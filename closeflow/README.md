@@ -30,12 +30,14 @@ CloseFlow helps you manage leads, track deals, and organize your sales pipeline 
 
 ## 📸 Screenshots
 
+
+### Pipeline
+![Pipeline](./public/screenshots/Bild%205.png)
+
 ### Dashboard
 ![Dashboard](./public/screenshots/Bild%203.png)
 ![Dashboard](./public/screenshots/Bild%204.png)
 
-### Pipeline
-![Pipeline](./public/screenshots/Bild%205.png)
 
 
 ---
