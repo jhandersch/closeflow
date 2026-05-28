@@ -1,3 +1,5 @@
+> 🚧 Work in progress – built in public
+
 # 🚀 CloseFlow
 
 AI-powered CRM for local service businesses.
