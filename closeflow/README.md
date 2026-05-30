@@ -1,68 +1,73 @@
-> 🚧 Work in progress – built in public
+# 🚀 CloseFlow CRM
 
-# 🚀 CloseFlow
+Modern AI-inspired CRM built with **Next.js**, **Supabase**, and a clean SaaS UI.
 
-AI-powered CRM for local service businesses.
-
-CloseFlow helps you manage leads, track deals, and organize your sales pipeline in a modern, simple interface.
-
----
-
-## ✨ Features
-
-- 📊 Dashboard with key metrics
-- 🧭 Kanban-style pipeline (New / Won / Lost)
-- ➕ Create, update, delete leads
-- 🔐 Authentication with Supabase
-- 🗂 Multi-page SaaS structure (Next.js App Router)
-- 🎨 Modern dark UI
+This project is a lightweight but powerful CRM system with:
+- Lead management
+- Pipeline (Kanban board)
+- AI-style lead scoring
+- Dashboard analytics
+- Authentication via Supabase
 
 ---
 
-## 🧱 Tech Stack
+# ✨ Features
+
+## 📊 Dashboard
+- Total leads overview
+- Won / Lost tracking
+- Average lead score
+- Hot / Warm / Cold segmentation
+- AI-style insights
+
+## 🧠 Lead Intelligence
+- Automatic scoring system (0–100)
+- Hot / Warm / Cold classification
+- Insight generation per lead
+
+## 📋 Leads Management
+- Searchable lead list
+- Status tracking (new, contacted, proposal, won)
+- Delete functionality
+
+## 🔥 Pipeline (Kanban)
+- Drag & Drop lead management
+- Status-based columns
+- Real-time updates via Supabase
+
+## 🔐 Authentication
+- Supabase Auth integration
+- User-specific data isolation
+
+---
+
+# 🛠 Tech Stack
 
 - Next.js (App Router)
+- React
 - TypeScript
+- Supabase (Database + Auth)
 - Tailwind CSS
-- Supabase (Auth + Database)
+- @hello-pangea/dnd (Drag & Drop)
 
 ---
 
-## 📸 Screenshots
+# 📸 Screenshots
 
+## Dashboard
+![Dashboard](./public/screenshots/dashboard.png)
 
-### Pipeline
+## Leads AI View
+![Leads](./public/screenshots/leads.png)
+
+## Pipeline
 ![Pipeline](./public/screenshots/pipeline.png)
 
-### Dashboard
-![Dashboard](./public/screenshots/dashboard(1).png)
-![Dashboard](./public/screenshots/dashboard(2).png)
-
-
-
 ---
 
-## 📌 Project Status
+# ⚙️ Setup
 
-This project is currently in active development and being built in public.
-
----
-
-## 🚀 Goal
-
-Building a lightweight AI-powered CRM for small local businesses to manage leads more efficiently.
-
----
-
-## 📈 Build in Public
-
-Follow the journey:
-- Iterative SaaS development
-- Real product evolution
-- Daily improvements
-
----
-
-## 🧠 Status
-
-MVP Phase → Early Product
+## 1. Clone project
+```bash
+git clone https://github.com/jhandersch/closeflow.git
+cd closeflow
