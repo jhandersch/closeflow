@@ -1,73 +1,70 @@
-# 🚀 CloseFlow CRM
+# CloseFlow 🚀
 
-Modern AI-inspired CRM built with **Next.js**, **Supabase**, and a clean SaaS UI.
-
-This project is a lightweight but powerful CRM system with:
-- Lead management
-- Pipeline (Kanban board)
-- AI-style lead scoring
-- Dashboard analytics
-- Authentication via Supabase
+A modern CRM SaaS built with Next.js, Supabase and Tailwind.
 
 ---
 
-# ✨ Features
+## 📌 Current Features
 
-## 📊 Dashboard
-- Total leads overview
-- Won / Lost tracking
-- Average lead score
-- Hot / Warm / Cold segmentation
-- AI-style insights
+### 🧠 Dashboard
+- KPI overview (total leads, won, revenue, pipeline value)
+- Clean analytics layout
 
-## 🧠 Lead Intelligence
-- Automatic scoring system (0–100)
-- Hot / Warm / Cold classification
-- Insight generation per lead
+### 📋 Leads System
+- Full lead list
+- Lead detail page with notes
+- User-specific data via Supabase
 
-## 📋 Leads Management
-- Searchable lead list
-- Status tracking (new, contacted, proposal, won)
-- Delete functionality
-
-## 🔥 Pipeline (Kanban)
-- Drag & Drop lead management
-- Status-based columns
-- Real-time updates via Supabase
-
-## 🔐 Authentication
-- Supabase Auth integration
-- User-specific data isolation
+### 🔄 Pipeline
+- Kanban-style CRM pipeline
+- Drag & drop lead movement
+- Status sync with Supabase
 
 ---
 
-# 🛠 Tech Stack
+## 🏗️ Architecture (IMPORTANT)
+
+The app is now structured using the Next.js App Router:
+
+
+src/app/(dashboard)/
+│
+├── layout.tsx # Global dashboard layout (Sidebar)
+├── dashboard/
+├── leads/
+│ ├── page.tsx
+│ └── [id]/page.tsx
+└── pipeline/
+
+
+### Key improvement:
+- Single global layout system
+- No duplicate sidebar
+- Fully scalable SaaS structure
+
+---
+
+## 🔧 Tech Stack
 
 - Next.js (App Router)
-- React
-- TypeScript
-- Supabase (Database + Auth)
+- Supabase (Auth + Database)
 - Tailwind CSS
-- @hello-pangea/dnd (Drag & Drop)
+- React DnD (@hello-pangea/dnd)
 
 ---
 
-# 📸 Screenshots
+## 🚀 Current Status
 
-## Dashboard
-![Dashboard](./public/screenshots/dashboard.png)
+CloseFlow is evolving from a simple dashboard into a real SaaS CRM system.
 
-## Leads AI View
-![Leads](./public/screenshots/leads.png)
-
-## Pipeline
-![Pipeline](./public/screenshots/pipeline.png)
+Next steps:
+- Authentication & protected routes
+- Settings page
+- Automation features
+- AI lead scoring improvements
 
 ---
 
-# ⚙️ Setup
+## 📈 Vision
 
-## 1. Clone project
-```bash
-git clone https://github.com/jhandersch/closeflow.git
-cd closeflow
+Building a lightweight, modern CRM alternative to tools like HubSpot & Pipedrive.
