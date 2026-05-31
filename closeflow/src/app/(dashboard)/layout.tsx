@@ -7,11 +7,14 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-black text-white">
+
+      {/* ONLY PLACE SIDEBAR EXISTS */}
       <Sidebar />
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-10">
         {children}
       </main>
+
     </div>
   )
 }
