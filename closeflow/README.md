@@ -28,13 +28,13 @@ The app is now structured using the Next.js App Router:
 
 
 src/app/(dashboard)/
-│
-├── layout.tsx # Global dashboard layout (Sidebar)
-├── dashboard/
-├── leads/
-│ ├── page.tsx
-│ └── [id]/page.tsx
-└── pipeline/
+
+    layout.tsx # Global dashboard layout (Sidebar)
+    dashboard/
+    leads/
+      page.tsx
+      [id]/page.tsx
+    pipeline/
 
 
 ### Key improvement:
@@ -67,4 +67,4 @@ Next steps:
 
 ## 📈 Vision
 
-Building a lightweight, modern CRM alternative to tools like HubSpot & Pipedrive.
+Building a lightweight, modern CRM alternative to tools like HubSpot & Pipedrive
