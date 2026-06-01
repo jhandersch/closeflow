@@ -1,70 +1,35 @@
-# CloseFlow 🚀
+# 🚀 CloseFlow CRM
 
-A modern CRM SaaS built with Next.js, Supabase and Tailwind.
-
----
-
-## 📌 Current Features
-
-### 🧠 Dashboard
-- KPI overview (total leads, won, revenue, pipeline value)
-- Clean analytics layout
-
-### 📋 Leads System
-- Full lead list
-- Lead detail page with notes
-- User-specific data via Supabase
-
-### 🔄 Pipeline
-- Kanban-style CRM pipeline
-- Drag & drop lead movement
-- Status sync with Supabase
+A modern lightweight CRM built with **Next.js 14**, **Supabase**, and **Tailwind CSS**.
 
 ---
 
-## 🏗️ Architecture (IMPORTANT)
+## ✨ Features
 
-The app is now structured using the Next.js App Router:
-
-
-src/app/(dashboard)/
-
-    layout.tsx # Global dashboard layout (Sidebar)
-    dashboard/
-    leads/
-      page.tsx
-      [id]/page.tsx
-    pipeline/
-
-
-### Key improvement:
-- Single global layout system
-- No duplicate sidebar
-- Fully scalable SaaS structure
+- 🔐 Authentication (Supabase Auth)
+- 📊 Dashboard with live KPIs
+- 👤 Lead management (Create / Read / Update / Delete)
+- 📌 Drag & Drop Pipeline
+- 📝 Lead details with notes
+- ⚙️ User settings
+- 🔓 Logout system
 
 ---
 
-## 🔧 Tech Stack
+## 🧱 Tech Stack
 
-- Next.js (App Router)
-- Supabase (Auth + Database)
+- Next.js 14 (App Router)
+- TypeScript
 - Tailwind CSS
-- React DnD (@hello-pangea/dnd)
+- Supabase (Auth + Database)
+- React Hooks
 
 ---
 
-## 🚀 Current Status
+## ⚙️ Setup
 
-CloseFlow is evolving from a simple dashboard into a real SaaS CRM system.
+### 1. Clone repo
 
-Next steps:
-- Authentication & protected routes
-- Settings page
-- Automation features
-- AI lead scoring improvements
-
----
-
-## 📈 Vision
-
-Building a lightweight, modern CRM alternative to tools like HubSpot & Pipedrive
+```bash
+git clone https://github.com/jhandersch/closeflow.git
+cd closeflow
