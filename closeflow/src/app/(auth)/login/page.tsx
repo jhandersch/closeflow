@@ -1,16 +1,31 @@
 "use client"
 
-import { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        router.replace("/dashboard")
+      }
+    }
+
+    checkUser()
+  }, [router])
+
+  const login = async () => {
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -20,38 +35,37 @@ export default function LoginPage() {
 
     setLoading(false)
 
-    if (error) {
-      alert(error.message)
-      return
+    if (!error) {
+      router.replace("/dashboard")
     }
-
-    router.push("/dashboard")
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <div className="w-96 space-y-4">
-        <h1 className="text-2xl font-bold">Login</h1>
+      <div className="bg-[#111] p-6 rounded-xl w-80">
+        <h1 className="text-2xl font-bold mb-6">Login</h1>
 
         <input
-          className="w-full p-2 bg-zinc-900 border border-white/10"
-          placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="w-full mb-3 px-3 py-2 rounded-lg bg-black border border-white/10"
         />
 
         <input
           type="password"
-          className="w-full p-2 bg-zinc-900 border border-white/10"
-          placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className="w-full mb-4 px-3 py-2 rounded-lg bg-black border border-white/10"
         />
 
         <button
-          onClick={handleLogin}
+          onClick={login}
           disabled={loading}
-          className="w-full bg-white text-black p-2"
+          className="w-full bg-white text-black py-2 rounded-lg"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Loading..." : "Login"}
         </button>
       </div>
     </div>
