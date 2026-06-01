@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
 type Lead = {
@@ -47,17 +48,15 @@ export default function LeadsPage() {
 
     if (!user) return
 
-    const { error } = await supabase
-      .from("leads")
-      .insert([
-        {
-          user_id: user.id,
-          name,
-          company,
-          status,
-          value: Number(value),
-        },
-      ])
+    const { error } = await supabase.from("leads").insert([
+      {
+        user_id: user.id,
+        name,
+        company,
+        status,
+        value: Number(value),
+      },
+    ])
 
     if (error) {
       alert(error.message)
@@ -79,19 +78,19 @@ export default function LeadsPage() {
 
   return (
     <div>
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
-          Leads
-        </h1>
+        <h1 className="text-3xl font-bold">Leads</h1>
 
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => setShowForm(true)}
           className="bg-white text-black px-4 py-2 rounded-xl"
         >
-          + New Lead
+          + Add Lead
         </button>
       </div>
 
+      {/* FORM */}
       {showForm && (
         <div className="bg-[#111] p-6 rounded-xl mb-6 space-y-4">
 
@@ -112,7 +111,7 @@ export default function LeadsPage() {
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Value (€)"
+            placeholder="Value"
             type="number"
             className="w-full bg-black border border-white/10 rounded-xl px-4 py-2"
           />
@@ -128,31 +127,40 @@ export default function LeadsPage() {
             <option value="won">won</option>
           </select>
 
-          <button
-            onClick={createLead}
-            className="bg-white text-black px-4 py-2 rounded-xl"
-          >
-            Create Lead
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={createLead}
+              className="bg-white text-black px-4 py-2 rounded-xl"
+            >
+              Create
+            </button>
+
+            <button
+              onClick={() => setShowForm(false)}
+              className="bg-black border border-white/10 px-4 py-2 rounded-xl"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
+      {/* LIST */}
       <div className="space-y-3">
         {leads.map((lead) => (
-          <div
+          <Link
             key={lead.id}
-            className="bg-[#111] p-4 rounded-xl"
+            href={`/leads/${lead.id}`}
+            className="block bg-[#111] p-4 rounded-xl hover:bg-white/5 transition"
           >
-            <p>{lead.name}</p>
-
+            <p className="font-medium">{lead.name}</p>
             <p className="text-sm text-zinc-400">
               {lead.company}
             </p>
-
             <p className="text-xs text-zinc-500">
               €{lead.value} • {lead.status}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
