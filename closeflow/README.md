@@ -7,12 +7,26 @@ A modern lightweight CRM built with **Next.js 14**, **Supabase**, and **Tailwind
 ## ✨ Features
 
 - 🔐 Authentication (Supabase Auth)
-- 📊 Dashboard with live KPIs
-- 👤 Lead management (Create / Read / Update / Delete)
-- 📌 Drag & Drop Pipeline
-- 📝 Lead details with notes
-- ⚙️ User settings
+- 📊 Dashboard with KPIs
+- 👤 Full Lead Management (Create / Edit / Delete)
+- 📝 Lead Notes system
+- 📌 Pipeline workflow (status-based)
+- 📈 Activity Timeline per lead
+- ⚙️ Settings page
 - 🔓 Logout system
+
+---
+
+## 🧠 Activity System
+
+CloseFlow tracks all important actions automatically:
+
+- Lead created
+- Lead updated (planned expansion)
+- Status changes (planned)
+- Notes updates (planned)
+
+Each activity is stored in Supabase and displayed in a timeline per lead.
 
 ---
 
@@ -23,6 +37,36 @@ A modern lightweight CRM built with **Next.js 14**, **Supabase**, and **Tailwind
 - Tailwind CSS
 - Supabase (Auth + Database)
 - React Hooks
+
+---
+
+## 📦 Database Schema
+
+### leads
+
+| Column     | Type      |
+|------------|----------|
+| id         | uuid      |
+| user_id    | uuid      |
+| name       | text      |
+| company    | text      |
+| status     | text      |
+| value      | numeric   |
+| notes      | text      |
+| created_at | timestamp |
+
+---
+
+### activities
+
+| Column     | Type      |
+|------------|----------|
+| id         | uuid      |
+| lead_id    | uuid      |
+| user_id    | uuid      |
+| action     | text      |
+| type       | text      |
+| created_at | timestamp |
 
 ---
 
