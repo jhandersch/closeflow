@@ -1,51 +1,112 @@
-# 🚀 CloseFlow CRM
+# CloseFlow CRM
 
-A modern lightweight CRM built with **Next.js 14**, **Supabase**, and **Tailwind CSS**.
+A modern CRM built with Next.js, Supabase, TypeScript, and Tailwind CSS.
 
----
-
-## ✨ Features
-
-- 🔐 Authentication (Supabase Auth)
-- 📊 Dashboard with KPIs
-- 👤 Full Lead Management (Create / Edit / Delete)
-- 📝 Lead Notes system
-- 📌 Pipeline workflow (status-based)
-- 📈 Activity Timeline per lead
-- ⚙️ Settings page
-- 🔓 Logout system
+CloseFlow helps users manage leads, track sales progress, and maintain a complete history of customer interactions.
 
 ---
 
-## 🧠 Activity System
+## Features
 
-CloseFlow tracks all important actions automatically:
+### Authentication
 
-- Lead created
-- Lead updated (planned expansion)
-- Status changes (planned)
-- Notes updates (planned)
+* Secure login with Supabase Auth
+* User-specific data isolation
+* Logout functionality
 
-Each activity is stored in Supabase and displayed in a timeline per lead.
+### Lead Management
+
+* Create leads
+* Edit leads
+* Delete leads
+* Store company information
+* Store deal values
+* Add lead notes
+
+### Pipeline Workflow
+
+* Status-based lead management
+* Lead stages:
+
+  * New
+  * Contacted
+  * Proposal
+  * Won
+
+### Activity Timeline
+
+* Automatic lead creation tracking
+* Activity history per lead
+* Chronological timeline view
+* Persistent activity storage
+
+### Status Change Tracking
+
+CloseFlow automatically records status changes.
+
+Examples:
+
+* Lead created
+* Status changed from new to contacted
+* Status changed from contacted to proposal
+* Status changed from proposal to won
+
+This creates a complete history of each lead's journey through the pipeline.
+
+### Dashboard
+
+* Total Leads
+* Won Deals
+* Revenue Tracking
+* Pipeline Value
+
+### Settings
+
+* User profile page
+* Account management foundation
 
 ---
 
-## 🧱 Tech Stack
+## Why CloseFlow?
 
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Supabase (Auth + Database)
-- React Hooks
+Most simple CRMs only store information.
+
+CloseFlow is being built to understand how leads evolve over time.
+
+The goal is to combine:
+
+* CRM functionality
+* Analytics
+* Activity tracking
+* AI-powered insights
+
+into a lightweight SaaS product.
 
 ---
 
-## 📦 Database Schema
+## Tech Stack
+
+### Frontend
+
+* Next.js 14
+* React
+* TypeScript
+* Tailwind CSS
+
+### Backend
+
+* Supabase
+* PostgreSQL
+* Supabase Auth
+
+---
+
+## Database Structure
 
 ### leads
 
 | Column     | Type      |
-|------------|----------|
+| ---------- | --------- |
 | id         | uuid      |
 | user_id    | uuid      |
 | name       | text      |
@@ -60,7 +121,7 @@ Each activity is stored in Supabase and displayed in a timeline per lead.
 ### activities
 
 | Column     | Type      |
-|------------|----------|
+| ---------- | --------- |
 | id         | uuid      |
 | lead_id    | uuid      |
 | user_id    | uuid      |
@@ -70,10 +131,46 @@ Each activity is stored in Supabase and displayed in a timeline per lead.
 
 ---
 
-## ⚙️ Setup
+## Local Development
 
-### 1. Clone repo
+### Clone repository
 
 ```bash
 git clone https://github.com/jhandersch/closeflow.git
 cd closeflow
+```
+### Completed
+
+* [x] Authentication
+* [x] Dashboard
+* [x] Lead CRUD
+* [x] Notes System
+* [x] Pipeline Workflow
+* [x] Activity Timeline
+* [x] Automatic Status Change Tracking
+* [x] Settings Page
+
+### Planned
+
+* [ ] Dashboard Analytics
+* [ ] Revenue Forecasting
+* [ ] AI Lead Scoring
+* [ ] Advanced Activity Tracking
+* [ ] Email Integration
+* [ ] Team Collaboration
+* [ ] AI Sales Insights
+
+---
+
+##  Project Goal
+
+CloseFlow is a learning and portfolio SaaS project focused on understanding:
+
+* Real-world CRM architecture
+* Full-stack development
+* Database design
+* SaaS product development
+* AI-powered business tools
+
+The project is being built publicly and improved step by step.
+
