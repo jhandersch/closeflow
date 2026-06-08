@@ -48,20 +48,32 @@ export default function LeadsPage() {
 
     if (!user) return
 
-    const { error } = await supabase.from("leads").insert([
-      {
-        user_id: user.id,
-        name,
-        company,
-        status,
-        value: Number(value),
-      },
-    ])
+    const { data: leadData, error } = await supabase
+      .from("leads")
+      .insert([
+        {
+          user_id: user.id,
+          name,
+          company,
+          status,
+          value: Number(value),
+        },
+      ])
+      .select()
+      .single()
 
     if (error) {
       alert(error.message)
       return
     }
+
+    await supabase.from("activities").insert([
+      {
+        lead_id: leadData.id,
+        user_id: user.id,
+        action: "Lead created",
+      },
+    ])
 
     setName("")
     setCompany("")
@@ -72,13 +84,33 @@ export default function LeadsPage() {
     load()
   }
 
+  const getLeadScore = (lead: Lead) => {
+    if (lead.status === "won" || lead.value >= 5000) {
+      return {
+        label: "🔥 Hot",
+        color: "text-red-400",
+      }
+    }
+
+    if (lead.status === "proposal" || lead.value >= 1000) {
+      return {
+        label: "🟡 Warm",
+        color: "text-yellow-400",
+      }
+    }
+
+    return {
+      label: "🔵 Cold",
+      color: "text-blue-400",
+    }
+  }
+
   if (loading) {
     return <div className="text-white">Loading...</div>
   }
 
   return (
     <div>
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Leads</h1>
 
@@ -90,7 +122,6 @@ export default function LeadsPage() {
         </button>
       </div>
 
-      {/* FORM */}
       {showForm && (
         <div className="bg-[#111] p-6 rounded-xl mb-6 space-y-4">
 
@@ -145,23 +176,38 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* LIST */}
       <div className="space-y-3">
-        {leads.map((lead) => (
-          <Link
-            key={lead.id}
-            href={`/leads/${lead.id}`}
-            className="block bg-[#111] p-4 rounded-xl hover:bg-white/5 transition"
-          >
-            <p className="font-medium">{lead.name}</p>
-            <p className="text-sm text-zinc-400">
-              {lead.company}
-            </p>
-            <p className="text-xs text-zinc-500">
-              €{lead.value} • {lead.status}
-            </p>
-          </Link>
-        ))}
+        {leads.map((lead) => {
+          const score = getLeadScore(lead)
+
+          return (
+            <Link
+              key={lead.id}
+              href={`/leads/${lead.id}`}
+              className="block bg-[#111] p-4 rounded-xl hover:bg-white/5 transition"
+            >
+              <div className="flex justify-between items-start">
+
+                <div>
+                  <p className="font-medium">{lead.name}</p>
+
+                  <p className="text-sm text-zinc-400">
+                    {lead.company}
+                  </p>
+
+                  <p className="text-xs text-zinc-500">
+                    €{lead.value} • {lead.status}
+                  </p>
+                </div>
+
+                <span className={`font-semibold ${score.color}`}>
+                  {score.label}
+                </span>
+
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

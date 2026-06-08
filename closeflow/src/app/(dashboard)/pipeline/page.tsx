@@ -47,6 +47,12 @@ export default function PipelinePage() {
 
     const newStatus = destination.droppableId
 
+    const lead = leads.find((l) => l.id === draggableId)
+
+    if (!lead) return
+    if (lead.status === newStatus) return
+
+    // UI update
     setLeads((prev) =>
       prev.map((l) =>
         l.id === draggableId
@@ -55,10 +61,25 @@ export default function PipelinePage() {
       )
     )
 
+    // DB update
     await supabase
       .from("leads")
       .update({ status: newStatus })
       .eq("id", draggableId)
+
+    // activity log
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+      await supabase.from("activities").insert([
+        {
+          lead_id: draggableId,
+          user_id: userData.user.id,
+          action: `Moved to ${newStatus}`,
+          type: "status",
+        },
+      ])
+    }
   }
 
   if (loading) {
@@ -71,7 +92,6 @@ export default function PipelinePage() {
 
   return (
     <div>
-
       <h1 className="text-3xl font-bold mb-6">
         Pipeline
       </h1>
@@ -125,7 +145,6 @@ export default function PipelinePage() {
 
         </div>
       </DragDropContext>
-
     </div>
   )
 }
