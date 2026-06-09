@@ -28,6 +28,7 @@ export default function LeadDetailPage() {
 
   const [lead, setLead] = useState<Lead | null>(null)
   const [loading, setLoading] = useState(true)
+  const [saved, setSaved] = useState(false)
 
   const [activities, setActivities] = useState<Activity[]>([])
 
@@ -70,6 +71,48 @@ export default function LeadDetailPage() {
     setLoading(false)
   }
 
+  const getRecommendation = () => {
+    if (!lead) return null
+
+    if (lead.status === "won") {
+      return {
+        icon: "🎉",
+        title: "Ask for referral",
+        text: "Customer already converted. Great moment to ask for a referral.",
+      }
+    }
+
+    if (lead.status === "proposal" && lead.value >= 5000) {
+      return {
+        icon: "📞",
+        title: "Schedule a call",
+        text: "High-value deal in proposal stage. Closing probability is high.",
+      }
+    }
+
+    if (lead.status === "proposal") {
+      return {
+        icon: "📄",
+        title: "Follow up on proposal",
+        text: "Check whether the customer has reviewed the proposal.",
+      }
+    }
+
+    if (lead.status === "contacted") {
+      return {
+        icon: "📧",
+        title: "Send follow-up email",
+        text: "Keep the conversation active and maintain momentum.",
+      }
+    }
+
+    return {
+      icon: "👀",
+      title: "Monitor lead",
+      text: "New lead. Gather more information before taking action.",
+    }
+  }
+
   const saveChanges = async () => {
     if (!lead) return
 
@@ -108,7 +151,12 @@ export default function LeadDetailPage() {
     }
 
     await load()
-    alert("Saved ✔")
+
+    setSaved(true)
+
+    setTimeout(() => {
+      setSaved(false)
+    }, 2000)
   }
 
   const deleteLead = async () => {
@@ -139,12 +187,44 @@ export default function LeadDetailPage() {
     return <div className="text-white">Lead not found</div>
   }
 
+  const recommendation = getRecommendation()
+
   return (
     <div className="max-w-2xl space-y-6">
+
+      {saved && (
+        <div className="fixed top-6 right-6 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg z-50">
+          ✓ Changes saved
+        </div>
+      )}
 
       <h1 className="text-3xl font-bold">
         Edit Lead
       </h1>
+
+      <div className="bg-[#111] p-6 rounded-xl">
+        <h2 className="text-xl font-semibold mb-4">
+          AI Recommendation
+        </h2>
+
+        <div className="flex gap-4">
+
+          <div className="text-3xl">
+            {recommendation?.icon}
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-lg">
+              {recommendation?.title}
+            </h3>
+
+            <p className="text-zinc-400 mt-1">
+              {recommendation?.text}
+            </p>
+          </div>
+
+        </div>
+      </div>
 
       <div className="bg-[#111] p-6 rounded-xl space-y-4">
 
