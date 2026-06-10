@@ -1,58 +1,37 @@
-# CloseFlow
+# CloseFlow – AI Inspired CRM
 
-CloseFlow is an AI-inspired CRM that helps users manage leads, track sales activity, and make better decisions — not just store data.
+CloseFlow is a modern CRM system built in public, designed to feel like a **smart sales assistant instead of just a database**.
 
-It combines a clean pipeline, activity tracking, and smart recommendations into a lightweight SaaS-style sales assistant.
+It helps manage leads, track sales progress, and provides AI-like insights into deal flow and revenue.
 
 ---
 
 ## Features
 
+### CRM Core
+- Lead management (create, edit, delete)
+- Status pipeline (new → contacted → proposal → won)
+- Lead detail pages with full activity history
+
+### Pipeline View
+- Drag & Drop sales pipeline
+- Real-time status updates
+- Activity tracking on every move
+- Visual stage organization
+
+### Smart Insights
+- Priority scoring system (0–100)
+- AI-style recommendations per lead
+- Revenue forecasting (weighted pipeline model)
+- Top leads detection
+
 ### Dashboard
 - Total leads overview
-- Revenue tracking
-- Pipeline value
-- Conversion rate
-- Average deal size
-
----
-
-### AI Recommendation System
-Each lead includes a smart suggestion:
-- 📞 Schedule a call
-- 📧 Send follow-up email
-- 👀 Monitor lead
-- 🎉 Ask for referral
-
----
-
-### Pipeline (Kanban)
-- Drag & drop lead management
-- Real-time status updates
-- Automatic activity logging
-
----
-
-### Activity Timeline
-- Tracks all important events:
-  - Lead created
-  - Status changes
-  - Pipeline movement
-- Full history per lead
-
----
-
-### Lead Management
-- Create / edit / delete leads
-- Notes per lead
-- Clean detail view
-
----
-
-### Modern UX
-- No annoying alerts
-- Smooth toast notifications
-- Fast feedback system
+- Won deals tracking
+- Revenue calculation
+- Forecast revenue estimation
+- Top leads ranking
+- Recent activity feed
 
 ---
 
@@ -68,49 +47,37 @@ Each lead includes a smart suggestion:
 
 ## Screenshots
 
-> Replace these with real screenshots from your app
-
 ### Dashboard
 ![Dashboard](./public/screenshots/dashboard.png)
 
+### Leads
+![Leads](./public/screenshots/leads.png)
+
 ### Pipeline
 ![Pipeline](./public/screenshots/pipeline.png)
-
-### Lead Detail
-![Lead Detail](./public/screenshots/leads.png)
-
----
-
-## Vision
-
-CloseFlow is evolving from a simple CRM into a **decision-driven sales assistant**.
-
-Instead of just managing data, it helps users decide:
-
-> What should I do next to close this deal?
 
 ---
 
 ## Roadmap
 
-- [x] Lead management system
-- [x] Activity timeline
-- [x] Drag & drop pipeline
-- [x] AI recommendation system (rules-based)
-- [ ] Priority scoring system
-- [ ] Real AI integration (OpenAI)
-- [ ] Email automation
-- [ ] Sales analytics charts
-- [ ] Team collaboration
+- [x] Lead Management System
+- [x] Activity Tracking
+- [x] Drag & Drop Pipeline
+- [x] Revenue Forecast
+- [ ] AI-powered Lead Scoring (OpenAI integration)
+- [ ] Smart Notifications
+- [ ] Email integration
+- [ ] Analytics charts
 
 ---
 
-## Philosophy
+## Vision
 
-> “A CRM should not only store leads — it should help you close them.”
+CloseFlow is built to evolve from a simple CRM into an **AI-driven sales assistant** that helps users understand:
+
+- What to do next
+- Which leads matter most
+- How revenue will develop
 
 ---
 
-## Status
-
-Active MVP development

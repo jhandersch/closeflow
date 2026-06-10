@@ -76,7 +76,6 @@ export default function LeadDetailPage() {
 
     if (lead.status === "won") {
       return {
-        icon: "🎉",
         title: "Ask for referral",
         text: "Customer already converted. Great moment to ask for a referral.",
       }
@@ -84,7 +83,6 @@ export default function LeadDetailPage() {
 
     if (lead.status === "proposal" && lead.value >= 5000) {
       return {
-        icon: "📞",
         title: "Schedule a call",
         text: "High-value deal in proposal stage. Closing probability is high.",
       }
@@ -92,7 +90,6 @@ export default function LeadDetailPage() {
 
     if (lead.status === "proposal") {
       return {
-        icon: "📄",
         title: "Follow up on proposal",
         text: "Check whether the customer has reviewed the proposal.",
       }
@@ -100,7 +97,6 @@ export default function LeadDetailPage() {
 
     if (lead.status === "contacted") {
       return {
-        icon: "📧",
         title: "Send follow-up email",
         text: "Keep the conversation active and maintain momentum.",
       }
