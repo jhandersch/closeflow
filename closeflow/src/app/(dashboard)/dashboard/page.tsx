@@ -4,12 +4,31 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import AuthGuard from "@/components/AuthGuard"
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts"
+
 type Lead = {
   id: string
   name: string
   company: string
   status: string
   value: number
+}
+
+type Activity = {
+  id: string
+  action: string
+  type?: string
+  created_at: string
 }
 
 const stageWeights: Record<string, number> = {
@@ -21,6 +40,7 @@ const stageWeights: Record<string, number> = {
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -41,7 +61,15 @@ export default function DashboardPage() {
       .select("*")
       .eq("user_id", user.id)
 
+    const { data: activityData } = await supabase
+      .from("activities")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+
     setLeads(data || [])
+    setActivities(activityData || [])
     setLoading(false)
   }
 
@@ -64,12 +92,52 @@ export default function DashboardPage() {
   }, 0)
 
   const topLeads = [...leads]
-    .sort((a, b) => (b.value || 0) - (a.value || 0))
+    .sort((a, b) => b.value - a.value)
     .slice(0, 3)
 
-  const recentLeads = [...leads]
-    .slice(-5)
-    .reverse()
+  const proposalLeads = leads.filter(
+    (l) => l.status === "proposal"
+  )
+
+  const proposalValue = proposalLeads.reduce(
+    (sum, l) => sum + (l.value || 0),
+    0
+  )
+
+  const chartData = [
+    {
+      status: "new",
+      value: leads.filter((l) => l.status === "new").length,
+    },
+    {
+      status: "contacted",
+      value: leads.filter((l) => l.status === "contacted").length,
+    },
+    {
+      status: "proposal",
+      value: leads.filter((l) => l.status === "proposal").length,
+    },
+    {
+      status: "won",
+      value: leads.filter((l) => l.status === "won").length,
+    },
+  ]
+
+  const COLORS = ["#3b82f6", "#eab308", "#f97316", "#22c55e"]
+
+  let recommendation = "Focus on growing your pipeline."
+
+  if (proposalLeads.length > 0) {
+    recommendation = "Schedule closing calls this week."
+  }
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="text-white">Loading...</div>
+      </AuthGuard>
+    )
+  }
 
   return (
     <AuthGuard>
@@ -78,9 +146,8 @@ export default function DashboardPage() {
           Dashboard
         </h1>
 
-        {/* KPI Grid */}
+        {/* KPI GRID */}
         <div className="grid md:grid-cols-4 gap-6 mb-10">
-
           <div className="bg-[#111] p-6 rounded-xl">
             <p className="text-zinc-400 text-sm">Total Leads</p>
             <h2 className="text-3xl font-bold mt-2">{total}</h2>
@@ -100,10 +167,26 @@ export default function DashboardPage() {
             <p className="text-zinc-400 text-sm">Pipeline Value</p>
             <h2 className="text-3xl font-bold mt-2">€{pipelineValue}</h2>
           </div>
-
         </div>
 
-        {/* Forecast */}
+        {/* AI INSIGHT */}
+        <div className="bg-[#111] border border-white/10 p-6 rounded-xl mb-10">
+          <p className="text-zinc-400 text-sm mb-2">Insight</p>
+
+          <h2 className="text-xl font-semibold">
+            {proposalLeads.length} leads are currently in proposal stage.
+          </h2>
+
+          <p className="text-zinc-500 mt-3">
+            Potential revenue: €{proposalValue}
+          </p>
+
+          <p className="text-green-400 mt-4">
+            Recommended action: {recommendation}
+          </p>
+        </div>
+
+        {/* FORECAST */}
         <div className="bg-[#111] p-6 rounded-xl mb-10">
           <p className="text-zinc-400 text-sm">Forecast Revenue</p>
           <h2 className="text-3xl font-bold mt-2 text-green-400">
@@ -111,9 +194,54 @@ export default function DashboardPage() {
           </h2>
         </div>
 
+        {/* CHARTS */}
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
+
+          <div className="bg-[#111] p-6 rounded-xl">
+            <h2 className="text-lg font-semibold mb-4">
+              Leads by Status
+            </h2>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="status" stroke="#aaa" />
+                <YAxis stroke="#aaa" />
+                <Tooltip />
+                <Bar dataKey="value" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-[#111] p-6 rounded-xl">
+            <h2 className="text-lg font-semibold mb-4">
+              Pipeline Distribution
+            </h2>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                >
+                  {chartData.map((_, index) => (
+                    <Cell key={index} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+        </div>
+
+        {/* BOTTOM GRID */}
         <div className="grid md:grid-cols-2 gap-6">
 
-          {/* Top Leads */}
+          {/* TOP LEADS */}
           <div className="bg-[#111] p-6 rounded-xl">
             <h2 className="text-lg font-semibold mb-4">
               Top Leads
@@ -134,21 +262,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Activity */}
+          {/* ACTIVITY */}
           <div className="bg-[#111] p-6 rounded-xl">
             <h2 className="text-lg font-semibold mb-4">
-              Recent Leads
+              Recent Activity
             </h2>
 
-            <div className="space-y-3">
-              {recentLeads.map((lead) => (
+            <div className="space-y-4">
+              {activities.map((activity) => (
                 <div
-                  key={lead.id}
-                  className="text-sm border-b border-white/10 pb-2"
+                  key={activity.id}
+                  className="border-b border-white/10 pb-3"
                 >
-                  <p className="font-medium">{lead.name}</p>
-                  <p className="text-zinc-500 text-xs">
-                    {lead.company} • {lead.status}
+                  <p className="text-sm">{activity.action}</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {new Date(activity.created_at).toLocaleString()}
                   </p>
                 </div>
               ))}
