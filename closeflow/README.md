@@ -58,7 +58,7 @@ Instead of just tracking leads, CloseFlow helps you understand:
 ![Dashboard](./public/screenshots/dashboard.png)
 
 ### Dashboard Analytics
-![Dashboard Analytics](./public/screenshots/dashboard(2).png)
+![Dashboard Analytics](./public/screenshots/dashboard (2).png)
 
 ### Pipeline
 ![Pipeline](./public/screenshots/pipeline.png)
