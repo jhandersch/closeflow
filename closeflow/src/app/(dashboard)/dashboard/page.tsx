@@ -14,6 +14,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts"
 
 type Lead = {
@@ -125,6 +127,14 @@ export default function DashboardPage() {
 
   const COLORS = ["#3b82f6", "#eab308", "#f97316", "#22c55e"]
 
+  const revenueData = [
+  { month: "Jan", revenue: 2000 },
+  { month: "Feb", revenue: 4500 },
+  { month: "Mar", revenue: 7000 },
+  { month: "Apr", revenue: 9000 },
+  { month: "May", revenue: 12000 },
+]
+
   let recommendation = "Focus on growing your pipeline."
 
   if (proposalLeads.length > 0) {
@@ -168,6 +178,7 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold mt-2">€{pipelineValue}</h2>
           </div>
         </div>
+        
 
         {/* AI INSIGHT */}
         <div className="bg-[#111] border border-white/10 p-6 rounded-xl mb-10">
@@ -193,6 +204,43 @@ export default function DashboardPage() {
             €{Math.round(forecast)}
           </h2>
         </div>
+
+        {/* NOTIFICATIONS */}
+<div className="bg-[#111] p-6 rounded-xl mb-10">
+
+  <h2 className="text-lg font-semibold mb-4">
+    Notifications
+  </h2>
+
+  <div className="space-y-3">
+
+    {proposalLeads.length > 0 && (
+      <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-xl">
+        ⚠️ {proposalLeads.length} deals are currently waiting in proposal stage.
+      </div>
+    )}
+
+    {forecast > revenue && (
+      <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-xl">
+        📈 Forecast revenue is higher than current revenue.
+      </div>
+    )}
+
+    {won > 0 && (
+      <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl">
+        🎉 {won} deals have already been won.
+      </div>
+    )}
+
+    {total === 0 && (
+      <div className="bg-zinc-500/10 border border-zinc-500/20 p-3 rounded-xl">
+        No leads available yet.
+      </div>
+    )}
+
+  </div>
+
+</div>
 
         {/* CHARTS */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
@@ -237,6 +285,30 @@ export default function DashboardPage() {
           </div>
 
         </div>
+
+        {/* REVENUE TREND */}
+<div className="bg-[#111] p-6 rounded-xl mb-10">
+
+  <h2 className="text-lg font-semibold mb-4">
+    Revenue Trend
+  </h2>
+
+  <ResponsiveContainer width="100%" height={300}>
+    <LineChart data={revenueData}>
+      <XAxis dataKey="month" stroke="#aaa" />
+      <YAxis stroke="#aaa" />
+      <Tooltip />
+
+      <Line
+        type="monotone"
+        dataKey="revenue"
+        stroke="#22c55e"
+        strokeWidth={3}
+      />
+    </LineChart>
+  </ResponsiveContainer>
+
+</div>
 
         {/* BOTTOM GRID */}
         <div className="grid md:grid-cols-2 gap-6">

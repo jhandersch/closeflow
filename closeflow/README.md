@@ -1,54 +1,63 @@
 # CloseFlow – AI-Inspired CRM
 
-CloseFlow is a modern CRM system built in public, designed to evolve from a traditional CRM into a **sales intelligence system** that helps users make decisions, not just store data.
+CloseFlow is a modern CRM system built in public, designed to evolve into a **decision intelligence platform for sales teams**.
 
-Instead of just tracking leads, CloseFlow helps you understand:
-- What to focus on next
-- Which deals matter most
-- How your revenue will develop
+Instead of simply storing contacts, CloseFlow helps users understand:
+
+* What to do next
+* Which opportunities deserve attention
+* How revenue is likely to develop
 
 ---
 
 ## Features
 
 ### CRM Core
-- Lead management (create, edit, delete)
-- Status pipeline (new → contacted → proposal → won)
-- Lead detail pages with full activity history
+
+* Lead management (create, edit, delete)
+* Lead detail pages
+* Activity history
+* Status pipeline (new → contacted → proposal → won)
 
 ### Intelligence Layer
-- Lead scoring system (0–100)
-- AI-style recommendations per lead
-- Revenue forecasting based on pipeline stages
-- Smart prioritization of deals
+
+* Lead scoring system
+* AI-style recommendations
+* Revenue forecasting
+* Deal prioritization
 
 ### Dashboard
-- KPI overview (leads, revenue, won deals)
-- Forecast revenue estimation
-- Top leads ranking
-- Recent activity feed
-- AI insight panel
+
+* KPI overview
+* Forecast revenue
+* AI insight panel
+* Notifications center
+* Top leads ranking
+* Recent activity feed
+
+### Analytics
+
+* Bar chart visualization
+* Pipeline distribution pie chart
+* Revenue trend chart
+* Revenue insights
 
 ### Pipeline
-- Drag & Drop kanban board
-- Real-time status updates
-- Activity logging on every change
 
-### Analytics (New)
-- Pipeline distribution charts
-- Status breakdown visualization
-- Revenue insights (early stage)
+* Drag & Drop kanban board
+* Real-time status updates
+* Automatic activity logging
 
 ---
 
 ## Tech Stack
 
-- Next.js (App Router)
-- TypeScript
-- Supabase (Auth + Database)
-- Tailwind CSS
-- Recharts (Data visualization)
-- @hello-pangea/dnd (Drag & Drop)
+* Next.js (App Router)
+* TypeScript
+* Supabase
+* Tailwind CSS
+* Recharts
+* @hello-pangea/dnd
 
 ---
 
@@ -59,6 +68,7 @@ Instead of just tracking leads, CloseFlow helps you understand:
 
 ### Dashboard Analytics
 ![Dashboard Analytics](./public/screenshots/dashboard%20(2).png)
+![Dashboard Analytics](./public/screenshots/dashboard%20(3).png)
 
 ### Pipeline
 ![Pipeline](./public/screenshots/pipeline.png)
@@ -66,33 +76,37 @@ Instead of just tracking leads, CloseFlow helps you understand:
 ### Leads
 ![Leads](./public/screenshots/leads.png)
 
-
 ---
 
 ## Roadmap
 
-- [x] CRM Core system
-- [x] Pipeline with Drag & Drop
-- [x] Activity tracking system
-- [x] Forecasting engine
-- [x] Dashboard analytics
-- [ ] AI-powered lead insights (OpenAI)
-- [ ] Smart notifications system
-- [ ] Revenue timeline charts
-- [ ] Email integration
-- [ ] Multi-user / Teams support
+* [x] CRM Core
+* [x] Pipeline Board
+* [x] Activity Tracking
+* [x] Dashboard Analytics
+* [x] Revenue Forecasting
+* [x] Notifications Center
+* [x] Revenue Trend Charts
+* [ ] AI Lead Intelligence
+* [ ] Smart Deal Alerts
+* [ ] Email Integration
+* [ ] Team Collaboration
+* [ ] Multi-user Accounts
 
 ---
 
 ## Vision
 
-CloseFlow is evolving into a **decision intelligence layer for sales teams**, not just a CRM.
+CloseFlow aims to become a sales intelligence platform that helps users make better decisions automatically.
 
 The goal:
-> Help users know what to do next, automatically.
+
+> From CRM → Decision Intelligence System → AI Sales Assistant
 
 ---
 
 ## Build in Public
 
-This project is being built step by step in public, sharing every iteration from MVP → SaaS → AI product.
+CloseFlow is being built publicly, one iteration at a time.
+
+
