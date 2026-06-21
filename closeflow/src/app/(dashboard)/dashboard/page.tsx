@@ -7,7 +7,7 @@ import AuthGuard from "@/components/AuthGuard"
 import {
   BarChart,
   Bar,
-  XAxis,
+ XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
   const topLeads = [...leads]
     .sort((a, b) => b.value - a.value)
-    .slice(0, 3)
+    .slice(0, 5)
 
   const proposalLeads = leads.filter(
     (l) => l.status === "proposal"
@@ -104,6 +104,18 @@ export default function DashboardPage() {
   const proposalValue = proposalLeads.reduce(
     (sum, l) => sum + (l.value || 0),
     0
+  )
+
+  const highValueDeals = leads.filter(
+    (l) => (l.value || 0) >= 5000
+  )
+
+  const staleContactedDeals = leads.filter(
+    (l) => l.status === "contacted"
+  )
+
+  const urgentProposalDeals = leads.filter(
+    (l) => l.status === "proposal"
   )
 
   const chartData = [
@@ -125,20 +137,52 @@ export default function DashboardPage() {
     },
   ]
 
-  const COLORS = ["#3b82f6", "#eab308", "#f97316", "#22c55e"]
+  const COLORS = [
+    "#3b82f6",
+    "#eab308",
+    "#f97316",
+    "#22c55e",
+  ]
 
   const revenueData = [
-  { month: "Jan", revenue: 2000 },
-  { month: "Feb", revenue: 4500 },
-  { month: "Mar", revenue: 7000 },
-  { month: "Apr", revenue: 9000 },
-  { month: "May", revenue: 12000 },
-]
+    { month: "Jan", revenue: 2000 },
+    { month: "Feb", revenue: 4500 },
+    { month: "Mar", revenue: 7000 },
+    { month: "Apr", revenue: 9000 },
+    { month: "May", revenue: 12000 },
+  ]
 
   let recommendation = "Focus on growing your pipeline."
 
   if (proposalLeads.length > 0) {
     recommendation = "Schedule closing calls this week."
+  }
+
+  const getHealth = (lead: Lead) => {
+    let score = 0
+
+    if (lead.status === "proposal") score += 50
+    if (lead.status === "won") score += 20
+    if ((lead.value || 0) >= 5000) score += 30
+
+    if (score >= 70) {
+      return {
+        label: "Healthy",
+        color: "text-green-400",
+      }
+    }
+
+    if (score >= 40) {
+      return {
+        label: "Medium",
+        color: "text-yellow-400",
+      }
+    }
+
+    return {
+      label: "At Risk",
+      color: "text-red-400",
+    }
   }
 
   if (loading) {
@@ -155,57 +199,75 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold mb-8">
           Dashboard
         </h1>
-
         {/* KPI GRID */}
-        <div className="grid md:grid-cols-4 gap-6 mb-10">
-          <div className="bg-[#111] p-6 rounded-xl">
-            <p className="text-zinc-400 text-sm">Total Leads</p>
-            <h2 className="text-3xl font-bold mt-2">{total}</h2>
-          </div>
+<div className="grid md:grid-cols-4 gap-6 mb-10">
 
-          <div className="bg-[#111] p-6 rounded-xl">
-            <p className="text-zinc-400 text-sm">Won Deals</p>
-            <h2 className="text-3xl font-bold mt-2">{won}</h2>
-          </div>
+  <div className="bg-[#111] p-6 rounded-xl">
+    <p className="text-zinc-400 text-sm">
+      Total Leads
+    </p>
 
-          <div className="bg-[#111] p-6 rounded-xl">
-            <p className="text-zinc-400 text-sm">Revenue</p>
-            <h2 className="text-3xl font-bold mt-2">€{revenue}</h2>
-          </div>
+    <h2 className="text-3xl font-bold mt-2">
+      {total}
+    </h2>
+  </div>
 
-          <div className="bg-[#111] p-6 rounded-xl">
-            <p className="text-zinc-400 text-sm">Pipeline Value</p>
-            <h2 className="text-3xl font-bold mt-2">€{pipelineValue}</h2>
-          </div>
-        </div>
-        
+  <div className="bg-[#111] p-6 rounded-xl">
+    <p className="text-zinc-400 text-sm">
+      Won Deals
+    </p>
 
-        {/* AI INSIGHT */}
-        <div className="bg-[#111] border border-white/10 p-6 rounded-xl mb-10">
-          <p className="text-zinc-400 text-sm mb-2">Insight</p>
+    <h2 className="text-3xl font-bold mt-2">
+      {won}
+    </h2>
+  </div>
 
-          <h2 className="text-xl font-semibold">
-            {proposalLeads.length} leads are currently in proposal stage.
-          </h2>
+  <div className="bg-[#111] p-6 rounded-xl">
+    <p className="text-zinc-400 text-sm">
+      Revenue
+    </p>
 
-          <p className="text-zinc-500 mt-3">
-            Potential revenue: €{proposalValue}
-          </p>
+    <h2 className="text-3xl font-bold mt-2">
+      €{revenue}
+    </h2>
+  </div>
 
-          <p className="text-green-400 mt-4">
-            Recommended action: {recommendation}
-          </p>
-        </div>
+  <div className="bg-[#111] p-6 rounded-xl">
+    <p className="text-zinc-400 text-sm">
+      Forecast Revenue
+    </p>
 
-        {/* FORECAST */}
-        <div className="bg-[#111] p-6 rounded-xl mb-10">
-          <p className="text-zinc-400 text-sm">Forecast Revenue</p>
-          <h2 className="text-3xl font-bold mt-2 text-green-400">
-            €{Math.round(forecast)}
-          </h2>
-        </div>
+    <h2 className="text-3xl font-bold mt-2 text-green-400">
+      €{Math.round(forecast)}
+    </h2>
+  </div>
 
-        {/* NOTIFICATIONS */}
+</div>
+
+
+{/* AI INSIGHT */}
+<div className="bg-[#111] border border-white/10 p-6 rounded-xl mb-10">
+
+  <p className="text-zinc-400 text-sm mb-2">
+    AI Insight
+  </p>
+
+  <h2 className="text-xl font-semibold">
+    {proposalLeads.length} leads are currently in proposal stage.
+  </h2>
+
+  <p className="text-zinc-500 mt-3">
+    Potential revenue: €{proposalValue}
+  </p>
+
+  <p className="text-green-400 mt-4">
+    Recommended action: {recommendation}
+  </p>
+
+</div>
+
+
+{/* NOTIFICATIONS */}
 <div className="bg-[#111] p-6 rounded-xl mb-10">
 
   <h2 className="text-lg font-semibold mb-4">
@@ -232,6 +294,24 @@ export default function DashboardPage() {
       </div>
     )}
 
+    {highValueDeals.length > 0 && (
+      <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl">
+        💰 {highValueDeals.length} high-value deals above €5000 detected.
+      </div>
+    )}
+
+    {urgentProposalDeals.length > 0 && (
+      <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl">
+        📞 {urgentProposalDeals.length} deals are ready for closing.
+      </div>
+    )}
+
+    {staleContactedDeals.length > 3 && (
+      <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+        ⏳ Several contacted deals require follow-up.
+      </div>
+    )}
+
     {total === 0 && (
       <div className="bg-zinc-500/10 border border-zinc-500/20 p-3 rounded-xl">
         No leads available yet.
@@ -242,51 +322,69 @@ export default function DashboardPage() {
 
 </div>
 
-        {/* CHARTS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-10">
+{/* CHARTS */}
+<div className="grid md:grid-cols-2 gap-6 mb-10">
 
-          <div className="bg-[#111] p-6 rounded-xl">
-            <h2 className="text-lg font-semibold mb-4">
-              Leads by Status
-            </h2>
+  {/* LEADS BY STATUS */}
+  <div className="bg-[#111] p-6 rounded-xl">
 
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData}>
-                <XAxis dataKey="status" stroke="#aaa" />
-                <YAxis stroke="#aaa" />
-                <Tooltip />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+    <h2 className="text-lg font-semibold mb-4">
+      Leads by Status
+    </h2>
 
-          <div className="bg-[#111] p-6 rounded-xl">
-            <h2 className="text-lg font-semibold mb-4">
-              Pipeline Distribution
-            </h2>
+    <ResponsiveContainer width="100%" height={250}>
+      <BarChart data={chartData}>
+        <XAxis dataKey="status" stroke="#aaa" />
+        <YAxis stroke="#aaa" />
+        <Tooltip />
 
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  nameKey="status"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                >
-                  {chartData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <Bar
+          dataKey="value"
+          fill="#3b82f6"
+        />
+      </BarChart>
+    </ResponsiveContainer>
 
-        </div>
+  </div>
 
-        {/* REVENUE TREND */}
+
+  {/* PIPELINE DISTRIBUTION */}
+  <div className="bg-[#111] p-6 rounded-xl">
+
+    <h2 className="text-lg font-semibold mb-4">
+      Pipeline Distribution
+    </h2>
+
+    <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+
+        <Pie
+          data={chartData}
+          dataKey="value"
+          nameKey="status"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+        >
+          {chartData.map((_, index) => (
+            <Cell
+              key={index}
+              fill={COLORS[index]}
+            />
+          ))}
+        </Pie>
+
+        <Tooltip />
+
+      </PieChart>
+    </ResponsiveContainer>
+
+  </div>
+
+</div>
+
+
+{/* REVENUE TREND */}
 <div className="bg-[#111] p-6 rounded-xl mb-10">
 
   <h2 className="text-lg font-semibold mb-4">
@@ -295,8 +393,14 @@ export default function DashboardPage() {
 
   <ResponsiveContainer width="100%" height={300}>
     <LineChart data={revenueData}>
-      <XAxis dataKey="month" stroke="#aaa" />
+
+      <XAxis
+        dataKey="month"
+        stroke="#aaa"
+      />
+
       <YAxis stroke="#aaa" />
+
       <Tooltip />
 
       <Line
@@ -305,57 +409,154 @@ export default function DashboardPage() {
         stroke="#22c55e"
         strokeWidth={3}
       />
+
     </LineChart>
   </ResponsiveContainer>
 
 </div>
+{/* AI RECOMMENDATIONS */}
+<div className="bg-[#111] p-6 rounded-xl mb-10">
 
-        {/* BOTTOM GRID */}
-        <div className="grid md:grid-cols-2 gap-6">
+  <h2 className="text-lg font-semibold mb-4">
+    AI Recommendations
+  </h2>
 
-          {/* TOP LEADS */}
-          <div className="bg-[#111] p-6 rounded-xl">
-            <h2 className="text-lg font-semibold mb-4">
-              Top Leads
-            </h2>
+  <div className="space-y-3">
 
-            <div className="space-y-3">
-              {topLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="flex justify-between text-sm"
-                >
-                  <span>{lead.name}</span>
-                  <span className="text-green-400">
-                    €{lead.value}
-                  </span>
-                </div>
-              ))}
+    {proposalLeads.length > 0 && (
+      <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-xl">
+        Focus on proposal stage deals to maximize conversions.
+      </div>
+    )}
+
+    {highValueDeals.length > 0 && (
+      <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl">
+        Prioritize high-value opportunities above €5000.
+      </div>
+    )}
+
+    {staleContactedDeals.length > 0 && (
+      <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl">
+        Follow up contacted leads this week.
+      </div>
+    )}
+
+  </div>
+
+</div>
+
+
+{/* BOTTOM GRID */}
+<div className="grid md:grid-cols-2 gap-6">
+
+  {/* TOP LEADS */}
+  <div className="bg-[#111] p-6 rounded-xl">
+
+    <h2 className="text-lg font-semibold mb-4">
+      Top Leads
+    </h2>
+
+    <div className="space-y-4">
+
+      {topLeads.map((lead) => {
+        const health = getHealth(lead)
+
+
+        return (
+          <div
+            key={lead.id}
+            className="flex justify-between items-center border-b border-white/10 pb-3"
+          >
+
+            <div>
+              <p className="font-medium">
+                {lead.name}
+              </p>
+
+              <p className="text-sm text-zinc-500">
+                {lead.company}
+              </p>
             </div>
-          </div>
 
-          {/* ACTIVITY */}
-          <div className="bg-[#111] p-6 rounded-xl">
-            <h2 className="text-lg font-semibold mb-4">
-              Recent Activity
-            </h2>
+            <div className="text-right">
 
-            <div className="space-y-4">
-              {activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="border-b border-white/10 pb-3"
-                >
-                  <p className="text-sm">{activity.action}</p>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {new Date(activity.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+              <p className="text-green-400 font-semibold">
+                €{lead.value}
+              </p>
+
+              <p className={`text-sm ${health.color}`}>
+                {health.label}
+              </p>
+
             </div>
+
           </div>
+        )
+      })}
+
+    </div>
+
+  </div>
+
+
+  {/* RECENT ACTIVITY */}
+  <div className="bg-[#111] p-6 rounded-xl">
+
+    <h2 className="text-lg font-semibold mb-4">
+      Recent Activity
+    </h2>
+
+    <div className="space-y-4">
+
+      {activities.map((activity) => (
+
+        <div
+          key={activity.id}
+          className="border-b border-white/10 pb-3"
+        >
+
+          <p className="text-sm">
+            {activity.action}
+          </p>
+
+          <p className="text-xs text-zinc-500 mt-1">
+            {new Date(activity.created_at).toLocaleString()}
+          </p>
 
         </div>
+
+      ))}
+
+    </div>
+
+  </div>
+
+</div>
+
+{/* EMPTY STATES */}
+
+{topLeads.length === 0 && (
+  <div className="bg-[#111] p-6 rounded-xl mt-6">
+    <p className="text-zinc-500">
+      No leads available yet.
+    </p>
+  </div>
+)}
+
+{activities.length === 0 && (
+  <div className="bg-[#111] p-6 rounded-xl mt-6">
+    <p className="text-zinc-500">
+      No recent activity found.
+    </p>
+  </div>
+)}
+
+
+{/* FOOTER */}
+<div className="mt-12 text-center text-zinc-500 text-sm">
+  CloseFlow • AI-Inspired CRM • Build in Public 🚀
+</div>
+
       </div>
     </AuthGuard>
   )

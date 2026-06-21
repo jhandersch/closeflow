@@ -1,63 +1,66 @@
-# CloseFlow – AI-Inspired CRM
+# CloseFlow  
+AI-Inspired CRM for smarter sales decisions
 
-CloseFlow is a modern CRM system built in public, designed to evolve into a **decision intelligence platform for sales teams**.
-
-Instead of simply storing contacts, CloseFlow helps users understand:
-
-* What to do next
-* Which opportunities deserve attention
-* How revenue is likely to develop
+CloseFlow is a modern CRM built with Next.js, Supabase, and TypeScript that focuses not just on managing leads — but on helping users decide what to do next.
 
 ---
 
 ## Features
 
-### CRM Core
+### Smart Dashboard
+- KPI overview (leads, revenue, forecast)
+- Pipeline intelligence
+- Revenue forecasting based on weighted stages
 
-* Lead management (create, edit, delete)
-* Lead detail pages
-* Activity history
-* Status pipeline (new → contacted → proposal → won)
+### AI-style Insights
+- Lead stage analysis
+- Action recommendations
+- Opportunity detection (high-value, stalled deals)
 
-### Intelligence Layer
+### Visual Analytics
+- Bar chart: lead distribution
+- Pie chart: pipeline structure
+- Revenue trend line chart
 
-* Lead scoring system
-* AI-style recommendations
-* Revenue forecasting
-* Deal prioritization
+### Smart Notifications
+- High-value deal detection
+- Proposal stage alerts
+- Stale & inactive deal warnings
 
-### Dashboard
-
-* KPI overview
-* Forecast revenue
-* AI insight panel
-* Notifications center
-* Top leads ranking
-* Recent activity feed
-
-### Analytics
-
-* Bar chart visualization
-* Pipeline distribution pie chart
-* Revenue trend chart
-* Revenue insights
-
-### Pipeline
-
-* Drag & Drop kanban board
-* Real-time status updates
-* Automatic activity logging
+### Lead Intelligence
+- Lead health scoring (Healthy / Medium / At Risk)
+- Top performing leads overview
+- Activity tracking
 
 ---
 
 ## Tech Stack
 
-* Next.js (App Router)
-* TypeScript
-* Supabase
-* Tailwind CSS
-* Recharts
-* @hello-pangea/dnd
+- Next.js 14 (App Router)
+- TypeScript
+- Supabase (Auth + Database)
+- Tailwind CSS
+- Recharts
+
+---
+
+## Vision
+
+CloseFlow is evolving from a simple CRM into a **decision intelligence system for sales teams**.
+
+Instead of just tracking leads, it helps answer:
+
+> “What should I do next to close more deals?”
+
+---
+
+## Next Steps
+
+- AI-powered lead assistant (OpenAI integration)
+- Smart email suggestions
+- Automated follow-up system
+- Deal risk prediction
+- Real-time notifications
 
 ---
 
@@ -78,35 +81,13 @@ Instead of simply storing contacts, CloseFlow helps users understand:
 
 ---
 
-## Roadmap
-
-* [x] CRM Core
-* [x] Pipeline Board
-* [x] Activity Tracking
-* [x] Dashboard Analytics
-* [x] Revenue Forecasting
-* [x] Notifications Center
-* [x] Revenue Trend Charts
-* [ ] AI Lead Intelligence
-* [ ] Smart Deal Alerts
-* [ ] Email Integration
-* [ ] Team Collaboration
-* [ ] Multi-user Accounts
-
----
-
-## Vision
-
-CloseFlow aims to become a sales intelligence platform that helps users make better decisions automatically.
-
-The goal:
-
-> From CRM → Decision Intelligence System → AI Sales Assistant
-
----
-
 ## Build in Public
 
-CloseFlow is being built publicly, one iteration at a time.
+This project is being built step by step in public.
+
+Follow the journey
+
+#buildinpublic #saas #nextjs #supabase #ai #crm
+
 
 
