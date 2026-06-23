@@ -1,66 +1,51 @@
-# CloseFlow  
-AI-Inspired CRM for smarter sales decisions
+# CloseFlow
 
-CloseFlow is a modern CRM built with Next.js, Supabase, and TypeScript that focuses not just on managing leads — but on helping users decide what to do next.
+CloseFlow is a modern AI-inspired CRM and decision intelligence platform built with Next.js, Supabase, TypeScript, and Tailwind CSS.
+
+It goes beyond traditional CRMs by not only storing lead data, but helping users understand where to focus next.
 
 ---
 
-## Features
+## What’s new
 
-### Smart Dashboard
-- KPI overview (leads, revenue, forecast)
-- Pipeline intelligence
-- Revenue forecasting based on weighted stages
+### marter Dashboard
+- Priority Deals system for better focus
+- Win rate and average deal value metrics
+- Improved KPI overview
 
-### AI-style Insights
-- Lead stage analysis
-- Action recommendations
-- Opportunity detection (high-value, stalled deals)
+### Notifications Engine
+- Automated deal alerts
+- Pipeline risk detection
+- High-value opportunity highlights
 
-### Visual Analytics
-- Bar chart: lead distribution
-- Pie chart: pipeline structure
-- Revenue trend line chart
+### Analytics Upgrade
+- Revenue trend visualization
+- Pipeline distribution charts
+- Lead status breakdown
 
-### Smart Notifications
-- High-value deal detection
-- Proposal stage alerts
-- Stale & inactive deal warnings
+### Decision Intelligence Layer
+- AI-style insights based on pipeline state
+- Recommendation system for next actions
+- Health scoring per lead
 
-### Lead Intelligence
-- Lead health scoring (Healthy / Medium / At Risk)
-- Top performing leads overview
-- Activity tracking
+---
+
+## Product Vision
+
+CloseFlow is evolving from a CRM into a **decision intelligence tool**.
+
+The goal is not just to manage leads —  
+but to help sales teams understand what to do next.
 
 ---
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 14
 - TypeScript
-- Supabase (Auth + Database)
+- Supabase
 - Tailwind CSS
 - Recharts
-
----
-
-## Vision
-
-CloseFlow is evolving from a simple CRM into a **decision intelligence system for sales teams**.
-
-Instead of just tracking leads, it helps answer:
-
-> “What should I do next to close more deals?”
-
----
-
-## Next Steps
-
-- AI-powered lead assistant (OpenAI integration)
-- Smart email suggestions
-- Automated follow-up system
-- Deal risk prediction
-- Real-time notifications
 
 ---
 
@@ -81,13 +66,22 @@ Instead of just tracking leads, it helps answer:
 
 ---
 
-## Build in Public
+## Next Steps
 
-This project is being built step by step in public.
+- AI-powered lead intelligence
+- Smart deal alerts
+- Real-time revenue tracking from database
+- OpenAI integration
+- Team collaboration features
 
-Follow the journey
+---
 
-#buildinpublic #saas #nextjs #supabase #ai #crm
+## Status
+
+Actively built in public
+
+
+
 
 
 

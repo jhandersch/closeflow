@@ -11,9 +11,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   LineChart,
   Line,
 } from "recharts"
@@ -33,6 +30,7 @@ type Activity = {
   created_at: string
 }
 
+
 const stageWeights: Record<string, number> = {
   new: 0.1,
   contacted: 0.3,
@@ -44,6 +42,9 @@ export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
+
+  
+  const [tab, setTab] = useState<"leads" | "activity">("leads")
 
   useEffect(() => {
     load()
@@ -95,7 +96,22 @@ export default function DashboardPage() {
 
   const topLeads = [...leads]
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5)
+    .slice(0, 3)
+
+  const priorityDeals = [...leads]
+  .filter((lead) => lead.status !== "won")
+  .sort((a, b) => {
+    const aScore =
+      (a.status === "proposal" ? 100 : 0) +
+      (a.value || 0)
+
+    const bScore =
+      (b.status === "proposal" ? 100 : 0) +
+      (b.value || 0)
+
+    return bScore - aScore
+  })
+  .slice(0, 3)
 
   const proposalLeads = leads.filter(
     (l) => l.status === "proposal"
@@ -117,6 +133,16 @@ export default function DashboardPage() {
   const urgentProposalDeals = leads.filter(
     (l) => l.status === "proposal"
   )
+
+  const winRate =
+  total > 0
+    ? ((won / total) * 100).toFixed(1)
+    : "0"
+
+  const averageDealValue =
+  total > 0
+    ? Math.round(pipelineValue / total)
+    : 0
 
   const chartData = [
     {
@@ -195,10 +221,10 @@ export default function DashboardPage() {
 
   return (
     <AuthGuard>
-      <div>
         <h1 className="text-3xl font-bold mb-8">
           Dashboard
         </h1>
+        
         {/* KPI GRID */}
 <div className="grid md:grid-cols-4 gap-6 mb-10">
 
@@ -241,6 +267,26 @@ export default function DashboardPage() {
       €{Math.round(forecast)}
     </h2>
   </div>
+
+  <div className="bg-[#111] p-6 rounded-xl">
+  <p className="text-zinc-400 text-sm">
+    Win Rate
+  </p>
+
+  <h2 className="text-3xl font-bold mt-2 text-blue-400">
+    {winRate}%
+  </h2>
+</div>
+
+<div className="bg-[#111] p-6 rounded-xl">
+  <p className="text-zinc-400 text-sm">
+    Avg Deal Value
+  </p>
+
+  <h2 className="text-3xl font-bold mt-2 text-purple-400">
+    €{averageDealValue}
+  </h2>
+</div>
 
 </div>
 
@@ -322,6 +368,61 @@ export default function DashboardPage() {
 
 </div>
 
+{/* PRIORITY DEALS */}
+<div className="bg-[#111] p-6 rounded-xl mb-10">
+
+  <h2 className="text-lg font-semibold mb-4">
+    Priority Deals
+  </h2>
+
+  <div className="space-y-4">
+
+    {priorityDeals.map((lead) => {
+
+      const health = getHealth(lead)
+
+      return (
+        <div
+          key={lead.id}
+          className="flex justify-between items-center border-b border-white/10 pb-3"
+        >
+
+          <div>
+            <p className="font-medium">
+              {lead.name}
+            </p>
+
+            <p className="text-sm text-zinc-500">
+              {lead.company}
+            </p>
+          </div>
+
+          <div className="text-right">
+
+            <p className="text-green-400 font-semibold">
+              €{lead.value}
+            </p>
+
+            <p className={`text-sm ${health.color}`}>
+              {health.label}
+            </p>
+
+            <p className="text-xs text-zinc-500">
+              {lead.status === "proposal"
+              ? "Ready for closing"
+              : "High-value opportunity"}
+</p>
+
+          </div>
+
+        </div>
+      )
+    })}
+
+  </div>
+
+</div>
+
 {/* CHARTS */}
 <div className="grid md:grid-cols-2 gap-6 mb-10">
 
@@ -346,43 +447,6 @@ export default function DashboardPage() {
     </ResponsiveContainer>
 
   </div>
-
-
-  {/* PIPELINE DISTRIBUTION */}
-  <div className="bg-[#111] p-6 rounded-xl">
-
-    <h2 className="text-lg font-semibold mb-4">
-      Pipeline Distribution
-    </h2>
-
-    <ResponsiveContainer width="100%" height={250}>
-      <PieChart>
-
-        <Pie
-          data={chartData}
-          dataKey="value"
-          nameKey="status"
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-        >
-          {chartData.map((_, index) => (
-            <Cell
-              key={index}
-              fill={COLORS[index]}
-            />
-          ))}
-        </Pie>
-
-        <Tooltip />
-
-      </PieChart>
-    </ResponsiveContainer>
-
-  </div>
-
-</div>
-
 
 {/* REVENUE TREND */}
 <div className="bg-[#111] p-6 rounded-xl mb-10">
@@ -414,150 +478,111 @@ export default function DashboardPage() {
   </ResponsiveContainer>
 
 </div>
-{/* AI RECOMMENDATIONS */}
-<div className="bg-[#111] p-6 rounded-xl mb-10">
-
-  <h2 className="text-lg font-semibold mb-4">
-    AI Recommendations
-  </h2>
-
-  <div className="space-y-3">
-
-    {proposalLeads.length > 0 && (
-      <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-xl">
-        Focus on proposal stage deals to maximize conversions.
-      </div>
-    )}
-
-    {highValueDeals.length > 0 && (
-      <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl">
-        Prioritize high-value opportunities above €5000.
-      </div>
-    )}
-
-    {staleContactedDeals.length > 0 && (
-      <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl">
-        Follow up contacted leads this week.
-      </div>
-    )}
-
-  </div>
-
-</div>
-
 
 {/* BOTTOM GRID */}
-<div className="grid md:grid-cols-2 gap-6">
+<div className="bg-[#111] p-6 rounded-xl">
 
-  {/* TOP LEADS */}
-  <div className="bg-[#111] p-6 rounded-xl">
+  {/* TAB HEADER */}
+  <div className="flex gap-4 mb-6 border-b border-white/10 pb-3">
 
-    <h2 className="text-lg font-semibold mb-4">
+    <button
+      onClick={() => setTab("leads")}
+      className={`text-sm font-medium ${
+        tab === "leads"
+          ? "text-white"
+          : "text-zinc-500"
+      }`}
+    >
       Top Leads
-    </h2>
+    </button>
 
-    <div className="space-y-4">
+    <button
+      onClick={() => setTab("activity")}
+      className={`text-sm font-medium ${
+        tab === "activity"
+          ? "text-white"
+          : "text-zinc-500"
+      }`}
+    >
+      Activity
+    </button>
 
-      {topLeads.map((lead) => {
-        const health = getHealth(lead)
+  </div>
 
+  {/* TAB CONTENT */}
+  <div className="space-y-4">
 
-        return (
-          <div
-            key={lead.id}
-            className="flex justify-between items-center border-b border-white/10 pb-3"
-          >
+    {tab === "leads" && (
+      <div className="space-y-4">
 
-            <div>
-              <p className="font-medium">
-                {lead.name}
-              </p>
+        {topLeads.map((lead) => {
+          const health = getHealth(lead)
 
-              <p className="text-sm text-zinc-500">
-                {lead.company}
-              </p>
+          return (
+            <div
+              key={lead.id}
+              className="flex justify-between items-center border-b border-white/10 pb-3"
+            >
+
+              <div>
+                <p className="font-medium">
+                  {lead.name}
+                </p>
+
+                <p className="text-sm text-zinc-500">
+                  {lead.company}
+                </p>
+              </div>
+
+              <div className="text-right">
+
+                <p className="text-green-400 font-semibold">
+                  €{lead.value}
+                </p>
+
+                <p className={`text-sm ${health.color}`}>
+                  {health.label}
+                </p>
+
+              </div>
+
             </div>
-
-            <div className="text-right">
-
-              <p className="text-green-400 font-semibold">
-                €{lead.value}
-              </p>
-
-              <p className={`text-sm ${health.color}`}>
-                {health.label}
-              </p>
-
-            </div>
-
-          </div>
-        )
-      })}
-
-    </div>
-
-  </div>
-
-
-  {/* RECENT ACTIVITY */}
-  <div className="bg-[#111] p-6 rounded-xl">
-
-    <h2 className="text-lg font-semibold mb-4">
-      Recent Activity
-    </h2>
-
-    <div className="space-y-4">
-
-      {activities.map((activity) => (
-
-        <div
-          key={activity.id}
-          className="border-b border-white/10 pb-3"
-        >
-
-          <p className="text-sm">
-            {activity.action}
-          </p>
-
-          <p className="text-xs text-zinc-500 mt-1">
-            {new Date(activity.created_at).toLocaleString()}
-          </p>
-
-        </div>
-
-      ))}
-
-    </div>
-
-  </div>
-
-</div>
-
-{/* EMPTY STATES */}
-
-{topLeads.length === 0 && (
-  <div className="bg-[#111] p-6 rounded-xl mt-6">
-    <p className="text-zinc-500">
-      No leads available yet.
-    </p>
-  </div>
-)}
-
-{activities.length === 0 && (
-  <div className="bg-[#111] p-6 rounded-xl mt-6">
-    <p className="text-zinc-500">
-      No recent activity found.
-    </p>
-  </div>
-)}
-
-
-{/* FOOTER */}
-<div className="mt-12 text-center text-zinc-500 text-sm">
-  CloseFlow • AI-Inspired CRM • Build in Public 🚀
-</div>
+          )
+        })}
 
       </div>
+    )}
+
+    {tab === "activity" && (
+      <div className="space-y-4">
+
+        {activities.map((activity) => (
+          <div
+            key={activity.id}
+            className="border-b border-white/10 pb-3"
+          >
+
+            <p className="text-sm">
+              {activity.action}
+            </p>
+
+            <p className="text-xs text-zinc-500 mt-1">
+              {new Date(activity.created_at).toLocaleString()}
+            </p>
+
+          </div>
+        ))}
+
+      </div>
+    )}
+
+  </div>
+
+</div>
+
+ 
+</div>
+
     </AuthGuard>
   )
 }
