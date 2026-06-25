@@ -8,7 +8,7 @@ It goes beyond traditional CRMs by not only storing lead data, but helping users
 
 ## What’s new
 
-### marter Dashboard
+### smarter Dashboard
 - Priority Deals system for better focus
 - Win rate and average deal value metrics
 - Improved KPI overview
@@ -24,9 +24,24 @@ It goes beyond traditional CRMs by not only storing lead data, but helping users
 - Lead status breakdown
 
 ### Decision Intelligence Layer
-- AI-style insights based on pipeline state
-- Recommendation system for next actions
-- Health scoring per lead
+- Context-aware recommendations based on pipeline state
+- Next best action system per lead
+- Transparent reasoning behind suggestions
+
+### Lead Intelligence
+
+- Structured next best action system
+- Priority-based recommendations (low / medium / high)
+- Context-aware lead suggestions
+- Action reasoning for transparency
+- Improved decision support per lead
+
+### Activity Timeline (Improved)
+
+- Event type icons for better clarity
+- Status change tracking
+- Structured activity history per lead
+- Improved readability and UX
 
 ---
 
@@ -35,7 +50,7 @@ It goes beyond traditional CRMs by not only storing lead data, but helping users
 CloseFlow is evolving from a CRM into a **decision intelligence tool**.
 
 The goal is not just to manage leads —  
-but to help sales teams understand what to do next.
+but to help sales teams decide what to focus on next in real time.
 
 ---
 
@@ -54,15 +69,19 @@ but to help sales teams understand what to do next.
 ### Dashboard
 ![Dashboard](./public/screenshots/dashboard.png)
 
-### Dashboard Analytics
-![Dashboard Analytics](./public/screenshots/dashboard%20(2).png)
-![Dashboard Analytics](./public/screenshots/dashboard%20(3).png)
-
 ### Pipeline
 ![Pipeline](./public/screenshots/pipeline.png)
 
 ### Leads
 ![Leads](./public/screenshots/leads.png)
+
+### Lead Detail
+![Lead Detail](./public/screenshots/leads%20(edit).png)
+![Lead Detail](./public/screenshots/leads%20(edit)%20(2).png)
+
+### Dashboard Analytics
+![Dashboard Analytics](./public/screenshots/dashboard%20(2).png)
+![Dashboard Analytics](./public/screenshots/dashboard%20(3).png)
 
 ---
 

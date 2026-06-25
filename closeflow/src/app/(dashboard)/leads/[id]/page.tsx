@@ -20,6 +20,13 @@ type Activity = {
   created_at: string
 }
 
+type Action = {
+  title: string
+  description: string
+  priority: "low" | "medium" | "high"
+  reason: string
+}
+
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -71,43 +78,74 @@ export default function LeadDetailPage() {
     setLoading(false)
   }
 
-  const getRecommendation = () => {
-    if (!lead) return null
-
-    if (lead.status === "won") {
-      return {
-        title: "Ask for referral",
-        text: "Customer already converted. Great moment to ask for a referral.",
-      }
-    }
-
-    if (lead.status === "proposal" && lead.value >= 5000) {
-      return {
-        title: "Schedule a call",
-        text: "High-value deal in proposal stage. Closing probability is high.",
-      }
-    }
-
-    if (lead.status === "proposal") {
-      return {
-        title: "Follow up on proposal",
-        text: "Check whether the customer has reviewed the proposal.",
-      }
-    }
-
-    if (lead.status === "contacted") {
-      return {
-        title: "Send follow-up email",
-        text: "Keep the conversation active and maintain momentum.",
-      }
-    }
-
+ const getRecommendation = () => {
+  if (!lead) {
     return {
-      icon: "👀",
-      title: "Monitor lead",
-      text: "New lead. Gather more information before taking action.",
+      title: "Loading lead data",
+      description: "Please wait while we analyze this lead.",
+      priority: "low",
+      reason: "No lead data available yet",
     }
   }
+
+  const isHighValue = (lead.value || 0) >= 5000
+
+  if (lead.status === "won") {
+    return {
+      title: "Ask for referral",
+      description: "Customer already converted. Ask for referral while satisfaction is high.",
+      priority: "medium",
+      reason: "Converted customer = referral opportunity",
+    }
+  }
+
+  if (lead.status === "proposal" && isHighValue) {
+    return {
+      title: "Urgent closing call",
+      description: "High-value deal in proposal stage. Act fast to close.",
+      priority: "high",
+      reason: "High value + proposal stage",
+    }
+  }
+
+  if (lead.status === "proposal") {
+    return {
+      title: "Follow up on proposal",
+      description: "Check if the proposal was reviewed.",
+      priority: "medium",
+      reason: "Proposal stage needs follow-up",
+    }
+  }
+
+  if (lead.status === "contacted") {
+    return {
+      title: "Send follow-up email",
+      description: "Keep momentum and move lead forward.",
+      priority: "medium",
+      reason: "Contacted leads need nurturing",
+    }
+  }
+
+  return {
+    title: "Qualify lead",
+    description: "Gather more information before taking action.",
+    priority: "low",
+    reason: "New lead needs qualification",
+  }
+}
+
+  const getActivityIcon = (type?: string) => {
+  switch (type) {
+    case "status":
+      return "🔄"
+
+    case "note":
+      return "📝"
+
+    default:
+      return "📌"
+  }
+}
 
   const saveChanges = async () => {
     if (!lead) return
@@ -205,18 +243,30 @@ export default function LeadDetailPage() {
 
         <div className="flex gap-4">
 
-          <div className="text-3xl">
-            {recommendation?.icon}
-          </div>
-
           <div>
             <h3 className="font-semibold text-lg">
               {recommendation?.title}
             </h3>
 
             <p className="text-zinc-400 mt-1">
-              {recommendation?.text}
+              {recommendation?.description}
             </p>
+
+            <p className="text-xs text-zinc-500 mt-2">
+              {recommendation?.reason}
+            </p>
+
+            <span
+              className={`text-xs mt-3 inline-block px-2 py-1 rounded ${
+                recommendation?.priority === "high"
+                  ? "bg-red-500/20 text-red-400"
+                  : recommendation?.priority === "medium"
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "bg-blue-500/20 text-blue-400"
+              }`}
+            >
+              {recommendation?.priority?.toUpperCase()} PRIORITY
+            </span>
           </div>
 
         </div>
@@ -303,19 +353,29 @@ export default function LeadDetailPage() {
                 className="border-b border-white/10 pb-3"
               >
 
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-3 items-center">
 
-                  <span className="text-xs px-2 py-1 rounded bg-white/10 text-zinc-300">
+                <span className="text-xl">
+                  {getActivityIcon(a.type)}
+                </span>
+
+                <div>
+
+                  <p className="font-medium">
+                    {a.action}
+                  </p>
+
+                  <p className="text-xs text-zinc-500">
                     {a.type || "event"}
-                  </span>
+                  </p>
 
-                  <p>{a.action}</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {new Date(a.created_at).toLocaleString()}
+                  </p>
 
-                </div>
+  </div>
 
-                <p className="text-xs text-zinc-500">
-                  {new Date(a.created_at).toISOString()}
-                </p>
+</div>
 
               </div>
             ))}
