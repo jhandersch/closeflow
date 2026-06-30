@@ -21,6 +21,8 @@ type Lead = {
   company: string
   status: string
   value: number
+  created_at: string
+  notes?: string
 }
 
 type Activity = {
@@ -185,32 +187,57 @@ export default function DashboardPage() {
   }
 
   const getHealth = (lead: Lead) => {
-    let score = 0
+  let score = 0
 
-    if (lead.status === "proposal") score += 50
-    if (lead.status === "won") score += 20
-    if ((lead.value || 0) >= 5000) score += 30
+  // Status
+  switch (lead.status) {
+    case "new":
+      score += 20
+      break
+    case "contacted":
+      score += 40
+      break
+    case "proposal":
+      score += 70
+      break
+    case "won":
+      score += 100
+      break
+  }
 
-    if (score >= 70) {
-      return {
-        label: "Healthy",
-        color: "text-green-400",
-      }
-    }
+  // Deal Value
+  if ((lead.value || 0) >= 10000) {
+    score += 15
+  } else if ((lead.value || 0) >= 5000) {
+    score += 10
+  } else if ((lead.value || 0) >= 1000) {
+    score += 5
+  }
 
-    if (score >= 40) {
-      return {
-        label: "Medium",
-        color: "text-yellow-400",
-      }
-    }
+  score = Math.min(score, 100)
 
+  if (score >= 80) {
     return {
-      label: "At Risk",
-      color: "text-red-400",
+      label: "Healthy",
+      color: "text-green-400",
+      score,
     }
   }
 
+  if (score >= 50) {
+    return {
+      label: "Medium",
+      color: "text-yellow-400",
+      score,
+    }
+  }
+
+  return {
+    label: "At Risk",
+    color: "text-red-400",
+    score,
+  }
+}
   if (loading) {
     return (
       <AuthGuard>
@@ -404,7 +431,11 @@ export default function DashboardPage() {
             </p>
 
             <p className={`text-sm ${health.color}`}>
-              {health.label}
+              {health.label} ({health.score})
+            </p>
+
+            <p className="text-xs text-zinc-500">
+              Score: {health.score}/100
             </p>
 
             <p className="text-xs text-zinc-500">
@@ -541,7 +572,7 @@ export default function DashboardPage() {
                 </p>
 
                 <p className={`text-sm ${health.color}`}>
-                  {health.label}
+                  {health.label} ({health.score})
                 </p>
 
               </div>

@@ -84,54 +84,11 @@ export default function LeadDetailPage() {
       title: "Loading lead data",
       description: "Please wait while we analyze this lead.",
       priority: "low",
+      priorityScore: 0,
       reason: "No lead data available yet",
     }
   }
 
-  const isHighValue = (lead.value || 0) >= 5000
-
-  if (lead.status === "won") {
-    return {
-      title: "Ask for referral",
-      description: "Customer already converted. Ask for referral while satisfaction is high.",
-      priority: "medium",
-      reason: "Converted customer = referral opportunity",
-    }
-  }
-
-  if (lead.status === "proposal" && isHighValue) {
-    return {
-      title: "Urgent closing call",
-      description: "High-value deal in proposal stage. Act fast to close.",
-      priority: "high",
-      reason: "High value + proposal stage",
-    }
-  }
-
-  if (lead.status === "proposal") {
-    return {
-      title: "Follow up on proposal",
-      description: "Check if the proposal was reviewed.",
-      priority: "medium",
-      reason: "Proposal stage needs follow-up",
-    }
-  }
-
-  if (lead.status === "contacted") {
-    return {
-      title: "Send follow-up email",
-      description: "Keep momentum and move lead forward.",
-      priority: "medium",
-      reason: "Contacted leads need nurturing",
-    }
-  }
-
-  return {
-    title: "Qualify lead",
-    description: "Gather more information before taking action.",
-    priority: "low",
-    reason: "New lead needs qualification",
-  }
 }
 
   const getActivityIcon = (type?: string) => {
