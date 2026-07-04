@@ -13,7 +13,9 @@ type Lead = {
   name: string
   company: string
   status: string
-  value?: number
+  value: number
+  created_at: string
+  notes?: string
 }
 
 const stages = ["new", "contacted", "proposal", "won"]

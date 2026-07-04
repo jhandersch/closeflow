@@ -10,7 +10,9 @@ type Lead = {
   company: string
   status: string
   value: number
+  created_at: string
   notes?: string
+  stage_changed_at?: string
 }
 
 type Activity = {
@@ -25,6 +27,14 @@ type Action = {
   description: string
   priority: "low" | "medium" | "high"
   reason: string
+}
+
+type Recommendation = {
+  title: string
+  description: string
+  priority: "low" | "medium" | "high"
+  reason: string
+  score: number
 }
 
 export default function LeadDetailPage() {
@@ -75,20 +85,129 @@ export default function LeadDetailPage() {
     setValue(data.value?.toString() || "")
     setNotes(data.notes || "")
 
+    setLead(data)
+
     setLoading(false)
   }
 
- const getRecommendation = () => {
-  if (!lead) {
-    return {
-      title: "Loading lead data",
-      description: "Please wait while we analyze this lead.",
+const getRecommendations = (): Recommendation[] => {
+  if (!lead) return []
+
+  const baseScore =
+    (lead.status === "new" && 10) ||
+    (lead.status === "contacted" && 30) ||
+    (lead.status === "proposal" && 60) ||
+    (lead.status === "won" && 100) ||
+    0
+
+  const value = lead.value || 0
+
+  const valueScore =
+    value >= 10000 ? 30 :
+    value >= 5000 ? 20 :
+    value >= 1000 ? 10 : 0
+
+  const staleDays = getStaleDays()
+
+  const staleScore =
+    staleDays > 14 ? 100 :
+    staleDays > 7 ? 70 :
+    staleDays > 3 ? 40 : 10
+
+  const finalScore = Math.min(baseScore + valueScore + staleScore * 0.4, 100)
+
+  const actions: Recommendation[] = []
+
+  // 🧠 CORE LOGIC LAYER
+
+  if (lead.status === "new") {
+    actions.push({
+      title: "Qualify lead",
+      description: "Gather missing information and identify intent",
       priority: "low",
-      priorityScore: 0,
-      reason: "No lead data available yet",
-    }
+      reason: "New lead needs qualification",
+      score: finalScore
+    })
   }
 
+  if (lead.status === "contacted") {
+    actions.push({
+      title: "Send follow-up",
+      description: "Re-engage lead within 24–48h",
+      priority: "medium",
+      reason: "Contacted but not progressed",
+      score: finalScore
+    })
+  }
+
+  if (lead.status === "proposal") {
+    actions.push({
+      title: "Push proposal decision",
+      description: "Address objections and close deal",
+      priority: finalScore > 75 ? "high" : "medium",
+      reason: "Proposal stage is critical",
+      score: finalScore
+    })
+  }
+
+  if (lead.status === "won") {
+    actions.push({
+      title: "Request referral",
+      description: "Leverage success for new leads",
+      priority: "medium",
+      reason: "Closed deal opportunity",
+      score: finalScore
+    })
+  }
+
+  // 🚨 STALE OVERRIDE LAYER
+  if (staleDays > 10 && lead.status !== "won") {
+    actions.unshift({
+      title: "URGENT: Lead is going cold",
+      description: "No activity detected — risk of loss",
+      priority: "high",
+      reason: `${staleDays} days without activity`,
+      score: 100
+    })
+  }
+
+  return actions
+}
+
+  const getDaysInStage = () => {
+      if (!lead?.stage_changed_at) return 0
+
+      const start = new Date(lead.stage_changed_at).getTime()
+      const now = new Date().getTime()
+
+      return Math.floor((now - start) / (1000 * 60 * 60 * 24))
+    }
+  
+  const getStaleDays = () => {
+      if (!lead?.stage_changed_at) return 0
+
+      const last = new Date(lead.stage_changed_at).getTime()
+      const now = Date.now()
+
+      return Math.floor((now - last) / (1000 * 60 * 60 * 24))
+    }
+
+      const getDealAge = () => {
+        if (!lead) return 0
+
+        const created = new Date(lead.created_at).getTime()
+        const now = Date.now()
+
+        return Math.floor((now - created) / (1000 * 60 * 60 * 24))
+      }
+
+      const getStaleScore = () => {
+        const days = getStaleDays()
+
+        if (days > 14) return 100
+        if (days > 7) return 70
+        if (days > 3) return 40
+        return 10
 }
 
   const getActivityIcon = (type?: string) => {
@@ -178,7 +297,9 @@ export default function LeadDetailPage() {
     return <div className="text-white">Lead not found</div>
   }
 
-  const recommendation = getRecommendation()
+  const recommendations = getRecommendations()
+  const primary = recommendations[0]
+  const dealAge = getDealAge()
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -202,27 +323,27 @@ export default function LeadDetailPage() {
 
           <div>
             <h3 className="font-semibold text-lg">
-              {recommendation?.title}
+              {primary?.title}
             </h3>
 
             <p className="text-zinc-400 mt-1">
-              {recommendation?.description}
+              {primary?.description}
             </p>
 
             <p className="text-xs text-zinc-500 mt-2">
-              {recommendation?.reason}
+              {primary?.reason}
             </p>
 
             <span
               className={`text-xs mt-3 inline-block px-2 py-1 rounded ${
-                recommendation?.priority === "high"
+                primary?.priority === "high"
                   ? "bg-red-500/20 text-red-400"
-                  : recommendation?.priority === "medium"
+                  : primary?.priority === "medium"
                   ? "bg-yellow-500/20 text-yellow-400"
                   : "bg-blue-500/20 text-blue-400"
               }`}
             >
-              {recommendation?.priority?.toUpperCase()} PRIORITY
+              {primary?.priority?.toUpperCase()} PRIORITY
             </span>
           </div>
 
@@ -230,6 +351,47 @@ export default function LeadDetailPage() {
       </div>
 
       <div className="bg-[#111] p-6 rounded-xl space-y-4">
+      <div className="bg-[#111] p-6 rounded-xl">
+
+        <h2 className="text-xl font-semibold mb-4">
+          Deal Information
+        </h2>
+
+        <div className="grid grid-cols-3 gap-6">
+
+          <div>
+            <p className="text-zinc-500 text-sm">
+              Deal Age
+            </p>
+
+            <p className="text-2xl font-bold mt-1">
+              {dealAge} days
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500 text-sm">
+              Status
+            </p>
+
+            <p className="text-2xl font-bold mt-1 capitalize">
+              {lead.status}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500 text-sm">
+              Priority Score
+            </p>
+
+            <p className="text-2xl font-bold mt-1 text-green-400">
+              {primary?.score ?? 0}/100
+            </p>
+          </div>
+
+        </div>
+
+      </div>
 
         <input
           value={name}

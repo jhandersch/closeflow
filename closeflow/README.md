@@ -1,18 +1,44 @@
 # CloseFlow
 
-CloseFlow is a modern AI-inspired CRM and decision intelligence platform built with Next.js, Supabase, TypeScript, and Tailwind CSS.
+CloseFlow is a modern AI-inspired CRM and decision intelligence platform built with **Next.js, Supabase, TypeScript, and Tailwind CSS**.
 
-It goes beyond traditional CRMs by not only storing lead data, but helping users understand where to focus next.
+CloseFlow goes beyond traditional CRMs by combining lead management, analytics, and AI-inspired recommendations to help users prioritize opportunities and decide what to do next.
 
 ---
 
-## What's New
+## Features
+
+### AI Recommendation Engine
+
+* AI-inspired recommendation engine
+* Dynamic Priority Score (0–100)
+* Low / Medium / High priority classification
+* Context-aware lead suggestions
+* Transparent recommendation reasoning
+* Decision support for every lead
+
+### Lead Management
+
+* Create, edit and delete leads
+* Company and deal management
+* Notes system
+* Pipeline workflow
+* Deal value tracking
 
 ### Smarter Dashboard
 
-* Priority Deals system for better focus
-* Win rate and average deal value metrics
-* Improved KPI overview
+* Priority Deals system
+* Win rate metrics
+* Average deal value
+* Revenue overview
+* Improved KPI dashboard
+
+### Analytics
+
+* Revenue trend visualization
+* Pipeline distribution charts
+* Lead status breakdown
+* Interactive dashboard analytics
 
 ### Notifications Engine
 
@@ -20,33 +46,19 @@ It goes beyond traditional CRMs by not only storing lead data, but helping users
 * Pipeline risk detection
 * High-value opportunity highlights
 
-### Analytics Upgrade
+### Activity Timeline
 
-* Revenue trend visualization
-* Pipeline distribution charts
-* Lead status breakdown
-
-### Decision Intelligence Layer
-
-* Context-aware recommendations based on pipeline state
-* Next best action system per lead
-* Transparent reasoning behind suggestions
+* Automatic activity tracking
+* Status change history
+* Event type icons
+* Structured lead history
+* Improved readability and UX
 
 ### Lead Intelligence
 
-* AI-inspired recommendation engine
-* Dynamic Priority Score (0–100)
-* Priority levels (Low / Medium / High)
-* Context-aware lead suggestions
-* Transparent recommendation reasoning
-* Improved decision support for every lead
-
-### Activity Timeline
-
-* Event type icons for better clarity
-* Automatic status change tracking
-* Structured activity history per lead
-* Improved readability and UX
+* Deal age tracking
+* Pipeline staleness detection
+* Intelligent opportunity prioritization
 
 ---
 
@@ -54,17 +66,19 @@ It goes beyond traditional CRMs by not only storing lead data, but helping users
 
 CloseFlow is evolving from a CRM into a **decision intelligence platform**.
 
-The goal is not just to manage leads—but to help sales teams decide what to do next.
+The goal is not just to manage leads—but to help users decide what to do next.
 
-Instead of only displaying customer data, CloseFlow continuously highlights priorities, opportunities, and recommended actions.
+Instead of simply displaying customer information, CloseFlow continuously analyzes pipeline data to highlight priorities, opportunities, and recommended actions.
 
 ---
 
 ## Tech Stack
 
 * Next.js 14
+* React
 * TypeScript
 * Supabase
+* PostgreSQL
 * Tailwind CSS
 * Recharts
 
@@ -100,15 +114,33 @@ Instead of only displaying customer data, CloseFlow continuously highlights prio
 
 ## Roadmap
 
+* Lead Health Score
 * Shared scoring engine
-* Real-time revenue tracking
-* OpenAI-powered lead intelligence
+* Revenue forecasting
+* OpenAI-powered lead insights
 * Smart workflow automation
-* Team collaboration
 * Email integration
+* Team collaboration
+
+---
+
+## Project Goal
+
+CloseFlow is a portfolio SaaS project focused on building a modern CRM while exploring real-world full-stack development and AI-assisted workflows.
+
+The project covers:
+
+* CRM architecture
+* Sales analytics
+* Decision intelligence
+* SaaS product development
+* AI-powered business tools
+
+CloseFlow is actively developed in public and continuously improved step by step.
 
 ---
 
 ## Status
 
-Actively built in public.
+Actively built in public with new features and improvements released regularly.
+
