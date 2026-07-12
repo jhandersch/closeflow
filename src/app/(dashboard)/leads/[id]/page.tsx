@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import toast from "react-hot-toast"
 import { useParams, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 import {
@@ -30,6 +31,7 @@ from "@/components/leads/ActivityIntelligenceCard"
 import {
  calculateSalesScore
 } from "@/lib/salesScore"
+import AISalesCopilot from "@/components/leads/AISalesCopilot"
 
 type Lead = {
   id: string
@@ -167,11 +169,23 @@ export default function LeadDetailPage() {
 }
 
   if (loading) {
-    return <div className="text-white">Loading...</div>
+    return (
+      <div className="mx-auto w-full max-w-[1200px] rounded-3xl border border-white/10 bg-[#111] p-8" aria-busy="true" aria-live="polite">
+        <div className="h-7 w-56 animate-pulse rounded-full bg-white/10" />
+        <div className="mt-4 h-4 w-44 animate-pulse rounded-full bg-white/10" />
+        <div className="mt-8 h-32 animate-pulse rounded-2xl bg-white/10" />
+      </div>
+    )
   }
 
   if (!lead) {
-    return <div className="text-white">Lead not found</div>
+    return (
+      <div className="mx-auto w-full max-w-[900px] rounded-3xl border border-white/10 bg-[#111] p-10 text-center">
+        <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">Lead unavailable</p>
+        <h1 className="mt-4 text-2xl font-semibold text-white">We could not find this lead.</h1>
+        <p className="mt-3 text-sm leading-7 text-zinc-400">The record may have been removed or you may not have access to it.</p>
+      </div>
+    )
   }
 
   const dealAge = getDealAge()
@@ -184,11 +198,11 @@ export default function LeadDetailPage() {
   
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="mx-auto w-full max-w-[1200px] space-y-6">
 
       {saved && (
-        <div className="fixed top-6 right-6 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg z-50">
-          ✓ Changes saved
+        <div className="fixed right-6 top-6 z-50 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-4 py-3 text-sm font-medium text-emerald-300 shadow-lg">
+          ✓ Changes saved successfully
         </div>
       )}
 
@@ -327,6 +341,14 @@ export default function LeadDetailPage() {
   loading={activityLoading}
 />
 
+<AISalesCopilot
+  lead={lead}
+  activities={activities}
+  memory={memory}
+  risk={aiRisk}
+  status={lead.status}
+/>
+
 {nextAction && (
   <AIActionCard
     leadId={lead.id}
@@ -377,7 +399,7 @@ export default function LeadDetailPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+              className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-white outline-none transition focus:border-cyan-400/50"
             />
           </div>
 
@@ -389,7 +411,7 @@ export default function LeadDetailPage() {
             <input
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+              className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-white outline-none transition focus:border-cyan-400/50"
             />
           </div>
 
@@ -402,7 +424,7 @@ export default function LeadDetailPage() {
               value={value}
               onChange={(e) => setValue(e.target.value)}
               type="number"
-              className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+              className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-white outline-none transition focus:border-cyan-400/50"
             />
           </div>
 
@@ -414,7 +436,7 @@ export default function LeadDetailPage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+              className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-white outline-none transition focus:border-cyan-400/50"
             >
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
@@ -434,7 +456,7 @@ export default function LeadDetailPage() {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="h-40 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+            className="h-40 w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-white outline-none transition focus:border-cyan-400/50"
           />
 
         </div>
@@ -446,6 +468,7 @@ export default function LeadDetailPage() {
 
               if (!lead) return
 
+              try {
                 await saveLead(
                   lead.id,
                   lead.status,
@@ -459,6 +482,12 @@ export default function LeadDetailPage() {
                 )
 
                 setSaved(true)
+                toast.success("Lead updated")
+                window.setTimeout(() => setSaved(false), 2200)
+              } catch (error) {
+                console.error(error)
+                toast.error("Could not save lead")
+              }
 
               }}
             className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:scale-[1.02]"
@@ -471,14 +500,18 @@ export default function LeadDetailPage() {
 
               if (!lead) return
 
-              const ok = confirm("Delete this lead?")
+              const ok = window.confirm("Delete this lead? This action cannot be undone.")
 
               if (!ok) return
 
-
-              await deleteLead(lead.id)
-
-              router.push("/leads")
+              try {
+                await deleteLead(lead.id)
+                toast.success("Lead deleted")
+                router.push("/leads")
+              } catch (error) {
+                console.error(error)
+                toast.error("Could not delete lead")
+              }
 
             }}
             className="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"

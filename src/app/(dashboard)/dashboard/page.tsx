@@ -10,14 +10,31 @@ import KPIGrid from "@/components/dashboard/KPIGrid"
 import PipelineChart from "@/components/dashboard/PipelineChart"
 import PriorityDealsCard from "@/components/dashboard/PriorityDealsCard"
 import RevenueForecastChart from "@/components/dashboard/RevenueForecastChart"
+import RevenueForecastAI from "@/components/dashboard/RevenueForecastAI"
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics"
 import { useLeadsData } from "@/hooks/useLeadsData"
 import { useAIInsight } from "@/hooks/useAIInsight"
+import { useForecastAI } from "@/hooks/useForecastAI"
+import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI"
+import { calculateForecast } from "@/lib/forecast"
+import RevenueForecast from "@/components/dashboard/RevenueForecast"
+import AIForecastCard from "@/components/dashboard/AIForecastCard"
 
 
 export default function DashboardPage() {
   const { leads, activities, loading, error, refresh } = useLeadsData({ activityLimit: 5 })
   const metrics = useDashboardMetrics(leads)
+  const forecast = calculateForecast(leads)
+  const {
+    analysis: forecastAnalysis,
+    loading: forecastLoading,
+  } = useForecastAI(
+    forecast.pipelineValue,
+    forecast.weightedRevenue,
+    forecast.revenueAtRisk,
+    leads
+  )
+  const { insight: revenueInsight, loading: revenueInsightLoading } = useRevenueForecastAI(leads, forecast)
   const { insight, loading: aiLoading } = useAIInsight(
     
     {
@@ -34,12 +51,12 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <AuthGuard>
-        <div className="space-y-4" aria-busy="true" aria-live="polite">
-          <div className="h-20 animate-pulse rounded-2xl border border-white/10 bg-[#111]" />
-          <div className="h-32 animate-pulse rounded-2xl border border-white/10 bg-[#111]" />
+        <div className="space-y-6" aria-busy="true" aria-live="polite">
+          <div className="h-24 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
+          <div className="h-32 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-28 animate-pulse rounded-2xl border border-white/10 bg-[#111]" />
+              <div key={index} className="h-28 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
             ))}
           </div>
         </div>
@@ -50,12 +67,26 @@ export default function DashboardPage() {
   if (error) {
     return (
       <AuthGuard>
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-6 text-rose-200" role="alert">
-          <p className="font-semibold">We couldn’t load your dashboard data.</p>
-          <p className="mt-2 text-sm">{error}</p>
-          <button onClick={() => void refresh()} className="mt-4 rounded-xl border border-rose-400/30 px-3 py-2 text-sm transition hover:bg-rose-500/20">
+        <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-8 text-rose-200" role="alert">
+          <p className="text-lg font-semibold">We couldn’t load your dashboard data.</p>
+          <p className="mt-2 text-sm text-rose-200/80">{error}</p>
+          <button onClick={() => void refresh()} className="mt-5 rounded-xl border border-rose-400/30 px-4 py-2 text-sm transition hover:bg-rose-500/20">
             Try again
           </button>
+        </div>
+      </AuthGuard>
+    )
+  }
+
+  if (!leads.length) {
+    return (
+      <AuthGuard>
+        <div className="rounded-3xl border border-white/10 bg-[#111] p-10 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+          <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">No leads yet</p>
+          <h2 className="mt-4 text-2xl font-semibold text-white">Your pipeline is ready for its first deal</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+            Once you add your first lead, CloseFlow will surface forecasting, health insights, and actions here automatically.
+          </p>
         </div>
       </AuthGuard>
     )
@@ -66,7 +97,23 @@ export default function DashboardPage() {
       <div className="space-y-8">
         <DashboardHeader forecast={metrics.forecast} />
         <AIInsightCard insight={insight} />
-        <KPIGrid total={metrics.total} openPipeline={metrics.openPipeline} revenue={metrics.revenue} winRate={metrics.winRate} />
+        <KPIGrid 
+          total={metrics.total} 
+          openPipeline={metrics.openPipeline} 
+          revenue={metrics.revenue} 
+          winRate={metrics.winRate} 
+        />
+
+        <RevenueForecast
+          pipelineValue={forecast.pipelineValue}
+          weightedRevenue={forecast.weightedRevenue}
+          revenueAtRisk={forecast.revenueAtRisk}
+        />
+
+        <AIForecastCard
+          analysis={forecastAnalysis}
+          loading={forecastLoading}
+        />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
@@ -91,6 +138,8 @@ export default function DashboardPage() {
           <RevenueForecastChart data={metrics.forecastTrend} />
           <PipelineChart data={metrics.statusChartData} />
         </div>
+
+        <RevenueForecastAI insight={revenueInsight} loading={revenueInsightLoading} />
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <PriorityDealsCard leads={metrics.priorityDeals} />
