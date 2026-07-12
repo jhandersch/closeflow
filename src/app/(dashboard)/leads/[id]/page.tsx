@@ -32,6 +32,8 @@ import {
  calculateSalesScore
 } from "@/lib/salesScore"
 import AISalesCopilot from "@/components/leads/AISalesCopilot"
+import { useTasks } from "@/hooks/useTasks"
+import TaskCard from "@/components/leads/TaskCard"
 
 type Lead = {
   id: string
@@ -83,6 +85,8 @@ export default function LeadDetailPage() {
     refresh,
   } = useLeadDetail(id)
 
+  
+
   const {
     saveLead,
     deleteLead,
@@ -110,6 +114,13 @@ export default function LeadDetailPage() {
     activities
     )
 
+  const {
+  tasks,
+  addTask,
+  toggleTask,
+  deleteTask,
+} = useTasks(id)
+
 
   const [saved, setSaved] = useState(false)
 
@@ -119,6 +130,7 @@ export default function LeadDetailPage() {
   const [status, setStatus] = useState("new")
   const [value, setValue] = useState("")
   const [notes, setNotes] = useState("")
+  const [newTask, setNewTask] = useState("")
 
 
 
@@ -334,8 +346,6 @@ export default function LeadDetailPage() {
   loading={memoryLoading}
 />
 
-<AIFollowUp lead={lead} />
-
 <ActivityIntelligenceCard
   insight={activityInsight}
   loading={activityLoading}
@@ -382,6 +392,79 @@ export default function LeadDetailPage() {
     value={lead.value}
     stageAge={stageAge}
 />
+
+<div className="bg-[#111] p-6 rounded-xl space-y-5">
+
+<h2 className="text-xl font-semibold text-white">
+Tasks
+</h2>
+
+
+<div className="flex gap-3">
+
+<input
+value={newTask}
+onChange={(e)=>setNewTask(e.target.value)}
+placeholder="Add new task..."
+className="flex-1 rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+/>
+
+
+<button
+onClick={async()=>{
+
+if(!newTask.trim()) return
+
+await addTask(newTask)
+
+setNewTask("")
+
+}}
+className="rounded-xl bg-white px-5 py-3 font-semibold text-black"
+>
+Add
+</button>
+
+</div>
+
+
+<div className="space-y-3">
+
+{
+tasks.map((task)=>(
+<TaskCard
+key={task.id}
+title={task.title}
+completed={task.completed}
+dueDate={task.due_date}
+onToggle={()=>
+toggleTask(
+task.id,
+task.completed
+)
+}
+onDelete={()=>
+deleteTask(task.id)
+}
+/>
+))
+}
+
+
+{
+tasks.length === 0 && (
+
+<p className="text-zinc-500 text-sm">
+No tasks yet.
+</p>
+
+)
+}
+
+</div>
+
+
+</div>
 
         <div className="bg-[#111] p-6 rounded-xl space-y-4">
 

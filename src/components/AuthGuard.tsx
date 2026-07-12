@@ -21,10 +21,19 @@ export default function AuthGuard({
         return
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user?.user_metadata?.onboarding_completed) {
+        router.replace("/onboarding")
+        return
+      }
+
       setLoading(false)
     }
 
-    checkSession()
+    void checkSession()
 
     const {
       data: { subscription },

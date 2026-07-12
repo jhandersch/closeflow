@@ -27,7 +27,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
           ))
         ) : (
           <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-zinc-500">
-            No recent activity yet. New lead actions will appear here automatically.
+            No recent activity yet. Create a lead or load demo data to see momentum here.
           </div>
         )}
       </div>

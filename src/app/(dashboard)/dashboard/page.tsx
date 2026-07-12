@@ -19,6 +19,9 @@ import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI"
 import { calculateForecast } from "@/lib/forecast"
 import RevenueForecast from "@/components/dashboard/RevenueForecast"
 import AIForecastCard from "@/components/dashboard/AIForecastCard"
+import EmptyState from "@/components/EmptyState"
+import { loadDemoData } from "@/lib/demoData"
+import { useState } from "react"
 
 
 export default function DashboardPage() {
@@ -35,6 +38,8 @@ export default function DashboardPage() {
     leads
   )
   const { insight: revenueInsight, loading: revenueInsightLoading } = useRevenueForecastAI(leads, forecast)
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoMessage, setDemoMessage] = useState<string | null>(null)
   const { insight, loading: aiLoading } = useAIInsight(
     
     {
@@ -81,12 +86,36 @@ export default function DashboardPage() {
   if (!leads.length) {
     return (
       <AuthGuard>
-        <div className="rounded-3xl border border-white/10 bg-[#111] p-10 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
-          <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">No leads yet</p>
-          <h2 className="mt-4 text-2xl font-semibold text-white">Your pipeline is ready for its first deal</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
-            Once you add your first lead, CloseFlow will surface forecasting, health insights, and actions here automatically.
-          </p>
+        <div className="space-y-6">
+          <EmptyState
+            icon="📈"
+            title="Your workspace is ready"
+            description="Add your first lead or load demo data to see forecasting, AI insights, and pipeline momentum instantly."
+            actions={
+              <>
+                <button
+                  onClick={async () => {
+                    setDemoLoading(true)
+                    setDemoMessage(null)
+                    try {
+                      const result = await loadDemoData()
+                      setDemoMessage(result.message)
+                      await refresh()
+                    } catch (error) {
+                      setDemoMessage(error instanceof Error ? error.message : "Could not load demo data")
+                    } finally {
+                      setDemoLoading(false)
+                    }
+                  }}
+                  disabled={demoLoading}
+                  className="rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                >
+                  {demoLoading ? "Loading demo data..." : "Load demo data"}
+                </button>
+              </>
+            }
+          />
+          {demoMessage ? <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{demoMessage}</div> : null}
         </div>
       </AuthGuard>
     )

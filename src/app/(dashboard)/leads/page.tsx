@@ -13,6 +13,8 @@ import PriorityBadge from "@/components/dashboard/PriorityBadge"
 import LeadActions from "@/components/dashboard/LeadActions"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
+import { loadDemoData } from "@/lib/demoData"
+
 
 export default function LeadsPage() {
   const { leads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
@@ -30,6 +32,9 @@ export default function LeadsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [view, setView] = useState<"list" | "pipeline">("list")
   const [favorites, setFavorites] = useState<string[]>([])
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoMessage, setDemoMessage] = useState<string | null>(null)
+ 
 
   const toggleFavorite = (id: string) => {
   setFavorites((current) =>
@@ -64,12 +69,6 @@ export default function LeadsPage() {
 
     if (!user) {
       setFormError("You need an active session to create a lead.")
-      setSubmitting(false)
-      return
-    }
-
-    if (!name.trim() || !company.trim() || !value.trim()) {
-      setFormError("Please fill out the lead name, company, and value.")
       setSubmitting(false)
       return
     }
@@ -127,6 +126,7 @@ if (error) {
     setName("")
     setCompany("")
     setValue("")
+    setNotes("")
     setLeadStatus("new")
     setShowForm(false)
     setSubmitting(false)
@@ -302,6 +302,12 @@ if (error) {
                 <option value="proposal">proposal</option>
                 <option value="won">won</option>
               </select>
+              <textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Notes about this lead..."
+              className="md:col-span-2 w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+            />
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">
@@ -416,27 +422,40 @@ if (error) {
             Create your first opportunity and start building your pipeline.
             </p>
 
-            <button
-            onClick={() => setShowForm(true)}
-            className="
-            mt-5
-            rounded-xl
-            bg-white
-            px-5
-            py-2
-            font-medium
-            text-black
-            "
-            >
-            Create first lead
-            </button>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setShowForm(true)}
+                className="rounded-xl bg-white px-5 py-2 font-medium text-black"
+              >
+                Create first lead
+              </button>
+              <button
+                onClick={async () => {
+                  setDemoLoading(true)
+                  setDemoMessage(null)
+                  try {
+                    const result = await loadDemoData()
+                    setDemoMessage(result.message)
+                    await refresh()
+                  } catch (error) {
+                    setDemoMessage(error instanceof Error ? error.message : "Could not load demo data")
+                  } finally {
+                    setDemoLoading(false)
+                  }
+                }}
+                disabled={demoLoading}
+                className="rounded-xl border border-white/10 bg-black/30 px-5 py-2 font-medium text-zinc-200 transition hover:bg-white/5 disabled:opacity-60"
+              >
+                {demoLoading ? "Loading demo data..." : "Load demo data"}
+              </button>
+            </div>
+            {demoMessage ? <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{demoMessage}</div> : null}
           </div>
         ) : (
           view === "list" ? (
 
           <div className="space-y-3">
             {filteredLeads.map((lead) => {
-              console.log("LEAD DATA:", lead)
               
               const staleDays = getStaleDays(lead)
 
@@ -631,7 +650,16 @@ if (error) {
                       </span>
 
                       </div>
-                        <LeadActions leadId={lead.id} />
+                        <div
+                          onClick={(event) => {
+                            event.stopPropagation()
+                          }}
+                        >
+                          <LeadActions
+                            leadId={lead.id}
+                            currentStatus={lead.status}
+                          />
+                        </div>
                       </div>
                       
                     </div>

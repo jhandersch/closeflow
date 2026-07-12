@@ -42,10 +42,10 @@ Activity History:
 ${activityHistory || "No activity"}
 
 AI Memory:
-${JSON.stringify(memory)}
+JSON.stringify(memory).slice(0,2000)
 
 Current Risk:
-${JSON.stringify(risk)}
+JSON.stringify(risk).slice(0,1000)
 
 
 Create sales assistance.
@@ -53,6 +53,10 @@ Create sales assistance.
 Return JSON only:
 
 {
+ "strategy": "",
+
+ "dealSummary": "",
+
  "callPreparation": {
    "goal": "",
    "talkingPoints": [],
@@ -68,16 +72,23 @@ Return JSON only:
    }
  ],
 
+ "nextBestAction": "",
+
  "meetingSummary": ""
 }
 
 
 Focus on:
-- closing the deal
-- understanding customer motivation
-- handling objections
-- next best sales conversation
-- practical actions for the salesperson
+
+- Think like an experienced B2B sales manager
+- Identify why this deal will close or fail
+- Create a clear strategy to win this opportunity
+- Detect buying signals from activities and notes
+- Suggest the next best action
+- Prepare the salesperson for the next conversation
+- Write emails that move the deal forward
+- Avoid generic advice
+- Use the available lead context
 `
 
 

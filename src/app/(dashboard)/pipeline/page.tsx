@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
+import EmptyState from "@/components/EmptyState"
+import { loadDemoData } from "@/lib/demoData"
 import {
   DragDropContext,
   Droppable,
@@ -24,6 +26,8 @@ const stages = ["new", "contacted", "proposal", "won"]
 export default function PipelinePage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoMessage, setDemoMessage] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -166,7 +170,41 @@ export default function PipelinePage() {
   }
 
   if (loading) {
-    return <div className="text-white">Loading pipeline...</div>
+    return <div className="rounded-3xl border border-white/10 bg-[#111] p-8 text-white">Loading pipeline...</div>
+  }
+
+  if (!leads.length) {
+    return (
+      <div className="space-y-6">
+        <EmptyState
+          icon="🧭"
+          title="No deals in the pipeline yet"
+          description="Start by creating a lead or loading demo data to see the pipeline board come to life."
+          actions={
+            <button
+              onClick={async () => {
+                setDemoLoading(true)
+                setDemoMessage(null)
+                try {
+                  const result = await loadDemoData()
+                  setDemoMessage(result.message)
+                  await load()
+                } catch (error) {
+                  setDemoMessage(error instanceof Error ? error.message : "Could not load demo data")
+                } finally {
+                  setDemoLoading(false)
+                }
+              }}
+              disabled={demoLoading}
+              className="rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+            >
+              {demoLoading ? "Loading demo data..." : "Load demo data"}
+            </button>
+          }
+        />
+        {demoMessage ? <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{demoMessage}</div> : null}
+      </div>
+    )
   }
 
   return (
