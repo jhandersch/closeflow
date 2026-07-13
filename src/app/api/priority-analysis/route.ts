@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
+
+  let locale: "de" | "en" = "de"
+
   try {
     const payload = await request.json()
+    locale = payload?.language === "en" ? "en" : "de"
 
     const apiKey = process.env.OPENAI_API_KEY
 
     if (!apiKey) {
       return NextResponse.json({
         explanation:
-          "Focus on high-value deals and opportunities that are close to conversion.",
+          locale === "de"
+            ? "Konzentriere dich auf hochwertige Deals und Chancen kurz vor dem Abschluss."
+            : "Focus on high-value deals and opportunities that are close to conversion.",
         nextAction:
-          "Review priority leads and schedule follow-ups.",
+          locale === "de"
+            ? "Prüfe priorisierte Leads und plane Follow-ups."
+            : "Review priority leads and schedule follow-ups.",
       })
     }
 
@@ -45,6 +53,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 Be concise and practical.
+                Write explanation and nextAction in ${locale === "de" ? "German" : "English"}.
                 `,
             },
 
@@ -74,9 +83,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       explanation:
-        "Review the highest priority opportunities first.",
+        locale === "de" ? "Prüfe zuerst die wichtigsten Opportunities." : "Review the highest priority opportunities first.",
       nextAction:
-        "Contact deals with high value and low activity.",
+        locale === "de" ? "Kontaktiere Deals mit hohem Wert und niedriger Aktivität." : "Contact deals with high value and low activity.",
     })
 
   }

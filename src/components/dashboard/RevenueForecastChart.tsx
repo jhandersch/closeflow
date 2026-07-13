@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import {
   CartesianGrid,
@@ -31,8 +31,8 @@ export default function RevenueForecastChart({
     <section className="
       rounded-2xl
       border
-      border-white/10
-      bg-[#111]
+      border-border-subtle
+      bg-surface-1
       p-6
     ">
 
@@ -46,7 +46,7 @@ export default function RevenueForecastChart({
 
         <div>
 
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-foreground/65">
             Revenue intelligence
           </p>
 
@@ -54,7 +54,7 @@ export default function RevenueForecastChart({
           <h2 className="
             text-lg
             font-semibold
-            text-white
+            text-foreground
           ">
             Forecast momentum
           </h2>
@@ -142,7 +142,7 @@ export default function RevenueForecastChart({
             <YAxis
               stroke="#71717a"
               tickLine={false}
-              tickFormatter={(value)=>`€${value / 1000}k`}
+              tickFormatter={(value)=>`â‚¬${value / 1000}k`}
             />
 
 
@@ -156,7 +156,7 @@ export default function RevenueForecastChart({
               }}
 
               formatter={(value)=>[
-                `€${Number(value ?? 0).toLocaleString("de-DE")}`,
+                `â‚¬${Number(value ?? 0).toLocaleString("de-DE")}`,
                 "Forecast"
               ]}
 

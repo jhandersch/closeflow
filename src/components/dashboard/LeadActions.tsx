@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
@@ -54,18 +54,18 @@ export default function LeadActions({
         onClick={(e) => {
           e.stopPropagation()
         }}
-        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10"
+        className="rounded-lg border border-border-subtle bg-white/5 px-3 py-1.5 text-xs text-foreground/80 hover:bg-white/10"
       >
-        📞 Call
+        Call
       </button>
 
       <button
         onClick={(e) => {
           e.stopPropagation()
         }}
-        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10"
+        className="rounded-lg border border-border-subtle bg-white/5 px-3 py-1.5 text-xs text-foreground/80 hover:bg-white/10"
       >
-        ✉ Email
+        Email
       </button>
 
       <button
@@ -75,7 +75,7 @@ export default function LeadActions({
         }}
         className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
       >
-        🗑 Delete
+        Delete
       </button>
 
       <select
@@ -87,7 +87,7 @@ export default function LeadActions({
         onClick={(e) => {
           e.stopPropagation()
         }}
-        className="rounded-lg border border-white/10 bg-black px-3 py-1.5 text-xs text-zinc-300"
+        className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-1.5 text-xs text-foreground/80"
       >
         <option value="new">New</option>
         <option value="contacted">Contacted</option>

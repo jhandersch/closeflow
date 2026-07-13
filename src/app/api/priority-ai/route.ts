@@ -3,9 +3,12 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
 
+  let locale: "de" | "en" = "de"
+
   try {
 
-    const { leads } = await request.json()
+    const { leads, language } = await request.json()
+    locale = language === "en" ? "en" : "de"
 
     const apiKey = process.env.OPENAI_API_KEY
 
@@ -15,10 +18,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
 
         explanation:
-          "Your highest priority deals should receive immediate attention based on value and pipeline stage.",
+          locale === "de"
+            ? "Die wichtigsten Deals sollten sofort Aufmerksamkeit erhalten, basierend auf Wert und Pipeline-Phase."
+            : "Your highest priority deals should receive immediate attention based on value and pipeline stage.",
 
         nextAction:
-          "Contact proposal-stage leads first."
+          locale === "de" ? "Kontaktiere zuerst Leads in der Angebotsphase." : "Contact proposal-stage leads first."
 
       })
 
@@ -74,6 +79,8 @@ export async function POST(request: NextRequest) {
             }
 
             Be concise and actionable.
+            Keep riskLevel enum as Low | Medium | High.
+            Write all other text fields in ${locale === "de" ? "German" : "English"}.
             `
             },
 
@@ -126,16 +133,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
 
       headline:
-        "Priority opportunities need attention",
+        locale === "de" ? "Priorisierte Chancen brauchen Aufmerksamkeit" : "Priority opportunities need attention",
 
       explanation:
-        "Your highest priority deals should receive attention based on value and pipeline stage.",
+        locale === "de"
+          ? "Die wichtigsten Deals sollten basierend auf Wert und Pipeline-Phase priorisiert bearbeitet werden."
+          : "Your highest priority deals should receive attention based on value and pipeline stage.",
 
       nextAction:
-        "Contact proposal-stage leads first.",
+        locale === "de" ? "Kontaktiere zuerst Leads in der Angebotsphase." : "Contact proposal-stage leads first.",
 
       priorityReason:
-        "High-value opportunities have the strongest closing potential.",
+        locale === "de"
+          ? "Hochwertige Chancen haben das stärkste Abschluss-Potenzial."
+          : "High-value opportunities have the strongest closing potential.",
 
       riskLevel:
         "Medium"

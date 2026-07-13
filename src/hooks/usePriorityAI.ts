@@ -11,7 +11,7 @@ type PriorityAIResult = {
   riskLevel: "Low" | "Medium" | "High"
 }
 
-export function usePriorityAI(leads: any[]) {
+export function usePriorityAI(leads: any[], language: "de" | "en" = "de") {
 
   const [data, setData] = useState<PriorityAIResult>({
     headline: "",
@@ -35,6 +35,7 @@ export function usePriorityAI(leads: any[]) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            language,
             leads: leads.slice(0,4).map((lead) => ({
               name: leadDisplayName(lead),
               company: leadCompany(lead),
@@ -55,16 +56,16 @@ export function usePriorityAI(leads: any[]) {
 
         setData({
           headline:
-            "AI analysis unavailable",
+            language === "de" ? "KI-Analyse nicht verfügbar" : "AI analysis unavailable",
 
           explanation:
-            "Unable to analyze opportunities right now.",
+            language === "de" ? "Opportunities können aktuell nicht analysiert werden." : "Unable to analyze opportunities right now.",
 
           nextAction:
-            "Review your highest-value deals manually.",
+            language === "de" ? "Prüfe deine wertvollsten Deals manuell." : "Review your highest-value deals manually.",
 
           priorityReason:
-            "No AI data available.",
+            language === "de" ? "Keine KI-Daten verfügbar." : "No AI data available.",
 
           riskLevel:
             "Medium",
@@ -77,7 +78,7 @@ export function usePriorityAI(leads: any[]) {
 
     generate()
 
-  }, [leads])
+  }, [language, leads])
 
 
   return data

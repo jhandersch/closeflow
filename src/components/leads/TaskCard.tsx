@@ -1,9 +1,12 @@
-"use client"
+﻿"use client"
+
+import type { TaskPriority } from "@/types"
 
 type Props = {
   title:string
   completed:boolean
   dueDate:string | null
+  priority?: TaskPriority | null
   onToggle:()=>void
   onDelete:()=>void
 }
@@ -13,13 +16,28 @@ export default function TaskCard({
   title,
   completed,
   dueDate,
+  priority,
   onToggle,
   onDelete
 }:Props){
 
+const isOverdue = Boolean(
+  dueDate &&
+  !completed &&
+  new Date(dueDate).getTime() < Date.now()
+)
+
+const statusLabel = completed
+  ? "erledigt"
+  : isOverdue
+  ? "ueberfaellig"
+  : "offen"
+
+const priorityLabel = (priority || "medium").toUpperCase()
+
 return (
 
-<div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#111] p-4">
+<div className="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-1 p-4">
 
 
 <div className="flex items-center gap-3">
@@ -38,19 +56,36 @@ onChange={onToggle}
 className={
 completed
 ?
-"line-through text-zinc-500"
+"line-through text-foreground/55"
 :
-"text-white"
+"text-foreground"
 }
 >
 {title}
 </p>
 
+<div className="mt-1 flex items-center gap-2">
+<span className="rounded-full bg-surface-2/80 px-2 py-0.5 text-[10px] font-semibold text-foreground/80">
+{priorityLabel}
+</span>
+<span
+className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+statusLabel === "erledigt"
+? "bg-emerald-500/20 text-emerald-300"
+: statusLabel === "ueberfaellig"
+? "bg-red-500/20 text-red-300"
+: "bg-blue-500/20 text-blue-300"
+}`}
+>
+{statusLabel}
+</span>
+</div>
+
 
 {
 dueDate && (
-<p className="text-xs text-zinc-500">
-Fällig: {new Date(dueDate).toLocaleDateString()}
+<p className="text-xs text-foreground/55">
+FÃ¤llig: {new Date(dueDate).toLocaleDateString()}
 </p>
 )
 }

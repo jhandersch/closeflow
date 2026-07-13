@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 type Props = {
   insight: {
@@ -24,8 +24,8 @@ export default function ActivityIntelligenceCard({
       <div className="
         rounded-2xl
         border
-        border-white/10
-        bg-[#111]
+        border-border-subtle
+        bg-surface-1
         p-6
         animate-pulse
       ">
@@ -73,7 +73,7 @@ export default function ActivityIntelligenceCard({
             mt-2
             text-2xl
             font-bold
-            text-white
+            text-foreground
           ">
             Sales Activity Analysis
           </h2>
@@ -82,7 +82,7 @@ export default function ActivityIntelligenceCard({
 
 
         <div className="text-4xl">
-          📊
+          ðŸ“Š
         </div>
 
       </div>
@@ -99,11 +99,11 @@ export default function ActivityIntelligenceCard({
 
         <div className="
           rounded-xl
-          bg-black/30
+          bg-surface-2/70
           p-4
         ">
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-foreground/55">
             Health
           </p>
 
@@ -122,11 +122,11 @@ export default function ActivityIntelligenceCard({
 
         <div className="
           rounded-xl
-          bg-black/30
+          bg-surface-2/70
           p-4
         ">
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-foreground/55">
             Risk
           </p>
 
@@ -150,19 +150,19 @@ export default function ActivityIntelligenceCard({
         mt-5
         rounded-xl
         border
-        border-white/10
-        bg-black/30
+        border-border-subtle
+        bg-surface-2/70
         p-4
       ">
 
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-foreground/55">
           AI Summary
         </p>
 
 
         <p className="
           mt-2
-          text-white
+          text-foreground
         ">
           {insight.summary}
         </p>
@@ -192,7 +192,7 @@ export default function ActivityIntelligenceCard({
         <p className="
           mt-2
           font-semibold
-          text-white
+          text-foreground
         ">
           {insight.recommendation}
         </p>
@@ -205,7 +205,7 @@ export default function ActivityIntelligenceCard({
       <div className="
         mt-5
         text-sm
-        text-zinc-400
+        text-foreground/65
       ">
 
         AI Confidence:

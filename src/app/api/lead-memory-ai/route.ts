@@ -7,9 +7,12 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
 
+  let locale: "de" | "en" = "de"
+
   try {
 
-    const { lead, activities } = await req.json()
+    const { lead, activities, language } = await req.json()
+    locale = language === "en" ? "en" : "de"
 
 
     const history = activities
@@ -58,6 +61,7 @@ Focus on:
 Consider that:
 - returning from a later stage to an earlier stage can indicate hesitation
 - but returning back to a later stage can indicate continued buying interest
+- Write all text values in ${locale === "de" ? "German" : "English"}
 
 `
 
@@ -70,7 +74,7 @@ Consider that:
         {
           role:"system",
           content:
-            "You are an expert B2B sales assistant."
+            `You are an expert B2B sales assistant. Return valid JSON only and write all text values in ${locale === "de" ? "German" : "English"}.`
         },
         {
           role:"user",
@@ -100,9 +104,9 @@ Consider that:
 
     return NextResponse.json(
       {
-        summary:"AI analysis failed.",
-        risk:"Unknown",
-        nextAction:"Review manually.",
+        summary: locale === "de" ? "KI-Analyse fehlgeschlagen." : "AI analysis failed.",
+        risk: locale === "de" ? "Unbekannt" : "Unknown",
+        nextAction: locale === "de" ? "Manuell prüfen." : "Review manually.",
         confidence:0,
       },
       {

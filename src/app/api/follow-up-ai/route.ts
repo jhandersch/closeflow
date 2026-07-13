@@ -3,18 +3,23 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
 
+  let locale: "de" | "en" = "de"
+
   try {
 
-    const { lead } = await request.json()
+    const { lead, language } = await request.json()
+    locale = language === "en" ? "en" : "de"
 
     const apiKey = process.env.OPENAI_API_KEY
 
 
     if (!apiKey) {
       return NextResponse.json({
-        subject: "Follow up",
+        subject: locale === "de" ? "Kurzes Follow-up" : "Follow up",
         email:
-          "Hello, I wanted to follow up regarding our previous conversation."
+          locale === "de"
+            ? "Hallo, ich wollte mich zu unserem letzten Gespräch kurz zurückmelden."
+            : "Hello, I wanted to follow up regarding our previous conversation."
       })
     }
 
@@ -62,6 +67,7 @@ Return ONLY JSON:
 }
 
 Keep it concise and human.
+Write subject and email in ${locale === "de" ? "German" : "English"}.
 `
             },
 
@@ -96,8 +102,8 @@ Keep it concise and human.
     console.error(error)
 
     return NextResponse.json({
-      subject:"Follow up",
-      email:"Unable to generate email."
+      subject: locale === "de" ? "Nachfassen" : "Follow up",
+      email: locale === "de" ? "E-Mail konnte nicht generiert werden." : "Unable to generate email."
     })
 
   }

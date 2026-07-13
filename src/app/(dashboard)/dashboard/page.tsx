@@ -12,6 +12,7 @@ import PriorityDealsCard from "@/components/dashboard/PriorityDealsCard"
 import RevenueForecastChart from "@/components/dashboard/RevenueForecastChart"
 import RevenueForecastAI from "@/components/dashboard/RevenueForecastAI"
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics"
+import { useDashboardTasks } from "@/hooks/useDashboardTasks"
 import { useLeadsData } from "@/hooks/useLeadsData"
 import { useAIInsight } from "@/hooks/useAIInsight"
 import { useForecastAI } from "@/hooks/useForecastAI"
@@ -19,14 +20,18 @@ import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI"
 import { calculateForecast } from "@/lib/forecast"
 import RevenueForecast from "@/components/dashboard/RevenueForecast"
 import AIForecastCard from "@/components/dashboard/AIForecastCard"
+import TasksWidget from "@/components/dashboard/TasksWidget"
 import EmptyState from "@/components/EmptyState"
 import { loadDemoData } from "@/lib/demoData"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { useState } from "react"
 
 
 export default function DashboardPage() {
+  const { t, language } = useAppPreferences()
   const { leads, activities, loading, error, refresh } = useLeadsData({ activityLimit: 5 })
   const metrics = useDashboardMetrics(leads)
+  const { summary: taskSummary, loading: tasksLoading } = useDashboardTasks()
   const forecast = calculateForecast(leads)
   const {
     analysis: forecastAnalysis,
@@ -35,9 +40,10 @@ export default function DashboardPage() {
     forecast.pipelineValue,
     forecast.weightedRevenue,
     forecast.revenueAtRisk,
-    leads
+    leads,
+    language
   )
-  const { insight: revenueInsight, loading: revenueInsightLoading } = useRevenueForecastAI(leads, forecast)
+  const { insight: revenueInsight, loading: revenueInsightLoading } = useRevenueForecastAI(leads, forecast, language)
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoMessage, setDemoMessage] = useState<string | null>(null)
   const { insight, loading: aiLoading } = useAIInsight(
@@ -50,18 +56,19 @@ export default function DashboardPage() {
       atRiskDeals: metrics.atRiskDeals.length,
       highValueDeals: metrics.highValueDeals.length,
     },
-    metrics.insight
+    metrics.insight,
+    language
   )
 
   if (loading) {
     return (
       <AuthGuard>
         <div className="space-y-6" aria-busy="true" aria-live="polite">
-          <div className="h-24 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
-          <div className="h-32 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
+          <div className="h-24 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
+          <div className="h-32 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-28 animate-pulse rounded-3xl border border-white/10 bg-[#111]" />
+              <div key={index} className="h-28 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
             ))}
           </div>
         </div>
@@ -88,7 +95,7 @@ export default function DashboardPage() {
       <AuthGuard>
         <div className="space-y-6">
           <EmptyState
-            icon="📈"
+            icon={<span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-base font-semibold text-cyan-300">CF</span>}
             title="Your workspace is ready"
             description="Add your first lead or load demo data to see forecasting, AI insights, and pipeline momentum instantly."
             actions={
@@ -108,7 +115,7 @@ export default function DashboardPage() {
                     }
                   }}
                   disabled={demoLoading}
-                  className="rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                  className="rounded-xl bg-foreground px-4 py-2 font-semibold text-background transition hover:opacity-90 disabled:opacity-60"
                 >
                   {demoLoading ? "Loading demo data..." : "Load demo data"}
                 </button>
@@ -131,6 +138,8 @@ export default function DashboardPage() {
           openPipeline={metrics.openPipeline} 
           revenue={metrics.revenue} 
           winRate={metrics.winRate} 
+          conversionRate={metrics.conversionRate}
+          wonLostLabel={metrics.wonLostLabel}
         />
 
         <RevenueForecast
@@ -145,21 +154,21 @@ export default function DashboardPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Average sales cycle</p>
-            <p className="mt-2 text-3xl font-semibold text-white">{metrics.averageSalesCycle} days</p>
+          <div className="cf-card cf-enter p-5">
+            <p className="cf-label">{t("dashboard.conversionRate", "Conversion rate")}</p>
+            <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">{metrics.conversionRate}%</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Lost opportunities</p>
-            <p className="mt-2 text-3xl font-semibold text-white">{metrics.lost}</p>
+          <div className="cf-card cf-enter p-5">
+            <p className="cf-label">{t("dashboard.wonLost", "Won / Lost")}</p>
+            <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">{metrics.wonLostLabel}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Pipeline value</p>
-            <p className="mt-2 text-3xl font-semibold text-white">€{metrics.pipelineValue}</p>
+          <div className="cf-card cf-enter p-5">
+            <p className="cf-label">{t("dashboard.avgDealSize", "Average deal size")}</p>
+            <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">€{metrics.averageDealValue.toLocaleString("de-DE")}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Stage coverage</p>
-            <p className="mt-2 text-3xl font-semibold text-white">{metrics.stageCounts.length}</p>
+          <div className="cf-card cf-enter p-5">
+            <p className="cf-label">{t("dashboard.avgSalesCycle", "Average sales cycle")}</p>
+            <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">{metrics.averageSalesCycle} days</p>
           </div>
         </div>
 
@@ -173,18 +182,18 @@ export default function DashboardPage() {
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <PriorityDealsCard leads={metrics.priorityDeals} />
           <div className="space-y-6">
-            <section className="rounded-2xl border border-white/10 bg-[#111] p-6">
-              <p className="text-sm text-zinc-400">Actionable insights</p>
-              <h2 className="text-lg font-semibold text-white">What to do next</h2>
+            <section className="cf-card cf-enter p-6">
+              <p className="cf-label">{t("dashboard.actionableInsights", "Actionable insights")}</p>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("dashboard.nextSteps", "What to do next")}</h2>
               <div className="mt-4 space-y-3">
-                <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                  <p className="text-sm text-zinc-300">{metrics.proposalLeads.length} proposals are ready for close-plan follow-up.</p>
+                <div className="cf-card-soft p-3">
+                  <p className="text-sm text-foreground/80">{metrics.proposalLeads.length} proposals are ready for close-plan follow-up.</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                  <p className="text-sm text-zinc-300">{metrics.atRiskDeals.length} deals need attention to lift their health score.</p>
+                <div className="cf-card-soft p-3">
+                  <p className="text-sm text-foreground/80">{metrics.atRiskDeals.length} deals need attention to lift their health score.</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-                  <p className="text-sm text-zinc-300">Average deal value sits at €{metrics.averageDealValue} with {metrics.highValueDeals.length} opportunities above €5k.</p>
+                <div className="cf-card-soft p-3">
+                  <p className="text-sm text-foreground/80">Average deal value sits at €{metrics.averageDealValue} with {metrics.highValueDeals.length} opportunities above €5k.</p>
                 </div>
                 <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3">
                   <p className="text-sm text-cyan-300">{metrics.insight.headline}</p>
@@ -199,7 +208,17 @@ export default function DashboardPage() {
 
         <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
           <ActivityFeed activities={activities} />
-          <EngagementCard contactedCount={metrics.contactedLeads.length} proposalCount={metrics.proposalLeads.length} forecastDelta={metrics.forecastDelta} />
+          <div className="space-y-6">
+            <EngagementCard contactedCount={metrics.contactedLeads.length} proposalCount={metrics.proposalLeads.length} forecastDelta={metrics.forecastDelta} />
+            <TasksWidget
+              open={taskSummary.open}
+              completed={taskSummary.completed}
+              overdue={taskSummary.overdue}
+              highPriorityOpen={taskSummary.highPriorityOpen}
+              nextDue={taskSummary.nextDue}
+              loading={tasksLoading}
+            />
+          </div>
         </div>
       </div>
     </AuthGuard>

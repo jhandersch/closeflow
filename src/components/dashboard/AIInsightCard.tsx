@@ -1,4 +1,4 @@
-type AIInsightCardProps = {
+﻿type AIInsightCardProps = {
   insight: {
     headline: string
     detail: string
@@ -29,8 +29,8 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
         <div className="flex gap-4">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/20 text-2xl">
-            🤖
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+            AI
           </div>
 
 
@@ -43,13 +43,13 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
             <h2
               id="ai-insight-heading"
-              className="mt-2 text-2xl font-bold text-white"
+              className="mt-2 text-2xl font-bold text-foreground"
             >
               {insight.headline}
             </h2>
 
 
-            <p className="mt-2 max-w-2xl text-sm text-zinc-300">
+            <p className="mt-2 max-w-2xl text-sm text-foreground/80">
               {insight.detail}
             </p>
 
@@ -72,7 +72,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
       <div className="mt-6">
 
-        <p className="mb-3 text-sm text-zinc-500">
+        <p className="mb-3 text-sm text-foreground/55">
           Recommended actions
         </p>
 
@@ -83,7 +83,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
             <div
               key={action}
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-4"
+              className="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4"
             >
 
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300">
@@ -91,7 +91,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
               </div>
 
 
-              <p className="text-sm text-zinc-200">
+              <p className="text-sm text-foreground/85">
                 {action}
               </p>
 

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Toaster } from "react-hot-toast"
 
@@ -7,9 +7,10 @@ export default function ToastProvider() {
     <Toaster
       position="top-right"
       toastOptions={{
-        className: "!bg-[#111] !text-white !border !border-white/10",
+        className: "!bg-surface-1 !text-foreground !border !border-border-subtle",
         duration: 4000,
       }}
     />
   )
 }
+

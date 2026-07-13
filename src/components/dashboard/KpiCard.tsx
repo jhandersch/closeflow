@@ -1,4 +1,4 @@
-type KpiCardProps = {
+﻿type KpiCardProps = {
   label: string
   value: string
   hint?: string
@@ -14,10 +14,11 @@ const accentStyles = {
 
 export default function KpiCard({ label, value, hint, accent = "cyan" }: KpiCardProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-      <p className="text-sm text-zinc-400">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+    <div className="cf-card cf-enter p-5">
+      <p className="cf-label">{label}</p>
+      <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">{value}</p>
       {hint ? <p className={`mt-2 text-sm ${accentStyles[accent]}`}>{hint}</p> : null}
     </div>
   )
 }
+

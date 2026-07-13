@@ -1,4 +1,4 @@
-type PriorityBadgeProps = {
+﻿type PriorityBadgeProps = {
   score: number
 }
 
@@ -27,11 +27,11 @@ export default function PriorityBadge({
         {label}
       </span>
 
-      <p className="mt-2 text-2xl font-bold text-white">
+      <p className="mt-2 text-2xl font-bold text-foreground">
         {score}
       </p>
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-foreground/55">
         Priority
       </p>
     </div>

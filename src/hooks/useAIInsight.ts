@@ -9,7 +9,7 @@ export type AIInsight = {
   confidence: "High" | "Medium" | "Low"
 }
 
-export function useAIInsight(payload: unknown, fallback: AIInsight) {
+export function useAIInsight(payload: unknown, fallback: AIInsight, language: "de" | "en" = "de") {
   const [insight, setInsight] = useState<AIInsight>(fallback)
   const [loading, setLoading] = useState(false)
 
@@ -25,7 +25,10 @@ export function useAIInsight(payload: unknown, fallback: AIInsight) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...(payload as Record<string, unknown>),
+            language,
+          }),
         })
 
         if (!response.ok) {
@@ -51,7 +54,7 @@ export function useAIInsight(payload: unknown, fallback: AIInsight) {
     return () => {
       cancelled = true
     }
-  }, [JSON.stringify(payload)])
+  }, [language, JSON.stringify(payload)])
 
   return {
     insight,

@@ -1,4 +1,4 @@
-type PipelineJourneyProps = {
+﻿type PipelineJourneyProps = {
   status: string
 }
 
@@ -10,9 +10,9 @@ export default function PipelineJourney({
   const currentIndex = stages.indexOf(status)
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#111] p-6">
+    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold text-foreground">
           Pipeline Journey
         </h2>
 
@@ -34,7 +34,7 @@ export default function PipelineJourney({
                 className={`flex h-10 w-10 items-center justify-center rounded-full font-bold transition ${
                   completed
                     ? "bg-cyan-500 text-black"
-                    : "bg-zinc-800 text-zinc-500"
+                    : "bg-zinc-800 text-foreground/55"
                 }`}
               >
                 {index + 1}
@@ -44,7 +44,7 @@ export default function PipelineJourney({
                 className={`mt-3 text-xs ${
                   completed
                     ? "text-cyan-400"
-                    : "text-zinc-500"
+                    : "text-foreground/55"
                 }`}
               >
                 {stage}

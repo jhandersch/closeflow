@@ -1,4 +1,6 @@
-"use client"
+﻿"use client"
+
+import Link from "next/link"
 
 import {
   BarChart,
@@ -40,8 +42,8 @@ export default function PipelineChart({
       className="
         rounded-2xl
         border
-        border-white/10
-        bg-[#111]
+        border-border-subtle
+        bg-surface-1
         p-6
       "
     >
@@ -52,14 +54,14 @@ export default function PipelineChart({
 
         <div>
 
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-foreground/65">
             Pipeline overview
           </p>
 
           <h2 className="
             text-lg
             font-semibold
-            text-white
+            text-foreground
           ">
             Deal distribution
           </h2>
@@ -77,7 +79,9 @@ export default function PipelineChart({
           text-sm
           text-blue-300
         ">
-          Live pipeline
+          <Link href="/pipeline" className="hover:underline">
+            Open pipeline
+          </Link>
         </div>
 
 

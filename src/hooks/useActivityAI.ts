@@ -13,7 +13,8 @@ type ActivityInsight = {
 
 export function useActivityAI(
   lead:any,
-  activities:any[]
+  activities:any[],
+  language: "de" | "en" = "de"
 ){
 
   const [insight,setInsight] = useState<ActivityInsight | null>(null)
@@ -41,7 +42,8 @@ export function useActivityAI(
             },
             body:JSON.stringify({
               lead,
-              activities
+              activities,
+              language,
             })
           }
         )
@@ -67,7 +69,7 @@ export function useActivityAI(
     analyze()
 
 
-  },[lead,activities])
+  },[activities, language, lead])
 
 
   return {

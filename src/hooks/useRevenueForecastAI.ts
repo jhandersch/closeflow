@@ -28,7 +28,7 @@ type Lead = {
   next_action?: string | null
 }
 
-export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary) {
+export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary, language: "de" | "en" = "de") {
   const [insight, setInsight] = useState<RevenueForecastInsight | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -53,6 +53,7 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary) {
           body: JSON.stringify({
             leads,
             forecast,
+            language,
           }),
         })
 
@@ -71,10 +72,10 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary) {
         if (active) {
           setInsight({
             confidence: 0.2,
-            explanation: "AI revenue intelligence is temporarily unavailable.",
+            explanation: language === "de" ? "KI-Umsatzanalyse ist vorübergehend nicht verfügbar." : "AI revenue intelligence is temporarily unavailable.",
             positiveDrivers: [],
-            risks: ["Forecast data could not be analyzed automatically."],
-            recommendation: "Review the pipeline manually and focus on the largest open deals.",
+            risks: [language === "de" ? "Forecast-Daten konnten nicht automatisch analysiert werden." : "Forecast data could not be analyzed automatically."],
+            recommendation: language === "de" ? "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals." : "Review the pipeline manually and focus on the largest open deals.",
           })
         }
       } finally {
@@ -89,7 +90,7 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary) {
     return () => {
       active = false
     }
-  }, [leads, forecast])
+  }, [forecast, language, leads])
 
   return {
     insight,

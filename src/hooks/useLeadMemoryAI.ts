@@ -11,7 +11,8 @@ type LeadMemory = {
 
 export function useLeadMemoryAI(
   lead: any,
-  activities: any[]
+  activities: any[],
+  language: "de" | "en" = "de"
 ) {
   const [memory, setMemory] = useState<LeadMemory | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,6 +32,7 @@ export function useLeadMemoryAI(
           body: JSON.stringify({
             lead,
             activities,
+            language,
           }),
         })
 
@@ -41,9 +43,9 @@ export function useLeadMemoryAI(
         console.error(error)
 
         setMemory({
-          summary: "Unable to analyze this lead.",
-          risk: "Unknown",
-          nextAction: "Review the lead manually.",
+          summary: language === "de" ? "Dieser Lead konnte nicht analysiert werden." : "Unable to analyze this lead.",
+          risk: language === "de" ? "Unbekannt" : "Unknown",
+          nextAction: language === "de" ? "Lead manuell prüfen." : "Review the lead manually.",
           confidence: 0,
         })
       }
@@ -52,7 +54,7 @@ export function useLeadMemoryAI(
     }
 
     generateMemory()
-  }, [lead, activities])
+  }, [activities, language, lead])
 
   return {
     memory,

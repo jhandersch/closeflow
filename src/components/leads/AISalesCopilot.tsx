@@ -1,6 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type Props = {
   lead: any
@@ -17,6 +18,7 @@ export default function AISalesCopilot({
   risk,
   status,
 }: Props) {
+  const { language } = useAppPreferences()
 
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -57,6 +59,7 @@ export default function AISalesCopilot({
             memory,
             risk,
             status,
+            language,
           }),
         }
       )
@@ -75,7 +78,7 @@ export default function AISalesCopilot({
     } catch(error){
 
       console.error(error)
-      setError("AI Sales Copilot could not generate recommendations.")
+      setError(language === "de" ? "Der KI-Vertriebsassistent konnte keine Empfehlungen erstellen." : "AI Sales Copilot could not generate recommendations.")
 
     }
 
@@ -94,8 +97,8 @@ export default function AISalesCopilot({
   if(loading){
 
     return (
-      <div className="bg-[#111] rounded-xl p-6 text-zinc-400">
-        🤖 AI Sales Copilot is preparing recommendations...
+      <div className="bg-surface-1 rounded-xl p-6 text-foreground/65">
+        {language === "de" ? "KI-Vertriebsassistent erstellt Empfehlungen..." : "AI Sales Copilot is preparing recommendations..."}
       </div>
     )
 
@@ -107,7 +110,7 @@ export default function AISalesCopilot({
   if(error){
 
   return (
-  <div className="bg-[#111] border border-red-500/20 rounded-xl p-6 text-red-300">
+  <div className="bg-surface-1 border border-red-500/20 rounded-xl p-6 text-red-300">
   {error}
   </div>
   )
@@ -117,30 +120,30 @@ export default function AISalesCopilot({
 
   return (
 
-    <div className="bg-[#111] border border-cyan-500/20 rounded-xl p-6 space-y-6">
+    <div className="bg-surface-1 border border-cyan-500/20 rounded-xl p-6 space-y-6">
 
       <div className="flex items-start justify-between">
 
         <div>
-          <h2 className="text-xl font-semibold text-white">
-            🤖 AI Sales Copilot
+          <h2 className="text-xl font-semibold text-foreground">
+            {language === "de" ? "KI-Vertriebsassistent" : "AI Sales Copilot"}
           </h2>
           {data.strategy && (
           <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
 
           <h3 className="font-semibold text-cyan-300">
-          🧠 Deal Strategy
+          {language === "de" ? "Deal-Strategie" : "Deal Strategy"}
           </h3>
 
-          <p className="mt-2 text-sm text-zinc-200">
+          <p className="mt-2 text-sm text-foreground/85">
           {data.strategy}
           </p>
 
           </div>
           )}
 
-          <p className="text-sm text-zinc-400 mt-1">
-            AI-powered closing assistance
+          <p className="text-sm text-foreground/65 mt-1">
+            {language === "de" ? "KI-gestützte Unterstützung für den Abschluss" : "AI-powered closing assistance"}
           </p>
         </div>
 
@@ -149,7 +152,7 @@ export default function AISalesCopilot({
           onClick={generateCopilot}
           className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-black"
         >
-          Regenerate
+          {language === "de" ? "Neu generieren" : "Regenerate"}
         </button>
 
       </div>
@@ -157,16 +160,16 @@ export default function AISalesCopilot({
 
       <div>
         <h3 className="text-cyan-400 font-semibold">
-          🎯 Call Preparation
+          {language === "de" ? "Gesprächsvorbereitung" : "Call Preparation"}
         </h3>
         {data.dealSummary && (
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+          <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
 
-            <h3 className="text-white font-semibold">
-              📌 Deal Summary
+            <h3 className="text-foreground font-semibold">
+              {language === "de" ? "Deal-Zusammenfassung" : "Deal Summary"}
             </h3>
 
-            <p className="mt-2 text-sm text-zinc-300">
+            <p className="mt-2 text-sm text-foreground/80">
               {data.dealSummary}
             </p>
 
@@ -174,7 +177,7 @@ export default function AISalesCopilot({
         )}
 
 
-        <p className="text-white mt-2">
+        <p className="text-foreground mt-2">
           {data.callPreparation?.goal}
         </p>
 
@@ -185,9 +188,9 @@ export default function AISalesCopilot({
             (point:string)=>(
               <li
                 key={point}
-                className="text-sm text-zinc-300"
+                className="text-sm text-foreground/80"
               >
-                • {point}
+                - {point}
               </li>
             )
           )}
@@ -201,7 +204,7 @@ export default function AISalesCopilot({
       <div>
 
         <h3 className="text-cyan-400 font-semibold">
-          ❓ Questions to ask
+          {language === "de" ? "Fragen für das Gespräch" : "Questions to ask"}
         </h3>
 
 
@@ -211,9 +214,9 @@ export default function AISalesCopilot({
             (q:string)=>(
               <li
                 key={q}
-                className="text-sm text-zinc-300"
+                className="text-sm text-foreground/80"
               >
-                • {q}
+                - {q}
               </li>
             )
           )}
@@ -227,7 +230,7 @@ export default function AISalesCopilot({
       <div>
 
         <h3 className="text-cyan-400 font-semibold">
-          ⚠️ Possible objections
+          {language === "de" ? "Mögliche Einwände" : "Possible objections"}
         </h3>
 
 
@@ -237,14 +240,14 @@ export default function AISalesCopilot({
           (item:any)=>(
             <div
               key={item.objection}
-              className="border border-white/10 rounded-xl p-4"
+              className="border border-border-subtle rounded-xl p-4"
             >
 
-              <p className="text-white font-medium">
+              <p className="text-foreground font-medium">
                 {item.objection}
               </p>
 
-              <p className="text-zinc-400 text-sm mt-2">
+              <p className="text-foreground/65 text-sm mt-2">
                 {item.response}
               </p>
 
@@ -261,11 +264,11 @@ export default function AISalesCopilot({
       <div>
 
         <h3 className="text-cyan-400 font-semibold">
-          ✉️ Email Draft
+          {language === "de" ? "E-Mail-Entwurf" : "Email Draft"}
         </h3>
 
 
-        <div className="mt-2 bg-black/30 rounded-xl p-4 text-zinc-300 text-sm whitespace-pre-line">
+        <div className="mt-2 bg-surface-2/70 rounded-xl p-4 text-foreground/80 text-sm whitespace-pre-line">
           <div>
           <textarea
           value={data.emailDraft || ""}
@@ -273,13 +276,13 @@ export default function AISalesCopilot({
           className="
           w-full
           min-h-48
-          bg-black
+          bg-surface-2
           border
-          border-white/10
+          border-border-subtle
           rounded-xl
           p-4
           text-sm
-          text-zinc-200
+          text-foreground/85
           outline-none
           "
           />
@@ -288,7 +291,7 @@ export default function AISalesCopilot({
           onClick={copyEmail}
           className="mt-3 rounded-xl bg-white px-4 py-2 font-semibold text-black"
           >
-          {copied ? "Copied ✓" : "Copy Email"}
+          {copied ? (language === "de" ? "Kopiert" : "Copied") : (language === "de" ? "E-Mail kopieren" : "Copy Email")}
           </button>
 
           </div>

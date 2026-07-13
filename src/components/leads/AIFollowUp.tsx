@@ -1,6 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 
 export default function AIFollowUp({
@@ -8,6 +9,7 @@ export default function AIFollowUp({
 }:{
   lead:any
 }){
+const { language } = useAppPreferences()
 
 
 const [loading,setLoading]=useState(false)
@@ -29,7 +31,8 @@ async function generate(){
       "Content-Type":"application/json"
     },
     body:JSON.stringify({
-      lead
+      lead,
+      language,
     })
   }
  )
@@ -107,7 +110,7 @@ font-semibold
 {
 loading
 ? "Generating..."
-: "✉ Generate Follow-up Email"
+: "Generate Follow-up Email"
 }
 
 </button>
@@ -119,7 +122,7 @@ loading
 <div className="mt-5 space-y-3">
 
 
-<h3 className="font-bold text-white">
+<h3 className="font-bold text-foreground">
 {mail.subject}
 </h3>
 
@@ -131,9 +134,9 @@ className="
 h-48
 w-full
 rounded-xl
-bg-black
+bg-surface-2
 p-4
-text-white
+text-foreground
 "
 />
 
@@ -152,7 +155,7 @@ text-white
   >
   {
   copied
-  ? "✓ Copied"
+  ? "Copied"
   : "Copy Email"
   }
 </button>

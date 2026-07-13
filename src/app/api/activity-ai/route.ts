@@ -9,12 +9,17 @@ const openai = new OpenAI({
 
 export async function POST(req:Request){
 
+let locale: "de" | "en" = "de"
+
 try{
 
 const {
   lead,
-  activities
+  activities,
+  language,
 }=await req.json()
+
+locale = language === "en" ? "en" : "de"
 
 
 
@@ -73,6 +78,7 @@ Analyze:
 - customer engagement
 - sales risk
 - next action
+- Write all text values in ${locale === "de" ? "German" : "English"}
 
 `
 
@@ -87,7 +93,7 @@ messages:[
 {
 role:"system",
 content:
-"You are an expert sales operations AI."
+`You are an expert sales operations AI. Return valid JSON only and write all text values in ${locale === "de" ? "German" : "English"}.`
 },
 {
 role:"user",
@@ -121,10 +127,10 @@ console.error(error)
 
 return NextResponse.json(
 {
-health:"unknown",
-risk:"unknown",
-summary:"AI failed",
-recommendation:"Review manually",
+health: locale === "de" ? "unbekannt" : "unknown",
+risk: locale === "de" ? "unbekannt" : "unknown",
+summary: locale === "de" ? "KI-Analyse fehlgeschlagen" : "AI failed",
+recommendation: locale === "de" ? "Manuell prüfen" : "Review manually",
 confidence:0
 },
 {

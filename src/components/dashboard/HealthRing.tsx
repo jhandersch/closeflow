@@ -1,4 +1,4 @@
-type HealthRingProps = {
+﻿type HealthRingProps = {
   value: number
 }
 
@@ -57,7 +57,7 @@ export default function HealthRing({ value }: HealthRingProps) {
         </text>
       </svg>
 
-      <p className="mt-1 text-xs text-zinc-400">
+      <p className="mt-1 text-xs text-foreground/65">
         Health
       </p>
     </div>

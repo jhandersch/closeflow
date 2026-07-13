@@ -1,4 +1,4 @@
-type AIRiskCardProps = {
+﻿type AIRiskCardProps = {
   risk: {
     level: string
     title: string
@@ -12,7 +12,7 @@ export default function AIRiskCard({
 }: AIRiskCardProps) {
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#111] p-6">
+    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
 
       <div className="flex items-start gap-4">
 
@@ -27,7 +27,7 @@ export default function AIRiskCard({
             text-sm
             uppercase
             tracking-widest
-            text-zinc-500
+            text-foreground/55
           ">
             AI Risk Detection
           </p>
@@ -37,7 +37,7 @@ export default function AIRiskCard({
             mt-2
             text-xl
             font-bold
-            text-white
+            text-foreground
           ">
             {risk.title}
           </h2>
@@ -45,7 +45,7 @@ export default function AIRiskCard({
 
           <p className="
             mt-2
-            text-zinc-400
+            text-foreground/65
           ">
             {risk.message}
           </p>

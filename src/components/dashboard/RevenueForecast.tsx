@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 type Props = {
   pipelineValue: number
@@ -18,8 +18,8 @@ export default function RevenueForecast({
     <div className="
       rounded-2xl
       border
-      border-white/10
-      bg-[#111]
+      border-border-subtle
+      bg-surface-1
       p-6
     ">
 
@@ -30,13 +30,13 @@ export default function RevenueForecast({
             Revenue Intelligence
           </p>
 
-          <h2 className="mt-2 text-2xl font-bold text-white">
+          <h2 className="mt-2 text-2xl font-bold text-foreground">
             Forecast
           </h2>
         </div>
 
-        <div className="text-4xl">
-          📈
+        <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          Forecast
         </div>
 
       </div>
@@ -45,14 +45,14 @@ export default function RevenueForecast({
       <div className="mt-6 grid gap-4 md:grid-cols-3">
 
 
-        <div className="rounded-xl bg-black/30 p-4">
+        <div className="rounded-xl bg-surface-2/70 p-4">
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-foreground/55">
             Pipeline Value
           </p>
 
-          <p className="mt-2 text-3xl font-bold text-white">
-            €
+          <p className="mt-2 text-3xl font-bold text-foreground">
+            â‚¬
             {pipelineValue.toLocaleString("de-DE")}
           </p>
 
@@ -60,14 +60,14 @@ export default function RevenueForecast({
 
 
 
-        <div className="rounded-xl bg-black/30 p-4">
+        <div className="rounded-xl bg-surface-2/70 p-4">
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-foreground/55">
             Expected Revenue
           </p>
 
           <p className="mt-2 text-3xl font-bold text-emerald-400">
-            €
+            â‚¬
             {Math.round(weightedRevenue).toLocaleString("de-DE")}
           </p>
 
@@ -75,14 +75,14 @@ export default function RevenueForecast({
 
 
 
-        <div className="rounded-xl bg-black/30 p-4">
+        <div className="rounded-xl bg-surface-2/70 p-4">
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-foreground/55">
             Revenue At Risk
           </p>
 
           <p className="mt-2 text-3xl font-bold text-red-400">
-            €
+            â‚¬
             {revenueAtRisk.toLocaleString("de-DE")}
           </p>
 

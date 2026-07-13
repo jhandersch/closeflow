@@ -1,14 +1,15 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Manrope, Space_Grotesk } from "next/font/google"
+import { AppPreferencesProvider } from "@/components/AppPreferencesProvider"
 import ToastProvider from "@/components/ToastProvider"
 import "./globals.css"
 
-const geistSans = Geist({
+const geistSans = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 })
 
-const geistMono = Geist_Mono({
+const geistMono = Space_Grotesk({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 })
@@ -24,10 +25,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full bg-black text-white">
-        <ToastProvider />
-        {children}
+    <html lang="de" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full bg-background text-foreground">
+        <AppPreferencesProvider>
+          <ToastProvider />
+          {children}
+        </AppPreferencesProvider>
       </body>
     </html>
   )

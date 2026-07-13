@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 
 export default function AuthGuard({
@@ -10,14 +10,19 @@ export default function AuthGuard({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
+
+  const nextPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`
+  const encodedNextPath = encodeURIComponent(nextPath)
 
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
 
       if (!data.session) {
-        router.replace("/login")
+        router.replace(`/login?next=${encodedNextPath}`)
         return
       }
 
@@ -26,7 +31,7 @@ export default function AuthGuard({
       } = await supabase.auth.getUser()
 
       if (!user?.user_metadata?.onboarding_completed) {
-        router.replace("/onboarding")
+        router.replace(`/onboarding?next=${encodedNextPath}`)
         return
       }
 
@@ -39,16 +44,16 @@ export default function AuthGuard({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        router.replace("/login")
+        router.replace(`/login?next=${encodedNextPath}`)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [encodedNextPath, router])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-surface-2 text-foreground flex items-center justify-center">
         Loading session...
       </div>
     )

@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
-
-type Task = {
-  id: string
-  title: string
-  completed: boolean
-  due_date: string | null
-  lead_id: string
-  created_at: string
-}
+import type { ActivityType, Task, TaskPriority } from "@/types"
 
 export function useTasks(leadId: string) {
 
@@ -26,7 +18,11 @@ export function useTasks(leadId: string) {
     } = await supabase.auth.getUser()
 
 
-    if (!user) return
+    if (!user) {
+      setTasks([])
+      setLoading(false)
+      return
+    }
 
 
     const { data } = await supabase
@@ -55,7 +51,8 @@ export function useTasks(leadId: string) {
 
   const addTask = async (
     title: string,
-    dueDate?: string
+    dueDate?: string,
+    priority: TaskPriority = "medium"
   ) => {
 
     const {
@@ -66,13 +63,39 @@ export function useTasks(leadId: string) {
     if (!user) return
 
 
-    await supabase
+    let { error } = await supabase
       .from("tasks")
       .insert({
         user_id: user.id,
         lead_id: leadId,
         title,
         due_date: dueDate || null,
+        priority,
+      })
+
+    if (error && /column .* does not exist/i.test(error.message || "")) {
+      const retry = await supabase
+        .from("tasks")
+        .insert({
+          user_id: user.id,
+          lead_id: leadId,
+          title,
+          due_date: dueDate || null,
+        })
+      error = retry.error
+    }
+
+    if (error) {
+      throw error
+    }
+
+    await supabase
+      .from("activities")
+      .insert({
+        lead_id: leadId,
+        user_id: user.id,
+        action: `Task created: ${title}`,
+        type: "task_created" as ActivityType,
       })
 
 
@@ -85,13 +108,30 @@ export function useTasks(leadId: string) {
     completed:boolean
   ) => {
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    const nextCompleted = !completed
+
 
     await supabase
       .from("tasks")
       .update({
-        completed: !completed,
+        completed: nextCompleted,
       })
       .eq("id", id)
+
+    if (user && nextCompleted) {
+      await supabase
+        .from("activities")
+        .insert({
+          lead_id: leadId,
+          user_id: user.id,
+          action: "Task completed",
+          type: "task_completed" as ActivityType,
+        })
+    }
 
 
     loadTasks()

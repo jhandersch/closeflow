@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 
 type Lead = {
@@ -45,7 +45,7 @@ stages.map(stage => (
 
 <div
 key={stage.id}
-className="rounded-2xl bg-[#111] p-4 border border-white/10"
+className="rounded-2xl bg-surface-1 p-4 border border-border-subtle"
 >
 
 <h3 className="font-semibold mb-4">
@@ -65,19 +65,19 @@ lead => lead.status === stage.id
 <Link
 key={lead.id}
 href={`/leads/${lead.id}`}
-className="block rounded-xl bg-black/40 p-3 hover:bg-white/5"
+className="block rounded-xl bg-surface-2/80 p-3 hover:bg-white/5"
 >
 
 <p className="font-medium">
 {leadDisplayName(lead)}
 </p>
 
-<p className="text-sm text-zinc-400">
+<p className="text-sm text-foreground/65">
 {leadCompany(lead)}
 </p>
 
 <p className="text-xs text-green-400 mt-2">
-€{lead.value.toLocaleString("de-DE")}
+â‚¬{lead.value.toLocaleString("de-DE")}
 </p>
 
 </Link>

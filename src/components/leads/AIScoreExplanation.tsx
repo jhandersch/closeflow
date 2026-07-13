@@ -1,4 +1,4 @@
-type ScoreReason = {
+﻿type ScoreReason = {
   icon: string
   text: string
 }
@@ -16,8 +16,8 @@ export default function AIScoreExplanation({
     <div className="
       rounded-2xl
       border
-      border-white/10
-      bg-[#111]
+      border-border-subtle
+      bg-surface-1
       p-6
     ">
 
@@ -35,7 +35,7 @@ export default function AIScoreExplanation({
         mt-2
         text-2xl
         font-bold
-        text-white
+        text-foreground
       ">
         Why this score?
       </h2>
@@ -56,8 +56,8 @@ export default function AIScoreExplanation({
               gap-3
               rounded-xl
               border
-              border-white/10
-              bg-black/30
+              border-border-subtle
+              bg-surface-2/70
               p-3
             "
           >
@@ -67,7 +67,7 @@ export default function AIScoreExplanation({
             </span>
 
 
-            <p className="text-zinc-300">
+            <p className="text-foreground/80">
               {reason.text}
             </p>
 

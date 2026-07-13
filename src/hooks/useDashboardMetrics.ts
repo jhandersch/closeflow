@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { generateDashboardInsight } from "@/lib/openai"
 import { analyzeLead, getHealthScore } from "@/lib/scoring"
-import type { Lead } from "@/hooks/useLeadsData"
+import type { Lead } from "@/types"
 
 const stageWeights: Record<string, number> = {
   new: 0.1,
@@ -12,12 +12,22 @@ const stageWeights: Record<string, number> = {
 
 const stageOrder = ["new", "contacted", "proposal", "won"] as const
 
+const monthLabel = (date: Date) =>
+  date.toLocaleDateString("de-DE", {
+    month: "short",
+    year: "2-digit",
+  })
+
+const monthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`
+
 export function useDashboardMetrics(leads: Lead[]) {
   return useMemo(() => {
     const total = leads.length
     const won = leads.filter((lead) => lead.status === "won").length
     const lost = leads.filter((lead) => lead.status === "lost").length
     const pipelineValue = leads.reduce((sum, lead) => sum + (lead.value || 0), 0)
+    const openPipeline = total - won - lost
+    const wonOrLost = won + lost
     const revenue = leads
       .filter((lead) => lead.status === "won")
       .reduce((sum, lead) => sum + (lead.value || 0), 0)
@@ -49,12 +59,32 @@ export function useDashboardMetrics(leads: Lead[]) {
         .reduce((sum, lead) => sum + (lead.value || 0), 0),
     }))
 
-    const forecastTrend = [
-      { month: "Now", value: revenue },
-      { month: "+1 mo", value: Math.round(revenue + forecast * 0.15) },
-      { month: "+2 mo", value: Math.round(revenue + forecast * 0.3) },
-      { month: "+3 mo", value: Math.round(revenue + forecast * 0.45) },
-    ]
+    const monthBuckets = Array.from({ length: 6 }).map((_, index) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - (5 - index))
+      return {
+        key: monthKey(date),
+        month: monthLabel(date),
+        value: 0,
+      }
+    })
+
+    const bucketMap = new Map(monthBuckets.map((bucket) => [bucket.key, bucket]))
+    const wonLeads = leads.filter((lead) => lead.status === "won")
+
+    wonLeads.forEach((lead) => {
+      const closeDate = new Date(lead.stage_changed_at || lead.updated_at || lead.created_at)
+      const key = monthKey(closeDate)
+      const bucket = bucketMap.get(key)
+      if (bucket) {
+        bucket.value += lead.value || 0
+      }
+    })
+
+    const forecastTrend = monthBuckets.map((bucket) => ({
+      month: bucket.month,
+      value: Math.round(bucket.value),
+    }))
 
     const pipelineDistribution = stageCounts.map((item) => ({
       name: item.stage,
@@ -71,6 +101,10 @@ export function useDashboardMetrics(leads: Lead[]) {
         value: contactedLeads.length,
       },
       {
+        name: "Qualified",
+        value: leads.filter((lead) => lead.status === "qualified").length,
+      },
+      {
         name: "Proposal",
         value: proposalLeads.length,
       },
@@ -78,7 +112,34 @@ export function useDashboardMetrics(leads: Lead[]) {
         name: "Won",
         value: won,
       },
+      {
+        name: "Lost",
+        value: lost,
+      },
     ]
+
+    const averageDealValue = won > 0
+      ? Math.round(revenue / won)
+      : total > 0
+      ? Math.round(pipelineValue / total)
+      : 0
+
+    const wonCycleDays = wonLeads
+      .map((lead) => {
+        const created = new Date(lead.created_at).getTime()
+        const closed = new Date(lead.stage_changed_at || lead.updated_at || lead.created_at).getTime()
+        const diff = Math.round((closed - created) / (1000 * 60 * 60 * 24))
+        return diff >= 0 ? diff : 0
+      })
+      .filter((value) => Number.isFinite(value))
+
+    const averageSalesCycle = wonCycleDays.length > 0
+      ? Math.round(wonCycleDays.reduce((sum, days) => sum + days, 0) / wonCycleDays.length)
+      : 0
+
+    const conversionRate = wonOrLost > 0 ? Number(((won / wonOrLost) * 100).toFixed(1)) : 0
+
+    const currentMonthRevenue = forecastTrend[forecastTrend.length - 1]?.value || 0
 
     const insight = generateDashboardInsight({
       leads,
@@ -102,17 +163,20 @@ export function useDashboardMetrics(leads: Lead[]) {
       atRiskDeals,
       healthyLeadCount,
       winRate: total > 0 ? ((won / total) * 100).toFixed(1) : "0",
-      averageDealValue: total > 0 ? Math.round(pipelineValue / total) : 0,
+      conversionRate,
+      wonLostLabel: `${won}/${lost}`,
+      averageDealValue,
       forecastTrend,
       statusChartData,
       priorityDeals,
       insight,
-      openPipeline: total - won - lost,
+      openPipeline,
       watchlistCount: total - healthyLeadCount - atRiskDeals.length,
       forecastDelta: Math.max(0, Math.round(forecast - revenue)),
       stageCounts,
       pipelineDistribution,
-      averageSalesCycle: total > 0 ? Math.round(pipelineValue / Math.max(won, 1)) : 0,
+      averageSalesCycle,
+      currentMonthRevenue,
     }
   }, [leads])
 }

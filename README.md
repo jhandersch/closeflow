@@ -114,13 +114,15 @@ Instead of simply displaying customer information, CloseFlow continuously analyz
 
 ## Roadmap
 
-* Lead Health Score
-* Shared scoring engine
-* Revenue forecasting
-* OpenAI-powered lead insights
-* Smart workflow automation
-* Email integration
-* Team collaboration
+Execution roadmap and implementation status are tracked in:
+
+* ROADMAP.md
+
+Highlights:
+
+* `Now`: Core CRM + AI Assistant + Teams (DB-first) are implemented
+* `Next`: Auth completion, notifications center, global search, command palette, calendar
+* `Later`: reporting suite, enterprise permissions, full billing/integration backend
 
 ---
 
@@ -143,4 +145,36 @@ CloseFlow is actively developed in public and continuously improved step by step
 ## Status
 
 Actively built in public with new features and improvements released regularly.
+
+---
+
+## Team Workspace Migration
+
+CloseFlow now includes a database-first team architecture using these tables:
+
+* organizations
+* organization_members
+* organization_invites
+
+Migration file:
+
+* supabase/migrations/20260713_team_workspace.sql
+* supabase/backfill-team-metadata.sql (optional, for legacy metadata migration)
+
+What this migration adds:
+
+* Team workspace schema with role and status checks
+* Row Level Security policies for member-based access
+* Invite acceptance RPC: accept_organization_invite
+* Invite creation RPC: create_organization_invite
+* Case-insensitive email uniqueness safeguards
+* Organization audit events for invite lifecycle (created, refreshed, accepted)
+
+Apply the migration with your normal Supabase workflow, for example:
+
+```bash
+supabase db push
+```
+
+If you previously stored team data in auth user metadata (`team_workspace`), run the backfill script in Supabase SQL Editor to migrate those records into relational team tables.
 

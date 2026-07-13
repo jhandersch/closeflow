@@ -2,18 +2,23 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, LogOut, Settings2, Users, Workflow } from "lucide-react"
+import { LayoutDashboard, LogOut, Settings2, Users, Workflow, Bot, UserRound } from "lucide-react"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { supabase } from "@/lib/supabase/client"
 
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { t } = useAppPreferences()
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/leads", label: "Leads", icon: Users },
-    { href: "/pipeline", label: "Pipeline", icon: Workflow },
-    { href: "/settings", label: "Settings", icon: Settings2 },
+    { href: "/dashboard", label: t("nav.dashboard", "Dashboard"), icon: LayoutDashboard },
+    { href: "/leads", label: t("nav.leads", "Leads"), icon: Users },
+    { href: "/pipeline", label: t("nav.pipeline", "Pipeline"), icon: Workflow },
+    { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRound },
+    { href: "/ai", label: t("nav.ai", "AI Assistant"), icon: Bot },
+    { href: "/teams", label: t("nav.teams", "Teams"), icon: Users },
+    { href: "/settings", label: t("nav.settings", "Settings"), icon: Settings2 },
   ]
 
   const handleLogout = async () => {
@@ -22,15 +27,15 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col overflow-y-auto border-r border-white/10 bg-[#111] px-5 py-6">
+    <aside className="sticky top-0 flex h-screen w-64 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)]">
       <div>
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/15 text-sm font-semibold text-cyan-300">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-500/25 bg-cyan-500/10 text-sm font-semibold text-cyan-200">
             CF
           </div>
           <div>
-            <p className="text-lg font-semibold text-white">CloseFlow</p>
-            <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Revenue OS</p>
+            <p className="text-lg font-semibold tracking-tight text-foreground">{t("brand.name", "CloseFlow")}</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{t("brand.tagline", "Revenue OS")}</p>
           </div>
         </div>
 
@@ -45,8 +50,8 @@ export default function Sidebar() {
                 href={link.href}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   active
-                    ? "bg-white text-black shadow-sm"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                    ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-100 shadow-[0_0_0_1px_rgba(56,189,248,0.12)]"
+                    : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
                 }`}
               >
                 <Icon size={18} />
@@ -59,10 +64,10 @@ export default function Sidebar() {
 
       <button
         onClick={() => void handleLogout()}
-        className="mt-auto flex items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 text-left text-sm text-zinc-400 transition hover:bg-white/5 hover:text-white"
+        className="mt-auto flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-left text-sm text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground"
       >
         <LogOut size={18} />
-        Logout
+        {t("nav.logout", "Logout")}
       </button>
     </aside>
   )

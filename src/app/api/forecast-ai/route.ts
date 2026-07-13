@@ -9,6 +9,8 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
 
+  let locale: "de" | "en" = "de"
+
   try {
 
     const {
@@ -21,7 +23,10 @@ export async function POST(req: Request) {
 
     const prompt = `
 You are an AI sales forecasting assistant.
+        language,
 
+
+      locale = language === "en" ? "en" : "de"
 Analyze this CRM forecast:
 
 Pipeline value:
@@ -64,7 +69,7 @@ Focus on:
           {
             role:"system",
             content:
-              "You are an expert revenue forecasting analyst."
+              `You are an expert revenue forecasting analyst. Return valid JSON only and write all text values in ${locale === "de" ? "German" : "English"}.`
           },
           {
             role:"user",
@@ -94,10 +99,10 @@ Focus on:
 
     return NextResponse.json(
       {
-        summary:"Forecast analysis failed",
+        summary: locale === "de" ? "Forecast-Analyse fehlgeschlagen" : "Forecast analysis failed",
         positiveFactors:[],
         risks:[],
-        recommendation:"Review pipeline manually"
+        recommendation: locale === "de" ? "Pipeline manuell prüfen" : "Review pipeline manually"
       },
       {
         status:500

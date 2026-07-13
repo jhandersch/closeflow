@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server"
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json()
+    const locale = payload?.language === "en" ? "en" : "de"
     const apiKey = process.env.OPENAI_API_KEY
 
     if (!apiKey) {
       return NextResponse.json({
-        headline: "Pipeline momentum is steady.",
-        detail: payload?.detail ?? "Your current data suggests a healthy, active pipeline.",
+        headline: locale === "de" ? "Die Pipeline entwickelt sich stabil." : "Pipeline momentum is steady.",
+        detail: payload?.detail ?? (locale === "de" ? "Deine aktuellen Daten zeigen eine aktive und gesunde Pipeline." : "Your current data suggests a healthy, active pipeline."),
         actions: payload?.actions ?? [],
         confidence: "Medium",
       })
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
         No markdown.
         No explanations.
         Only JSON.
+        Keep confidence enum values exactly as High, Medium, Low.
+        Write headline/detail/actions in ${locale === "de" ? "German" : "English"}.
         `,
           },
           {
@@ -76,9 +79,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsed)
   } catch {
     return NextResponse.json({
-      headline: "Pipeline momentum is steady.",
-      detail: "Your CRM data is healthy and ready for follow-up.",
-      actions: ["Follow up with proposal-stage leads.", "Review at-risk deals with low health scores."],
+      headline: "Die Pipeline entwickelt sich stabil.",
+      detail: "Deine CRM-Daten sind gesund und bereit für Follow-ups.",
+      actions: ["Fasse Leads in der Angebotsphase nach.", "Prüfe risikobehaftete Deals mit niedrigem Health-Score."],
       confidence: "Medium",
     })
   }

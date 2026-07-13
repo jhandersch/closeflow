@@ -29,18 +29,21 @@ type RevenueForecastAIResponse = {
 
 const fallbackInsight = (): RevenueForecastAIResponse => ({
   confidence: 0.2,
-  explanation: "Revenue intelligence could not be generated automatically.",
+  explanation: "Umsatz-Insights konnten nicht automatisch erstellt werden.",
   positiveDrivers: [],
-  risks: ["Forecast data could not be analyzed automatically."],
-  recommendation: "Review the pipeline manually and focus on the largest open deals.",
+  risks: ["Forecast-Daten konnten nicht automatisch analysiert werden."],
+  recommendation: "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals.",
 })
 
 export async function POST(req: Request) {
   try {
-    const { leads, forecast } = (await req.json()) as {
+    const { leads, forecast, language } = (await req.json()) as {
       leads?: LeadPayload[]
       forecast?: ForecastPayload
+      language?: "de" | "en"
     }
+
+    const locale = language === "en" ? "en" : "de"
 
     if (!Array.isArray(leads) || leads.length === 0) {
       return NextResponse.json(fallbackInsight())
@@ -99,6 +102,7 @@ Analyze:
 - activity and movement signals
 - risks and likely close outcomes
 - the most useful next action for the sales team
+- Write all text fields in ${locale === "de" ? "German" : "English"}
 `
 
     const openai = new OpenAI({ apiKey })
@@ -107,7 +111,7 @@ Analyze:
       messages: [
         {
           role: "system",
-          content: "You are an expert revenue intelligence analyst for a B2B sales CRM.",
+          content: `You are an expert revenue intelligence analyst for a B2B sales CRM. Return valid JSON only and write text fields in ${locale === "de" ? "German" : "English"}.`,
         },
         {
           role: "user",
@@ -123,10 +127,10 @@ Analyze:
 
     return NextResponse.json({
       confidence: typeof result.confidence === "number" ? result.confidence : 0.5,
-      explanation: typeof result.explanation === "string" ? result.explanation : "Revenue drivers were summarized automatically.",
+      explanation: typeof result.explanation === "string" ? result.explanation : (locale === "de" ? "Umsatztreiber wurden automatisch zusammengefasst." : "Revenue drivers were summarized automatically."),
       positiveDrivers: Array.isArray(result.positiveDrivers) ? result.positiveDrivers.filter((item): item is string => typeof item === "string") : [],
       risks: Array.isArray(result.risks) ? result.risks.filter((item): item is string => typeof item === "string") : [],
-      recommendation: typeof result.recommendation === "string" ? result.recommendation : "Review the pipeline manually.",
+      recommendation: typeof result.recommendation === "string" ? result.recommendation : (locale === "de" ? "Prüfe die Pipeline manuell." : "Review the pipeline manually."),
     })
   } catch (error) {
     console.error("Revenue forecast AI failed:", error)

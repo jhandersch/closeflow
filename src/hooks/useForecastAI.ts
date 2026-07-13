@@ -13,7 +13,8 @@ export function useForecastAI(
   pipelineValue: number,
   weightedRevenue: number,
   revenueAtRisk: number,
-  leads: any[]
+  leads: any[],
+  language: "de" | "en" = "de"
 ) {
   const [analysis, setAnalysis] = useState<ForecastAI | null>(null)
   const [loading, setLoading] = useState(false)
@@ -35,6 +36,7 @@ export function useForecastAI(
             weightedRevenue,
             revenueAtRisk,
             leads,
+            language,
           }),
         })
 
@@ -45,10 +47,10 @@ export function useForecastAI(
         console.error(err)
 
         setAnalysis({
-          summary: "Forecast analysis unavailable.",
+          summary: language === "de" ? "Forecast-Analyse nicht verfügbar." : "Forecast analysis unavailable.",
           positiveFactors: [],
           risks: [],
-          recommendation: "Review pipeline manually.",
+          recommendation: language === "de" ? "Pipeline manuell prüfen." : "Review pipeline manually.",
         })
       }
 
@@ -56,7 +58,7 @@ export function useForecastAI(
     }
 
     generate()
-  }, [pipelineValue, weightedRevenue, revenueAtRisk, leads])
+  }, [language, pipelineValue, weightedRevenue, revenueAtRisk, leads])
 
   return {
     analysis,

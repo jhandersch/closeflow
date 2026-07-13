@@ -6,6 +6,9 @@ const openai = new OpenAI({
 })
 
 export async function POST(req: Request) {
+
+  let locale: "de" | "en" = "de"
+
   try {
     const {
       lead,
@@ -13,7 +16,13 @@ export async function POST(req: Request) {
       memory,
       risk,
       status,
+      question,
+      mode,
+      pipeline,
+      language,
     } = await req.json()
+
+    locale = language === "en" ? "en" : "de"
 
 
     const activityHistory = activities
@@ -24,28 +33,41 @@ export async function POST(req: Request) {
       .join("\n")
 
 
-    const prompt = `
-You are an AI sales copilot inside a CRM.
+    const memoryJson = JSON.stringify(memory || {}).slice(0, 2000)
+    const riskJson = JSON.stringify(risk || {}).slice(0, 1000)
+    const pipelineJson = JSON.stringify(pipeline || {}).slice(0, 2000)
 
-Analyze this sales opportunity.
+    const prompt = `
+  You are an AI sales copilot inside a CRM.
+
+  Analyze this sales opportunity and answer the user query.
 
 Lead:
-Name: ${lead.name}
-Company: ${lead.company}
-Deal Value: €${lead.value}
-Current Stage: ${status}
+  Name: ${lead?.name || "n/a"}
+  Company: ${lead?.company || "n/a"}
+  Deal Value: €${lead?.value || 0}
+  Current Stage: ${status || lead?.status || "n/a"}
 
 Notes:
-${lead.notes || "No notes"}
+  ${lead?.notes || "No notes"}
 
 Activity History:
 ${activityHistory || "No activity"}
 
 AI Memory:
-JSON.stringify(memory).slice(0,2000)
+  ${memoryJson}
 
 Current Risk:
-JSON.stringify(risk).slice(0,1000)
+  ${riskJson}
+
+  Pipeline Snapshot:
+  ${pipelineJson}
+
+  Mode:
+  ${mode || "lead-analysis"}
+
+  User Question:
+  ${question || "Generate a complete lead plan."}
 
 
 Create sales assistance.
@@ -89,6 +111,7 @@ Focus on:
 - Write emails that move the deal forward
 - Avoid generic advice
 - Use the available lead context
+- Output language for all free-text values: ${locale === "de" ? "German" : "English"}
 `
 
 
@@ -101,7 +124,7 @@ Focus on:
           {
             role:"system",
             content:
-              "You are an expert B2B sales strategist."
+              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English, but write all text values in ${locale === "de" ? "German" : "English"}.`
           },
           {
             role:"user",
@@ -131,7 +154,7 @@ Focus on:
 
     return NextResponse.json(
       {
-        error:"Sales copilot failed"
+        error: locale === "de" ? "KI-Vertriebsassistent fehlgeschlagen" : "Sales copilot failed"
       },
       {
         status:500

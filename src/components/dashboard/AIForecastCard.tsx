@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 type Props = {
   analysis: {
@@ -18,7 +18,7 @@ export default function AIForecastCard({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#111] p-6 animate-pulse">
+      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 animate-pulse">
         <div className="h-6 w-56 rounded bg-white/10" />
         <div className="mt-5 h-4 w-full rounded bg-white/10" />
         <div className="mt-2 h-4 w-5/6 rounded bg-white/10" />
@@ -44,13 +44,13 @@ export default function AIForecastCard({
         AI Forecast Analyst
       </p>
 
-      <h2 className="mt-2 text-2xl font-bold text-white">
+      <h2 className="mt-2 text-2xl font-bold text-foreground">
         Revenue Intelligence
       </h2>
 
       <div className="mt-6">
 
-        <p className="text-zinc-300 leading-7">
+        <p className="text-foreground/80 leading-7">
           {analysis.summary}
         </p>
 
@@ -59,7 +59,7 @@ export default function AIForecastCard({
       <div className="mt-6">
 
         <h3 className="font-semibold text-emerald-400">
-          ✅ Positive Factors
+          Positive Factors
         </h3>
 
         <ul className="mt-3 space-y-2">
@@ -68,9 +68,9 @@ export default function AIForecastCard({
 
             <li
               key={index}
-              className="text-sm text-zinc-300"
+              className="text-sm text-foreground/80"
             >
-              • {item}
+              â€¢ {item}
             </li>
 
           ))}
@@ -82,7 +82,7 @@ export default function AIForecastCard({
       <div className="mt-6">
 
         <h3 className="font-semibold text-red-400">
-          ⚠ Risks
+          Risks
         </h3>
 
         <ul className="mt-3 space-y-2">
@@ -91,9 +91,9 @@ export default function AIForecastCard({
 
             <li
               key={index}
-              className="text-sm text-zinc-300"
+              className="text-sm text-foreground/80"
             >
-              • {item}
+              â€¢ {item}
             </li>
 
           ))}
@@ -115,7 +115,7 @@ export default function AIForecastCard({
           Recommendation
         </p>
 
-        <p className="mt-2 text-white">
+        <p className="mt-2 text-foreground">
           {analysis.recommendation}
         </p>
 

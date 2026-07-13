@@ -1,4 +1,4 @@
-type AICoachProps = {
+﻿type AICoachProps = {
   title: string
   message: string
   reasons: string[]
@@ -18,8 +18,8 @@ export default function AICoach({
 
       <div className="flex items-start gap-4">
 
-        <div className="text-4xl">
-          🤖
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          AI
         </div>
 
         <div className="flex-1">
@@ -28,11 +28,11 @@ export default function AICoach({
             AI Coach
           </p>
 
-          <h2 className="mt-2 text-2xl font-bold text-white">
+          <h2 className="mt-2 text-2xl font-bold text-foreground">
             {title}
           </h2>
 
-          <p className="mt-3 text-zinc-300">
+          <p className="mt-3 text-foreground/80">
             {message}
           </p>
 
@@ -42,9 +42,9 @@ export default function AICoach({
             {reasons.map((reason) => (
               <div
                 key={reason}
-                className="rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-zinc-300"
+                className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-2 text-sm text-foreground/80"
               >
-                ✓ {reason}
+                {reason}
               </div>
             ))}
 
@@ -54,11 +54,11 @@ export default function AICoach({
           <div className="mt-5 flex items-center justify-between">
 
             <div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-foreground/55">
                 Recommended action
               </p>
 
-              <p className="mt-1 font-semibold text-white">
+              <p className="mt-1 font-semibold text-foreground">
                 {action}
               </p>
             </div>

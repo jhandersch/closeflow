@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase/client"
@@ -80,12 +80,12 @@ export default function AIActionCard({
       </p>
 
 
-      <h3 className="mt-2 text-xl font-bold text-white">
+      <h3 className="mt-2 text-xl font-bold text-foreground">
         {action}
       </h3>
 
 
-      <p className="mt-2 text-sm text-zinc-400">
+      <p className="mt-2 text-sm text-foreground/65">
         {description}
       </p>
 
@@ -108,7 +108,7 @@ export default function AIActionCard({
         {loading
           ? "Saving..."
           : done
-          ? "✓ Completed"
+          ? "Completed"
           : "Mark completed"
         }
 

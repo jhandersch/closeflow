@@ -1,8 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useRouter } from "next/navigation"
 import { getHealthScore, getPriorityScore } from "@/lib/scoring"
 import { usePriorityAI } from "@/hooks/usePriorityAI"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 
 type PriorityLead = {
@@ -23,33 +24,34 @@ type PriorityDealsCardProps = {
 export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
   const router = useRouter()
-  const aiAnalysis = usePriorityAI(leads)
+  const { language } = useAppPreferences()
+  const aiAnalysis = usePriorityAI(leads, language)
 
 
   return (
 
     <section
-      className="rounded-2xl border border-white/10 bg-[#111] p-6"
+      className="rounded-2xl border border-border-subtle bg-surface-1 p-6"
       aria-labelledby="priority-deals-heading"
     >
 
       <div className="flex items-center justify-between">
 
         <div>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-foreground/65">
             AI priority scoring
           </p>
 
           <h2
             id="priority-deals-heading"
-            className="text-lg font-semibold text-white"
+            className="text-lg font-semibold text-foreground"
           >
             Deals to focus on
           </h2>
         </div>
 
 
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-foreground/55">
           Top {leads.length}
         </div>
 
@@ -70,19 +72,19 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
 
         {aiAnalysis.headline && (
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-foreground">
             {aiAnalysis.headline}
           </h3>
         )}
 
-        <p className="mt-2 text-sm text-zinc-200">
+        <p className="mt-2 text-sm text-foreground/85">
           {aiAnalysis.explanation ||
             "Analyzing priority opportunities..."}
         </p>
 
 
         {aiAnalysis.priorityReason && (
-          <p className="mt-3 text-sm text-zinc-300">
+          <p className="mt-3 text-sm text-foreground/80">
             <span className="text-cyan-400">
               Why:
             </span>{" "}
@@ -95,7 +97,7 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
           <div className="mt-4 flex items-center gap-3">
 
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm text-foreground/65">
               Risk:
             </span>
 
@@ -117,11 +119,6 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
                 }
               `}
             >
-
-              {aiAnalysis.riskLevel === "High" && "🔴 "}
-              {aiAnalysis.riskLevel === "Medium" && "🟡 "}
-              {aiAnalysis.riskLevel === "Low" && "🟢 "}
-
               {aiAnalysis.riskLevel}
 
             </span>
@@ -133,7 +130,7 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
         {aiAnalysis.nextAction && (
           <p className="mt-3 text-sm text-cyan-300">
             Next:
-            <span className="ml-1 text-white">
+            <span className="ml-1 text-foreground">
               {aiAnalysis.nextAction}
             </span>
           </p>
@@ -175,12 +172,12 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
                 text-left
                 rounded-xl
                 border
-                border-white/10
-                bg-black/30
+                border-border-subtle
+                bg-surface-2/70
                 p-4
                 transition
                 hover:border-cyan-500/40
-                hover:bg-black/50
+                hover:bg-surface-2/90
               "
             >
 
@@ -190,12 +187,12 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
                 <div>
 
-                  <p className="font-semibold text-white">
+                  <p className="font-semibold text-foreground">
                     {leadDisplayName(lead)}
                   </p>
 
 
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-foreground/55">
                     {leadCompany(lead)}
                   </p>
 
@@ -207,7 +204,7 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
                 <div className="text-right">
 
                   <p className="text-sm font-semibold text-cyan-400">
-                    ⚡ {priority}/100
+                    Score {priority}/100
                   </p>
 
 
@@ -235,9 +232,9 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
               <div className="mt-4 flex justify-between text-sm">
 
-                <span className="text-zinc-400">
+                <span className="text-foreground/65">
                   Stage:
-                  <span className="ml-1 text-white">
+                  <span className="ml-1 text-foreground">
                     {lead.status}
                   </span>
                 </span>
@@ -245,7 +242,7 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
 
                 <span className="font-semibold text-purple-400">
-                  €
+                  â‚¬
                   {lead.value.toLocaleString("de-DE")}
                 </span>
 
@@ -280,3 +277,4 @@ export default function PriorityDealsCard({ leads }: PriorityDealsCardProps) {
 
   )
 }
+

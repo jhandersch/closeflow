@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect } from "react"
 
@@ -8,11 +8,11 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   }, [error])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
-      <div className="w-full max-w-xl rounded-3xl border border-rose-500/20 bg-[#111] p-10 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+      <div className="w-full max-w-xl rounded-3xl border border-rose-500/20 bg-surface-1 p-10 shadow-2xl">
         <p className="text-sm uppercase tracking-[0.3em] text-rose-400">Something went wrong</p>
         <h1 className="mt-4 text-4xl font-semibold">We hit an unexpected issue</h1>
-        <p className="mt-4 text-base leading-7 text-zinc-400">
+        <p className="mt-4 text-base leading-7 text-foreground/65">
           The app could not render this view. A retry usually resolves it quickly.
         </p>
         <button
@@ -25,3 +25,4 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
     </div>
   )
 }
+

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import AuthGuard from "@/components/AuthGuard"
 import LeadFilters from "@/components/dashboard/LeadFilters"
@@ -14,6 +14,7 @@ import LeadActions from "@/components/dashboard/LeadActions"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
 import { loadDemoData } from "@/lib/demoData"
+import type { LeadSource, LeadStatus } from "@/types"
 
 
 export default function LeadsPage() {
@@ -21,19 +22,29 @@ export default function LeadsPage() {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
+  const [priority, setPriority] = useState("all")
+  const [sourceFilter, setSourceFilter] = useState("all")
   const [sortBy, setSortBy] = useState<"created_at" | "value" | "priority">("priority")
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
   const [company, setCompany] = useState("")
   const [value, setValue] = useState("")
   const [notes, setNotes] = useState("")
-  const [leadStatus, setLeadStatus] = useState("new")
+  const [leadStatus, setLeadStatus] = useState<LeadStatus>("new")
+  const [leadSource, setLeadSource] = useState<LeadSource>("website")
+  const [tagsInput, setTagsInput] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [website, setWebsite] = useState("")
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [view, setView] = useState<"list" | "pipeline">("list")
   const [favorites, setFavorites] = useState<string[]>([])
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoMessage, setDemoMessage] = useState<string | null>(null)
+  const [importingCsv, setImportingCsv] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
  
 
   const toggleFavorite = (id: string) => {
@@ -51,14 +62,209 @@ export default function LeadsPage() {
       .filter((lead) => {
         const matchesQuery = !query || `${leadDisplayName(lead)} ${leadCompany(lead)}`.toLowerCase().includes(query)
         const matchesStatus = status === "all" || lead.status === status
-        return matchesQuery && matchesStatus
+        const score = getPriorityScore(lead)
+        const priorityLabel = score >= 75 ? "hot" : score >= 45 ? "warm" : "cold"
+        const matchesPriority = priority === "all" || priorityLabel === priority
+        const matchesSource = sourceFilter === "all" || (lead.source || "other") === sourceFilter
+
+        return matchesQuery && matchesStatus && matchesPriority && matchesSource
       })
       .sort((a, b) => {
         if (sortBy === "value") return (b.value || 0) - (a.value || 0)
         if (sortBy === "created_at") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         return getPriorityScore(b) - getPriorityScore(a)
       })
-  }, [leads, search, status, sortBy])
+  }, [leads, priority, search, sortBy, sourceFilter, status])
+
+  const escapeCsv = (value: unknown) => {
+    const text = String(value ?? "")
+    if (text.includes(",") || text.includes("\n") || text.includes("\"")) {
+      return `"${text.replaceAll("\"", "\"\"")}"`
+    }
+    return text
+  }
+
+  const parseCsvLine = (line: string) => {
+    const values: string[] = []
+    let current = ""
+    let inQuotes = false
+
+    for (let index = 0; index < line.length; index += 1) {
+      const char = line[index]
+      const next = line[index + 1]
+
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"'
+          index += 1
+        } else {
+          inQuotes = !inQuotes
+        }
+        continue
+      }
+
+      if (char === "," && !inQuotes) {
+        values.push(current)
+        current = ""
+        continue
+      }
+
+      current += char
+    }
+
+    values.push(current)
+    return values.map((value) => value.trim())
+  }
+
+  const exportCsv = () => {
+    const headers = ["name", "company", "status", "value", "source", "email", "phone", "website", "address", "tags", "notes"]
+    const rows = filteredLeads.map((lead) => [
+      lead.name,
+      lead.company,
+      lead.status,
+      lead.value,
+      lead.source ?? "",
+      lead.email ?? "",
+      lead.phone ?? "",
+      lead.website ?? "",
+      lead.address ?? "",
+      (lead.tags || []).join("|"),
+      lead.notes ?? "",
+    ])
+
+    const csv = [headers.join(","), ...rows.map((row) => row.map(escapeCsv).join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `closeflow-leads-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importCsv = async (file: File) => {
+    setImportingCsv(true)
+    setDemoMessage(null)
+
+    try {
+      const csvText = await file.text()
+      const lines = csvText
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+
+      if (lines.length < 2) {
+        setDemoMessage("CSV import skipped: no lead rows found.")
+        return
+      }
+
+      const headers = parseCsvLine(lines[0]).map((header) => header.toLowerCase())
+      const headerIndex = (name: string) => headers.indexOf(name)
+
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData.user
+      if (!user) {
+        setDemoMessage("CSV import failed: no active session.")
+        return
+      }
+
+      const { data: existingLeads } = await supabase
+        .from("leads")
+        .select("name, company")
+        .eq("user_id", user.id)
+
+      const knownKeys = new Set(
+        (existingLeads || []).map((lead) => `${(lead.name || "").trim().toLowerCase()}::${(lead.company || "").trim().toLowerCase()}`)
+      )
+
+      let insertedCount = 0
+      let skippedCount = 0
+
+      for (const line of lines.slice(1)) {
+        const values = parseCsvLine(line)
+        const get = (column: string) => {
+          const index = headerIndex(column)
+          return index >= 0 ? values[index] || "" : ""
+        }
+
+        const rowName = get("name")
+        const rowCompany = get("company")
+        const rowStatus = get("status") || "new"
+        const rowValue = Number(get("value") || "0")
+
+        if (!rowName.trim() || !rowCompany.trim()) {
+          skippedCount += 1
+          continue
+        }
+
+        const key = `${rowName.trim().toLowerCase()}::${rowCompany.trim().toLowerCase()}`
+        if (knownKeys.has(key)) {
+          skippedCount += 1
+          continue
+        }
+
+        const payload = {
+          user_id: user.id,
+          name: rowName.trim(),
+          company: rowCompany.trim(),
+          status: rowStatus,
+          value: Number.isFinite(rowValue) ? rowValue : 0,
+          notes: get("notes"),
+          source: get("source") || null,
+          email: get("email") || null,
+          phone: get("phone") || null,
+          website: get("website") || null,
+          address: get("address") || null,
+          tags: get("tags")
+            .split("|")
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          stage_changed_at: new Date().toISOString(),
+          last_activity_at: new Date().toISOString(),
+        }
+
+        let insertResult = await supabase.from("leads").insert([payload]).select("id").single()
+
+        if (insertResult.error && /column .* does not exist/i.test(insertResult.error.message || "")) {
+          const fallbackPayload = {
+            user_id: user.id,
+            name: rowName.trim(),
+            company: rowCompany.trim(),
+            status: rowStatus,
+            value: Number.isFinite(rowValue) ? rowValue : 0,
+            notes: get("notes"),
+            stage_changed_at: new Date().toISOString(),
+            last_activity_at: new Date().toISOString(),
+          }
+          insertResult = await supabase.from("leads").insert([fallbackPayload]).select("id").single()
+        }
+
+        if (insertResult.error || !insertResult.data?.id) {
+          skippedCount += 1
+          continue
+        }
+
+        knownKeys.add(key)
+        insertedCount += 1
+
+        await supabase.from("activities").insert([
+          {
+            lead_id: insertResult.data.id,
+            user_id: user.id,
+            action: "Lead imported from CSV",
+            type: "created",
+          },
+        ])
+      }
+
+      setDemoMessage(`CSV import done. Added ${insertedCount} leads, skipped ${skippedCount}.`)
+      await refresh()
+    } catch (error) {
+      setDemoMessage(error instanceof Error ? error.message : "CSV import failed.")
+    } finally {
+      setImportingCsv(false)
+    }
+  }
 
   const createLead = async () => {
     setFormError(null)
@@ -86,6 +292,10 @@ if (!company.trim()) {
 }
 
 const dealValue = Number(value)
+const parsedTags = tagsInput
+  .split(",")
+  .map((tag) => tag.trim())
+  .filter(Boolean)
 
 if (isNaN(dealValue) || dealValue < 0) {
   setFormError("Deal value must be a valid number")
@@ -93,21 +303,68 @@ if (isNaN(dealValue) || dealValue < 0) {
   return
 }
 
+const normalizedName = name.trim().toLowerCase()
+const normalizedCompany = company.trim().toLowerCase()
 
-const { data: leadData, error } = await supabase
+const { data: existingLeads, error: duplicateCheckError } = await supabase
   .from("leads")
-  .insert([
-      {
-      user_id: user.id,
-      name: name.trim(),
-      company: company.trim(),
-      status: leadStatus,
-      value: dealValue,
-      notes: notes.trim() || "",
-    },
-  ])
+  .select("id, name, company")
+  .eq("user_id", user.id)
+
+if (duplicateCheckError) {
+  setFormError(duplicateCheckError.message)
+  setSubmitting(false)
+  return
+}
+
+const duplicateLead = (existingLeads || []).find((lead) => {
+  const sameName = (lead.name || "").trim().toLowerCase() === normalizedName
+  const sameCompany = (lead.company || "").trim().toLowerCase() === normalizedCompany
+  return sameName && sameCompany
+})
+
+if (duplicateLead) {
+  setFormError("Duplicate lead detected: same name and company already exist.")
+  setSubmitting(false)
+  return
+}
+
+const baseInsertPayload = {
+  user_id: user.id,
+  name: name.trim(),
+  company: company.trim(),
+  status: leadStatus,
+  value: dealValue,
+  notes: notes.trim() || "",
+  stage_changed_at: new Date().toISOString(),
+  last_activity_at: new Date().toISOString(),
+}
+
+const extendedInsertPayload = {
+  ...baseInsertPayload,
+  source: leadSource,
+  tags: parsedTags,
+  email: email.trim() || null,
+  phone: phone.trim() || null,
+  address: address.trim() || null,
+  website: website.trim() || null,
+}
+
+let { data: leadData, error } = await supabase
+  .from("leads")
+  .insert([extendedInsertPayload])
   .select()
   .single()
+
+if (error && /column .* does not exist/i.test(error.message || "")) {
+  const retry = await supabase
+    .from("leads")
+    .insert([baseInsertPayload])
+    .select()
+    .single()
+  leadData = retry.data
+  error = retry.error
+}
 
 
 if (error) {
@@ -115,11 +372,13 @@ if (error) {
   setSubmitting(false)
   return
 }
+
     await supabase.from("activities").insert([
       {
         lead_id: leadData.id,
         user_id: user.id,
         action: "Lead created",
+        type: "created",
       },
     ])
 
@@ -127,6 +386,12 @@ if (error) {
     setCompany("")
     setValue("")
     setNotes("")
+    setLeadSource("website")
+    setTagsInput("")
+    setEmail("")
+    setPhone("")
+    setAddress("")
+    setWebsite("")
     setLeadStatus("new")
     setShowForm(false)
     setSubmitting(false)
@@ -139,34 +404,34 @@ if (error) {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">Pipeline</p>
-            <h1 className="text-3xl font-bold text-white">Leads</h1>
-            <p className="mt-2 text-sm text-zinc-400">Search, filter, sort, and follow up on the right opportunities.</p>
+            <h1 className="text-3xl font-bold text-foreground">Leads</h1>
+            <p className="mt-2 text-sm text-foreground/65">Search, filter, sort, and follow up on the right opportunities.</p>
           </div>
 
           <div className="flex gap-3">
 
-            <div className="flex rounded-xl border border-white/10 bg-[#111] p-1">
+            <div className="flex rounded-xl border border-border-subtle bg-surface-1 p-1">
 
               <button
                 onClick={() => setView("list")}
                 className={`px-4 py-2 rounded-lg text-sm ${
                   view === "list"
-                    ? "bg-white text-black"
-                    : "text-zinc-400"
+                    ? "bg-foreground text-background"
+                    : "text-foreground/65"
                 }`}
               >
-                ☰ List
+                List
               </button>
 
               <button
                 onClick={() => setView("pipeline")}
                 className={`px-4 py-2 rounded-lg text-sm ${
                   view === "pipeline"
-                    ? "bg-white text-black"
-                    : "text-zinc-400"
+                    ? "bg-foreground text-background"
+                    : "text-foreground/65"
                 }`}
               >
-                ▦ Pipeline
+                Pipeline
               </button>
 
             </div>
@@ -174,10 +439,39 @@ if (error) {
 
             <button
               onClick={() => setShowForm(true)}
-              className="rounded-xl bg-white px-4 py-2 font-medium text-black"
+              className="rounded-xl bg-foreground px-4 py-2 font-medium text-background"
             >
               + Add Lead
             </button>
+
+            <button
+              onClick={exportCsv}
+              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
+            >
+              Export CSV
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importingCsv}
+              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60"
+            >
+              {importingCsv ? "Importing..." : "Import CSV"}
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) {
+                  void importCsv(file)
+                }
+                event.currentTarget.value = ""
+              }}
+            />
 
           </div>
         </div>
@@ -191,23 +485,27 @@ if (error) {
         <LeadFilters
           search={search}
           status={status}
+          priority={priority}
+          source={sourceFilter}
           sortBy={sortBy}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
+          onPriorityChange={setPriority}
+          onSourceChange={setSourceFilter}
           onSortChange={setSortBy}
         />
 
         <div className="grid gap-4 md:grid-cols-4">
 
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Total Leads</p>
-            <p className="mt-2 text-3xl font-bold text-white">
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
+            <p className="text-sm text-foreground/65">Total Leads</p>
+            <p className="mt-2 text-3xl font-bold text-foreground">
               {filteredLeads.length}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Pipeline Value</p>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
+            <p className="text-sm text-foreground/65">Pipeline Value</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">
               €
               {filteredLeads
@@ -216,8 +514,8 @@ if (error) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Average Health</p>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
+            <p className="text-sm text-foreground/65">Average Health</p>
             <p className="mt-2 text-3xl font-bold text-cyan-400">
               {Math.round(
                 filteredLeads.reduce(
@@ -228,8 +526,8 @@ if (error) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-5">
-            <p className="text-sm text-zinc-400">Forecast Revenue</p>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
+            <p className="text-sm text-foreground/65">Forecast Revenue</p>
 
             <p className="mt-2 text-3xl font-bold text-purple-400">
               €
@@ -266,7 +564,7 @@ if (error) {
         </div>
 
         {showForm ? (
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-6 shadow-sm shadow-black/30">
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
             {formError ? <p className="mb-3 text-sm text-rose-300">{formError}</p> : null}
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -274,14 +572,14 @@ if (error) {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Name"
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
 
               <input
                 value={company}
                 onChange={(event) => setCompany(event.target.value)}
                 placeholder="Company"
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
 
               <input
@@ -289,24 +587,74 @@ if (error) {
                 onChange={(event) => setValue(event.target.value)}
                 placeholder="Value"
                 type="number"
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
 
               <select
                 value={leadStatus}
-                onChange={(event) => setLeadStatus(event.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+                onChange={(event) => setLeadStatus(event.target.value as LeadStatus)}
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               >
                 <option value="new">new</option>
                 <option value="contacted">contacted</option>
+                <option value="qualified">qualified</option>
                 <option value="proposal">proposal</option>
                 <option value="won">won</option>
+                <option value="lost">lost</option>
               </select>
+
+              <select
+                value={leadSource}
+                onChange={(event) => setLeadSource(event.target.value as LeadSource)}
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              >
+                <option value="website">website</option>
+                <option value="recommendation">recommendation</option>
+                <option value="phone">phone</option>
+                <option value="advertising">advertising</option>
+                <option value="other">other</option>
+              </select>
+
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email"
+                type="email"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
+
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="Phone"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
+
+              <input
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+                placeholder="Website"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
+
+              <input
+                value={tagsInput}
+                onChange={(event) => setTagsInput(event.target.value)}
+                placeholder="Tags (comma separated)"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
+
+              <input
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="Address"
+                className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
               <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Notes about this lead..."
-              className="md:col-span-2 w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-white outline-none"
+              className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
             />
             </div>
 
@@ -314,7 +662,7 @@ if (error) {
               <button
                 onClick={() => void createLead()}
                 disabled={submitting}
-                className="rounded-xl bg-white px-4 py-2 font-medium text-black disabled:opacity-60"
+                className="rounded-xl bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60"
               >
                 {submitting ? "Creating..." : "Create lead"}
               </button>
@@ -324,7 +672,7 @@ if (error) {
                   setShowForm(false)
                   setFormError(null)
                 }}
-                className="rounded-xl border border-white/10 bg-black px-4 py-2 text-zinc-300"
+                className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80"
               >
                 Cancel
               </button>
@@ -341,8 +689,8 @@ if (error) {
                 className="
                   rounded-2xl
                   border
-                  border-white/10
-                  bg-[#111]
+                  border-border-subtle
+                  bg-surface-1
                   p-5
                   animate-pulse
                 "
@@ -354,7 +702,7 @@ if (error) {
                     h-14
                     w-14
                     rounded-full
-                    bg-white/10
+                    bg-foreground/10
                   "/>
 
 
@@ -364,21 +712,21 @@ if (error) {
                       h-4
                       w-40
                       rounded
-                      bg-white/10
+                      bg-foreground/10
                     "/>
 
                     <div className="
                       h-3
                       w-24
                       rounded
-                      bg-white/10
+                      bg-foreground/10
                     "/>
 
                     <div className="
                       h-3
                       w-32
                       rounded
-                      bg-white/10
+                      bg-foreground/10
                     "/>
 
                   </div>
@@ -394,22 +742,20 @@ if (error) {
           <div className="
           rounded-2xl
           border
-          border-white/10
+          border-border-subtle
           bg-gradient-to-br
-          from-[#111]
-          to-[#18181b]
+          from-surface-1
+          to-surface-2
           p-10
           text-center
           ">
-            <div className="text-4xl">
-            🚀
-            </div>
+            <div className="mx-auto h-10 w-10 rounded-full border border-cyan-500/30 bg-cyan-500/10" />
 
             <h3 className="
             mt-4
             text-xl
             font-semibold
-            text-white
+            text-foreground
             ">
             No leads yet
             </h3>
@@ -417,7 +763,7 @@ if (error) {
             <p className="
             mt-2
             text-sm
-            text-zinc-400
+            text-foreground/65
             ">
             Create your first opportunity and start building your pipeline.
             </p>
@@ -425,7 +771,7 @@ if (error) {
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowForm(true)}
-                className="rounded-xl bg-white px-5 py-2 font-medium text-black"
+                className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
               >
                 Create first lead
               </button>
@@ -444,7 +790,7 @@ if (error) {
                   }
                 }}
                 disabled={demoLoading}
-                className="rounded-xl border border-white/10 bg-black/30 px-5 py-2 font-medium text-zinc-200 transition hover:bg-white/5 disabled:opacity-60"
+                className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60"
               >
                 {demoLoading ? "Loading demo data..." : "Load demo data"}
               </button>
@@ -477,16 +823,16 @@ if (error) {
                     block
                     rounded-2xl
                     border
-                    border-white/10
+                    border-border-subtle
                     bg-gradient-to-br
-                    from-[#111]
-                    to-[#18181b]
+                    from-surface-1
+                    to-surface-2
                     p-5
                     transition
                     hover:-translate-y-1
                     hover:shadow-xl
                     hover:shadow-cyan-500/10
-                    hover:bg-white/5
+                    hover:bg-foreground/5
                   "
                 >
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -504,7 +850,7 @@ if (error) {
                               <div>
                                 <div className="flex items-center gap-2">
 
-                                  <p className="font-semibold text-lg text-white whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px] md:max-w-[300px]">
+                                  <p className="font-semibold text-lg text-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px] md:max-w-[300px]">
                                     {leadDisplayName(lead)}
                                   </p>
 
@@ -517,17 +863,17 @@ if (error) {
                             className="text-xl"
                           >
                             {favorites.includes(lead.id)
-                              ? "⭐"
-                              : "☆"}
+                              ? "Pinned"
+                              : "Pin"}
                           </button>
 
                         </div>
 
-                        <p className="text-sm text-zinc-400">
+                        <p className="text-sm text-foreground/65">
                           {leadCompany(lead)}
                         </p>
 
-                        <p className="mt-2 text-sm font-semibold text-white">
+                        <p className="mt-2 text-sm font-semibold text-foreground">
                           €{lead.value.toLocaleString("de-DE")}
                         </p>
 
@@ -554,7 +900,7 @@ if (error) {
                               font-medium
                               text-orange-300
                             ">
-                              🔥 Hot Deal
+                              High Priority
                             </span>
                           )}
                         </span>
@@ -588,26 +934,26 @@ if (error) {
                     AI Signal
                     </p>
 
-                    <p className="mt-1 text-sm font-semibold text-white">
+                    <p className="mt-1 text-sm font-semibold text-foreground">
                     {
                     staleDays > 14
-                    ? "⚠️ Needs attention"
+                    ? "Needs attention"
                     : probability > 80
-                    ? "🔥 Strong closing signal"
+                    ? "Strong closing signal"
                     : probability > 60
-                    ? "🚀 Positive momentum"
-                    : "🌱 Nurturing required"
+                    ? "Positive momentum"
+                    : "Nurturing required"
                     }
                     </p>
 
                     </div>
-                      <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-3 text-left">
+                      <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-3 text-left">
 
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-foreground/55">
                           Next action
                         </p>
 
-                        <p className="mt-1 text-sm text-white">
+                        <p className="mt-1 text-sm text-foreground">
                           {lead.next_action || "No action planned"}
                         </p>
 
@@ -620,7 +966,7 @@ if (error) {
                                 : "text-emerald-400"
                             }`}
                           >
-                            📅 {new Date(
+                            Due {new Date(
                               lead.next_action_date
                             ).toLocaleDateString("de-DE")}
                           </p>
@@ -628,10 +974,10 @@ if (error) {
 
                       </div>
 
-                      <div className="mt-2 text-xs text-zinc-500">
+                      <div className="mt-2 text-xs text-foreground/55">
                        <div className="mt-3 flex items-center gap-2 text-xs">
 
-                      <span className="text-zinc-400">
+                      <span className="text-foreground/65">
                       Last activity:
                       </span>
 

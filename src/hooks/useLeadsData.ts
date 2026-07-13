@@ -1,19 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
-
-type Lead = {
-  id: string
-  name: string
-  company: string
-  status: string
-  value: number
-  created_at: string
-  stage_changed_at?: string
-  notes?: string
-  next_action?: string | null
-  last_activity_at?: string | null
-  next_action_date?: string
-}
+import type { Lead } from "@/types"
 
 type Activity = {
   id: string
@@ -50,7 +37,7 @@ export function useLeadsData({ activityLimit = 6 }: UseLeadsDataOptions = {}) {
       await Promise.all([
         supabase
           .from("leads")
-          .select("id, name, company, status, value, created_at, stage_changed_at, notes")
+          .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
         supabase

@@ -64,7 +64,7 @@ export function useLeadAI(
   if (lead.status === "new") {
 
     recommendations.push({
-      icon:"🧠",
+      icon:"AI",
       title:"Qualify lead",
       description:
         "Gather missing information and identify intent.",
@@ -81,7 +81,7 @@ export function useLeadAI(
   if (lead.status === "contacted") {
 
     recommendations.push({
-      icon:"📧",
+      icon:"MAIL",
       title:"Send follow-up",
       description:
         "Re-engage the customer.",
@@ -98,7 +98,7 @@ export function useLeadAI(
   if (lead.status === "proposal") {
 
     recommendations.push({
-      icon:"🔥",
+      icon:"CALL",
       title:"Call customer today",
       description:
         "Address objections and close the deal.",
@@ -118,7 +118,7 @@ export function useLeadAI(
   const nextAction =
     staleDays > 7
       ? {
-          icon:"🚨",
+          icon:"ALERT",
           title:"Immediate follow-up required",
           action:"Contact customer today",
           description:
@@ -128,7 +128,7 @@ export function useLeadAI(
       :
       lead.status === "proposal"
       ? {
-          icon:"🔥",
+          icon:"CALL",
           title:"Closing opportunity",
           action:"Schedule closing call",
           description:
@@ -137,7 +137,7 @@ export function useLeadAI(
         }
       :
       {
-        icon:"📌",
+        icon:"INFO",
         title:"Continue nurturing",
         action:"Maintain relationship",
         description:
@@ -159,7 +159,7 @@ export function useLeadAI(
           title:"Lead going cold",
           message:
             `No activity for ${staleDays} days.`,
-          icon:"🚨",
+          icon:"ALERT",
         }
       :
       {
@@ -167,7 +167,7 @@ export function useLeadAI(
         title:"Healthy lead",
         message:
           "No major risks detected.",
-        icon:"✅",
+        icon:"OK",
       }
 
 
@@ -179,7 +179,7 @@ export function useLeadAI(
   if (lead.value >= 10000) {
 
     scoreReasons.push({
-      icon:"💰",
+      icon:"VALUE",
       text:
         "High deal value increases opportunity score",
     })
@@ -190,7 +190,7 @@ export function useLeadAI(
   if (priority > 80) {
 
     scoreReasons.push({
-      icon:"⭐",
+      icon:"SIGNAL",
       text:
         "Strong overall opportunity signal",
     })

@@ -1,4 +1,4 @@
-type AIScoreCardProps = {
+﻿type AIScoreCardProps = {
   score: number
   health: number
   probability: number
@@ -44,7 +44,7 @@ export default function AIScoreCard({
             mt-2
             text-2xl
             font-bold
-            text-white
+            text-foreground
           ">
             Lead Analysis
           </h2>
@@ -52,8 +52,8 @@ export default function AIScoreCard({
         </div>
 
 
-        <div className="text-4xl">
-          🧠
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          AI
         </div>
 
       </div>
@@ -102,12 +102,12 @@ export default function AIScoreCard({
         mt-6
         rounded-xl
         border
-        border-white/10
-        bg-black/30
+        border-border-subtle
+        bg-surface-2/70
         p-4
       ">
 
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-foreground/55">
           Recommended Action
         </p>
 
@@ -116,7 +116,7 @@ export default function AIScoreCard({
           mt-2
           text-lg
           font-semibold
-          text-white
+          text-foreground
         ">
           {recommendation}
         </p>
@@ -142,11 +142,11 @@ function ScoreBox({
   return (
     <div className="
       rounded-xl
-      bg-black/30
+      bg-surface-2/70
       p-4
     ">
 
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-foreground/55">
         {title}
       </p>
 

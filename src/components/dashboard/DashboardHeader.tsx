@@ -1,3 +1,5 @@
+﻿import Link from "next/link"
+
 type DashboardHeaderProps = {
   forecast: number
 }
@@ -11,7 +13,7 @@ export default function DashboardHeader({
     <section className="
       rounded-2xl
       border
-      border-white/10
+      border-border-subtle
       bg-gradient-to-br
       from-[#111]
       via-[#111]
@@ -35,18 +37,8 @@ export default function DashboardHeader({
 
           <div className="flex items-center gap-3">
 
-            <span className="
-              rounded-full
-              border
-              border-cyan-500/20
-              bg-cyan-500/10
-              px-3
-              py-1
-              text-xs
-              font-semibold
-              text-cyan-300
-            ">
-              🤖 AI CRM Command Center
+            <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+              Control Center
             </span>
 
 
@@ -72,23 +64,30 @@ export default function DashboardHeader({
             mt-4
             text-3xl
             font-bold
-            text-white
+            text-foreground
             md:text-4xl
           ">
-            Sales intelligence dashboard
+            Good morning, Jan
           </h1>
 
 
 
           <p className="
             mt-3
-            text-zinc-400
+            text-foreground/65
             max-w-2xl
           ">
-            Track pipeline health, predict revenue,
-            and identify the opportunities that need
-            attention before they go cold.
+            Here is your sales overview.
           </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/leads" className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90">
+              New Lead
+            </Link>
+            <Link href="/ai" className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20">
+              Ask AI
+            </Link>
+          </div>
 
 
         </div>
@@ -115,9 +114,9 @@ export default function DashboardHeader({
             mt-2
             text-4xl
             font-bold
-            text-white
+            text-foreground
           ">
-            €{Math.round(forecast).toLocaleString("de-DE")}
+            â‚¬{Math.round(forecast).toLocaleString("de-DE")}
           </p>
 
 
@@ -126,7 +125,7 @@ export default function DashboardHeader({
             text-sm
             text-emerald-300
           ">
-            ↑ Predicted pipeline outcome
+            Predicted pipeline outcome
           </p>
 
 
