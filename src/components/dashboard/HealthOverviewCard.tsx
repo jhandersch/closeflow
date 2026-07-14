@@ -4,25 +4,194 @@
   atRiskCount: number
 }
 
-export default function HealthOverviewCard({ healthyCount, watchlistCount, atRiskCount }: HealthOverviewCardProps) {
+export default function HealthOverviewCard({
+  healthyCount,
+  watchlistCount,
+  atRiskCount,
+}: HealthOverviewCardProps) {
+
+
+  const total =
+    healthyCount +
+    watchlistCount +
+    atRiskCount
+
+
+  const healthPercentage =
+    total > 0
+      ? Math.round((healthyCount / total) * 100)
+      : 0
+
+
+
   return (
-    <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6" aria-labelledby="health-overview-heading">
-      <p className="text-sm text-foreground/65">Health overview</p>
-      <h2 id="health-overview-heading" className="text-lg font-semibold text-foreground">Opportunity wellness</h2>
-      <div className="mt-4 space-y-3">
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm">
-          <span className="text-emerald-300">Healthy</span>
-          <span className="font-semibold text-foreground">{healthyCount}</span>
+
+    <section
+      className="
+      rounded-2xl
+      border
+      border-border-subtle
+      bg-surface-1
+      p-6
+      "
+    >
+
+
+      <div className="flex items-center justify-between">
+
+
+        <div>
+
+          <p className="text-sm text-foreground/65">
+            Pipeline Health
+          </p>
+
+
+          <h2 className="text-lg font-semibold text-foreground">
+            AI-powered deal health monitoring
+          </h2>
+
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm">
-          <span className="text-amber-300">Watchlist</span>
-          <span className="font-semibold text-foreground">{watchlistCount}</span>
+
+
+
+        <div
+          className="
+          rounded-full
+          border
+          border-cyan-500/20
+          bg-cyan-500/10
+          px-3
+          py-1
+          text-sm
+          font-semibold
+          text-cyan-300
+          "
+        >
+
+          {healthPercentage}% healthy
+
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm">
-          <span className="text-rose-300">At risk</span>
-          <span className="font-semibold text-foreground">{atRiskCount}</span>
-        </div>
+
+
       </div>
+
+
+
+
+      <div className="mt-5">
+
+
+        <div className="
+          h-3
+          overflow-hidden
+          rounded-full
+          bg-surface-2
+        ">
+
+
+          <div
+            className="
+            h-full
+            rounded-full
+            bg-gradient-to-r
+            from-emerald-400
+            to-cyan-400
+            "
+            style={{
+              width:`${healthPercentage}%`
+            }}
+          />
+
+
+        </div>
+
+
+      </div>
+
+
+
+
+      <div className="mt-5 space-y-3">
+
+
+        <div className="
+          flex
+          items-center
+          justify-between
+          rounded-xl
+          border
+          border-emerald-500/20
+          bg-emerald-500/10
+          px-3
+          py-2
+        ">
+
+          <span className="text-emerald-300">
+            Healthy Deals
+          </span>
+
+          <span className="font-semibold text-foreground">
+            {healthyCount}
+          </span>
+
+        </div>
+
+
+
+        <div className="
+          flex
+          items-center
+          justify-between
+          rounded-xl
+          border
+          border-amber-500/20
+          bg-amber-500/10
+          px-3
+          py-2
+        ">
+
+          <span className="text-amber-300">
+            Watchlist
+          </span>
+
+          <span className="font-semibold text-foreground">
+            {watchlistCount}
+          </span>
+
+        </div>
+
+
+
+
+        <div className="
+          flex
+          items-center
+          justify-between
+          rounded-xl
+          border
+          border-rose-500/20
+          bg-rose-500/10
+          px-3
+          py-2
+        ">
+
+          <span className="text-rose-300">
+            At Risk
+          </span>
+
+
+          <span className="font-semibold text-foreground">
+            {atRiskCount}
+          </span>
+
+        </div>
+
+
+      </div>
+
+
     </section>
+
   )
 }

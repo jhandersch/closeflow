@@ -13,6 +13,8 @@ import {
   Cell,
 } from "recharts"
 
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
 
 type PipelineChartProps = {
   data: Array<{
@@ -22,11 +24,21 @@ type PipelineChartProps = {
 }
 
 
-const stageColors: Record<string, string> = {
-  New: "#38bdf8",
-  Contacted: "#facc15",
-  Proposal: "#fb923c",
-  Won: "#34d399",
+
+const stageColors: Record<string,string> = {
+
+  New:"#38bdf8",
+
+  Contacted:"#facc15",
+
+  Qualified:"#a78bfa",
+
+  Proposal:"#fb923c",
+
+  Won:"#34d399",
+
+  Lost:"#f87171",
+
 }
 
 
@@ -34,6 +46,55 @@ const stageColors: Record<string, string> = {
 export default function PipelineChart({
   data,
 }: PipelineChartProps) {
+
+
+  const { t } = useAppPreferences()
+
+
+
+  const stageLabels: Record<string,string> = {
+
+    New: t(
+      "pipeline.new",
+      "New"
+    ),
+
+    Contacted: t(
+      "pipeline.contacted",
+      "Contacted"
+    ),
+
+    Qualified: t(
+      "pipeline.qualified",
+      "Qualified"
+    ),
+
+    Proposal: t(
+      "pipeline.proposal",
+      "Proposal"
+    ),
+
+    Won: t(
+      "pipeline.won",
+      "Won"
+    ),
+
+    Lost: t(
+      "pipeline.lost",
+      "Lost"
+    ),
+
+  }
+
+
+
+  const translatedData = data.map((item)=>({
+    ...item,
+    name:
+      stageLabels[item.name] ??
+      item.name
+  }))
+
 
 
   return (
@@ -54,22 +115,39 @@ export default function PipelineChart({
 
         <div>
 
-          <p className="text-sm text-foreground/65">
-            Pipeline overview
+          <p
+            className="
+            text-sm
+            text-foreground/65
+            "
+          >
+            {t(
+              "dashboard.pipelineOverview",
+              "Pipeline overview"
+            )}
           </p>
 
-          <h2 className="
+
+          <h2
+            className="
             text-lg
             font-semibold
             text-foreground
-          ">
-            Deal distribution
+            "
+          >
+            {t(
+              "dashboard.dealDistribution",
+              "Deal distribution"
+            )}
           </h2>
 
         </div>
 
 
-        <div className="
+
+
+        <div
+          className="
           rounded-full
           border
           border-blue-500/20
@@ -78,10 +156,19 @@ export default function PipelineChart({
           py-1
           text-sm
           text-blue-300
-        ">
-          <Link href="/pipeline" className="hover:underline">
-            Open pipeline
+          "
+        >
+
+          <Link
+            href="/pipeline"
+            className="hover:underline"
+          >
+            {t(
+              "dashboard.openPipeline",
+              "Open pipeline"
+            )}
           </Link>
+
         </div>
 
 
@@ -90,10 +177,13 @@ export default function PipelineChart({
 
 
 
-      <div className="
+
+      <div
+        className="
         mt-6
         h-72
-      ">
+        "
+      >
 
 
         <ResponsiveContainer
@@ -103,13 +193,14 @@ export default function PipelineChart({
 
 
           <BarChart
-            data={data}
+            data={translatedData}
             layout="vertical"
           >
 
 
             <CartesianGrid
-              stroke="#27272a"
+              stroke="currentColor"
+              opacity={0.08}
               horizontal={false}
             />
 
@@ -117,35 +208,47 @@ export default function PipelineChart({
 
             <XAxis
               type="number"
-              stroke="#71717a"
+              stroke="currentColor"
+              opacity={0.5}
               tickLine={false}
             />
+
 
 
             <YAxis
               dataKey="name"
               type="category"
-              stroke="#71717a"
+              stroke="currentColor"
+              opacity={0.5}
               width={90}
               tickLine={false}
             />
 
 
 
+
             <Tooltip
 
               contentStyle={{
-                background:"#09090b",
-                border:"1px solid #27272a",
+                background:"var(--surface-1)",
+                border:"1px solid var(--border-subtle)",
                 borderRadius:"12px",
               }}
 
               formatter={(value)=>[
-                `${value} deals`,
-                "Pipeline"
+                `${value} ${t(
+                  "dashboard.deals",
+                  "deals"
+                )}`,
+                t(
+                  "dashboard.pipeline",
+                  "Pipeline"
+                )
               ]}
 
             />
+
+
 
 
 
@@ -165,14 +268,16 @@ export default function PipelineChart({
             >
 
               {
-                  data.map((entry, index)=>(
+                translatedData.map((entry,index)=>(
+
                   <Cell
-                   key={`${entry.name}-${index}`}
+                    key={`${entry.name}-${index}`}
                     fill={
-                      stageColors[entry.name] ??
+                      stageColors[data[index]?.name] ??
                       "#22d3ee"
                     }
                   />
+
                 ))
               }
 

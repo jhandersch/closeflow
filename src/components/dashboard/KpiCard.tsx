@@ -2,23 +2,79 @@
   label: string
   value: string
   hint?: string
-  accent?: "cyan" | "emerald" | "amber" | "rose"
+  accent?: "amber" | "emerald" | "cyan" | "purple" | "blue" | "red"
 }
 
-const accentStyles = {
-  cyan: "border-cyan-500/20 bg-cyan-500/10 text-cyan-300",
-  emerald: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
-  amber: "border-amber-500/20 bg-amber-500/10 text-amber-300",
-  rose: "border-rose-500/20 bg-rose-500/10 text-rose-300",
+const accentColors = {
+  cyan: "text-cyan-300",
+  emerald: "text-emerald-300",
+  amber: "text-amber-300",
+  purple: "text-purple-300",
+  blue: "text-blue-300",
+  red: "text-red-300",
 }
 
-export default function KpiCard({ label, value, hint, accent = "cyan" }: KpiCardProps) {
+const accentGlow = {
+  cyan: "bg-cyan-500",
+  emerald: "bg-emerald-500",
+  amber: "bg-amber-500",
+  purple: "bg-purple-500",
+  blue: "bg-blue-500",
+  red: "bg-red-500",
+}
+
+
+export default function KpiCard({
+  label,
+  value,
+  hint,
+  accent = "cyan",
+}: KpiCardProps) {
+
   return (
     <div className="cf-card cf-enter p-5">
-      <p className="cf-label">{label}</p>
-      <p className="cf-kpi mt-2 text-3xl font-semibold text-foreground">{value}</p>
-      {hint ? <p className={`mt-2 text-sm ${accentStyles[accent]}`}>{hint}</p> : null}
+
+      <div className="flex items-center gap-2">
+
+        <span
+          className={`
+            h-2
+            w-2
+            rounded-full
+            ${accentGlow[accent]}
+          `}
+        />
+
+        <p className="cf-label">
+          {label}
+        </p>
+
+      </div>
+
+
+      <p className="
+        cf-kpi
+        mt-3
+        text-3xl
+        font-semibold
+        text-foreground
+      ">
+        {value}
+      </p>
+
+
+      {hint && (
+        <p
+          className={`
+            mt-2
+            text-sm
+            ${accentColors[accent]}
+          `}
+        >
+          {hint}
+        </p>
+      )}
+
     </div>
   )
 }
-

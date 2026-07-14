@@ -2,8 +2,6 @@
 
 import {
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,6 +9,8 @@ import {
   Area,
   AreaChart,
 } from "recharts"
+
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 
 type RevenueForecastChartProps = {
@@ -21,42 +21,64 @@ type RevenueForecastChartProps = {
 }
 
 
+
 export default function RevenueForecastChart({
   data,
 }: RevenueForecastChartProps) {
 
 
+  const { t } = useAppPreferences()
+
+
+
   return (
 
-    <section className="
+    <section
+      className="
       rounded-2xl
       border
       border-border-subtle
       bg-surface-1
       p-6
-    ">
+      "
+    >
 
 
-      <div className="
+      <div
+        className="
         flex
         items-center
         justify-between
-      ">
+        "
+      >
 
 
         <div>
 
-          <p className="text-sm text-foreground/65">
-            Revenue intelligence
+          <p
+            className="
+            text-sm
+            text-foreground/65
+            "
+          >
+            {t(
+              "dashboard.revenueIntelligence",
+              "Revenue intelligence"
+            )}
           </p>
 
 
-          <h2 className="
+          <h2
+            className="
             text-lg
             font-semibold
             text-foreground
-          ">
-            Forecast momentum
+            "
+          >
+            {t(
+              "dashboard.forecastMomentum",
+              "Forecast momentum"
+            )}
           </h2>
 
 
@@ -64,7 +86,10 @@ export default function RevenueForecastChart({
 
 
 
-        <div className="
+
+
+        <div
+          className="
           rounded-full
           border
           border-emerald-500/20
@@ -73,8 +98,12 @@ export default function RevenueForecastChart({
           py-1
           text-sm
           text-emerald-300
-        ">
-          AI predicted
+          "
+        >
+          {t(
+            "dashboard.aiPredicted",
+            "AI predicted"
+          )}
         </div>
 
 
@@ -83,16 +112,20 @@ export default function RevenueForecastChart({
 
 
 
-      <div className="
+
+      <div
+        className="
         mt-6
         h-72
-      ">
+        "
+      >
 
 
         <ResponsiveContainer
           width="100%"
           height="100%"
         >
+
 
           <AreaChart data={data}>
 
@@ -126,41 +159,63 @@ export default function RevenueForecastChart({
 
 
 
+
+
             <CartesianGrid
-              stroke="#27272a"
+              stroke="currentColor"
+              opacity={0.08}
               vertical={false}
             />
 
 
+
+
+
             <XAxis
               dataKey="month"
-              stroke="#71717a"
+              stroke="currentColor"
+              opacity={0.5}
               tickLine={false}
             />
+
+
+
 
 
             <YAxis
-              stroke="#71717a"
+              stroke="currentColor"
+              opacity={0.5}
               tickLine={false}
-              tickFormatter={(value)=>`â‚¬${value / 1000}k`}
+              tickFormatter={(value)=>`€${value / 1000}k`}
             />
+
+
+
 
 
 
             <Tooltip
 
               contentStyle={{
-                background:"#09090b",
-                border:"1px solid #27272a",
+                background:"var(--surface-1)",
+                border:"1px solid var(--border-subtle)",
                 borderRadius:"12px",
               }}
 
+
               formatter={(value)=>[
-                `â‚¬${Number(value ?? 0).toLocaleString("de-DE")}`,
-                "Forecast"
+                `€${Number(value ?? 0).toLocaleString("de-DE")}`,
+                t(
+                  "dashboard.forecastRevenue",
+                  "Forecast Revenue"
+                )
               ]}
 
             />
+
+
+
+
 
 
 
@@ -188,7 +243,6 @@ export default function RevenueForecastChart({
 
 
       </div>
-
 
 
     </section>

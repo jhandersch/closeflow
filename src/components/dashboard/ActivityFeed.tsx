@@ -7,31 +7,221 @@
   }>
 }
 
-export default function ActivityFeed({ activities }: ActivityFeedProps) {
-  return (
-    <section className="cf-card cf-enter p-6" aria-labelledby="activity-feed-heading">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="cf-label">Recent activity</p>
-          <h2 id="activity-feed-heading" className="cf-title text-lg font-semibold text-foreground">Latest momentum</h2>
-        </div>
-      </div>
 
-      <div className="mt-4 space-y-3">
-        {activities.length > 0 ? (
-          activities.map((activity) => (
-            <div key={activity.id} className="cf-card-soft p-3">
-              <p className="text-sm text-foreground/80">{activity.action}</p>
-              <p className="mt-1 text-xs text-foreground/55">{new Date(activity.created_at).toLocaleString()}</p>
-            </div>
-          ))
-        ) : (
-          <div className="rounded-xl border border-dashed border-border-subtle bg-surface-2/60 p-4 text-sm text-foreground/55">
-            No recent activity yet. Create a lead or load demo data to see momentum here.
-          </div>
-        )}
-      </div>
-    </section>
-  )
+function getActivityStyle(type?: string) {
+
+  switch(type) {
+
+    case "created":
+      return {
+        icon:"➕",
+        color:"text-emerald-300",
+        bg:"bg-emerald-500/10",
+        border:"border-emerald-500/20"
+      }
+
+
+    case "status_change":
+      return {
+        icon:"🔄",
+        color:"text-cyan-300",
+        bg:"bg-cyan-500/10",
+        border:"border-cyan-500/20"
+      }
+
+
+    case "ai":
+      return {
+        icon:"🤖",
+        color:"text-purple-300",
+        bg:"bg-purple-500/10",
+        border:"border-purple-500/20"
+      }
+
+
+    case "follow_up":
+      return {
+        icon:"📅",
+        color:"text-amber-300",
+        bg:"bg-amber-500/10",
+        border:"border-amber-500/20"
+      }
+
+
+    default:
+      return {
+        icon:"•",
+        color:"text-foreground/70",
+        bg:"bg-white/5",
+        border:"border-border-subtle"
+      }
+
+  }
+
 }
 
+
+
+export default function ActivityFeed({
+  activities,
+}: ActivityFeedProps) {
+
+
+  return (
+
+    <section
+      className="
+      cf-card
+      cf-enter
+      p-6
+      "
+    >
+
+
+      <div className="flex items-center justify-between">
+
+
+        <div>
+
+          <p className="cf-label">
+            Activity timeline
+          </p>
+
+
+          <h2 className="cf-title text-lg font-semibold text-foreground">
+            Customer journey
+          </h2>
+
+        </div>
+
+
+      </div>
+
+
+
+
+      <div className="mt-5 space-y-3">
+
+
+        {
+          activities.length > 0 ? (
+
+            activities.map((activity)=>{
+
+
+              const style =
+                getActivityStyle(activity.type)
+
+
+
+              return (
+
+                <div
+                  key={activity.id}
+                  className="
+                  flex
+                  gap-4
+                  rounded-xl
+                  border
+                  border-border-subtle
+                  bg-surface-2/60
+                  p-4
+                  "
+                >
+
+
+                  <div
+                    className={`
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-full
+                    border
+                    ${style.border}
+                    ${style.bg}
+                    `}
+                  >
+
+                    {style.icon}
+
+                  </div>
+
+
+
+                  <div className="flex-1">
+
+
+                    <p className="
+                    text-sm
+                    font-medium
+                    text-foreground
+                    ">
+                      {activity.action}
+                    </p>
+
+
+
+                    <p className="
+                    mt-1
+                    text-xs
+                    text-foreground/55
+                    ">
+                      {new Date(
+                        activity.created_at
+                      ).toLocaleString(
+                        "de-DE",
+                        {
+                          day:"2-digit",
+                          month:"short",
+                          hour:"2-digit",
+                          minute:"2-digit"
+                        }
+                      )}
+                    </p>
+
+
+                  </div>
+
+
+                </div>
+
+              )
+
+
+            })
+
+
+          ) : (
+
+            <div
+              className="
+              rounded-xl
+              border
+              border-dashed
+              border-border-subtle
+              bg-surface-2/60
+              p-4
+              text-sm
+              text-foreground/55
+              "
+            >
+
+              No activity yet.
+              Create a lead to start tracking sales momentum.
+
+            </div>
+
+          )
+        }
+
+
+      </div>
+
+
+    </section>
+
+  )
+
+}

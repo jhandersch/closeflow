@@ -1,16 +1,82 @@
-﻿import Link from "next/link"
+﻿"use client"
+
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase/client"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type DashboardHeaderProps = {
   forecast: number
+  userName?: string
+  totalLeads: number
+  pipelineValue: number
+  attentionCount: number
 }
+
 
 export default function DashboardHeader({
   forecast,
+  totalLeads,
+  pipelineValue,
+  attentionCount,
 }: DashboardHeaderProps) {
+
+  const [name, setName] = useState("there")
+  const [greeting, setGreeting] = useState("Good morning")
+  const { t } = useAppPreferences()
+
+
+
+  useEffect(() => {
+
+    const loadUser = async () => {
+
+      const { data } = await supabase.auth.getUser()
+
+      const user = data.user
+
+      if (user) {
+
+        const metadataName =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name
+
+        if(metadataName){
+          setName(metadataName)
+        }
+        else if(user.email){
+          setName(user.email.split("@")[0])
+        }
+
+      }
+
+    }
+
+
+    loadUser()
+
+
+    const hour = new Date().getHours()
+
+    if(hour < 12){
+      setGreeting("Good morning")
+    }
+    else if(hour < 18){
+      setGreeting("Good afternoon")
+    }
+    else {
+      setGreeting("Good evening")
+    }
+
+
+  }, [])
+
+
 
   return (
 
-    <section className="
+    <section
+      className="
       rounded-2xl
       border
       border-border-subtle
@@ -19,17 +85,19 @@ export default function DashboardHeader({
       via-[#111]
       to-cyan-500/10
       p-6
-    ">
+      "
+    >
 
-
-      <div className="
+      <div
+        className="
         flex
         flex-col
         gap-6
         xl:flex-row
         xl:items-center
         xl:justify-between
-      ">
+        "
+      >
 
 
         <div className="max-w-3xl">
@@ -37,12 +105,26 @@ export default function DashboardHeader({
 
           <div className="flex items-center gap-3">
 
-            <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
-              Control Center
+
+            <span
+              className="
+              rounded-full
+              border
+              border-cyan-500/20
+              bg-cyan-500/10
+              px-3
+              py-1
+              text-xs
+              font-semibold
+              text-cyan-300
+              "
+            >
+              {t("dashboard.salesControlCenter", "Sales Control Center")}
             </span>
 
 
-            <span className="
+            <span
+              className="
               rounded-full
               border
               border-emerald-500/20
@@ -51,8 +133,9 @@ export default function DashboardHeader({
               py-1
               text-xs
               text-emerald-300
-            ">
-              System healthy
+              "
+            >
+              ✓ {t("dashboard.systemHealthy", "System healthy")}
             </span>
 
 
@@ -60,33 +143,122 @@ export default function DashboardHeader({
 
 
 
-          <h1 className="
+          <h1
+            className="
             mt-4
             text-3xl
             font-bold
             text-foreground
             md:text-4xl
-          ">
-            Good morning, Jan
+            "
+          >
+            {greeting}, {name} 👋
           </h1>
 
 
 
-          <p className="
+          <p
+            className="
             mt-3
             text-foreground/65
             max-w-2xl
-          ">
-            Here is your sales overview.
+            "
+          >
+            {t(
+              "dashboard.salesOverview",
+              "Your sales overview and AI recommendations for today."
+            )}
           </p>
 
+
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+
+
+            <div className="cf-card-soft p-3">
+
+              <p className="cf-label">
+                {t("dashboard.activeLeads", "Active leads")}
+              </p>
+
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {totalLeads}
+              </p>
+
+            </div>
+
+
+            <div className="cf-card-soft p-3">
+
+              <p className="cf-label">
+                {t("dashboard.pipeline", "Pipeline")}
+              </p>
+
+              <p className="mt-1 text-xl font-bold text-foreground">
+                €{pipelineValue.toLocaleString("de-DE")}
+              </p>
+
+            </div>
+
+
+
+            <div className="cf-card-soft p-3">
+
+              <p className="cf-label">
+                {t("dashboard.attention", "Attention")}
+              </p>
+
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {attentionCount}
+              </p>
+
+            </div>
+
+
+          </div>
+
+
+
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/leads" className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90">
-              New Lead
+
+            <Link
+              href="/leads"
+              className="
+              rounded-xl
+              bg-white
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-black
+              transition
+              hover:opacity-90
+              "
+            >
+              {t("dashboard.newLead", "New Lead")}
             </Link>
-            <Link href="/ai" className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20">
-              Ask AI
+
+
+            <Link
+              href="/ai"
+              className="
+              rounded-xl
+              border
+              border-cyan-500/30
+              bg-cyan-500/10
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-cyan-300
+              transition
+              hover:bg-cyan-500/20
+              "
+            >
+              {t("dashboard.askAI", "Ask AI")}
             </Link>
+
+
           </div>
 
 
@@ -95,37 +267,39 @@ export default function DashboardHeader({
 
 
 
-        <div className="
+        <div
+          className="
           rounded-2xl
           border
           border-cyan-500/20
           bg-cyan-500/10
           p-5
           min-w-[240px]
-        ">
-
+          "
+        >
 
           <p className="text-sm text-cyan-300">
-            AI revenue forecast
+            {t("dashboard.aiRevenueForecast", "AI revenue forecast")}
           </p>
 
 
-          <p className="
+          <p
+            className="
             mt-2
             text-4xl
             font-bold
             text-foreground
-          ">
-            â‚¬{Math.round(forecast).toLocaleString("de-DE")}
+            "
+          >
+            €{Math.round(forecast).toLocaleString("de-DE")}
           </p>
 
 
-          <p className="
-            mt-2
-            text-sm
-            text-emerald-300
-          ">
-            Predicted pipeline outcome
+          <p className="mt-2 text-sm text-emerald-300">
+            {t(
+              "dashboard.predictedPipelineOutcome",
+              "Predicted pipeline outcome"
+              )}
           </p>
 
 
