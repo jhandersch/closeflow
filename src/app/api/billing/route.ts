@@ -11,6 +11,16 @@ export async function GET(request: Request) {
   const { workspace, error: workspaceError } = await loadWorkspaceForUser(supabase, user.id)
 
   if (workspaceError) {
+    if (/workspace_members|workspaces/i.test(workspaceError.message || "")) {
+      return NextResponse.json({
+        workspace_id: null,
+        plan: "free",
+        status: "inactive",
+        current_period_end: null,
+        stripe_subscription_id: null,
+      })
+    }
+
     return NextResponse.json({ error: workspaceError.message }, { status: 500 })
   }
 

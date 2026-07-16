@@ -270,7 +270,7 @@ Always return valid JSON only.
 
 
       {
-        status:500
+        status: 200
       }
 
     )
