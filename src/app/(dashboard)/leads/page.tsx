@@ -15,6 +15,22 @@ import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
 import { loadDemoData } from "@/lib/demoData"
 import type { LeadSource, LeadStatus } from "@/types"
+import * as XLSX from "xlsx"
+
+type ImportIssue = {
+  row: number
+  reason: string
+  name?: string
+  company?: string
+}
+
+const escapeCsv = (value: unknown) => {
+  const text = String(value ?? "")
+  if (text.includes(",") || text.includes("\n") || text.includes('"')) {
+    return `"${text.replaceAll('"', '""')}"`
+  }
+  return text
+}
 
 
 export default function LeadsPage() {
@@ -44,6 +60,7 @@ export default function LeadsPage() {
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoMessage, setDemoMessage] = useState<string | null>(null)
   const [importingCsv, setImportingCsv] = useState(false)
+  const [importIssues, setImportIssues] = useState<ImportIssue[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
  
 
@@ -76,60 +93,105 @@ export default function LeadsPage() {
       })
   }, [leads, priority, search, sortBy, sourceFilter, status])
 
-  const escapeCsv = (value: unknown) => {
-    const text = String(value ?? "")
-    if (text.includes(",") || text.includes("\n") || text.includes("\"")) {
-      return `"${text.replaceAll("\"", "\"\"")}"`
-    }
-    return text
-  }
+  const getAuthHeaders = async (includeJson = false) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  const parseCsvLine = (line: string) => {
-    const values: string[] = []
-    let current = ""
-    let inQuotes = false
+    const headers: Record<string, string> = {}
 
-    for (let index = 0; index < line.length; index += 1) {
-      const char = line[index]
-      const next = line[index + 1]
-
-      if (char === '"') {
-        if (inQuotes && next === '"') {
-          current += '"'
-          index += 1
-        } else {
-          inQuotes = !inQuotes
-        }
-        continue
-      }
-
-      if (char === "," && !inQuotes) {
-        values.push(current)
-        current = ""
-        continue
-      }
-
-      current += char
+    if (includeJson) {
+      headers["Content-Type"] = "application/json"
     }
 
-    values.push(current)
-    return values.map((value) => value.trim())
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
+
+    return headers
   }
 
-  const exportCsv = () => {
-    const headers = ["name", "company", "status", "value", "source", "email", "phone", "website", "address", "tags", "notes"]
-    const rows = filteredLeads.map((lead) => [
-      lead.name,
-      lead.company,
-      lead.status,
-      lead.value,
-      lead.source ?? "",
-      lead.email ?? "",
-      lead.phone ?? "",
-      lead.website ?? "",
-      lead.address ?? "",
-      (lead.tags || []).join("|"),
-      lead.notes ?? "",
+  const downloadExport = async (format: "csv" | "xlsx") => {
+    const response = await fetch(`/api/leads/export?format=${format}`, {
+      headers: await getAuthHeaders(),
+    })
+    if (!response.ok) {
+      setDemoMessage(`${format.toUpperCase()} export failed.`)
+      return
+    }
+
+    const buffer = await response.arrayBuffer()
+    const blob = new Blob([buffer], {
+      type:
+        format === "xlsx"
+          ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          : "text/csv;charset=utf-8;",
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `closeflow-leads-${new Date().toISOString().slice(0, 10)}.${format}`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importFile = async (file: File) => {
+    setImportingCsv(true)
+    setDemoMessage(null)
+    setImportIssues([])
+
+    try {
+      const lowerName = file.name.toLowerCase()
+      const csvText = lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")
+        ? (() => {
+            const parseWorkbook = async () => {
+              const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
+              const firstSheet = workbook.SheetNames[0]
+              if (!firstSheet) {
+                throw new Error("Import failed: workbook has no sheets.")
+              }
+              return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet])
+            }
+            return parseWorkbook()
+          })()
+        : file.text()
+
+      const resolvedCsvText = await csvText
+      const response = await fetch("/api/leads/import", {
+        method: "POST",
+        headers: await getAuthHeaders(true),
+        body: JSON.stringify({ csv: resolvedCsvText }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        setDemoMessage(text || "CSV import failed.")
+        return
+      }
+
+      const data = (await response.json()) as { inserted?: number; skipped?: number; issues?: ImportIssue[] }
+      const issues = Array.isArray(data.issues) ? data.issues : []
+      setImportIssues(issues)
+      setDemoMessage(
+        `Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
+      )
+      await refresh()
+    } catch (error) {
+      setDemoMessage(error instanceof Error ? error.message : "Import failed.")
+    } finally {
+      setImportingCsv(false)
+    }
+  }
+
+  const downloadImportIssuesReport = () => {
+    if (!importIssues.length) return
+
+    const headers = ["row", "reason", "name", "company"]
+    const rows = importIssues.map((issue) => [
+      issue.row,
+      issue.reason,
+      issue.name || "",
+      issue.company || "",
     ])
 
     const csv = [headers.join(","), ...rows.map((row) => row.map(escapeCsv).join(","))].join("\n")
@@ -137,133 +199,9 @@ export default function LeadsPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `closeflow-leads-${new Date().toISOString().slice(0, 10)}.csv`
+    link.download = `closeflow-leads-import-issues-${new Date().toISOString().slice(0, 10)}.csv`
     link.click()
     URL.revokeObjectURL(url)
-  }
-
-  const importCsv = async (file: File) => {
-    setImportingCsv(true)
-    setDemoMessage(null)
-
-    try {
-      const csvText = await file.text()
-      const lines = csvText
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-
-      if (lines.length < 2) {
-        setDemoMessage("CSV import skipped: no lead rows found.")
-        return
-      }
-
-      const headers = parseCsvLine(lines[0]).map((header) => header.toLowerCase())
-      const headerIndex = (name: string) => headers.indexOf(name)
-
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData.user
-      if (!user) {
-        setDemoMessage("CSV import failed: no active session.")
-        return
-      }
-
-      const { data: existingLeads } = await supabase
-        .from("leads")
-        .select("name, company")
-        .eq("user_id", user.id)
-
-      const knownKeys = new Set(
-        (existingLeads || []).map((lead) => `${(lead.name || "").trim().toLowerCase()}::${(lead.company || "").trim().toLowerCase()}`)
-      )
-
-      let insertedCount = 0
-      let skippedCount = 0
-
-      for (const line of lines.slice(1)) {
-        const values = parseCsvLine(line)
-        const get = (column: string) => {
-          const index = headerIndex(column)
-          return index >= 0 ? values[index] || "" : ""
-        }
-
-        const rowName = get("name")
-        const rowCompany = get("company")
-        const rowStatus = get("status") || "new"
-        const rowValue = Number(get("value") || "0")
-
-        if (!rowName.trim() || !rowCompany.trim()) {
-          skippedCount += 1
-          continue
-        }
-
-        const key = `${rowName.trim().toLowerCase()}::${rowCompany.trim().toLowerCase()}`
-        if (knownKeys.has(key)) {
-          skippedCount += 1
-          continue
-        }
-
-        const payload = {
-          user_id: user.id,
-          name: rowName.trim(),
-          company: rowCompany.trim(),
-          status: rowStatus,
-          value: Number.isFinite(rowValue) ? rowValue : 0,
-          notes: get("notes"),
-          source: get("source") || null,
-          email: get("email") || null,
-          phone: get("phone") || null,
-          website: get("website") || null,
-          address: get("address") || null,
-          tags: get("tags")
-            .split("|")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-          stage_changed_at: new Date().toISOString(),
-          last_activity_at: new Date().toISOString(),
-        }
-
-        let insertResult = await supabase.from("leads").insert([payload]).select("id").single()
-
-        if (insertResult.error && /column .* does not exist/i.test(insertResult.error.message || "")) {
-          const fallbackPayload = {
-            user_id: user.id,
-            name: rowName.trim(),
-            company: rowCompany.trim(),
-            status: rowStatus,
-            value: Number.isFinite(rowValue) ? rowValue : 0,
-            notes: get("notes"),
-            stage_changed_at: new Date().toISOString(),
-            last_activity_at: new Date().toISOString(),
-          }
-          insertResult = await supabase.from("leads").insert([fallbackPayload]).select("id").single()
-        }
-
-        if (insertResult.error || !insertResult.data?.id) {
-          skippedCount += 1
-          continue
-        }
-
-        knownKeys.add(key)
-        insertedCount += 1
-
-        await supabase.from("activities").insert([
-          {
-            lead_id: insertResult.data.id,
-            user_id: user.id,
-            action: "Lead imported from CSV",
-            type: "created",
-          },
-        ])
-      }
-
-      setDemoMessage(`CSV import done. Added ${insertedCount} leads, skipped ${skippedCount}.`)
-      await refresh()
-    } catch (error) {
-      setDemoMessage(error instanceof Error ? error.message : "CSV import failed.")
-    } finally {
-      setImportingCsv(false)
-    }
   }
 
   const createLead = async () => {
@@ -445,10 +383,17 @@ if (error) {
             </button>
 
             <button
-              onClick={exportCsv}
+              onClick={() => void downloadExport("csv")}
               className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
             >
               Export CSV
+            </button>
+
+            <button
+              onClick={() => void downloadExport("xlsx")}
+              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
+            >
+              Export Excel
             </button>
 
             <button
@@ -456,22 +401,31 @@ if (error) {
               disabled={importingCsv}
               className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60"
             >
-              {importingCsv ? "Importing..." : "Import CSV"}
+              {importingCsv ? "Importing..." : "Import File"}
             </button>
 
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 if (file) {
-                  void importCsv(file)
+                  void importFile(file)
                 }
                 event.currentTarget.value = ""
               }}
             />
+
+            {importIssues.length ? (
+              <button
+                onClick={downloadImportIssuesReport}
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 font-medium text-amber-200"
+              >
+                Download Import Issues
+              </button>
+            ) : null}
 
           </div>
         </div>

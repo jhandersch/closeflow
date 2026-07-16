@@ -1,9 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import AuthGuard from "@/components/AuthGuard"
 import { useLeadsData } from "@/hooks/useLeadsData"
+import * as XLSX from "xlsx"
+import { supabase } from "@/lib/supabase/client"
 
 const VIP_THRESHOLD = 50000
 
@@ -20,11 +22,30 @@ type CustomerSummary = {
   lastContactAt: string | null
 }
 
+type ImportIssue = {
+  row: number
+  reason: string
+  company: string
+  contact: string
+}
+
+const escapeCsv = (value: unknown) => {
+  const text = String(value ?? "")
+  if (text.includes(",") || text.includes("\n") || text.includes('"')) {
+    return `"${text.replaceAll('"', '""')}"`
+  }
+  return text
+}
+
 export default function CustomersPage() {
-  const { leads, loading, error } = useLeadsData({ activityLimit: 0 })
+  const { leads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
 
   const [filter, setFilter] = useState<CustomerFilter>("all")
   const [query, setQuery] = useState("")
+  const [importingCsv, setImportingCsv] = useState(false)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
+  const [importIssues, setImportIssues] = useState<ImportIssue[]>([])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const customers = useMemo(() => {
     const byCompany = new Map<string, CustomerSummary>()
@@ -83,6 +104,117 @@ export default function CustomersPage() {
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
   }, [customers, filter, query])
 
+  const getAuthHeaders = async (includeJson = false) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const headers: Record<string, string> = {}
+
+    if (includeJson) {
+      headers["Content-Type"] = "application/json"
+    }
+
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
+
+    return headers
+  }
+
+  const downloadExport = async (format: "csv" | "xlsx") => {
+    const response = await fetch(`/api/customers/export?format=${format}`, {
+      headers: await getAuthHeaders(),
+    })
+    if (!response.ok) {
+      setImportMessage(`${format.toUpperCase()} export failed.`)
+      return
+    }
+
+    const buffer = await response.arrayBuffer()
+    const blob = new Blob([buffer], {
+      type:
+        format === "xlsx"
+          ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          : "text/csv;charset=utf-8;",
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `closeflow-customers-${new Date().toISOString().slice(0, 10)}.${format}`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importCsv = async (file: File) => {
+    setImportingCsv(true)
+    setImportMessage(null)
+    setImportIssues([])
+
+    try {
+      const lowerName = file.name.toLowerCase()
+      const csvText = lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")
+        ? (() => {
+            const parseWorkbook = async () => {
+              const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
+              const firstSheet = workbook.SheetNames[0]
+              if (!firstSheet) {
+                throw new Error("Import failed: workbook has no sheets.")
+              }
+              return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet])
+            }
+            return parseWorkbook()
+          })()
+        : file.text()
+
+      const resolvedCsvText = await csvText
+      const response = await fetch("/api/customers/import", {
+        method: "POST",
+        headers: await getAuthHeaders(true),
+        body: JSON.stringify({ csv: resolvedCsvText }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        setImportMessage(text || "Import failed.")
+        return
+      }
+
+      const data = (await response.json()) as { inserted?: number; skipped?: number; issues?: ImportIssue[] }
+      const issues = Array.isArray(data.issues) ? data.issues : []
+      setImportIssues(issues)
+      setImportMessage(
+        `Import done. Added ${data.inserted || 0} customers, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
+      )
+      await refresh()
+    } catch (importError) {
+      setImportMessage(importError instanceof Error ? importError.message : "Import failed.")
+    } finally {
+      setImportingCsv(false)
+    }
+  }
+
+  const downloadImportIssuesReport = () => {
+    if (!importIssues.length) return
+
+    const headers = ["row", "reason", "company", "contact"]
+    const rows = importIssues.map((issue) => [
+      issue.row,
+      issue.reason,
+      issue.company,
+      issue.contact,
+    ])
+
+    const csv = [headers.join(","), ...rows.map((row) => row.map(escapeCsv).join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `closeflow-customers-import-issues-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
@@ -124,6 +256,50 @@ export default function CustomersPage() {
           >
             VIP
           </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => void downloadExport("csv")}
+            className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => void downloadExport("xlsx")}
+            className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
+          >
+            Export Excel
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importingCsv}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-60"
+          >
+            {importingCsv ? "Importing..." : "Import File"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) {
+                void importCsv(file)
+              }
+              event.currentTarget.value = ""
+            }}
+          />
+          {importIssues.length ? (
+            <button
+              onClick={downloadImportIssuesReport}
+              className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-200"
+            >
+              Download Import Issues
+            </button>
+          ) : null}
+          {importMessage ? <p className="text-sm text-foreground/65">{importMessage}</p> : null}
         </div>
 
         {error ? (
