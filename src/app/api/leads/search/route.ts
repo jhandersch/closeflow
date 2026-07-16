@@ -1,0 +1,48 @@
+import { NextResponse } from "next/server"
+import { getRouteUser } from "@/lib/supabase/route"
+
+type LeadSearchResult = {
+  id: string
+  name: string | null
+  company: string | null
+  email: string | null
+  status: string | null
+  value: number | null
+  created_at: string
+  stage_changed_at: string | null
+}
+
+export async function GET(request: Request) {
+  const { supabase, user, error } = await getRouteUser(request)
+
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const url = new URL(request.url)
+  const query = (url.searchParams.get("q") || "").trim()
+
+  if (!query) {
+    return NextResponse.json([])
+  }
+
+  const likeQuery = `%${query}%`
+  const [nameResult, companyResult, emailResult] = await Promise.all([
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("name", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("company", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("email", likeQuery).limit(10),
+  ])
+
+  const errorMessage = nameResult.error?.message || companyResult.error?.message || emailResult.error?.message
+
+  if (errorMessage) {
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  }
+
+  const byId = new Map<string, LeadSearchResult>()
+  for (const row of [...(nameResult.data || []), ...(companyResult.data || []), ...(emailResult.data || [])] as LeadSearchResult[]) {
+    byId.set(row.id, row)
+  }
+
+  return NextResponse.json(Array.from(byId.values()))
+}

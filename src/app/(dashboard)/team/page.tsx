@@ -1,442 +1,254 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import toast from "react-hot-toast"
 import AuthGuard from "@/components/AuthGuard"
-import { useTeamWorkspace } from "@/hooks/useTeamWorkspace"
-import type { TeamRole } from "@/types"
+import InviteMemberModal from "@/components/team/InviteMemberModal"
+import MemberTable from "@/components/team/MemberTable"
+import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher"
+import { supabase } from "@/lib/supabase/client"
+import type { Workspace, WorkspaceInvite, WorkspaceMember, WorkspaceRole } from "@/types"
 
-const roleOptions: TeamRole[] = ["Owner", "Admin", "Sales Manager", "Sales", "Viewer", "Sales Rep"]
-
-const getInviteExpiryMeta = (expiresAt?: string | null) => {
-  if (!expiresAt) {
-    return {
-      label: "No expiry",
-      tone: "neutral" as const,
-    }
-  }
-
-  const expiryDate = new Date(expiresAt)
-  if (Number.isNaN(expiryDate.getTime())) {
-    return {
-      label: "No expiry",
-      tone: "neutral" as const,
-    }
-  }
-
-  const now = Date.now()
-  const diffMs = expiryDate.getTime() - now
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-  const formattedDate = expiryDate.toLocaleDateString()
-
-  if (diffDays < 0) {
-    return {
-      label: `Expired on ${formattedDate}`,
-      tone: "expired" as const,
-    }
-  }
-
-  if (diffDays === 0) {
-    return {
-      label: `Expires today (${formattedDate})`,
-      tone: "soon" as const,
-    }
-  }
-
-  if (diffDays === 1) {
-    return {
-      label: `Expires in 1 day (${formattedDate})`,
-      tone: "soon" as const,
-    }
-  }
-
-  if (diffDays <= 2) {
-    return {
-      label: `Expires in ${diffDays} days (${formattedDate})`,
-      tone: "soon" as const,
-    }
-  }
-
-  return {
-    label: `Expires in ${diffDays} days (${formattedDate})`,
-    tone: "neutral" as const,
-  }
-}
-
-const getInviteSortKey = (expiresAt?: string | null) => {
-  if (!expiresAt) {
-    return {
-      group: 2,
-      time: Number.MAX_SAFE_INTEGER,
-    }
-  }
-
-  const expiryDate = new Date(expiresAt)
-  if (Number.isNaN(expiryDate.getTime())) {
-    return {
-      group: 2,
-      time: Number.MAX_SAFE_INTEGER,
-    }
-  }
-
-  const now = Date.now()
-  const diffMs = expiryDate.getTime() - now
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays < 0) {
-    return {
-      group: 0,
-      time: expiryDate.getTime(),
-    }
-  }
-
-  if (diffDays <= 2) {
-    return {
-      group: 1,
-      time: expiryDate.getTime(),
-    }
-  }
-
-  return {
-    group: 2,
-    time: expiryDate.getTime(),
-  }
+type WorkspaceBundle = {
+  workspace: Workspace
+  members: WorkspaceMember[]
+  invites: WorkspaceInvite[]
 }
 
 export default function TeamPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const inviteToken = searchParams.get("invite")
+  const [workspaces, setWorkspaces] = useState<WorkspaceBundle[]>([])
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [workspaceName, setWorkspaceName] = useState("")
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
 
-  const {
-    loading,
-    saving,
-    source,
-    inviteTokenStatus,
-    workspace,
-    currentMemberId,
-    stats,
-    updateOrganization: persistOrganization,
-    inviteMember: createInvite,
-    removeInvite: deleteInvite,
-    updateRole: persistRole,
-    reload,
-  } = useTeamWorkspace(inviteToken)
-
-  const [organizationName, setOrganizationName] = useState("")
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState<TeamRole>("Sales")
-  const [showExpiredOnly, setShowExpiredOnly] = useState(false)
-
-  const sortedInvites = useMemo(() => {
-    if (!workspace) return []
-
-    return [...workspace.invites].sort((a, b) => {
-      const aKey = getInviteSortKey(a.expires_at)
-      const bKey = getInviteSortKey(b.expires_at)
-
-      if (aKey.group !== bKey.group) {
-        return aKey.group - bKey.group
-      }
-
-      if (aKey.time !== bKey.time) {
-        return aKey.time - bKey.time
-      }
-
-      return a.email.localeCompare(b.email)
-    })
-  }, [workspace])
-
-  const filteredInvites = useMemo(() => {
-    if (!showExpiredOnly) return sortedInvites
-
-    return sortedInvites.filter((invite) => getInviteExpiryMeta(invite.expires_at).tone === "expired")
-  }, [showExpiredOnly, sortedInvites])
-
-  const inviteAnalytics = useMemo(() => {
-    const expired = sortedInvites.filter((invite) => getInviteExpiryMeta(invite.expires_at).tone === "expired").length
-    const total = sortedInvites.length
-    const open = total - expired
-
-    return {
-      total,
-      open,
-      expired,
+  const readApiError = async (response: Response, fallback: string) => {
+    try {
+      const data = (await response.json()) as { error?: string }
+      return data.error || fallback
+    } catch {
+      const text = await response.text()
+      return text || fallback
     }
-  }, [sortedInvites])
+  }
 
-  useEffect(() => {
-    if (workspace) {
-      setOrganizationName(workspace.organization_name)
-    }
-  }, [workspace])
-
-  useEffect(() => {
-    if (inviteTokenStatus === "accepted") {
-      toast.success("Invite accepted. You are now part of this workspace.")
-      router.replace("/team")
+  const showActionError = (message: string) => {
+    if (message.toLowerCase().includes("two-factor authentication required")) {
+      toast.error("2FA required for this action. Verify 2FA in Settings -> Security.")
       return
     }
 
-    if (inviteTokenStatus === "invalid") {
-      toast.error("Invite link is invalid or expired.")
-      router.replace("/team")
-    }
-  }, [inviteTokenStatus, router])
-
-  const handleUpdateOrganization = async () => {
-    if (!workspace) return
-
-    const result = await persistOrganization(organizationName)
-    if (result.ok) {
-      toast.success("Organization updated")
-    } else {
-      toast.error(result.message || "Could not update organization")
-    }
+    toast.error(message)
   }
 
-  const handleInviteMember = async () => {
-    if (!workspace) return
+  const load = async () => {
+    setLoading(true)
+    const response = await fetch("/api/workspaces")
+    if (response.ok) {
+      const data = (await response.json()) as WorkspaceBundle[]
+      setWorkspaces(data)
+      setSelectedWorkspaceId((current) => current || data[0]?.workspace.id || null)
+    } else {
+      toast.error("Could not load workspaces")
+    }
+    setLoading(false)
+  }
 
-    const result = await createInvite(inviteEmail, inviteRole)
-    if (result.ok) {
-      setInviteEmail("")
-      setInviteRole("Sales")
-      const inviteUrl = "inviteUrl" in result ? result.inviteUrl : undefined
-      const replacedInvite = "replacedInvite" in result ? result.replacedInvite : false
+  useEffect(() => {
+    void load()
+  }, [])
 
-      if (inviteUrl) {
-        if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(inviteUrl)
-          toast.success(replacedInvite ? "Updated invite link copied to clipboard" : "Invite link copied to clipboard")
-        } else {
-          toast.success(replacedInvite ? `Updated invite link: ${inviteUrl}` : `Invite link: ${inviteUrl}`)
-        }
-      } else {
-        toast.success(replacedInvite ? "Invite updated" : "Invite saved")
+  useEffect(() => {
+    const loadSecurityState = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setTwoFactorEnabled(Boolean(user?.user_metadata?.two_factor_enabled))
+    }
+
+    void loadSecurityState()
+  }, [])
+
+  const selectedWorkspace = useMemo(
+    () => workspaces.find((bundle) => bundle.workspace.id === selectedWorkspaceId) || workspaces[0] || null,
+    [selectedWorkspaceId, workspaces]
+  )
+
+  const createWorkspace = async () => {
+    if (!workspaceName.trim()) {
+      toast.error("Workspace name is required")
+      return
+    }
+
+    setCreating(true)
+    const response = await fetch("/api/workspaces/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: workspaceName }),
+    })
+
+    if (response.ok) {
+      setWorkspaceName("")
+      toast.success("Workspace created")
+      await load()
+    } else {
+      showActionError(await readApiError(response, "Could not create workspace"))
+    }
+
+    setCreating(false)
+  }
+
+  const inviteMember = async ({ email, role }: { email: string; role: WorkspaceRole }) => {
+    if (!selectedWorkspace) return
+
+    const response = await fetch("/api/workspaces/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_id: selectedWorkspace.workspace.id, email, role }),
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      if (data.inviteUrl) {
+        await navigator.clipboard.writeText(data.inviteUrl)
       }
-
-      await reload()
+      toast.success("Invite created")
+      setInviteOpen(false)
+      await load()
     } else {
-      toast.error(result.message || "Could not create invite")
+      showActionError(await readApiError(response, "Could not create invite"))
     }
   }
 
-  const handleCopyInviteLink = async (email: string, role: TeamRole, isExpired: boolean) => {
-    const result = await createInvite(email, role)
-    if (result.ok) {
-      const inviteUrl = "inviteUrl" in result ? result.inviteUrl : undefined
+  const updateRole = async (userId: string, role: WorkspaceRole) => {
+    if (!selectedWorkspace) return
 
-      if (inviteUrl) {
-        if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(inviteUrl)
-          toast.success(isExpired ? "Invite link refreshed and copied" : "Invite link copied to clipboard")
-        } else {
-          toast.success(isExpired ? `Refreshed invite link: ${inviteUrl}` : `Invite link: ${inviteUrl}`)
-        }
-      } else {
-        toast.success(isExpired ? "Invite refreshed" : "Invite updated")
-      }
+    const response = await fetch("/api/workspaces/update-role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_id: selectedWorkspace.workspace.id, user_id: userId, role }),
+    })
 
-      await reload()
-    } else {
-      toast.error(result.message || "Could not refresh invite link")
-    }
-  }
-
-  const handleRemoveInvite = async (email: string) => {
-    const result = await deleteInvite(email)
-    if (result.ok) {
-      toast.success("Invite removed")
-      await reload()
-    } else {
-      toast.error(result.message || "Could not remove invite")
-    }
-  }
-
-  const handleUpdateRole = async (memberId: string, role: TeamRole) => {
-    const result = await persistRole(memberId, role)
-    if (result.ok) {
+    if (response.ok) {
       toast.success("Role updated")
-      await reload()
+      await load()
     } else {
-      toast.error(result.message || "Could not update role")
+      showActionError(await readApiError(response, "Could not update role"))
     }
   }
 
-  if (loading || !workspace) {
-    return (
-      <AuthGuard>
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">Loading team workspace...</div>
-      </AuthGuard>
-    )
+  const removeMember = async (userId: string) => {
+    if (!selectedWorkspace) return
+
+    const response = await fetch("/api/workspaces/remove-member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_id: selectedWorkspace.workspace.id, user_id: userId }),
+    })
+
+    if (response.ok) {
+      toast.success("Member removed")
+      await load()
+    } else {
+      showActionError(await readApiError(response, "Could not remove member"))
+    }
   }
 
   return (
     <AuthGuard>
       <div className="mx-auto max-w-5xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Team</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Team workspace</h1>
-          <p className="mt-2 text-sm text-foreground/65">
-            Set organization details, prepare team invites, and assign roles (Owner/Admin/Sales Manager/Sales/Viewer).
-          </p>
-          <p className="mt-2 text-xs text-foreground/55">Data source: {source === "database" ? "Supabase tables" : "user metadata fallback"}</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Workspace</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">Members</h1>
+          <p className="mt-2 text-sm text-foreground/65">Invite users, assign roles, and switch between workspaces.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-xs text-foreground/65">Active members</p>
-            <p className="mt-2 text-3xl font-semibold text-foreground">{stats.activeMembers}</p>
+        {!twoFactorEnabled ? (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <p className="text-sm font-semibold text-amber-300">Security recommendation: enable 2FA before managing workspace members.</p>
+            <p className="mt-1 text-sm text-amber-100/80">Sensitive actions can be blocked until your session reaches AAL2.</p>
+            <Link href="/settings#security" className="mt-3 inline-flex rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-200">
+              Open Security Settings
+            </Link>
           </div>
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-xs text-foreground/65">Pending invites</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-300">{stats.pendingInvites}</p>
-          </div>
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-xs text-foreground/65">Owners</p>
-            <p className="mt-2 text-3xl font-semibold text-cyan-300">{stats.owners}</p>
-          </div>
-        </div>
+        ) : null}
 
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-          <h2 className="text-xl font-semibold text-foreground">Organization</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto]">
-            <input
-              value={organizationName}
-              onChange={(event) => setOrganizationName(event.target.value)}
-              className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-              placeholder="Organization name"
-            />
-            <button onClick={() => void handleUpdateOrganization()} disabled={saving} className="rounded-xl bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-60">
-              Save
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-foreground/55">Slug: {workspace.organization_slug}</p>
-        </div>
+        {loading ? (
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">Loading workspace...</div>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
+              <WorkspaceSwitcher
+                workspaces={workspaces.map((bundle) => bundle.workspace)}
+                selectedWorkspaceId={selectedWorkspace?.workspace.id || null}
+                onSelect={(workspaceId) => setSelectedWorkspaceId(workspaceId)}
+              />
 
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-          <h2 className="text-xl font-semibold text-foreground">Invite members</h2>
-          <p className="mt-2 text-sm text-foreground/65">Invites are stored as pending entries until email delivery is connected.</p>
+              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+                <p className="text-sm text-foreground/65">Create workspace</p>
+                <div className="mt-3 flex gap-3">
+                  <input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="New workspace name" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                  <button onClick={() => void createWorkspace()} disabled={creating} className="rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-black disabled:opacity-60">
+                    {creating ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </div>
+            </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setShowExpiredOnly((current) => !current)}
-              className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
-                showExpiredOnly
-                  ? "border-amber-400/40 bg-amber-500/10 text-amber-300"
-                  : "border-border-subtle bg-surface-2/70 text-foreground/80 hover:text-foreground"
-              }`}
-            >
-              {showExpiredOnly ? "Show all invites" : "Show expired only"}
-            </button>
-            <p className="text-xs text-foreground/55">Open: {inviteAnalytics.open}</p>
-            <p className="text-xs text-foreground/55">Expired: {inviteAnalytics.expired}</p>
-            <p className="text-xs text-foreground/55">Total: {inviteAnalytics.total}</p>
-          </div>
+            {selectedWorkspace ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <StatCard label="Plan" value={selectedWorkspace.workspace.plan} />
+                  <StatCard label="Members" value={String(selectedWorkspace.members.length)} />
+                  <StatCard label="Invites" value={String(selectedWorkspace.invites.length)} />
+                </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
-            <input
-              value={inviteEmail}
-              onChange={(event) => setInviteEmail(event.target.value)}
-              placeholder="user@company.com"
-              className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            />
-            <select
-              value={inviteRole}
-              onChange={(event) => setInviteRole(event.target.value as TeamRole)}
-              className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            >
-              {roleOptions.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-            <button onClick={() => void handleInviteMember()} disabled={saving} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 font-semibold text-cyan-300 disabled:opacity-60">
-              Add invite
-            </button>
-          </div>
+                <div className="flex justify-end">
+                  <button onClick={() => setInviteOpen(true)} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
+                    Invite User
+                  </button>
+                </div>
 
-          <div className="mt-4 space-y-2">
-            {filteredInvites.length === 0 ? (
-              <p className="text-sm text-foreground/55">{showExpiredOnly ? "No expired invites." : "No pending invites."}</p>
-            ) : (
-              filteredInvites.map((invite) => {
-                const expiry = getInviteExpiryMeta(invite.expires_at)
-                const isExpired = expiry.tone === "expired"
+                <MemberTable
+                  members={selectedWorkspace.members}
+                  currentUserId={null}
+                  onUpdateRole={updateRole}
+                  onRemoveMember={removeMember}
+                />
 
-                return (
-                  <div key={invite.email} className="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm">
-                    <div>
-                      <p className="text-foreground">{invite.email}</p>
-                      <p className="text-xs text-foreground/55">{invite.role} • pending</p>
-                      <p
-                        className={`text-xs ${
-                          expiry.tone === "expired"
-                            ? "text-rose-300"
-                            : expiry.tone === "soon"
-                              ? "text-amber-300"
-                              : "text-foreground/55"
-                        }`}
-                      >
-                        {expiry.label}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => void handleCopyInviteLink(invite.email, invite.role, isExpired)}
-                        disabled={saving}
-                        className={`${isExpired ? "text-amber-300 hover:text-amber-200" : "text-cyan-300 hover:text-cyan-200"} transition disabled:opacity-50`}
-                      >
-                        {isExpired ? "Refresh link" : "Copy link"}
-                      </button>
-                      <button onClick={() => void handleRemoveInvite(invite.email)} className="text-rose-300 transition hover:text-rose-200">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-          <h2 className="text-xl font-semibold text-foreground">Members and roles</h2>
-          <div className="mt-4 space-y-2">
-            {workspace.members.map((member) => {
-              const isCurrentOwner = member.id === currentMemberId && member.role === "Owner"
-
-              return (
-                <div key={member.id} className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{member.name || "Team member"}</p>
-                    <p className="text-xs text-foreground/55">{member.email}</p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-foreground/55">{member.status}</span>
-                    <select
-                      value={member.role}
-                      onChange={(event) => void handleUpdateRole(member.id, event.target.value as TeamRole)}
-                      disabled={saving || isCurrentOwner}
-                      className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none focus:border-cyan-400 disabled:opacity-50"
-                    >
-                      {roleOptions.map((role) => (
-                        <option key={`${member.id}-${role}`} value={role}>
-                          {role}
-                        </option>
-                      ))}
-                    </select>
+                <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+                  <h2 className="text-xl font-semibold text-foreground">Pending invites</h2>
+                  <div className="mt-4 space-y-2">
+                    {selectedWorkspace.invites.length === 0 ? (
+                      <p className="text-sm text-foreground/55">No pending invites.</p>
+                    ) : (
+                      selectedWorkspace.invites.map((invite) => (
+                        <div key={invite.id} className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80">
+                          {invite.email} · {invite.role}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </div>
+              </>
+            ) : null}
+          </>
+        )}
+
+        <InviteMemberModal open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={inviteMember} />
       </div>
     </AuthGuard>
+  )
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
+      <p className="text-xs text-foreground/65">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-foreground">{value}</p>
+    </div>
   )
 }

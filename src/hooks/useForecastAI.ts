@@ -172,7 +172,7 @@ export function useForecastAI(
 
         const res =
           await fetch(
-            "/api/forecast-ai",
+            "/api/revenue-forecast-ai",
             {
 
 
@@ -190,29 +190,19 @@ export function useForecastAI(
 
 
 
-              body:
-                JSON.stringify({
+              body: JSON.stringify({
 
-                  language,
+                language,
 
-
+                forecast: {
                   pipelineValue,
-
-
                   weightedRevenue,
-
-
                   revenueAtRisk,
+                },
 
+                leads: analyzedLeads,
 
-                  pipelineCoverage,
-
-
-                  leads:
-                    analyzedLeads,
-
-
-                }),
+              }),
 
 
             }
@@ -226,9 +216,14 @@ export function useForecastAI(
 
         if (!res.ok) {
 
-          throw new Error(
-            "Forecast AI failed"
+          const errorText = await res.text()
+
+          console.error(
+            "FORECAST API ERROR:",
+            errorText
           )
+
+          throw new Error(errorText)
 
         }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, LogOut, Settings2, Users, Workflow, Bot, UserRound } from "lucide-react"
+import { LayoutDashboard, LogOut, Settings2, Users, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, Sparkles, ShieldCheck } from "lucide-react"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { supabase } from "@/lib/supabase/client"
 
@@ -14,10 +14,18 @@ export default function Sidebar() {
   const links = [
     { href: "/dashboard", label: t("nav.dashboard", "Dashboard"), icon: LayoutDashboard },
     { href: "/leads", label: t("nav.leads", "Leads"), icon: Users },
+    { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRoundCheck },
     { href: "/pipeline", label: t("nav.pipeline", "Pipeline"), icon: Workflow },
-    { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRound },
+    { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
+    { href: "/activities", label: t("nav.activities", "Activities"), icon: Activity },
     { href: "/ai", label: t("nav.ai", "AI Assistant"), icon: Bot },
-    { href: "/teams", label: t("nav.teams", "Teams"), icon: Users },
+    { href: "/analytics", label: t("nav.analytics", "Analytics"), icon: BarChart3 },
+    { href: "/forecast", label: t("nav.forecast", "Forecast"), icon: Sparkles },
+    { href: "/automations", label: t("nav.automations", "Automations"), icon: Sparkles },
+    { href: "/notifications", label: t("nav.notifications", "Notifications"), icon: ListTodo },
+    { href: "/team", label: t("nav.team", "Team"), icon: Users },
+    { href: "/billing", label: t("nav.billing", "Billing"), icon: CreditCard },
+    { href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck },
     { href: "/settings", label: t("nav.settings", "Settings"), icon: Settings2 },
   ]
 

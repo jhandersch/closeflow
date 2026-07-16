@@ -23,10 +23,14 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState("")
   const [username, setUsername] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
-  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset">("login")
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset" | "magic" | "mfa">("login")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [mfaCode, setMfaCode] = useState("")
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+  const [mfaRecoveryCode, setMfaRecoveryCode] = useState("")
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false)
 
   useEffect(() => {
     const modeParam = searchParams.get("mode")
@@ -48,7 +52,7 @@ export default function LoginPage() {
       } = await supabase.auth.getUser()
 
       if (user) {
-        if (mode === "reset") {
+        if (mode === "reset" || mode === "mfa") {
           return
         }
         if (user.user_metadata?.onboarding_completed) {
@@ -62,6 +66,59 @@ export default function LoginPage() {
 
     void checkUser()
   }, [mode, nextPath, router])
+
+  const getAuthRedirectPath = () => {
+    if (nextPath) {
+      return `${window.location.origin}/login?next=${encodeURIComponent(nextPath)}`
+    }
+
+    return `${window.location.origin}/login`
+  }
+
+  const startOAuth = async (provider: "google" | "azure") => {
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: getAuthRedirectPath(),
+      },
+    })
+
+    if (error) {
+      setError(error.message || "OAuth login failed")
+      setLoading(false)
+    }
+  }
+
+  const sendMagicLink = async () => {
+    if (!email.trim()) {
+      setError("Email is required")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: getAuthRedirectPath(),
+      },
+    })
+
+    if (error) {
+      setError(error.message || "Could not send magic link")
+    } else {
+      setSuccess("Magic link sent. Check your inbox.")
+      setMode("login")
+    }
+
+    setLoading(false)
+  }
 
   const submit = async () => {
     setLoading(true)
@@ -77,6 +134,29 @@ export default function LoginPage() {
 
         if (error) {
           throw error
+        }
+
+        const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
+        if (mfaApi?.getAuthenticatorAssuranceLevel && mfaApi?.listFactors) {
+          const { data: aalData } = await mfaApi.getAuthenticatorAssuranceLevel()
+
+          if (aalData?.nextLevel === "aal2") {
+            const { data: factorsData } = await mfaApi.listFactors()
+            const totpFactors = factorsData?.totp || []
+            const selectedFactor =
+              totpFactors.find((factor: any) => factor.status === "verified") ||
+              totpFactors.find((factor: any) => factor.status === "unverified")
+
+            if (!selectedFactor?.id) {
+              throw new Error("2FA required but no TOTP factor is configured")
+            }
+
+            setMfaFactorId(selectedFactor.id)
+            setMode("mfa")
+            setSuccess("Two-factor code required. Enter your authenticator code.")
+            setLoading(false)
+            return
+          }
         }
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -110,7 +190,7 @@ export default function LoginPage() {
         setMode("login")
         setPassword("")
         setPasswordConfirm("")
-      } else {
+      } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -129,9 +209,59 @@ export default function LoginPage() {
         setSuccess("Account created. Confirm your email, then sign in.")
         setFullName("")
         setUsername("")
+      } else if (mode === "mfa") {
+        if (useRecoveryCode) {
+          if (!mfaRecoveryCode.trim()) {
+            throw new Error("Recovery code is required")
+          }
+
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+
+          const response = await fetch("/api/security/recovery-codes/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+            },
+            body: JSON.stringify({ code: mfaRecoveryCode.trim() }),
+          })
+
+          if (!response.ok) {
+            throw new Error("Invalid recovery code")
+          }
+
+          setMfaRecoveryCode("")
+        } else {
+          if (!mfaFactorId) {
+            throw new Error("No MFA factor selected")
+          }
+
+          if (!mfaCode.trim()) {
+            throw new Error("Authentication code is required")
+          }
+
+          const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
+
+          if (!mfaApi?.challengeAndVerify) {
+            throw new Error("MFA challenge is not available")
+          }
+
+          const { error } = await mfaApi.challengeAndVerify({
+            factorId: mfaFactorId,
+            code: mfaCode.trim(),
+          })
+
+          if (error) {
+            throw error
+          }
+
+          setMfaCode("")
+        }
       }
 
-      if (mode === "forgot" || mode === "reset") {
+      if (mode === "forgot" || mode === "reset" || mode === "magic") {
         return
       }
 
@@ -163,6 +293,10 @@ export default function LoginPage() {
             ? t("auth.welcomeBack", "Welcome back")
             : mode === "signup"
               ? t("auth.createWorkspace", "Create your workspace")
+              : mode === "magic"
+                ? t("auth.magicLink", "Sign in with magic link")
+                : mode === "mfa"
+                  ? t("auth.twoFactor", "Two-factor authentication")
               : mode === "forgot"
                 ? t("auth.resetPassword", "Reset your password")
                 : t("auth.setPassword", "Set a new password")}
@@ -172,12 +306,48 @@ export default function LoginPage() {
             ? "Sign in to continue with your CRM workspace."
             : mode === "signup"
             ? "Create an account and we’ll guide you through your first setup."
+            : mode === "magic"
+            ? "Enter your email and we’ll send a one-click secure sign-in link."
+            : mode === "mfa"
+            ? "Enter the 6-digit code from your authenticator app to continue."
             : mode === "forgot"
             ? "Enter your email and we’ll send you a recovery link."
             : "Choose a strong new password for your account."}
         </p>
 
-        {mode !== "reset" ? (
+        {mode === "login" ? (
+          <div className="mt-6 space-y-2">
+            <button
+              type="button"
+              onClick={() => void startOAuth("google")}
+              disabled={loading}
+              className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm font-medium text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+            >
+              Continue with Google
+            </button>
+            <button
+              type="button"
+              onClick={() => void startOAuth("azure")}
+              disabled={loading}
+              className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm font-medium text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+            >
+              Continue with Microsoft
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("magic")
+                setError(null)
+                setSuccess(null)
+              }}
+              className="w-full rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+            >
+              Continue with Magic Link
+            </button>
+          </div>
+        ) : null}
+
+        {mode !== "reset" && mode !== "mfa" ? (
           <div className="mt-6 flex rounded-2xl border border-border-subtle bg-surface-2/70 p-1">
             <button
               type="button"
@@ -223,14 +393,16 @@ export default function LoginPage() {
             </>
           ) : null}
 
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder={t("auth.email", "Email")}
-            className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
-          />
+          {mode !== "mfa" ? (
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={t("auth.email", "Email")}
+              className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
+            />
+          ) : null}
 
-          {mode !== "forgot" ? (
+          {mode !== "forgot" && mode !== "magic" && mode !== "mfa" ? (
             <input
               type="password"
               value={password}
@@ -249,6 +421,39 @@ export default function LoginPage() {
               className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
             />
           ) : null}
+
+          {mode === "mfa" ? (
+            <>
+              <input
+                value={useRecoveryCode ? mfaRecoveryCode : mfaCode}
+                onChange={(event) => {
+                  if (useRecoveryCode) {
+                    setMfaRecoveryCode(event.target.value)
+                    return
+                  }
+
+                  setMfaCode(event.target.value)
+                }}
+                placeholder={
+                  useRecoveryCode
+                    ? t("auth.recoveryCode", "Enter recovery code")
+                    : t("auth.enterCode", "Enter 6-digit code")
+                }
+                className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setUseRecoveryCode((current) => !current)
+                  setError(null)
+                  setSuccess(null)
+                }}
+                className="text-left text-sm text-cyan-300 transition hover:text-cyan-200"
+              >
+                {useRecoveryCode ? "Use authenticator code instead" : "Use recovery code instead"}
+              </button>
+            </>
+          ) : null}
         </div>
 
         {error && (
@@ -265,7 +470,14 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={() => void submit()}
+          onClick={() => {
+            if (mode === "magic") {
+              void sendMagicLink()
+              return
+            }
+
+            void submit()
+          }}
           disabled={loading}
           className="mt-6 w-full rounded-2xl bg-foreground px-4 py-3 font-semibold text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -277,6 +489,10 @@ export default function LoginPage() {
             ? t("auth.createAccount", "Create account")
             : mode === "forgot"
             ? t("auth.sendReset", "Send reset link")
+            : mode === "magic"
+            ? t("auth.sendMagicLink", "Send magic link")
+            : mode === "mfa"
+            ? t("auth.verifyCode", "Verify code")
             : t("auth.updatePassword", "Update password")}
         </button>
 
@@ -284,13 +500,33 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => {
+              if (mode === "magic") {
+                setMode("login")
+                setError(null)
+                setSuccess(null)
+                return
+              }
+
+              if (mode === "mfa") {
+                setMode("login")
+                setMfaCode("")
+                setMfaFactorId(null)
+                setMfaRecoveryCode("")
+                setUseRecoveryCode(false)
+                setError(null)
+                setSuccess(null)
+                return
+              }
+
               setMode(mode === "forgot" ? "login" : "forgot")
               setError(null)
               setSuccess(null)
             }}
             className="text-cyan-300 transition hover:text-cyan-200"
           >
-            {mode === "forgot" ? t("auth.backToLogin", "Back to login") : t("auth.forgotPassword", "Forgot password?")}
+            {mode === "forgot" || mode === "magic" || mode === "mfa"
+              ? t("auth.backToLogin", "Back to login")
+              : t("auth.forgotPassword", "Forgot password?")}
           </button>
 
           {mode === "reset" ? (

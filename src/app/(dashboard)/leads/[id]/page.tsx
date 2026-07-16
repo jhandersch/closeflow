@@ -10,6 +10,7 @@ import PipelineJourney from "@/components/leads/PipelineJourney"
 import DealMetrics from "@/components/leads/DealMetrics"
 import ActivityTimeline from "@/components/leads/ActivityTimeline"
 import TaskCard from "@/components/leads/TaskCard"
+import AILeadSummary from "@/components/leads/AILeadSummary"
 
 import { useLeadDetail } from "@/hooks/useLeadDetail"
 import { useLeadActions } from "@/hooks/useLeadActions"
@@ -533,6 +534,14 @@ export default function LeadDetailPage() {
     )
 
 
+  const hasPhone =
+    Boolean(lead.phone?.trim())
+
+
+  const hasEmail =
+    Boolean(lead.email?.trim())
+
+
 
   return (
 
@@ -669,51 +678,85 @@ export default function LeadDetailPage() {
 
 
 
-          <a
-            href={
-              lead.phone
-                ? `tel:${lead.phone}`
-                : undefined
-            }
-            className="
-            rounded-xl
-            border
-            border-border-subtle
-            px-4
-            py-2
-            text-sm
-            font-semibold
-            text-foreground/85
-            transition
-            hover:bg-foreground/5
-            "
-          >
-            Call
-          </a>
+          {hasPhone ? (
+            <a
+              href={`tel:${lead.phone}`}
+              className="
+              rounded-xl
+              border
+              border-border-subtle
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-foreground/85
+              transition
+              hover:bg-foreground/5
+              "
+            >
+              Call
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="No phone number available"
+              className="
+              rounded-xl
+              border
+              border-border-subtle
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-foreground/40
+              opacity-60
+              "
+            >
+              Call
+            </button>
+          )}
 
 
 
-          <a
-            href={
-              lead.email
-                ? `mailto:${lead.email}`
-                : undefined
-            }
-            className="
-            rounded-xl
-            border
-            border-border-subtle
-            px-4
-            py-2
-            text-sm
-            font-semibold
-            text-foreground/85
-            transition
-            hover:bg-foreground/5
-            "
-          >
-            Email
-          </a>
+          {hasEmail ? (
+            <a
+              href={`mailto:${lead.email}`}
+              className="
+              rounded-xl
+              border
+              border-border-subtle
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-foreground/85
+              transition
+              hover:bg-foreground/5
+              "
+            >
+              Email
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="No email address available"
+              className="
+              rounded-xl
+              border
+              border-border-subtle
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-foreground/40
+              opacity-60
+              "
+            >
+              Email
+            </button>
+          )}
 
 
 
@@ -738,24 +781,44 @@ export default function LeadDetailPage() {
 
 
 
-          <Link
-            href={`/ai?leadId=${lead.id}`}
-            className="
-            rounded-full
-            border
-            border-cyan-500/30
-            bg-cyan-500/10
-            px-4
-            py-2
-            text-sm
-            font-semibold
-            text-cyan-300
-            transition
-            hover:bg-cyan-500/20
-            "
-          >
-            Open in AI Assistant
-          </Link>
+          <div className="flex gap-3">
+
+            <Link
+              href={`/ai?leadId=${lead.id}`}
+              className="
+              rounded-full
+              border
+              border-cyan-500/30
+              bg-cyan-500/10
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-cyan-300
+              "
+            >
+              Open AI Assistant
+            </Link>
+
+
+            <Link
+              href={`/ai?leadId=${lead.id}`}
+              className="
+              rounded-full
+              border
+              border-purple-500/30
+              bg-purple-500/10
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              text-purple-300
+              "
+            >
+              Generate Analysis
+            </Link>
+
+            </div>
 
 
 
@@ -895,11 +958,29 @@ export default function LeadDetailPage() {
                 {lead.status}
               </p>
 
+              <div className="space-y-2">
+
               <p>
-                Probability:
-                {" "}
-                {closeProbability}%
+              Probability:
+              {" "}
+              {closeProbability}%
               </p>
+
+
+              <p>
+              AI Health Score:
+              {" "}
+              {salesScore.health}/100
+              </p>
+
+
+              <p>
+              Priority:
+              {" "}
+              {salesScore.priority}
+              </p>
+
+              </div>
 
               <p>
                 Expected close:
@@ -1043,6 +1124,10 @@ export default function LeadDetailPage() {
 
         stageAge={stageAge}
 
+      />
+
+      <AILeadSummary
+        lead={lead}
       />
 
 

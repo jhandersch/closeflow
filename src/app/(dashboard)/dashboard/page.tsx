@@ -6,6 +6,8 @@ import AuthGuard from "@/components/AuthGuard"
 
 import ActivityFeed from "@/components/dashboard/ActivityFeed"
 import AIInsightCard from "@/components/dashboard/AIInsightCard"
+import RevenueCard from "@/components/dashboard/RevenueCard"
+import WinRateCard from "@/components/dashboard/WinRateCard"
 import DashboardHeader from "@/components/dashboard/DashboardHeader"
 import EngagementCard from "@/components/dashboard/EngagementCard"
 import HealthOverviewCard from "@/components/dashboard/HealthOverviewCard"
@@ -35,8 +37,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 export default function DashboardPage() {
 
-  const { language, t } = useAppPreferences()
-
+  const { language } = useAppPreferences()
 
   const {
     leads,
@@ -45,12 +46,10 @@ export default function DashboardPage() {
     error,
     refresh,
   } = useLeadsData({
-    activityLimit:5
+    activityLimit: 5,
   })
 
-
   const metrics = useDashboardMetrics(leads)
-
 
   const {
     summary: taskSummary,
@@ -89,7 +88,6 @@ export default function DashboardPage() {
 
   const {
     insight,
-    loading: aiLoading,
   } = useAIInsight(
     {
       leads,
@@ -165,7 +163,7 @@ export default function DashboardPage() {
         ">
 
           <p className="text-lg font-semibold">
-            We couldn't load your dashboard.
+            We could not load your dashboard.
           </p>
 
 
@@ -354,6 +352,12 @@ export default function DashboardPage() {
         <AIInsightCard
           insight={insight}
         />
+
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+          <RevenueCard pipelineValue={metrics.pipelineValue} />
+          <WinRateCard winRate={Number(metrics.winRate)} />
+        </div>
 
 
 
