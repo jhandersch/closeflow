@@ -20,15 +20,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 400 })
   }
 
+  let selectedPlan: "pro" | "business" = "pro"
+
+  try {
+    const body = await request.json()
+    if (body?.plan === "business") {
+      selectedPlan = "business"
+    }
+  } catch {
+    selectedPlan = "pro"
+  }
+
   const apiKey = process.env.STRIPE_SECRET_KEY
-  const priceId = process.env.STRIPE_PRO_PRICE_ID
+  const priceByPlan = {
+    pro: process.env.STRIPE_PRO_PRICE_ID,
+    business: process.env.STRIPE_BUSINESS_PRICE_ID,
+  } as const
+  const priceId = priceByPlan[selectedPlan]
   const successUrl = process.env.STRIPE_SUCCESS_URL || `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/settings/billing?success=1`
   const cancelUrl = process.env.STRIPE_CANCEL_URL || `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/settings/billing?canceled=1`
 
   if (!apiKey || !priceId) {
     return NextResponse.json({
       checkoutUrl: null,
-      message: "Stripe is not configured yet.",
+      message:
+        selectedPlan === "business"
+          ? "Stripe Business plan is not configured yet."
+          : "Stripe Pro plan is not configured yet.",
     })
   }
 
@@ -44,7 +62,7 @@ export async function POST(request: Request) {
     metadata: {
       user_id: user.id,
       workspace_id: workspace.id,
-      plan: "pro",
+      plan: selectedPlan,
     },
   })
 

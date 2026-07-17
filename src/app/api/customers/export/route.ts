@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import * as XLSX from "xlsx"
 import { getRouteUser } from "@/lib/supabase/route"
+import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 
 type CustomerSummary = {
   company: string
@@ -27,6 +28,11 @@ export async function GET(request: Request) {
 
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "export")
+  if (!limitCheck.ok) {
+    return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
   }
 
   const primaryQuery = await supabase

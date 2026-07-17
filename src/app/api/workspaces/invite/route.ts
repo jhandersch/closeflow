@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getRouteUser, requireMfaForWorkspaceRole } from "@/lib/supabase/route"
+import { enforceTeamSeatLimit } from "@/lib/usageLimits"
 
 const rolePattern = /^(owner|admin|member|viewer)$/i
 
@@ -22,6 +23,11 @@ export async function POST(request: Request) {
   const authz = await requireMfaForWorkspaceRole(request, supabase, workspaceId, user.id)
   if (!authz.ok) {
     return NextResponse.json({ error: authz.message }, { status: authz.status })
+  }
+
+  const seatLimit = await enforceTeamSeatLimit(supabase, user.id, workspaceId)
+  if (!seatLimit.ok) {
+    return NextResponse.json({ error: seatLimit.message }, { status: seatLimit.status })
   }
 
   const token = crypto.randomUUID()

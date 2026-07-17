@@ -26,7 +26,9 @@ export default function KPIGrid({
   averageSalesCycle,
   atRiskDeals,
 }: KPIGridProps) {
-  const { t } = useAppPreferences()
+  const { t, language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -40,7 +42,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.pipelineValue", "Pipeline Value")}
-        value={`€${pipelineValue.toLocaleString("de-DE")}`}
+        value={`€${pipelineValue.toLocaleString(locale)}`}
         hint={`${openPipeline} ${t(
           "dashboard.dealsInProgress",
           "deals in progress"
@@ -51,7 +53,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.revenueClosed", "Revenue Closed")}
-        value={`€${revenue.toLocaleString("de-DE")}`}
+        value={`€${revenue.toLocaleString(locale)}`}
         hint={t("dashboard.wonBusiness", "Won business")}
         accent="emerald"
       />
@@ -73,7 +75,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.averageDeal", "Average Deal")}
-        value={`€${averageDealValue.toLocaleString("de-DE")}`}
+        value={`€${averageDealValue.toLocaleString(locale)}`}
         hint={t(
           "dashboard.averageOpportunitySize",
           "Average opportunity size"
@@ -84,7 +86,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.salesCycle", "Sales Cycle")}
-        value={`${averageSalesCycle} days`}
+        value={`${averageSalesCycle} ${isDe ? "Tage" : "days"}`}
         hint={t(
           "dashboard.averageClosingTime",
           "Average closing time"
@@ -109,7 +111,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.forecast", "Forecast")}
-        value={`€${pipelineValue.toLocaleString("de-DE")}`}
+        value={`€${pipelineValue.toLocaleString(locale)}`}
         hint={t(
           "dashboard.expectedPipeline",
           "Expected pipeline"

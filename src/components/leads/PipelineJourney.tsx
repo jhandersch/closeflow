@@ -1,19 +1,34 @@
-﻿type PipelineJourneyProps = {
+﻿"use client"
+
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type PipelineJourneyProps = {
   status: string
 }
 
-const stages = ["new", "contacted", "proposal", "won"]
+const stages = ["new", "contacted", "qualified", "proposal", "won", "lost"]
 
 export default function PipelineJourney({
   status,
 }: PipelineJourneyProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
   const currentIndex = stages.indexOf(status)
+
+  const labels: Record<string, string> = {
+    new: isDe ? "Neu" : "New",
+    contacted: isDe ? "Kontaktiert" : "Contacted",
+    qualified: isDe ? "Qualifiziert" : "Qualified",
+    proposal: isDe ? "Angebot" : "Proposal",
+    won: isDe ? "Gewonnen" : "Won",
+    lost: isDe ? "Verloren" : "Lost",
+  }
 
   return (
     <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">
-          Pipeline Journey
+          {isDe ? "Pipeline-Verlauf" : "Pipeline Journey"}
         </h2>
 
         <span className="font-semibold text-cyan-400">
@@ -47,7 +62,7 @@ export default function PipelineJourney({
                     : "text-foreground/55"
                 }`}
               >
-                {stage}
+                {labels[stage] ?? stage}
               </p>
             </div>
           )

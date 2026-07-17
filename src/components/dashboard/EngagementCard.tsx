@@ -1,4 +1,6 @@
-﻿type EngagementCardProps = {
+﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type EngagementCardProps = {
   contactedCount: number
   proposalCount: number
   forecastDelta: number
@@ -10,6 +12,9 @@ export default function EngagementCard({
   proposalCount,
   forecastDelta,
 }: EngagementCardProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
 
 
   return (
@@ -28,10 +33,10 @@ export default function EngagementCard({
       <div>
 
         <p className="text-sm text-foreground/65">
-          Sales Engagement
+          {isDe ? "Sales-Engagement" : "Sales Engagement"}
         </p>
 
-
+          {isDe ? "Kundenmomentum" : "Customer momentum"}
         <h2 className="
           text-lg
           font-semibold
@@ -77,7 +82,7 @@ export default function EngagementCard({
             <div>
 
               <p className="text-sm text-orange-300">
-                Follow-up required
+                {isDe ? "Follow-up erforderlich" : "Follow-up required"}
               </p>
 
 
@@ -101,7 +106,9 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            Leads contacted but waiting for the next sales action.
+            {isDe
+              ? "Leads wurden kontaktiert, warten aber auf die nächste Sales-Aktion."
+              : "Leads contacted but waiting for the next sales action."}
           </p>
 
 
@@ -140,7 +147,7 @@ export default function EngagementCard({
             <div>
 
               <p className="text-sm text-cyan-300">
-                Proposal opportunities
+                {isDe ? "Angebots-Chancen" : "Proposal opportunities"}
               </p>
 
 
@@ -165,7 +172,7 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            Deals currently closest to conversion.
+            {isDe ? "Deals, die aktuell am nächsten am Abschluss sind." : "Deals currently closest to conversion."}
           </p>
 
 
@@ -208,7 +215,7 @@ export default function EngagementCard({
 
 
               <p className="text-sm text-emerald-300">
-                Revenue upside
+                {isDe ? "Umsatzpotenzial" : "Revenue upside"}
               </p>
 
 
@@ -218,7 +225,7 @@ export default function EngagementCard({
                 font-bold
                 text-foreground
               ">
-                €{forecastDelta.toLocaleString("de-DE")}
+                €{forecastDelta.toLocaleString(locale)}
               </p>
 
 
@@ -235,7 +242,9 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            Additional forecasted revenue compared to closed deals.
+            {isDe
+              ? "Zusaetzlicher prognostizierter Umsatz im Vergleich zu bereits abgeschlossenen Deals."
+              : "Additional forecasted revenue compared to closed deals."}
           </p>
 
 

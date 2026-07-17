@@ -1,4 +1,6 @@
-﻿type ActivityFeedProps = {
+﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type ActivityFeedProps = {
   activities: Array<{
     id: string
     action: string
@@ -65,6 +67,9 @@ function getActivityStyle(type?: string) {
 export default function ActivityFeed({
   activities,
 }: ActivityFeedProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
 
 
   return (
@@ -84,12 +89,12 @@ export default function ActivityFeed({
         <div>
 
           <p className="cf-label">
-            Activity timeline
+            {isDe ? "Aktivitäts-Timeline" : "Activity timeline"}
           </p>
 
 
           <h2 className="cf-title text-lg font-semibold text-foreground">
-            Customer journey
+            {isDe ? "Kundenreise" : "Customer journey"}
           </h2>
 
         </div>
@@ -171,7 +176,7 @@ export default function ActivityFeed({
                       {new Date(
                         activity.created_at
                       ).toLocaleString(
-                        "de-DE",
+                        locale,
                         {
                           day:"2-digit",
                           month:"short",
@@ -208,8 +213,9 @@ export default function ActivityFeed({
               "
             >
 
-              No activity yet.
-              Create a lead to start tracking sales momentum.
+              {isDe
+                ? "Noch keine Aktivität. Erstelle einen Lead, um Sales-Momentum zu verfolgen."
+                : "No activity yet. Create a lead to start tracking sales momentum."}
 
             </div>
 

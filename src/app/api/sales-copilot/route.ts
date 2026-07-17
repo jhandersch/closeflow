@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import { getRouteUser } from "@/lib/supabase/route"
+import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
+import { captureWorkspaceError } from "@/lib/errorMonitoring"
+import { recordAiUsageEvent } from "@/lib/aiCost"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,8 +12,29 @@ const openai = new OpenAI({
 export async function POST(req: Request) {
 
   let locale: "de" | "en" = "de"
+  let userId: string | null = null
 
   try {
+    const { supabase, user, error } = await getRouteUser(req)
+
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    userId = user.id
+
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle()
+
+    const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "ai")
+    if (!limitCheck.ok) {
+      return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
+    }
+
     const {
       lead,
       activities,
@@ -138,6 +163,18 @@ Focus on:
 
       })
 
+    if (membership?.workspace_id) {
+      await recordAiUsageEvent(
+        supabase,
+        membership.workspace_id,
+        user.id,
+        "sales_copilot",
+        "gpt-4.1-mini",
+        completion.usage?.prompt_tokens || 0,
+        completion.usage?.completion_tokens || 0
+      )
+    }
+
 
     const result =
       JSON.parse(
@@ -151,6 +188,19 @@ Focus on:
   } catch(error){
 
     console.error(error)
+
+    if (userId) {
+      const { supabase } = await getRouteUser(req)
+      await captureWorkspaceError(supabase, userId, {
+        source: "api",
+        level: "error",
+        message: "Sales copilot route failed",
+        details: {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        pathname: "/api/sales-copilot",
+      })
+    }
 
     return NextResponse.json(
       {

@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react"
 import AuthGuard from "@/components/AuthGuard"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { supabase } from "@/lib/supabase/client"
 import TaskBoard from "@/components/tasks/TaskBoard"
 import TaskCalendar from "@/components/tasks/TaskCalendar"
 import TaskFilters from "@/components/tasks/TaskFilters"
 
 export default function TasksPage() {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   const [tasks, setTasks] = useState<Array<{ id: string; title: string; priority: string; due_date: string | null; completed: boolean; user_id: string }>>([])
   const [filter, setFilter] = useState("all")
   const [loading, setLoading] = useState(true)
@@ -43,15 +47,15 @@ export default function TasksPage() {
     <AuthGuard>
       <div className="space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">Tasks</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Sales tasks</h1>
-          <p className="mt-2 text-sm text-foreground/65">Track follow-up work across your workspace.</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Aufgaben" : "Tasks"}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Sales-Aufgaben" : "Sales tasks"}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{isDe ? "Verfolge Follow-up-Arbeit in deinem Workspace." : "Track follow-up work across your workspace."}</p>
         </div>
 
         <TaskFilters value={filter} onChange={setFilter} />
 
         {loading ? (
-          <p className="text-foreground/65">Loading...</p>
+          <p className="text-foreground/65">{isDe ? "Lade..." : "Loading..."}</p>
         ) : (
           <div className="space-y-6">
             <TaskBoard tasks={filteredTasks} />

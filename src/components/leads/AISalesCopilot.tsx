@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
+import { supabase } from "@/lib/supabase/client"
 
 type Props = {
   lead: any
@@ -45,13 +46,22 @@ export default function AISalesCopilot({
     setError(null)
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error(language === "de" ? "Bitte melde dich erneut an." : "Please sign in again.")
+      }
 
       const response = await fetch(
         "/api/sales-copilot",
         {
           method:"POST",
+          credentials: "include",
           headers:{
             "Content-Type":"application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
           body:JSON.stringify({
             lead,

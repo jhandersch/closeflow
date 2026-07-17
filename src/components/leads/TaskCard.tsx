@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import type { TaskPriority } from "@/types"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type Props = {
   title:string
@@ -20,6 +21,8 @@ export default function TaskCard({
   onToggle,
   onDelete
 }:Props){
+const { language } = useAppPreferences()
+const isDe = language === "de"
 
 const isOverdue = Boolean(
   dueDate &&
@@ -28,10 +31,10 @@ const isOverdue = Boolean(
 )
 
 const statusLabel = completed
-  ? "erledigt"
+  ? (isDe ? "erledigt" : "done")
   : isOverdue
-  ? "ueberfaellig"
-  : "offen"
+  ? (isDe ? "überfällig" : "overdue")
+  : (isDe ? "offen" : "open")
 
 const priorityLabel = (priority || "medium").toUpperCase()
 
@@ -71,8 +74,9 @@ completed
 <span
 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
 statusLabel === "erledigt"
+|| statusLabel === "done"
 ? "bg-emerald-500/20 text-emerald-300"
-: statusLabel === "ueberfaellig"
+: statusLabel === (isDe ? "überfällig" : "overdue")
 ? "bg-red-500/20 text-red-300"
 : "bg-blue-500/20 text-blue-300"
 }`}
@@ -85,7 +89,7 @@ statusLabel === "erledigt"
 {
 dueDate && (
 <p className="text-xs text-foreground/55">
-FÃ¤llig: {new Date(dueDate).toLocaleDateString()}
+{isDe ? "Fällig" : "Due"}: {new Date(dueDate).toLocaleDateString()}
 </p>
 )
 }
@@ -100,7 +104,7 @@ FÃ¤llig: {new Date(dueDate).toLocaleDateString()}
 onClick={onDelete}
 className="text-red-400 text-sm"
 >
-Delete
+{isDe ? "Löschen" : "Delete"}
 </button>
 
 

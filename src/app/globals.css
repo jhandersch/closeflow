@@ -14,10 +14,10 @@ html[data-theme="light"] {
   --background: #f2f5fa;
   --foreground: #0f172a;
   --surface-1: #ffffff;
-  --surface-2: #eef2f8;
+  --surface-2: #e8eef7;
   --border-subtle: rgba(15, 23, 42, 0.14);
-  --accent: #0284c7;
-  --accent-soft: rgba(2, 132, 199, 0.12);
+  --accent: #0369a1;
+  --accent-soft: rgba(3, 105, 161, 0.16);
 }
 
 html[data-theme="dark"] {
@@ -78,6 +78,48 @@ html[data-theme="light"] .text-zinc-100 {
 html[data-theme="light"] .text-zinc-500,
 html[data-theme="light"] .text-zinc-600 {
   color: color-mix(in oklab, var(--foreground) 55%, white) !important;
+}
+
+/* Improve cyan text contrast on light backgrounds. */
+html[data-theme="light"] .text-cyan-200 {
+  color: #075985 !important;
+}
+
+html[data-theme="light"] .text-cyan-300 {
+  color: #0369a1 !important;
+}
+
+html[data-theme="light"] .text-cyan-400,
+html[data-theme="light"] .text-cyan-500 {
+  color: #0c4a6e !important;
+}
+
+html[data-theme="light"] .bg-cyan-500\/5 {
+  background-color: rgba(3, 105, 161, 0.1) !important;
+}
+
+html[data-theme="light"] .bg-cyan-500\/8,
+html[data-theme="light"] .bg-cyan-500\/10 {
+  background-color: rgba(3, 105, 161, 0.14) !important;
+}
+
+html[data-theme="light"] .bg-cyan-500\/15,
+html[data-theme="light"] .bg-cyan-500\/20 {
+  background-color: rgba(3, 105, 161, 0.2) !important;
+}
+
+html[data-theme="light"] .border-cyan-500\/20 {
+  border-color: rgba(3, 105, 161, 0.3) !important;
+}
+
+html[data-theme="light"] .border-cyan-500\/30,
+html[data-theme="light"] .border-cyan-500\/40,
+html[data-theme="light"] .border-cyan-500\/50 {
+  border-color: rgba(3, 105, 161, 0.42) !important;
+}
+
+html[data-theme="light"] .border-cyan-400\/30 {
+  border-color: rgba(8, 145, 178, 0.42) !important;
 }
 
 html[data-theme="light"] .bg-black,

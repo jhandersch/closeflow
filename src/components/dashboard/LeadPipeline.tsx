@@ -1,4 +1,7 @@
-﻿import Link from "next/link"
+﻿"use client"
+
+import Link from "next/link"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 
 type Lead = {
@@ -10,35 +13,26 @@ type Lead = {
 }
 
 
-const stages = [
-  {
-    id: "new",
-    label: "New"
-  },
-  {
-    id: "contacted",
-    label: "Contacted"
-  },
-  {
-    id: "proposal",
-    label: "Proposal"
-  },
-  {
-    id: "won",
-    label: "Won"
-  }
-]
-
-
 export default function LeadPipeline({
   leads
 }: {
   leads: Lead[]
 }) {
+const { language } = useAppPreferences()
+const isDe = language === "de"
+
+const stages = [
+  { id: "new", label: isDe ? "Neu" : "New" },
+  { id: "contacted", label: isDe ? "Kontaktiert" : "Contacted" },
+  { id: "qualified", label: isDe ? "Qualifiziert" : "Qualified" },
+  { id: "proposal", label: isDe ? "Angebot" : "Proposal" },
+  { id: "won", label: isDe ? "Gewonnen" : "Won" },
+  { id: "lost", label: isDe ? "Verloren" : "Lost" },
+]
 
 return (
 
-<div className="grid gap-4 md:grid-cols-4">
+<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
 
 {
 stages.map(stage => (
@@ -77,7 +71,7 @@ className="block rounded-xl bg-surface-2/80 p-3 hover:bg-white/5"
 </p>
 
 <p className="text-xs text-green-400 mt-2">
-â‚¬{lead.value.toLocaleString("de-DE")}
+€{lead.value.toLocaleString("de-DE")}
 </p>
 
 </Link>

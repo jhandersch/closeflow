@@ -7,8 +7,13 @@ import PipelineChart from "@/components/dashboard/PipelineChart"
 import { supabase } from "@/lib/supabase/client"
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics"
 import { useLeadsData } from "@/hooks/useLeadsData"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 export default function RevenueAnalyticsPage() {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
+
   const { leads, loading } = useLeadsData({ activityLimit: 5 })
   const metrics = useDashboardMetrics(leads)
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
@@ -30,14 +35,14 @@ export default function RevenueAnalyticsPage() {
       const { data } = await supabase.from("revenue_events").select("amount, created_at, type").eq("workspace_id", workspaceId)
       const buckets = new Map<string, number>()
       for (const event of data || []) {
-        const month = new Date(event.created_at).toLocaleDateString("de-DE", { month: "short", year: "2-digit" })
+        const month = new Date(event.created_at).toLocaleDateString(locale, { month: "short", year: "2-digit" })
         buckets.set(month, (buckets.get(month) || 0) + Number(event.amount || 0))
       }
       setRevenueEvents(Array.from(buckets.entries()).map(([month, value]) => ({ month, value })))
     }
 
     void load()
-  }, [workspaceId])
+  }, [locale, workspaceId])
 
   const wonLost = useMemo(() => [
     { name: "New", value: metrics.statusChartData.find((item) => item.name === "New")?.value || 0 },
@@ -47,22 +52,22 @@ export default function RevenueAnalyticsPage() {
   ], [metrics.statusChartData])
 
   if (loading) {
-    return <AuthGuard><div className="text-foreground">Loading revenue analytics...</div></AuthGuard>
+    return <AuthGuard><div className="text-foreground">{isDe ? "Umsatz-Analytics werden geladen..." : "Loading revenue analytics..."}</div></AuthGuard>
   }
 
   return (
     <AuthGuard>
       <div className="space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">Revenue Analytics</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Revenue over time</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Umsatz-Analysen" : "Revenue Analytics"}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Umsatz über die Zeit" : "Revenue over time"}</h1>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card label="Revenue" value={`€${metrics.revenue.toLocaleString("de-DE")}`} />
-          <Card label="Average deal size" value={`€${metrics.averageDealValue.toLocaleString("de-DE")}`} />
-          <Card label="Sales cycle" value={`${metrics.averageSalesCycle} days`} />
-          <Card label="Conversion" value={`${metrics.conversionRate}%`} />
+          <Card label={isDe ? "Umsatz" : "Revenue"} value={`€${metrics.revenue.toLocaleString(locale)}`} />
+          <Card label={isDe ? "Durchschnittlicher Deal" : "Average deal size"} value={`€${metrics.averageDealValue.toLocaleString(locale)}`} />
+          <Card label={isDe ? "Sales-Zyklus" : "Sales cycle"} value={`${metrics.averageSalesCycle} ${isDe ? "Tage" : "days"}`} />
+          <Card label={isDe ? "Conversion" : "Conversion"} value={`${metrics.conversionRate}%`} />
         </div>
 
         <RevenueChart data={revenueEvents} />

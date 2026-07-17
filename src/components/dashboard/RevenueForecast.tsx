@@ -14,7 +14,8 @@ export default function RevenueForecast({
   revenueAtRisk,
 }: Props) {
 
-  const { t } = useAppPreferences()
+  const { t, language } = useAppPreferences()
+  const locale = language === "de" ? "de-DE" : "en-US"
 
   const confidence =
     pipelineValue > 0
@@ -127,6 +128,7 @@ export default function RevenueForecast({
           )}
           value={pipelineValue}
           color="text-foreground"
+          locale={locale}
         />
 
 
@@ -137,6 +139,7 @@ export default function RevenueForecast({
           )}
           value={weightedRevenue}
           color="text-emerald-400"
+          locale={locale}
         />
 
 
@@ -147,6 +150,7 @@ export default function RevenueForecast({
           )}
           value={revenueAtRisk}
           color="text-red-400"
+          locale={locale}
         />
 
 
@@ -163,10 +167,12 @@ function ForecastCard({
   label,
   value,
   color,
+  locale,
 }: {
   label:string
   value:number
   color:string
+  locale:string
 }) {
 
 
@@ -198,7 +204,7 @@ function ForecastCard({
           ${color}
         `}
       >
-        €{Math.round(value).toLocaleString("de-DE")}
+        €{Math.round(value).toLocaleString(locale)}
       </p>
 
 

@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import { getRouteUser } from "@/lib/supabase/route"
+import { captureWorkspaceError } from "@/lib/errorMonitoring"
+import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
+import { recordAiUsageEvent } from "@/lib/aiCost"
 
 export async function POST(request: Request) {
+  let userId: string | null = null
+
   try {
     const { supabase, user, error } = await getRouteUser(request)
 
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    userId = user.id
+
+    const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "ai")
+    if (!limitCheck.ok) {
+      return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
     }
 
     const body = await request.json()
@@ -60,6 +72,16 @@ export async function POST(request: Request) {
     }
 
     if (membership?.workspace_id) {
+      await recordAiUsageEvent(
+        supabase,
+        membership.workspace_id,
+        user.id,
+        "ai_chat",
+        "gpt-4.1-mini",
+        completion.usage?.prompt_tokens || 0,
+        completion.usage?.completion_tokens || 0
+      )
+
       await supabase.from("ai_conversations").insert({
         workspace_id: membership.workspace_id,
         user_id: user.id,
@@ -74,6 +96,20 @@ export async function POST(request: Request) {
     return NextResponse.json(payload)
   } catch (error) {
     console.error(error)
+
+    if (userId) {
+      const { supabase } = await getRouteUser(request)
+      await captureWorkspaceError(supabase, userId, {
+        source: "api",
+        level: "error",
+        message: "AI chat route failed",
+        details: {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        pathname: "/api/ai/chat",
+      })
+    }
+
     return NextResponse.json({ error: "AI failed" }, { status: 500 })
   }
 }

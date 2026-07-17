@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type SearchLead = {
   id: string
@@ -19,29 +20,31 @@ type SearchTask = {
 }
 
 const pageLinks = [
-  { href: "/dashboard", title: "Dashboard" },
-  { href: "/leads", title: "Leads" },
-  { href: "/customers", title: "Customers" },
-  { href: "/pipeline", title: "Pipeline" },
-  { href: "/tasks", title: "Tasks" },
-  { href: "/activities", title: "Activities" },
-  { href: "/analytics", title: "Analytics" },
-  { href: "/analytics/revenue", title: "Revenue Analytics" },
-  { href: "/forecast", title: "Forecast" },
-  { href: "/ai", title: "AI Assistant" },
-  { href: "/automations", title: "Automations" },
-  { href: "/notifications", title: "Notifications" },
-  { href: "/team", title: "Team" },
-  { href: "/billing", title: "Billing" },
-  { href: "/pricing", title: "Pricing" },
-  { href: "/demo", title: "Demo" },
-  { href: "/admin", title: "Admin" },
-  { href: "/settings/profile", title: "Profile Settings" },
-  { href: "/settings", title: "Settings" },
+  { href: "/dashboard", titleDe: "Dashboard", titleEn: "Dashboard" },
+  { href: "/leads", titleDe: "Leads", titleEn: "Leads" },
+  { href: "/customers", titleDe: "Kunden", titleEn: "Customers" },
+  { href: "/pipeline", titleDe: "Pipeline", titleEn: "Pipeline" },
+  { href: "/tasks", titleDe: "Aufgaben", titleEn: "Tasks" },
+  { href: "/activities", titleDe: "Aktivitäten", titleEn: "Activities" },
+  { href: "/analytics", titleDe: "Analysen", titleEn: "Analytics" },
+  { href: "/analytics/revenue", titleDe: "Umsatzanalysen", titleEn: "Revenue Analytics" },
+  { href: "/forecast", titleDe: "Prognose", titleEn: "Forecast" },
+  { href: "/ai", titleDe: "KI-Assistent", titleEn: "AI Assistant" },
+  { href: "/automations", titleDe: "Automatisierungen", titleEn: "Automations" },
+  { href: "/notifications", titleDe: "Benachrichtigungen", titleEn: "Notifications" },
+  { href: "/team", titleDe: "Team", titleEn: "Team" },
+  { href: "/billing", titleDe: "Abrechnung", titleEn: "Billing" },
+  { href: "/pricing", titleDe: "Preise", titleEn: "Pricing" },
+  { href: "/demo", titleDe: "Demo", titleEn: "Demo" },
+  { href: "/admin", titleDe: "Admin", titleEn: "Admin" },
+  { href: "/settings/profile", titleDe: "Profileinstellungen", titleEn: "Profile Settings" },
+  { href: "/settings", titleDe: "Einstellungen", titleEn: "Settings" },
 ]
 
 export default function Search() {
   const router = useRouter()
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [leads, setLeads] = useState<SearchLead[]>([])
@@ -102,8 +105,8 @@ export default function Search() {
   const pageResults = useMemo(() => {
     const value = query.trim().toLowerCase()
     if (!value) return []
-    return pageLinks.filter((page) => page.title.toLowerCase().includes(value))
-  }, [query])
+    return pageLinks.filter((page) => (isDe ? page.titleDe : page.titleEn).toLowerCase().includes(value))
+  }, [isDe, query])
 
   if (!open) {
     return null
@@ -113,18 +116,24 @@ export default function Search() {
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 py-10 backdrop-blur-sm">
       <div className="w-full max-w-2xl rounded-3xl border border-border-subtle bg-surface-1 p-5 shadow-2xl">
         <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3">
-          <span className="text-xs uppercase tracking-[0.3em] text-cyan-400">Search</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-cyan-400">{isDe ? "Suche" : "Search"}</span>
           <input
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search leads, tasks, pages..."
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && query.trim().length >= 2) {
+                setOpen(false)
+                router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+              }
+            }}
+            placeholder={isDe ? "Leads, Aufgaben, Seiten suchen… (Eingabetaste für volle Ergebnisse)" : "Search leads, tasks, pages… (Enter for full results)"}
             className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/40"
           />
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <SearchSection title="Leads">
+          <SearchSection title={isDe ? "Leads" : "Leads"}>
             {leads.map((lead) => (
               <button
                 key={lead.id}
@@ -134,13 +143,13 @@ export default function Search() {
                 }}
                 className="w-full rounded-2xl border border-border-subtle bg-surface-2/80 px-4 py-3 text-left text-sm text-foreground/85 transition hover:bg-foreground/5"
               >
-                <div className="font-medium text-foreground">{lead.name || "Untitled lead"}</div>
-                <div className="mt-1 text-xs text-foreground/55">{lead.company || lead.email || "No company"}</div>
+                <div className="font-medium text-foreground">{lead.name || (isDe ? "Unbenannter Lead" : "Untitled lead")}</div>
+                <div className="mt-1 text-xs text-foreground/55">{lead.company || lead.email || (isDe ? "Keine Firma" : "No company")}</div>
               </button>
             ))}
           </SearchSection>
 
-          <SearchSection title="Tasks">
+          <SearchSection title={isDe ? "Aufgaben" : "Tasks"}>
             {tasks.map((task) => (
               <button
                 key={task.id}
@@ -151,12 +160,12 @@ export default function Search() {
                 className="w-full rounded-2xl border border-border-subtle bg-surface-2/80 px-4 py-3 text-left text-sm text-foreground/85 transition hover:bg-foreground/5"
               >
                 <div className="font-medium text-foreground">{task.title}</div>
-                <div className="mt-1 text-xs text-foreground/55">Lead task</div>
+                <div className="mt-1 text-xs text-foreground/55">{isDe ? "Lead-Aufgabe" : "Lead task"}</div>
               </button>
             ))}
           </SearchSection>
 
-          <SearchSection title="Pages">
+          <SearchSection title={isDe ? "Seiten" : "Pages"}>
             {pageResults.map((page) => (
               <Link
                 key={page.href}
@@ -164,13 +173,13 @@ export default function Search() {
                 onClick={() => setOpen(false)}
                 className="block rounded-2xl border border-border-subtle bg-surface-2/80 px-4 py-3 text-sm text-foreground/85 transition hover:bg-foreground/5"
               >
-                {page.title}
+                {isDe ? page.titleDe : page.titleEn}
               </Link>
             ))}
           </SearchSection>
         </div>
 
-        <p className="mt-4 text-xs text-foreground/45">Press Esc to close. Shortcut: Ctrl + K.</p>
+        <p className="mt-4 text-xs text-foreground/45">{isDe ? "Eingabetaste öffnet die volle Suche · Esc schließt · Strg+K öffnet erneut." : "Press Enter to open full search · Esc to close · Ctrl+K to reopen."}</p>
       </div>
     </div>
   )

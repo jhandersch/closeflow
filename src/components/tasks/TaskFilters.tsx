@@ -1,18 +1,23 @@
 "use client"
 
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
 type TaskFiltersProps = {
   value: string
   onChange: (value: string) => void
 }
 
 const filters = [
-  { value: "all", label: "All" },
-  { value: "open", label: "Open" },
-  { value: "completed", label: "Completed" },
-  { value: "overdue", label: "Overdue" },
+  { value: "all", labelDe: "Alle", labelEn: "All" },
+  { value: "open", labelDe: "Offen", labelEn: "Open" },
+  { value: "completed", labelDe: "Erledigt", labelEn: "Completed" },
+  { value: "overdue", labelDe: "Überfällig", labelEn: "Overdue" },
 ]
 
 export default function TaskFilters({ value, onChange }: TaskFiltersProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   return (
     <div className="flex flex-wrap gap-2">
       {filters.map((filter) => (
@@ -26,7 +31,7 @@ export default function TaskFilters({ value, onChange }: TaskFiltersProps) {
               : "border-border-subtle bg-surface-1 text-foreground/70 hover:bg-foreground/5"
           }`}
         >
-          {filter.label}
+          {isDe ? filter.labelDe : filter.labelEn}
         </button>
       ))}
     </div>

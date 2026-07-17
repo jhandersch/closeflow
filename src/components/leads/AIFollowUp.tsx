@@ -49,7 +49,7 @@ async function generate(){
     },
     body:JSON.stringify({
       leadId: lead.id,
-      action:"AI generated follow-up email",
+      action: language === "de" ? "KI hat eine Follow-up-E-Mail erstellt" : "AI generated follow-up email",
       type:"ai"
     })
   })
@@ -91,7 +91,7 @@ p-5
 ">
 
 <p className="text-xs uppercase text-purple-300">
-AI Email Assistant
+{language === "de" ? "KI-E-Mail-Assistent" : "AI Email Assistant"}
 </p>
 
 
@@ -109,8 +109,8 @@ font-semibold
 >
 {
 loading
-? "Generating..."
-: "Generate Follow-up Email"
+? (language === "de" ? "Wird generiert..." : "Generating...")
+: (language === "de" ? "Follow-up-E-Mail generieren" : "Generate Follow-up Email")
 }
 
 </button>
@@ -155,8 +155,8 @@ text-foreground
   >
   {
   copied
-  ? "Copied"
-  : "Copy Email"
+  ? (language === "de" ? "Kopiert" : "Copied")
+  : (language === "de" ? "E-Mail kopieren" : "Copy Email")
   }
 </button>
 

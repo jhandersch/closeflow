@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const fallbackResponse = (locale: "de" | "en") => ({
+  summary: locale === "de" ? "KI-Analyse derzeit nicht verfügbar." : "AI analysis is currently unavailable.",
+  risk: locale === "de" ? "Unbekannt" : "Unknown",
+  nextAction: locale === "de" ? "Lead manuell prüfen und nächste Aktion planen." : "Review the lead manually and define the next action.",
+  confidence: 0,
 })
 
 export async function POST(req: Request) {
@@ -13,6 +16,11 @@ export async function POST(req: Request) {
 
     const { lead, activities, language } = await req.json()
     locale = language === "en" ? "en" : "de"
+
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json(fallbackResponse(locale))
+    }
 
 
     const history = activities
@@ -65,6 +73,8 @@ Consider that:
 
 `
 
+  const openai = new OpenAI({ apiKey })
+
 
     const completion = await openai.chat.completions.create({
 
@@ -102,13 +112,20 @@ Consider that:
 
     console.error(error)
 
+    const openAiLikeError = error as { status?: number; code?: string; type?: string } | undefined
+    const recoverable =
+      openAiLikeError?.status === 429 ||
+      openAiLikeError?.status === 401 ||
+      openAiLikeError?.code === "insufficient_quota" ||
+      openAiLikeError?.type === "insufficient_quota" ||
+      openAiLikeError?.code === "rate_limit_exceeded"
+
+    if (recoverable) {
+      return NextResponse.json(fallbackResponse(locale))
+    }
+
     return NextResponse.json(
-      {
-        summary: locale === "de" ? "KI-Analyse fehlgeschlagen." : "AI analysis failed.",
-        risk: locale === "de" ? "Unbekannt" : "Unknown",
-        nextAction: locale === "de" ? "Manuell prüfen." : "Review manually.",
-        confidence:0,
-      },
+      fallbackResponse(locale),
       {
         status:500
       }

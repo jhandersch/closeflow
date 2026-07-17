@@ -7,6 +7,7 @@ import AuthGuard from "@/components/AuthGuard"
 import InviteMemberModal from "@/components/team/InviteMemberModal"
 import MemberTable from "@/components/team/MemberTable"
 import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { supabase } from "@/lib/supabase/client"
 import type { Workspace, WorkspaceInvite, WorkspaceMember, WorkspaceRole } from "@/types"
 
@@ -17,6 +18,9 @@ type WorkspaceBundle = {
 }
 
 export default function TeamPage() {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   const [workspaces, setWorkspaces] = useState<WorkspaceBundle[]>([])
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -37,7 +41,7 @@ export default function TeamPage() {
 
   const showActionError = (message: string) => {
     if (message.toLowerCase().includes("two-factor authentication required")) {
-      toast.error("2FA required for this action. Verify 2FA in Settings -> Security.")
+      toast.error(isDe ? "2FA ist für diese Aktion erforderlich. Prüfe 2FA in Einstellungen -> Sicherheit." : "2FA required for this action. Verify 2FA in Settings -> Security.")
       return
     }
 
@@ -52,7 +56,7 @@ export default function TeamPage() {
       setWorkspaces(data)
       setSelectedWorkspaceId((current) => current || data[0]?.workspace.id || null)
     } else {
-      toast.error("Could not load workspaces")
+      toast.error(isDe ? "Workspaces konnten nicht geladen werden" : "Could not load workspaces")
     }
     setLoading(false)
   }
@@ -79,7 +83,7 @@ export default function TeamPage() {
 
   const createWorkspace = async () => {
     if (!workspaceName.trim()) {
-      toast.error("Workspace name is required")
+      toast.error(isDe ? "Workspace-Name ist erforderlich" : "Workspace name is required")
       return
     }
 
@@ -92,10 +96,10 @@ export default function TeamPage() {
 
     if (response.ok) {
       setWorkspaceName("")
-      toast.success("Workspace created")
+      toast.success(isDe ? "Workspace erstellt" : "Workspace created")
       await load()
     } else {
-      showActionError(await readApiError(response, "Could not create workspace"))
+      showActionError(await readApiError(response, isDe ? "Workspace konnte nicht erstellt werden" : "Could not create workspace"))
     }
 
     setCreating(false)
@@ -115,11 +119,11 @@ export default function TeamPage() {
       if (data.inviteUrl) {
         await navigator.clipboard.writeText(data.inviteUrl)
       }
-      toast.success("Invite created")
+      toast.success(isDe ? "Einladung erstellt" : "Invite created")
       setInviteOpen(false)
       await load()
     } else {
-      showActionError(await readApiError(response, "Could not create invite"))
+      showActionError(await readApiError(response, isDe ? "Einladung konnte nicht erstellt werden" : "Could not create invite"))
     }
   }
 
@@ -133,10 +137,10 @@ export default function TeamPage() {
     })
 
     if (response.ok) {
-      toast.success("Role updated")
+      toast.success(isDe ? "Rolle aktualisiert" : "Role updated")
       await load()
     } else {
-      showActionError(await readApiError(response, "Could not update role"))
+      showActionError(await readApiError(response, isDe ? "Rolle konnte nicht aktualisiert werden" : "Could not update role"))
     }
   }
 
@@ -150,10 +154,10 @@ export default function TeamPage() {
     })
 
     if (response.ok) {
-      toast.success("Member removed")
+      toast.success(isDe ? "Mitglied entfernt" : "Member removed")
       await load()
     } else {
-      showActionError(await readApiError(response, "Could not remove member"))
+      showActionError(await readApiError(response, isDe ? "Mitglied konnte nicht entfernt werden" : "Could not remove member"))
     }
   }
 
@@ -161,23 +165,23 @@ export default function TeamPage() {
     <AuthGuard>
       <div className="mx-auto max-w-5xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Workspace</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Members</h1>
-          <p className="mt-2 text-sm text-foreground/65">Invite users, assign roles, and switch between workspaces.</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Workspace" : "Workspace"}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Mitglieder" : "Members"}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{isDe ? "Lade Nutzer ein, weise Rollen zu und wechsle zwischen Workspaces." : "Invite users, assign roles, and switch between workspaces."}</p>
         </div>
 
         {!twoFactorEnabled ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-            <p className="text-sm font-semibold text-amber-300">Security recommendation: enable 2FA before managing workspace members.</p>
-            <p className="mt-1 text-sm text-amber-100/80">Sensitive actions can be blocked until your session reaches AAL2.</p>
+            <p className="text-sm font-semibold text-amber-300">{isDe ? "Sicherheitsempfehlung: Aktiviere 2FA, bevor du Workspace-Mitglieder verwaltest." : "Security recommendation: enable 2FA before managing workspace members."}</p>
+            <p className="mt-1 text-sm text-amber-100/80">{isDe ? "Sensible Aktionen können blockiert werden, bis deine Sitzung AAL2 erreicht." : "Sensitive actions can be blocked until your session reaches AAL2."}</p>
             <Link href="/settings#security" className="mt-3 inline-flex rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-200">
-              Open Security Settings
+              {isDe ? "Sicherheitseinstellungen öffnen" : "Open Security Settings"}
             </Link>
           </div>
         ) : null}
 
         {loading ? (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">Loading workspace...</div>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">{isDe ? "Workspace wird geladen..." : "Loading workspace..."}</div>
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
@@ -188,11 +192,11 @@ export default function TeamPage() {
               />
 
               <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
-                <p className="text-sm text-foreground/65">Create workspace</p>
+                <p className="text-sm text-foreground/65">{isDe ? "Workspace erstellen" : "Create workspace"}</p>
                 <div className="mt-3 flex gap-3">
-                  <input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="New workspace name" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                  <input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder={isDe ? "Neuer Workspace-Name" : "New workspace name"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
                   <button onClick={() => void createWorkspace()} disabled={creating} className="rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-black disabled:opacity-60">
-                    {creating ? "Creating..." : "Create"}
+                    {creating ? (isDe ? "Erstelle..." : "Creating...") : (isDe ? "Erstellen" : "Create")}
                   </button>
                 </div>
               </div>
@@ -201,14 +205,14 @@ export default function TeamPage() {
             {selectedWorkspace ? (
               <>
                 <div className="grid gap-4 md:grid-cols-3">
-                  <StatCard label="Plan" value={selectedWorkspace.workspace.plan} />
-                  <StatCard label="Members" value={String(selectedWorkspace.members.length)} />
-                  <StatCard label="Invites" value={String(selectedWorkspace.invites.length)} />
+                  <StatCard label={isDe ? "Plan" : "Plan"} value={selectedWorkspace.workspace.plan} />
+                  <StatCard label={isDe ? "Mitglieder" : "Members"} value={String(selectedWorkspace.members.length)} />
+                  <StatCard label={isDe ? "Einladungen" : "Invites"} value={String(selectedWorkspace.invites.length)} />
                 </div>
 
                 <div className="flex justify-end">
                   <button onClick={() => setInviteOpen(true)} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-                    Invite User
+                    {isDe ? "Nutzer einladen" : "Invite User"}
                   </button>
                 </div>
 
@@ -220,10 +224,10 @@ export default function TeamPage() {
                 />
 
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-                  <h2 className="text-xl font-semibold text-foreground">Pending invites</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{isDe ? "Ausstehende Einladungen" : "Pending invites"}</h2>
                   <div className="mt-4 space-y-2">
                     {selectedWorkspace.invites.length === 0 ? (
-                      <p className="text-sm text-foreground/55">No pending invites.</p>
+                      <p className="text-sm text-foreground/55">{isDe ? "Keine ausstehenden Einladungen." : "No pending invites."}</p>
                     ) : (
                       selectedWorkspace.invites.map((invite) => (
                         <div key={invite.id} className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80">

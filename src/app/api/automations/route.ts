@@ -114,3 +114,41 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json(data)
 }
+
+export async function DELETE(request: Request) {
+  const { supabase, user, error } = await getRouteUser(request)
+
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+
+  if (!workspace) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 400 })
+  }
+
+  const authz = await requireMfaForWorkspaceRole(request, supabase, workspace.id, user.id)
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.message }, { status: authz.status })
+  }
+
+  const body = await request.json()
+  const id = typeof body.id === "string" ? body.id.trim() : ""
+
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 })
+  }
+
+  const { error: deleteError } = await supabase
+    .from("automations")
+    .delete()
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

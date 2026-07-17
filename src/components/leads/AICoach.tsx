@@ -1,4 +1,8 @@
-﻿type AICoachProps = {
+﻿"use client"
+
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type AICoachProps = {
   title: string
   message: string
   reasons: string[]
@@ -13,6 +17,9 @@ export default function AICoach({
   action,
   confidence,
 }: AICoachProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   return (
     <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
 
@@ -25,7 +32,7 @@ export default function AICoach({
         <div className="flex-1">
 
           <p className="text-sm uppercase tracking-widest text-cyan-400">
-            AI Coach
+            {isDe ? "KI-Coach" : "AI Coach"}
           </p>
 
           <h2 className="mt-2 text-2xl font-bold text-foreground">
@@ -55,7 +62,7 @@ export default function AICoach({
 
             <div>
               <p className="text-xs text-foreground/55">
-                Recommended action
+                {isDe ? "Empfohlene Aktion" : "Recommended action"}
               </p>
 
               <p className="mt-1 font-semibold text-foreground">
@@ -65,7 +72,7 @@ export default function AICoach({
 
 
             <div className="rounded-full bg-green-500/20 px-4 py-2 text-sm font-semibold text-green-400">
-              {confidence}% confidence
+              {confidence}% {isDe ? "Sicherheit" : "confidence"}
             </div>
 
           </div>

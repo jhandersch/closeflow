@@ -70,6 +70,8 @@ export default function CreateLeadModal({
   const [error, setError] =
     useState<string | null>(null)
 
+  const isDe = true
+
     const resetForm = () => {
   setName("")
   setCompany("")
@@ -96,7 +98,7 @@ export default function CreateLeadModal({
   setError(null)
 
   if (!name.trim() || !company.trim()) {
-    setError("Name and company are required")
+    setError(isDe ? "Name und Firma sind erforderlich" : "Name and company are required")
     return
   }
 
@@ -136,11 +138,11 @@ export default function CreateLeadModal({
 
 
     if(!response.ok){
-      throw new Error("Could not create lead")
+      throw new Error(isDe ? "Lead konnte nicht erstellt werden" : "Could not create lead")
     }
 
 
-    toast.success("Lead created")
+    toast.success(isDe ? "Lead erstellt" : "Lead created")
 
     resetForm()
 
@@ -156,7 +158,7 @@ export default function CreateLeadModal({
     setError(
       error instanceof Error
         ? error.message
-        : "Something went wrong"
+        : (isDe ? "Etwas ist schiefgelaufen" : "Something went wrong")
     )
 
   } finally {
@@ -224,7 +226,7 @@ export default function CreateLeadModal({
                 text-foreground/60
               "
             >
-              Lead Management
+              Lead-Management
             </p>
 
 
@@ -235,7 +237,7 @@ export default function CreateLeadModal({
                 text-foreground
               "
             >
-              Create new lead
+              Neuen Lead erstellen
             </h2>
 
           </div>
@@ -262,7 +264,7 @@ export default function CreateLeadModal({
             "
           >
 
-            Close
+            Schließen
 
           </button>
 
@@ -293,7 +295,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Contact Name *
+              Kontaktname *
             </label>
 
 
@@ -339,7 +341,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Company *
+              Firma *
             </label>
 
 
@@ -351,7 +353,7 @@ export default function CreateLeadModal({
                 setCompany(event.target.value)
               }
 
-              placeholder="Company name"
+              placeholder="Firmenname"
 
               className="
                 w-full
@@ -385,7 +387,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Deal Value (€)
+              Deal-Wert (€)
             </label>
 
 
@@ -432,7 +434,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Pipeline Stage
+              Pipeline-Stufe
             </label>
 
 
@@ -464,27 +466,27 @@ export default function CreateLeadModal({
             >
 
               <option value="new">
-                New
+                Neu
               </option>
 
               <option value="contacted">
-                Contacted
+                Kontaktiert
               </option>
 
               <option value="qualified">
-                Qualified
+                Qualifiziert
               </option>
 
               <option value="proposal">
-                Proposal
+                Angebot
               </option>
 
               <option value="won">
-                Won
+                Gewonnen
               </option>
 
               <option value="lost">
-                Lost
+                Verloren
               </option>
 
 
@@ -502,7 +504,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Lead Source
+              Lead-Quelle
             </label>
 
             <select
@@ -528,23 +530,23 @@ export default function CreateLeadModal({
             >
 
               <option value="website">
-                Website
+                Webseite
               </option>
 
               <option value="recommendation">
-                Recommendation
+                Empfehlung
               </option>
 
               <option value="phone">
-                Phone
+                Telefon
               </option>
 
               <option value="advertising">
-                Advertising
+                Werbung
               </option>
 
               <option value="other">
-                Other
+                Sonstiges
               </option>
 
             </select>
@@ -563,7 +565,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Email
+              E-Mail
             </label>
 
 
@@ -573,7 +575,7 @@ export default function CreateLeadModal({
                 setEmail(event.target.value)
               }
               type="email"
-              placeholder="customer@email.com"
+              placeholder="kunde@beispiel.de"
               className="
                 w-full
                 rounded-2xl
@@ -604,7 +606,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Phone
+              Telefon
             </label>
 
 
@@ -644,7 +646,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Website
+              Webseite
             </label>
 
 
@@ -653,7 +655,7 @@ export default function CreateLeadModal({
               onChange={(event) =>
                 setWebsite(event.target.value)
               }
-              placeholder="https://company.com"
+              placeholder="https://firma.de"
               className="
                 w-full
                 rounded-2xl
@@ -684,7 +686,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Address
+              Adresse
             </label>
 
 
@@ -693,7 +695,7 @@ export default function CreateLeadModal({
               onChange={(event) =>
                 setAddress(event.target.value)
               }
-              placeholder="Street, City"
+              placeholder="Straße, Stadt"
               className="
                 w-full
                 rounded-2xl
@@ -764,7 +766,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Next Action
+              Nächste Aktion
             </label>
 
 
@@ -773,7 +775,7 @@ export default function CreateLeadModal({
               onChange={(event) =>
                 setNextAction(event.target.value)
               }
-              placeholder="Call customer"
+              placeholder="Kunden anrufen"
               className="
                 w-full
                 rounded-2xl
@@ -804,7 +806,7 @@ export default function CreateLeadModal({
                 text-foreground/65
               "
             >
-              Next Action Date
+              Datum der nächsten Aktion
             </label>
 
 
@@ -846,7 +848,7 @@ export default function CreateLeadModal({
               text-foreground/65
             "
           >
-            Notes
+            Notizen
           </label>
 
 
@@ -855,7 +857,7 @@ export default function CreateLeadModal({
             onChange={(event) =>
               setNotes(event.target.value)
             }
-            placeholder="Add notes about this opportunity..."
+            placeholder="Notizen zu dieser Opportunity hinzufügen..."
             className="
               h-32
               w-full
@@ -925,7 +927,7 @@ export default function CreateLeadModal({
             disabled:opacity-50
           "
         >
-          Cancel
+          Abbrechen
         </button>
 
 
@@ -947,8 +949,8 @@ export default function CreateLeadModal({
           "
         >
           {loading
-            ? "Creating..."
-            : "Create Lead"
+            ? "Erstelle..."
+            : "Lead erstellen"
           }
         </button>
 

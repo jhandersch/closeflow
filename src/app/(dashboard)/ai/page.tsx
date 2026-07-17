@@ -40,6 +40,8 @@ type ChatMessage = {
 
 export default function AIAssistantPage() {
   const { language, t } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
   const searchParams = useSearchParams()
   const leadIdFromQuery = searchParams.get("leadId")
   const [leads, setLeads] = useState<LeadLite[]>([])
@@ -159,10 +161,20 @@ export default function AIAssistantPage() {
         activities = activityQuery.data || []
       }
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error(t("ai.errors.auth", "Bitte melde dich erneut an."))
+      }
+
       const response = await fetch("/api/sales-copilot", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           lead: selectedLead,
@@ -259,10 +271,10 @@ export default function AIAssistantPage() {
 
           <div className="mt-3 grid gap-2 md:grid-cols-5">
             <button onClick={() => void runCopilot("pipeline-analysis", language === "de" ? "Analysiere meine Pipeline und sag mir, worauf ich mich heute fokussieren soll." : "Analyze my pipeline and tell me what to focus on today.")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.pipeline", "Pipeline analysieren")}</button>
-            <button onClick={() => void runCopilot("sales-coach", language === "de" ? "Wie sollte ich diesen Deal verhandeln?" : "How should I negotiate this deal?")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.coach", "Sales Coach")}</button>
-            <button onClick={() => void runCopilot("email-generator", language === "de" ? "Schreibe eine Follow-up-E-Mail, die ich jetzt senden kann." : "Write a follow-up email I can send now.")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.email", "E-Mail Generator")}</button>
+            <button onClick={() => void runCopilot("sales-coach", language === "de" ? "Wie sollte ich diesen Deal verhandeln?" : "How should I negotiate this deal?")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.coach", "Verkaufs-Coach")}</button>
+            <button onClick={() => void runCopilot("email-generator", language === "de" ? "Schreibe eine Follow-up-E-Mail, die ich jetzt senden kann." : "Write a follow-up email I can send now.")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.email", "E-Mail-Generator")}</button>
             <button onClick={() => void runCopilot("risk-detection", language === "de" ? "Welche Deals sterben gerade und warum?" : "Which deals are dying and why?")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.risk", "Risiko-Erkennung")}</button>
-            <button onClick={() => void runCopilot("pipeline-analysis", language === "de" ? "Erreiche ich mein Umsatzziel in diesem Monat?" : "Will I hit my revenue target this month?")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.forecast", "Forecast")}</button>
+            <button onClick={() => void runCopilot("pipeline-analysis", language === "de" ? "Erreiche ich mein Umsatzziel in diesem Monat?" : "Will I hit my revenue target this month?")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.forecast", "Prognose")}</button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
@@ -278,7 +290,7 @@ export default function AIAssistantPage() {
           </div>
 
           <p className="mt-3 text-xs text-foreground/55">
-            Leads: {pipelineSummary.totalLeads} | Pipeline Value: EUR {Math.round(pipelineSummary.totalValue).toLocaleString("de-DE")} | Won Revenue: EUR {Math.round(pipelineSummary.wonRevenue).toLocaleString("de-DE")}
+            {t("dashboard.leads", "Leads")}: {pipelineSummary.totalLeads} | {t("dashboard.pipelineValue", "Pipeline-Wert")}: EUR {Math.round(pipelineSummary.totalValue).toLocaleString(locale)} | {t("dashboard.revenueClosed", "Abgeschlossener Umsatz")}: EUR {Math.round(pipelineSummary.wonRevenue).toLocaleString(locale)}
           </p>
 
           {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
@@ -292,7 +304,7 @@ export default function AIAssistantPage() {
             ) : (
               chat.map((message, index) => (
                 <div key={`${message.role}-${index}`} className={`rounded-xl border p-3 text-sm ${message.role === "user" ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-200" : "border-border-subtle bg-surface-2/70 text-foreground/85"}`}>
-                  <p className="mb-1 text-xs uppercase tracking-[0.2em] text-foreground/55">{message.role === "user" ? t("ai.you", "Du") : "AI"}</p>
+                  <p className="mb-1 text-xs uppercase tracking-[0.2em] text-foreground/55">{message.role === "user" ? t("ai.you", "Du") : (isDe ? "KI" : "AI")}</p>
                   <p className="whitespace-pre-wrap">{message.content}</p>
                 </div>
               ))
@@ -315,7 +327,7 @@ export default function AIAssistantPage() {
             <div className="cf-card cf-enter p-5">
               <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "Gesprächsvorbereitung" : "Call Preparation"}</h2>
               <p className="mt-2 text-sm text-foreground/80">{language === "de" ? "Ziel" : "Goal"}: {result.callPreparation?.goal || "-"}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{language === "de" ? "Talking Points" : "Talking points"}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{language === "de" ? "Gesprächspunkte" : "Talking points"}</p>
               <ul className="mt-2 space-y-1 text-sm text-foreground/80">
                 {(result.callPreparation?.talkingPoints || []).map((item, index) => (
                   <li key={`tp-${index}`}>- {item}</li>

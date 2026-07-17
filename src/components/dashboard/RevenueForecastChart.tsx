@@ -27,7 +27,8 @@ export default function RevenueForecastChart({
 }: RevenueForecastChartProps) {
 
 
-  const { t } = useAppPreferences()
+  const { t, language } = useAppPreferences()
+  const locale = language === "de" ? "de-DE" : "en-US"
 
 
 
@@ -204,7 +205,7 @@ export default function RevenueForecastChart({
 
 
               formatter={(value)=>[
-                `€${Number(value ?? 0).toLocaleString("de-DE")}`,
+                `€${Number(value ?? 0).toLocaleString(locale)}`,
                 t(
                   "dashboard.forecastRevenue",
                   "Forecast Revenue"

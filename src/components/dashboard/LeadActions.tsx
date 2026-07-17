@@ -2,20 +2,29 @@
 
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type LeadActionsProps = {
   leadId: string
   currentStatus: string
+  phone?: string | null
+  email?: string | null
+  onLeadDeleted?: () => void
 }
 
 export default function LeadActions({
   leadId,
   currentStatus,
+  phone,
+  email,
+  onLeadDeleted,
 }: LeadActionsProps) {
   const router = useRouter()
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
 
   const deleteLead = async () => {
-    const confirmDelete = confirm("Delete this lead?")
+    const confirmDelete = confirm(isDe ? "Diesen Lead löschen?" : "Delete this lead?")
 
     if (!confirmDelete) return
 
@@ -29,6 +38,7 @@ export default function LeadActions({
       return
     }
 
+    onLeadDeleted?.()
     router.refresh()
   }
 
@@ -53,19 +63,25 @@ export default function LeadActions({
       <button
         onClick={(e) => {
           e.stopPropagation()
+          if (!phone?.trim()) return
+          window.location.href = `tel:${phone.trim()}`
         }}
+        disabled={!phone?.trim()}
         className="rounded-lg border border-border-subtle bg-white/5 px-3 py-1.5 text-xs text-foreground/80 hover:bg-white/10"
       >
-        Call
+        {isDe ? "Anrufen" : "Call"}
       </button>
 
       <button
         onClick={(e) => {
           e.stopPropagation()
+          if (!email?.trim()) return
+          window.location.href = `mailto:${email.trim()}`
         }}
+        disabled={!email?.trim()}
         className="rounded-lg border border-border-subtle bg-white/5 px-3 py-1.5 text-xs text-foreground/80 hover:bg-white/10"
       >
-        Email
+        {isDe ? "E-Mail" : "Email"}
       </button>
 
       <button
@@ -75,7 +91,7 @@ export default function LeadActions({
         }}
         className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
       >
-        Delete
+        {isDe ? "Löschen" : "Delete"}
       </button>
 
       <select
@@ -89,10 +105,12 @@ export default function LeadActions({
         }}
         className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-1.5 text-xs text-foreground/80"
       >
-        <option value="new">New</option>
-        <option value="contacted">Contacted</option>
-        <option value="proposal">Proposal</option>
-        <option value="won">Won</option>
+        <option value="new">{isDe ? "Neu" : "New"}</option>
+        <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
+        <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
+        <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
+        <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
+        <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
       </select>
 
       <button
@@ -102,7 +120,7 @@ export default function LeadActions({
         }}
         className="rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-300 hover:bg-cyan-400/20"
       >
-        Open
+        {isDe ? "Öffnen" : "Open"}
       </button>
     </div>
   )

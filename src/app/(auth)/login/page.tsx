@@ -34,16 +34,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     const modeParam = searchParams.get("mode")
+    const oauthError = searchParams.get("oauthError")
+
     if (modeParam === "reset") {
       setMode("reset")
+    }
+
+    if (oauthError) {
+      setError(oauthError)
     }
 
     const hashParams = new URLSearchParams(window.location.hash.replace("#", ""))
     if (hashParams.get("type") === "recovery") {
       setMode("reset")
-      setSuccess("Recovery link verified. Set your new password.")
+      setSuccess(t("auth.recoveryVerified", "Recovery link verified. Set your new password."))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   useEffect(() => {
     const checkUser = async () => {
@@ -68,11 +74,13 @@ export default function LoginPage() {
   }, [mode, nextPath, router])
 
   const getAuthRedirectPath = () => {
+    const callbackUrl = new URL("/auth/callback", window.location.origin)
+
     if (nextPath) {
-      return `${window.location.origin}/login?next=${encodeURIComponent(nextPath)}`
+      callbackUrl.searchParams.set("next", nextPath)
     }
 
-    return `${window.location.origin}/login`
+    return callbackUrl.toString()
   }
 
   const startOAuth = async (provider: "google" | "azure") => {
@@ -88,14 +96,14 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message || "OAuth login failed")
+      setError(error.message || t("auth.oauthFailed", "OAuth login failed"))
       setLoading(false)
     }
   }
 
   const sendMagicLink = async () => {
     if (!email.trim()) {
-      setError("Email is required")
+      setError(t("auth.emailRequired", "Email is required"))
       return
     }
 
@@ -111,9 +119,9 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message || "Could not send magic link")
+      setError(error.message || t("auth.magicLinkFailed", "Could not send magic link"))
     } else {
-      setSuccess("Magic link sent. Check your inbox.")
+      setSuccess(t("auth.magicLinkSent", "Magic link sent. Check your inbox."))
       setMode("login")
     }
 
@@ -148,12 +156,12 @@ export default function LoginPage() {
               totpFactors.find((factor: any) => factor.status === "unverified")
 
             if (!selectedFactor?.id) {
-              throw new Error("2FA required but no TOTP factor is configured")
+              throw new Error(t("auth.twoFactorNotConfigured", "2FA required but no TOTP factor is configured"))
             }
 
             setMfaFactorId(selectedFactor.id)
             setMode("mfa")
-            setSuccess("Two-factor code required. Enter your authenticator code.")
+            setSuccess(t("auth.twoFactorCodeRequired", "Two-factor code required. Enter your authenticator code."))
             setLoading(false)
             return
           }
@@ -167,15 +175,15 @@ export default function LoginPage() {
           throw error
         }
 
-        setSuccess("Password reset link sent. Check your inbox.")
+        setSuccess(t("auth.passwordResetSent", "Password reset link sent. Check your inbox."))
         setMode("login")
       } else if (mode === "reset") {
         if (password.length < 8) {
-          throw new Error("Password must be at least 8 characters long")
+          throw new Error(t("auth.passwordMinLength", "Password must be at least 8 characters long"))
         }
 
         if (password !== passwordConfirm) {
-          throw new Error("Passwords do not match")
+          throw new Error(t("auth.passwordsMismatch", "Passwords do not match"))
         }
 
         const { error } = await supabase.auth.updateUser({
@@ -186,7 +194,7 @@ export default function LoginPage() {
           throw error
         }
 
-        setSuccess("Password updated successfully. You can now sign in.")
+        setSuccess(t("auth.passwordUpdated", "Password updated successfully. You can now sign in."))
         setMode("login")
         setPassword("")
         setPasswordConfirm("")
@@ -206,13 +214,13 @@ export default function LoginPage() {
           throw error
         }
 
-        setSuccess("Account created. Confirm your email, then sign in.")
+        setSuccess(t("auth.accountCreated", "Account created. Confirm your email, then sign in."))
         setFullName("")
         setUsername("")
       } else if (mode === "mfa") {
         if (useRecoveryCode) {
           if (!mfaRecoveryCode.trim()) {
-            throw new Error("Recovery code is required")
+            throw new Error(t("auth.recoveryCodeRequired", "Recovery code is required"))
           }
 
           const {
@@ -229,23 +237,23 @@ export default function LoginPage() {
           })
 
           if (!response.ok) {
-            throw new Error("Invalid recovery code")
+            throw new Error(t("auth.invalidRecoveryCode", "Invalid recovery code"))
           }
 
           setMfaRecoveryCode("")
         } else {
           if (!mfaFactorId) {
-            throw new Error("No MFA factor selected")
+            throw new Error(t("auth.noMfaFactor", "No MFA factor selected"))
           }
 
           if (!mfaCode.trim()) {
-            throw new Error("Authentication code is required")
+            throw new Error(t("auth.authCodeRequired", "Authentication code is required"))
           }
 
           const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
 
           if (!mfaApi?.challengeAndVerify) {
-            throw new Error("MFA challenge is not available")
+            throw new Error(t("auth.mfaUnavailable", "MFA challenge is not available"))
           }
 
           const { error } = await mfaApi.challengeAndVerify({
@@ -278,7 +286,7 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed")
+      setError(err instanceof Error ? err.message : t("auth.authenticationFailed", "Authentication failed"))
     } finally {
       setLoading(false)
     }
@@ -303,16 +311,16 @@ export default function LoginPage() {
         </h1>
         <p className="mt-3 text-sm leading-7 text-foreground/65">
           {mode === "login"
-            ? "Sign in to continue with your CRM workspace."
+            ? t("auth.subtitleLogin", "Sign in to continue with your CRM workspace.")
             : mode === "signup"
-            ? "Create an account and we’ll guide you through your first setup."
+            ? t("auth.subtitleSignUp", "Create an account and we\'ll guide you through your first setup.")
             : mode === "magic"
-            ? "Enter your email and we’ll send a one-click secure sign-in link."
+            ? t("auth.subtitleMagic", "Enter your email and we\'ll send a one-click secure sign-in link.")
             : mode === "mfa"
-            ? "Enter the 6-digit code from your authenticator app to continue."
+            ? t("auth.subtitleMfa", "Enter the 6-digit code from your authenticator app to continue.")
             : mode === "forgot"
-            ? "Enter your email and we’ll send you a recovery link."
-            : "Choose a strong new password for your account."}
+            ? t("auth.subtitleForgot", "Enter your email and we\'ll send you a recovery link.")
+            : t("auth.subtitleReset", "Choose a strong new password for your account.")}
         </p>
 
         {mode === "login" ? (
@@ -323,7 +331,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm font-medium text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
             >
-              Continue with Google
+              {t("auth.continueWithGoogle", "Continue with Google")}
             </button>
             <button
               type="button"
@@ -331,7 +339,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm font-medium text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
             >
-              Continue with Microsoft
+              {t("auth.continueWithMicrosoft", "Continue with Microsoft")}
             </button>
             <button
               type="button"
@@ -342,7 +350,7 @@ export default function LoginPage() {
               }}
               className="w-full rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
             >
-              Continue with Magic Link
+              {t("auth.continueWithMagicLink", "Continue with Magic Link")}
             </button>
           </div>
         ) : null}
@@ -450,7 +458,9 @@ export default function LoginPage() {
                 }}
                 className="text-left text-sm text-cyan-300 transition hover:text-cyan-200"
               >
-                {useRecoveryCode ? "Use authenticator code instead" : "Use recovery code instead"}
+                {useRecoveryCode
+                  ? t("auth.useAuthenticatorInstead", "Use authenticator code instead")
+                  : t("auth.useRecoveryInstead", "Use recovery code instead")}
               </button>
             </>
           ) : null}

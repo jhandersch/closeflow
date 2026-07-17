@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-
-const openai = new OpenAI({
-  apiKey:process.env.OPENAI_API_KEY,
+const fallbackResponse = (locale: "de" | "en") => ({
+  health: locale === "de" ? "unbekannt" : "unknown",
+  risk: locale === "de" ? "unbekannt" : "unknown",
+  summary: locale === "de" ? "KI-Analyse fehlgeschlagen" : "AI failed",
+  recommendation: locale === "de" ? "Manuell prüfen" : "Review manually",
+  confidence: 0,
 })
 
 
@@ -20,6 +23,11 @@ const {
 }=await req.json()
 
 locale = language === "en" ? "en" : "de"
+
+const apiKey = process.env.OPENAI_API_KEY
+if (!apiKey) {
+return NextResponse.json(fallbackResponse(locale))
+}
 
 
 
@@ -83,6 +91,8 @@ Analyze:
 `
 
 
+const openai = new OpenAI({ apiKey })
+
 
 const completion =
 await openai.chat.completions.create({
@@ -124,15 +134,21 @@ catch(error){
 
 console.error(error)
 
+const openAiLikeError = error as { status?: number; code?: string; type?: string } | undefined
+const recoverable =
+openAiLikeError?.status === 429 ||
+openAiLikeError?.status === 401 ||
+openAiLikeError?.code === "insufficient_quota" ||
+openAiLikeError?.type === "insufficient_quota" ||
+openAiLikeError?.code === "rate_limit_exceeded"
+
+if (recoverable) {
+return NextResponse.json(fallbackResponse(locale))
+}
+
 
 return NextResponse.json(
-{
-health: locale === "de" ? "unbekannt" : "unknown",
-risk: locale === "de" ? "unbekannt" : "unknown",
-summary: locale === "de" ? "KI-Analyse fehlgeschlagen" : "AI failed",
-recommendation: locale === "de" ? "Manuell prüfen" : "Review manually",
-confidence:0
-},
+fallbackResponse(locale),
 {
 status:500
 }

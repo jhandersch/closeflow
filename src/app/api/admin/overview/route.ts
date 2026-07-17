@@ -39,12 +39,25 @@ export async function GET(request: Request) {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const [workspacesRes, usersRes, leadsRes, subsRes, usageRes] = await Promise.all([
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [workspacesRes, usersRes, leadsRes, subsRes, usageRes, errors24hRes, aiUsage30dRes] = await Promise.all([
     admin.from("workspaces").select("id", { count: "exact", head: true }),
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("leads").select("id", { count: "exact", head: true }),
     admin.from("subscriptions").select("id, plan, status"),
     admin.from("usage").select("ai_requests"),
+    admin
+      .from("audit_logs")
+      .select("id", { count: "exact", head: true })
+      .ilike("event_type", "error.%")
+      .gte("created_at", since24h),
+    admin
+      .from("audit_logs")
+      .select("payload")
+      .eq("event_type", "ai.usage")
+      .gte("created_at", since30d),
   ])
 
   const monthlyRevenue = (subsRes.data || []).reduce((sum, row) => {
@@ -57,6 +70,14 @@ export async function GET(request: Request) {
   }, 0)
 
   const aiRequests = (usageRes.data || []).reduce((sum, row) => sum + Number(row.ai_requests || 0), 0)
+  const aiCost30d = (aiUsage30dRes.data || []).reduce((sum, row) => {
+    const payload = (row.payload || {}) as Record<string, unknown>
+    return sum + Number(payload.cost_usd || 0)
+  }, 0)
+  const aiTokens30d = (aiUsage30dRes.data || []).reduce((sum, row) => {
+    const payload = (row.payload || {}) as Record<string, unknown>
+    return sum + Number(payload.total_tokens || 0)
+  }, 0)
 
   return NextResponse.json({
     users: usersRes.count || 0,
@@ -64,5 +85,8 @@ export async function GET(request: Request) {
     leads: leadsRes.count || 0,
     mrr: monthlyRevenue,
     ai_requests: aiRequests,
+    errors_24h: errors24hRes.count || 0,
+    ai_cost_30d_usd: Math.round(aiCost30d * 100) / 100,
+    ai_tokens_30d: aiTokens30d,
   })
 }

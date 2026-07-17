@@ -27,13 +27,25 @@ type RevenueForecastAIResponse = {
   recommendation: string
 }
 
-const fallbackInsight = (): RevenueForecastAIResponse => ({
-  confidence: 0.2,
-  explanation: "Umsatz-Insights konnten nicht automatisch erstellt werden.",
-  positiveDrivers: [],
-  risks: ["Forecast-Daten konnten nicht automatisch analysiert werden."],
-  recommendation: "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals.",
-})
+const fallbackInsight = (locale: "de" | "en" = "de"): RevenueForecastAIResponse => {
+  if (locale === "en") {
+    return {
+      confidence: 0.2,
+      explanation: "Revenue insights could not be generated automatically.",
+      positiveDrivers: [],
+      risks: ["Forecast data could not be analyzed automatically."],
+      recommendation: "Review the pipeline manually and focus on the largest open deals.",
+    }
+  }
+
+  return {
+    confidence: 0.2,
+    explanation: "Umsatz-Insights konnten nicht automatisch erstellt werden.",
+    positiveDrivers: [],
+    risks: ["Forecast-Daten konnten nicht automatisch analysiert werden."],
+    recommendation: "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals.",
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -46,13 +58,13 @@ export async function POST(req: Request) {
     const locale = language === "en" ? "en" : "de"
 
     if (!Array.isArray(leads) || leads.length === 0) {
-      return NextResponse.json(fallbackInsight())
+      return NextResponse.json(fallbackInsight(locale))
     }
 
     const apiKey = process.env.OPENAI_API_KEY
 
     if (!apiKey) {
-      return NextResponse.json(fallbackInsight(), { status: 500 })
+      return NextResponse.json(fallbackInsight(locale))
     }
 
     const leadSummary = leads
@@ -135,6 +147,16 @@ Analyze:
   } catch (error) {
     console.error("Revenue forecast AI failed:", error)
 
-    return NextResponse.json(fallbackInsight(), { status: 500 })
+    const openAiLikeError = error as { status?: number; code?: string; type?: string } | undefined
+    const isRecoverableOpenAIError =
+      openAiLikeError?.status === 429 ||
+      openAiLikeError?.code === "insufficient_quota" ||
+      openAiLikeError?.type === "insufficient_quota"
+
+    if (isRecoverableOpenAIError) {
+      return NextResponse.json(fallbackInsight("de"))
+    }
+
+    return NextResponse.json(fallbackInsight("de"))
   }
 }

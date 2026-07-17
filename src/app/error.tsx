@@ -5,6 +5,30 @@ import { useEffect } from "react"
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error)
+
+    const report = async () => {
+      try {
+        await fetch("/api/monitoring/errors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source: "client",
+            level: "error",
+            message: error.message || "Unknown client rendering error",
+            stack: error.stack || null,
+            digest: error.digest || null,
+            pathname: window.location.pathname,
+            details: {
+              userAgent: window.navigator.userAgent,
+            },
+          }),
+        })
+      } catch {
+        // Best-effort reporting only.
+      }
+    }
+
+    void report()
   }, [error])
 
   return (

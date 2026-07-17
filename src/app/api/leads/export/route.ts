@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRouteUser } from "@/lib/supabase/route"
 import * as XLSX from "xlsx"
+import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 
 const escapeCsv = (value: unknown) => {
   const text = String(value ?? "")
@@ -19,11 +20,27 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: leads, error: queryError } = await supabase
+  const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "export")
+  if (!limitCheck.ok) {
+    return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
+  }
+
+  let { data: leads, error: queryError } = await supabase
     .from("leads")
     .select("name, company, status, value, source, email, phone, website, address, tags, notes")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
+
+  if (queryError && /column .* does not exist/i.test(queryError.message || "")) {
+    const fallback = await supabase
+      .from("leads")
+      .select("name, company, status, value, notes")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
+    leads = fallback.data as typeof leads
+    queryError = fallback.error
+  }
 
   if (queryError) {
     return NextResponse.json({ error: queryError.message }, { status: 500 })

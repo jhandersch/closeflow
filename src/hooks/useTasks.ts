@@ -62,16 +62,38 @@ export function useTasks(leadId: string) {
 
     if (!user) return
 
+    const { data: leadWorkspace } = await supabase
+      .from("leads")
+      .select("workspace_id")
+      .eq("id", leadId)
+      .limit(1)
+      .maybeSingle()
+
+    const { data: workspaceMember } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle()
+
+    const workspaceId = leadWorkspace?.workspace_id || workspaceMember?.workspace_id || null
+
+    const insertPayload: Record<string, unknown> = {
+      user_id: user.id,
+      lead_id: leadId,
+      title,
+      due_date: dueDate || null,
+      priority,
+    }
+
+    if (workspaceId) {
+      insertPayload.workspace_id = workspaceId
+    }
+
 
     let { error } = await supabase
       .from("tasks")
-      .insert({
-        user_id: user.id,
-        lead_id: leadId,
-        title,
-        due_date: dueDate || null,
-        priority,
-      })
+      .insert(insertPayload)
 
     if (error && /column .* does not exist/i.test(error.message || "")) {
       const retry = await supabase

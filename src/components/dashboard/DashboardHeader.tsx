@@ -16,14 +16,22 @@ type DashboardHeaderProps = {
 
 export default function DashboardHeader({
   forecast,
+  userName,
   totalLeads,
   pipelineValue,
   attentionCount,
 }: DashboardHeaderProps) {
 
-  const [name, setName] = useState("there")
-  const [greeting, setGreeting] = useState("Good morning")
-  const { t } = useAppPreferences()
+  const [name, setName] = useState(userName?.trim() || "")
+  const { t, language } = useAppPreferences()
+
+  const locale = language === "de" ? "de-DE" : "en-US"
+  const hour = new Date().getHours()
+  const greetingKey = hour < 12 ? "dashboard.goodMorning" : hour < 18 ? "dashboard.goodAfternoon" : "dashboard.goodEvening"
+  const displayName = name.trim()
+  const greeting = displayName
+    ? `${t(greetingKey, "Good morning")}, ${displayName}`
+    : t(greetingKey, "Good morning")
 
 
 
@@ -54,19 +62,6 @@ export default function DashboardHeader({
 
 
     loadUser()
-
-
-    const hour = new Date().getHours()
-
-    if(hour < 12){
-      setGreeting("Good morning")
-    }
-    else if(hour < 18){
-      setGreeting("Good afternoon")
-    }
-    else {
-      setGreeting("Good evening")
-    }
 
 
   }, [])
@@ -152,7 +147,7 @@ export default function DashboardHeader({
             md:text-4xl
             "
           >
-            {greeting}, {name} 👋
+            {greeting} 👋
           </h1>
 
 
@@ -195,7 +190,7 @@ export default function DashboardHeader({
               </p>
 
               <p className="mt-1 text-xl font-bold text-foreground">
-                €{pipelineValue.toLocaleString("de-DE")}
+                €{pipelineValue.toLocaleString(locale)}
               </p>
 
             </div>
@@ -291,7 +286,7 @@ export default function DashboardHeader({
             text-foreground
             "
           >
-            €{Math.round(forecast).toLocaleString("de-DE")}
+            €{Math.round(forecast).toLocaleString(locale)}
           </p>
 
 

@@ -1,4 +1,6 @@
-﻿type LeadFiltersProps = {
+﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type LeadFiltersProps = {
   search: string
   status: string
   priority: string
@@ -23,12 +25,15 @@ export default function LeadFilters({
   onSourceChange,
   onSortChange,
 }: LeadFiltersProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr]">
       <input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Search leads..."
+        placeholder={isDe ? "Leads suchen..." : "Search leads..."}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       />
 
@@ -37,13 +42,13 @@ export default function LeadFilters({
         onChange={(event) => onStatusChange(event.target.value)}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="all">All status</option>
-        <option value="new">New</option>
-        <option value="contacted">Contacted</option>
-        <option value="qualified">Qualified</option>
-        <option value="proposal">Proposal</option>
-        <option value="won">Won</option>
-        <option value="lost">Lost</option>
+        <option value="all">{isDe ? "Alle Status" : "All status"}</option>
+        <option value="new">{isDe ? "Neu" : "New"}</option>
+        <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
+        <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
+        <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
+        <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
+        <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
       </select>
 
       <select
@@ -51,10 +56,10 @@ export default function LeadFilters({
         onChange={(event) => onPriorityChange(event.target.value)}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="all">All priority</option>
-        <option value="hot">Hot</option>
-        <option value="warm">Warm</option>
-        <option value="cold">Cold</option>
+        <option value="all">{isDe ? "Alle Prioritäten" : "All priority"}</option>
+        <option value="hot">{isDe ? "Hoch" : "Hot"}</option>
+        <option value="warm">{isDe ? "Mittel" : "Warm"}</option>
+        <option value="cold">{isDe ? "Niedrig" : "Cold"}</option>
       </select>
 
       <select
@@ -62,11 +67,11 @@ export default function LeadFilters({
         onChange={(event) => onSourceChange(event.target.value)}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="all">All sources</option>
-        <option value="website">Website</option>
-        <option value="recommendation">Referral</option>
-        <option value="advertising">Ads</option>
-        <option value="other">Manual</option>
+        <option value="all">{isDe ? "Alle Quellen" : "All sources"}</option>
+        <option value="website">{isDe ? "Website" : "Website"}</option>
+        <option value="recommendation">{isDe ? "Empfehlung" : "Referral"}</option>
+        <option value="advertising">{isDe ? "Werbung" : "Ads"}</option>
+        <option value="other">{isDe ? "Manuell" : "Manual"}</option>
       </select>
 
       <select
@@ -74,9 +79,9 @@ export default function LeadFilters({
         onChange={(event) => onSortChange(event.target.value as "created_at" | "value" | "priority")}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="created_at">Newest</option>
-        <option value="value">Highest Value</option>
-        <option value="priority">Highest Score</option>
+        <option value="created_at">{isDe ? "Neueste" : "Newest"}</option>
+        <option value="value">{isDe ? "Höchster Wert" : "Highest Value"}</option>
+        <option value="priority">{isDe ? "Höchster Score" : "Highest Score"}</option>
       </select>
     </div>
   )

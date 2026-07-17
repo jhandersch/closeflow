@@ -8,11 +8,12 @@ export default function DemoPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  const startDemo = async () => {
+  const startDemo = async (reload = false) => {
     setLoading(true)
     try {
-      const result = await loadDemoData()
-      setMessage(result.message)
+      const result = await loadDemoData({ reload })
+      const warning = result.warnings?.length ? ` Warnings: ${result.warnings.join(" ")}` : ""
+      setMessage(`${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.${warning}`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to start demo")
     } finally {
@@ -29,9 +30,14 @@ export default function DemoPage() {
           <p className="mt-2 text-sm text-foreground/65">Spin up a sample dataset to explore CloseFlow instantly.</p>
         </div>
 
-        <button onClick={() => void startDemo()} disabled={loading} className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black disabled:opacity-60">
-          {loading ? "Loading..." : "Load demo data"}
-        </button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <button onClick={() => void startDemo(false)} disabled={loading} className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black disabled:opacity-60">
+            {loading ? "Loading..." : "Load demo data"}
+          </button>
+          <button onClick={() => void startDemo(true)} disabled={loading} className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-3 font-semibold text-foreground disabled:opacity-60">
+            {loading ? "Reloading..." : "Reload demo data"}
+          </button>
+        </div>
 
         {message ? <p className="text-sm text-foreground/70">{message}</p> : null}
       </div>

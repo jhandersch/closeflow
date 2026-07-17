@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useMemo, useRef, useState } from "react"
 import AuthGuard from "@/components/AuthGuard"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { useLeadsData } from "@/hooks/useLeadsData"
 import * as XLSX from "xlsx"
 import { supabase } from "@/lib/supabase/client"
@@ -39,6 +40,10 @@ const escapeCsv = (value: unknown) => {
 
 export default function CustomersPage() {
   const { leads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
+  const { language, t } = useAppPreferences()
+
+  const locale = language === "de" ? "de-DE" : "en-US"
+  const currencyFormatter = new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" })
 
   const [filter, setFilter] = useState<CustomerFilter>("all")
   const [query, setQuery] = useState("")
@@ -127,7 +132,7 @@ export default function CustomersPage() {
       headers: await getAuthHeaders(),
     })
     if (!response.ok) {
-      setImportMessage(`${format.toUpperCase()} export failed.`)
+      setImportMessage(t("customers.exportFailed", "Export failed.") + ` (${format.toUpperCase()})`)
       return
     }
 
@@ -159,7 +164,7 @@ export default function CustomersPage() {
               const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
               const firstSheet = workbook.SheetNames[0]
               if (!firstSheet) {
-                throw new Error("Import failed: workbook has no sheets.")
+                throw new Error(t("customers.importWorkbookNoSheets", "Import failed: workbook has no sheets."))
               }
               return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet])
             }
@@ -176,19 +181,25 @@ export default function CustomersPage() {
 
       if (!response.ok) {
         const text = await response.text()
-        setImportMessage(text || "Import failed.")
+        setImportMessage(text || t("customers.importFailed", "Import failed."))
         return
       }
 
       const data = (await response.json()) as { inserted?: number; skipped?: number; issues?: ImportIssue[] }
       const issues = Array.isArray(data.issues) ? data.issues : []
       setImportIssues(issues)
+
+      const inserted = data.inserted || 0
+      const skipped = data.skipped || 0
+      const summary = `${t("customers.importDoneStart", "Import done. Added")} ${inserted} ${t("customers.importDoneMiddle", "customers, skipped")} ${skipped}`
       setImportMessage(
-        `Import done. Added ${data.inserted || 0} customers, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
+        issues.length
+          ? `${summary}. ${issues.length} ${t("customers.importDoneIssuesSuffix", "issue(s) available in report.")}`
+          : `${summary}.`
       )
       await refresh()
     } catch (importError) {
-      setImportMessage(importError instanceof Error ? importError.message : "Import failed.")
+      setImportMessage(importError instanceof Error ? importError.message : t("customers.importFailed", "Import failed."))
     } finally {
       setImportingCsv(false)
     }
@@ -219,16 +230,16 @@ export default function CustomersPage() {
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Customers</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Customer Management</h1>
-          <p className="mt-2 text-sm text-foreground/65">Manage active customers, churn risk, and high-value VIP accounts.</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{t("customers.header", "Customers")}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{t("customers.title", "Customer Management")}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{t("customers.subtitle", "Manage active customers, churn risk, and high-value VIP accounts.")}</p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search customers..."
+            placeholder={t("customers.searchPlaceholder", "Search customers...")}
             className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground outline-none"
           />
 
@@ -236,19 +247,19 @@ export default function CustomersPage() {
             onClick={() => setFilter("all")}
             className={`rounded-xl border px-4 py-2 text-sm ${filter === "all" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}
           >
-            All
+            {t("customers.filterAll", "All")}
           </button>
           <button
             onClick={() => setFilter("active")}
             className={`rounded-xl border px-4 py-2 text-sm ${filter === "active" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}
           >
-            Active Customers
+            {t("customers.filterActive", "Active Customers")}
           </button>
           <button
             onClick={() => setFilter("lost")}
             className={`rounded-xl border px-4 py-2 text-sm ${filter === "lost" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}
           >
-            Lost Customers
+            {t("customers.filterLost", "Lost Customers")}
           </button>
           <button
             onClick={() => setFilter("vip")}
@@ -263,20 +274,20 @@ export default function CustomersPage() {
             onClick={() => void downloadExport("csv")}
             className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
           >
-            Export CSV
+            {t("customers.exportCsv", "Export CSV")}
           </button>
           <button
             onClick={() => void downloadExport("xlsx")}
             className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
           >
-            Export Excel
+            {t("customers.exportExcel", "Export Excel")}
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importingCsv}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-60"
           >
-            {importingCsv ? "Importing..." : "Import File"}
+            {importingCsv ? t("customers.importing", "Importing...") : t("customers.importFile", "Import File")}
           </button>
           <input
             ref={fileInputRef}
@@ -296,7 +307,7 @@ export default function CustomersPage() {
               onClick={downloadImportIssuesReport}
               className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-200"
             >
-              Download Import Issues
+              {t("customers.downloadImportIssues", "Download Import Issues")}
             </button>
           ) : null}
           {importMessage ? <p className="text-sm text-foreground/65">{importMessage}</p> : null}
@@ -304,14 +315,14 @@ export default function CustomersPage() {
 
         {error ? (
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-            Could not load customers: {error}
+            {t("customers.loadErrorPrefix", "Could not load customers:")} {error}
           </div>
         ) : null}
 
         {loading ? (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">Loading customers...</div>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">{t("customers.loading", "Loading customers...")}</div>
         ) : filteredCustomers.length === 0 ? (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-sm text-foreground/65">No customers found for the selected filter.</div>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-sm text-foreground/65">{t("customers.empty", "No customers found for the selected filter.")}</div>
         ) : (
           <div className="space-y-3">
             {filteredCustomers.map((customer) => (
@@ -323,22 +334,22 @@ export default function CustomersPage() {
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-foreground">{customer.company}</h2>
-                    <p className="mt-1 text-sm text-foreground/65">Contacts: {customer.contacts.join(", ") || "n/a"}</p>
+                    <p className="mt-1 text-sm text-foreground/65">{t("customers.contacts", "Contacts")}: {customer.contacts.join(", ") || t("customers.na", "n/a")}</p>
                   </div>
 
                   <div className="grid gap-3 text-sm md:grid-cols-3">
                     <div>
-                      <p className="text-foreground/55">Revenue</p>
-                      <p className="font-semibold text-emerald-300">EUR {customer.totalRevenue.toLocaleString("de-DE")}</p>
+                      <p className="text-foreground/55">{t("customers.revenue", "Revenue")}</p>
+                      <p className="font-semibold text-emerald-300">{currencyFormatter.format(customer.totalRevenue)}</p>
                     </div>
                     <div>
-                      <p className="text-foreground/55">Deals</p>
+                      <p className="text-foreground/55">{t("customers.deals", "Deals")}</p>
                       <p className="font-semibold text-foreground">{customer.deals}</p>
                     </div>
                     <div>
-                      <p className="text-foreground/55">Last Contact</p>
+                      <p className="text-foreground/55">{t("customers.lastContact", "Last Contact")}</p>
                       <p className="font-semibold text-foreground">
-                        {customer.lastContactAt ? new Date(customer.lastContactAt).toLocaleDateString("de-DE") : "n/a"}
+                        {customer.lastContactAt ? new Date(customer.lastContactAt).toLocaleDateString(locale) : t("customers.na", "n/a")}
                       </p>
                     </div>
                   </div>

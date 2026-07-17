@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import AuthGuard from "@/components/AuthGuard"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import LeadFilters from "@/components/dashboard/LeadFilters"
 import { supabase } from "@/lib/supabase/client"
 import { getHealthScore, getPriorityScore, getStaleDays } from "@/lib/scoring"
@@ -35,6 +36,9 @@ const escapeCsv = (value: unknown) => {
 
 export default function LeadsPage() {
   const { leads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
@@ -114,9 +118,18 @@ export default function LeadsPage() {
   const downloadExport = async (format: "csv" | "xlsx") => {
     const response = await fetch(`/api/leads/export?format=${format}`, {
       headers: await getAuthHeaders(),
+      credentials: "include",
     })
     if (!response.ok) {
-      setDemoMessage(`${format.toUpperCase()} export failed.`)
+      let message = isDe ? `${format.toUpperCase()}-Export fehlgeschlagen.` : `${format.toUpperCase()} export failed.`
+      try {
+        const data = (await response.json()) as { error?: string }
+        if (data.error) message = data.error
+      } catch {
+        const text = await response.text()
+        if (text) message = text
+      }
+      setDemoMessage(message)
       return
     }
 
@@ -148,7 +161,7 @@ export default function LeadsPage() {
               const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
               const firstSheet = workbook.SheetNames[0]
               if (!firstSheet) {
-                throw new Error("Import failed: workbook has no sheets.")
+                throw new Error(isDe ? "Import fehlgeschlagen: Arbeitsmappe enthaelt keine Tabellenblaetter." : "Import failed: workbook has no sheets.")
               }
               return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet])
             }
@@ -160,12 +173,13 @@ export default function LeadsPage() {
       const response = await fetch("/api/leads/import", {
         method: "POST",
         headers: await getAuthHeaders(true),
+        credentials: "include",
         body: JSON.stringify({ csv: resolvedCsvText }),
       })
 
       if (!response.ok) {
         const text = await response.text()
-        setDemoMessage(text || "CSV import failed.")
+        setDemoMessage(text || (isDe ? "CSV-Import fehlgeschlagen." : "CSV import failed."))
         return
       }
 
@@ -173,11 +187,13 @@ export default function LeadsPage() {
       const issues = Array.isArray(data.issues) ? data.issues : []
       setImportIssues(issues)
       setDemoMessage(
-        `Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
+        isDe
+          ? `Import abgeschlossen. ${data.inserted || 0} Leads hinzugefügt, ${data.skipped || 0} übersprungen${issues.length ? `. ${issues.length} Problem(e) im Bericht verfügbar.` : "."}`
+          : `Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
       )
       await refresh()
     } catch (error) {
-      setDemoMessage(error instanceof Error ? error.message : "Import failed.")
+      setDemoMessage(error instanceof Error ? error.message : (isDe ? "Import fehlgeschlagen." : "Import failed."))
     } finally {
       setImportingCsv(false)
     }
@@ -212,19 +228,19 @@ export default function LeadsPage() {
     const user = userData.user
 
     if (!user) {
-      setFormError("You need an active session to create a lead.")
+      setFormError(isDe ? "Du brauchst eine aktive Sitzung, um einen Lead zu erstellen." : "You need an active session to create a lead.")
       setSubmitting(false)
       return
     }
 
     if (!name.trim()) {
-  setFormError("Lead name is required")
+  setFormError(isDe ? "Lead-Name ist erforderlich" : "Lead name is required")
   setSubmitting(false)
   return
 }
 
 if (!company.trim()) {
-  setFormError("Company name is required")
+  setFormError(isDe ? "Firmenname ist erforderlich" : "Company name is required")
   setSubmitting(false)
   return
 }
@@ -236,7 +252,7 @@ const parsedTags = tagsInput
   .filter(Boolean)
 
 if (isNaN(dealValue) || dealValue < 0) {
-  setFormError("Deal value must be a valid number")
+  setFormError(isDe ? "Deal-Wert muss eine gültige Zahl sein" : "Deal value must be a valid number")
   setSubmitting(false)
   return
 }
@@ -262,7 +278,7 @@ const duplicateLead = (existingLeads || []).find((lead) => {
 })
 
 if (duplicateLead) {
-  setFormError("Duplicate lead detected: same name and company already exist.")
+  setFormError(isDe ? "Doppelter Lead erkannt: Name und Firma existieren bereits." : "Duplicate lead detected: same name and company already exist.")
   setSubmitting(false)
   return
 }
@@ -341,9 +357,9 @@ if (error) {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">Pipeline</p>
-            <h1 className="text-3xl font-bold text-foreground">Leads</h1>
-            <p className="mt-2 text-sm text-foreground/65">Search, filter, sort, and follow up on the right opportunities.</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">{isDe ? "Pipeline" : "Pipeline"}</p>
+            <h1 className="text-3xl font-bold text-foreground">{isDe ? "Leads" : "Leads"}</h1>
+            <p className="mt-2 text-sm text-foreground/65">{isDe ? "Suche, filtere, sortiere und arbeite die richtigen Opportunities nach." : "Search, filter, sort, and follow up on the right opportunities."}</p>
           </div>
 
           <div className="flex gap-3">
@@ -358,7 +374,7 @@ if (error) {
                     : "text-foreground/65"
                 }`}
               >
-                List
+                {isDe ? "Liste" : "List"}
               </button>
 
               <button
@@ -379,21 +395,21 @@ if (error) {
               onClick={() => setShowForm(true)}
               className="rounded-xl bg-foreground px-4 py-2 font-medium text-background"
             >
-              + Add Lead
+              {isDe ? "+ Lead hinzufügen" : "+ Add Lead"}
             </button>
 
             <button
               onClick={() => void downloadExport("csv")}
               className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
             >
-              Export CSV
+              {isDe ? "CSV exportieren" : "Export CSV"}
             </button>
 
             <button
               onClick={() => void downloadExport("xlsx")}
               className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
             >
-              Export Excel
+              {isDe ? "Excel exportieren" : "Export Excel"}
             </button>
 
             <button
@@ -401,7 +417,7 @@ if (error) {
               disabled={importingCsv}
               className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60"
             >
-              {importingCsv ? "Importing..." : "Import File"}
+              {importingCsv ? (isDe ? "Importiere..." : "Importing...") : (isDe ? "Datei importieren" : "Import File")}
             </button>
 
             <input
@@ -423,7 +439,7 @@ if (error) {
                 onClick={downloadImportIssuesReport}
                 className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 font-medium text-amber-200"
               >
-                Download Import Issues
+                {isDe ? "Importprobleme herunterladen" : "Download Import Issues"}
               </button>
             ) : null}
 
@@ -432,7 +448,7 @@ if (error) {
 
         {error ? (
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-            We couldn’t load your leads. {error}
+            {isDe ? "Leads konnten nicht geladen werden." : "We couldn’t load your leads."} {error}
           </div>
         ) : null}
 
@@ -452,24 +468,24 @@ if (error) {
         <div className="grid gap-4 md:grid-cols-4">
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">Total Leads</p>
+            <p className="text-sm text-foreground/65">{isDe ? "Leads gesamt" : "Total Leads"}</p>
             <p className="mt-2 text-3xl font-bold text-foreground">
               {filteredLeads.length}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">Pipeline Value</p>
+            <p className="text-sm text-foreground/65">{isDe ? "Pipeline-Wert" : "Pipeline Value"}</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">
               €
               {filteredLeads
                 .reduce((sum, lead) => sum + (lead.value || 0), 0)
-                .toLocaleString("de-DE")}
+                .toLocaleString(locale)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">Average Health</p>
+            <p className="text-sm text-foreground/65">{isDe ? "Durchschnittliche Gesundheit" : "Average Health"}</p>
             <p className="mt-2 text-3xl font-bold text-cyan-400">
               {Math.round(
                 filteredLeads.reduce(
@@ -481,7 +497,7 @@ if (error) {
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">Forecast Revenue</p>
+            <p className="text-sm text-foreground/65">{isDe ? "Forecast-Umsatz" : "Forecast Revenue"}</p>
 
             <p className="mt-2 text-3xl font-bold text-purple-400">
               €
@@ -509,7 +525,7 @@ if (error) {
 
                   return sum + (lead.value * probability) / 100
                 }, 0)
-                .toLocaleString("de-DE", {
+                .toLocaleString(locale, {
                   maximumFractionDigits: 0,
                 })}
             </p>
@@ -532,14 +548,14 @@ if (error) {
               <input
                 value={company}
                 onChange={(event) => setCompany(event.target.value)}
-                placeholder="Company"
+                placeholder={isDe ? "Firma" : "Company"}
                 className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
 
               <input
                 value={value}
                 onChange={(event) => setValue(event.target.value)}
-                placeholder="Value"
+                placeholder={isDe ? "Wert" : "Value"}
                 type="number"
                 className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
@@ -549,12 +565,12 @@ if (error) {
                 onChange={(event) => setLeadStatus(event.target.value as LeadStatus)}
                 className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               >
-                <option value="new">new</option>
-                <option value="contacted">contacted</option>
-                <option value="qualified">qualified</option>
-                <option value="proposal">proposal</option>
-                <option value="won">won</option>
-                <option value="lost">lost</option>
+                <option value="new">{isDe ? "Neu" : "New"}</option>
+                <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
+                <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
+                <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
+                <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
+                <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
               </select>
 
               <select
@@ -562,11 +578,11 @@ if (error) {
                 onChange={(event) => setLeadSource(event.target.value as LeadSource)}
                 className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               >
-                <option value="website">website</option>
-                <option value="recommendation">recommendation</option>
-                <option value="phone">phone</option>
-                <option value="advertising">advertising</option>
-                <option value="other">other</option>
+                <option value="website">{isDe ? "Website" : "Website"}</option>
+                <option value="recommendation">{isDe ? "Empfehlung" : "Recommendation"}</option>
+                <option value="phone">{isDe ? "Telefon" : "Phone"}</option>
+                <option value="advertising">{isDe ? "Werbung" : "Advertising"}</option>
+                <option value="other">{isDe ? "Sonstiges" : "Other"}</option>
               </select>
 
               <input
@@ -594,20 +610,20 @@ if (error) {
               <input
                 value={tagsInput}
                 onChange={(event) => setTagsInput(event.target.value)}
-                placeholder="Tags (comma separated)"
+                placeholder={isDe ? "Tags (durch Komma getrennt)" : "Tags (comma separated)"}
                 className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
 
               <input
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
-                placeholder="Address"
+                placeholder={isDe ? "Adresse" : "Address"}
                 className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
               <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              placeholder="Notes about this lead..."
+              placeholder={isDe ? "Notizen zu diesem Lead..." : "Notes about this lead..."}
               className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
             />
             </div>
@@ -618,7 +634,7 @@ if (error) {
                 disabled={submitting}
                 className="rounded-xl bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60"
               >
-                {submitting ? "Creating..." : "Create lead"}
+                {submitting ? (isDe ? "Erstelle..." : "Creating...") : (isDe ? "Lead erstellen" : "Create lead")}
               </button>
 
               <button
@@ -628,7 +644,7 @@ if (error) {
                 }}
                 className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80"
               >
-                Cancel
+                {isDe ? "Abbrechen" : "Cancel"}
               </button>
             </div>
           </div>
@@ -636,8 +652,7 @@ if (error) {
 
         {loading ? (
           <div className="space-y-3">
-
-            {[1,2,3].map((item) => (
+            {[1, 2, 3].map((item) => (
               <div
                 key={item}
                 className="
@@ -649,9 +664,7 @@ if (error) {
                   animate-pulse
                 "
               >
-
                 <div className="flex gap-4">
-
                   <div className="
                     h-14
                     w-14
@@ -659,9 +672,7 @@ if (error) {
                     bg-foreground/10
                   "/>
 
-
                   <div className="flex-1 space-y-3">
-
                     <div className="
                       h-4
                       w-40
@@ -682,17 +693,12 @@ if (error) {
                       rounded
                       bg-foreground/10
                     "/>
-
                   </div>
-
                 </div>
-
               </div>
             ))}
-
           </div>
-        ) : 
-      filteredLeads.length === 0 ? (
+        ) : filteredLeads.length === 0 ? (
           <div className="
           rounded-2xl
           border
@@ -711,7 +717,7 @@ if (error) {
             font-semibold
             text-foreground
             ">
-            No leads yet
+            {isDe ? "Noch keine Leads" : "No leads yet"}
             </h3>
 
             <p className="
@@ -719,7 +725,7 @@ if (error) {
             text-sm
             text-foreground/65
             ">
-            Create your first opportunity and start building your pipeline.
+            {isDe ? "Erstelle deine erste Opportunity und starte den Aufbau deiner Pipeline." : "Create your first opportunity and start building your pipeline."}
             </p>
 
             <div className="mt-5 flex flex-wrap justify-center gap-3">
@@ -727,7 +733,7 @@ if (error) {
                 onClick={() => setShowForm(true)}
                 className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
               >
-                Create first lead
+                {isDe ? "Ersten Lead erstellen" : "Create first lead"}
               </button>
               <button
                 onClick={async () => {
@@ -735,10 +741,13 @@ if (error) {
                   setDemoMessage(null)
                   try {
                     const result = await loadDemoData()
-                    setDemoMessage(result.message)
+                    const warning = result.warnings?.length ? ` ${isDe ? "Warnungen" : "Warnings"}: ${result.warnings.join(" ")}` : ""
+                    setDemoMessage(
+                      `${result.message} ${isDe ? "Leads" : "Leads"}: ${result.inserted_leads}, ${isDe ? "Aktivitäten" : "Activities"}: ${result.inserted_activities}, ${isDe ? "Aufgaben" : "Tasks"}: ${result.inserted_tasks}.${warning}`
+                    )
                     await refresh()
                   } catch (error) {
-                    setDemoMessage(error instanceof Error ? error.message : "Could not load demo data")
+                    setDemoMessage(error instanceof Error ? error.message : (isDe ? "Demo-Daten konnten nicht geladen werden" : "Could not load demo data"))
                   } finally {
                     setDemoLoading(false)
                   }
@@ -746,7 +755,7 @@ if (error) {
                 disabled={demoLoading}
                 className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60"
               >
-                {demoLoading ? "Loading demo data..." : "Load demo data"}
+                {demoLoading ? (isDe ? "Lade Demo-Daten..." : "Loading demo data...") : (isDe ? "Demo-Daten laden" : "Load demo data")}
               </button>
             </div>
             {demoMessage ? <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{demoMessage}</div> : null}
@@ -817,8 +826,8 @@ if (error) {
                             className="text-xl"
                           >
                             {favorites.includes(lead.id)
-                              ? "Pinned"
-                              : "Pin"}
+                              ? (isDe ? "Fixiert" : "Pinned")
+                              : (isDe ? "Fixieren" : "Pin")}
                           </button>
 
                         </div>
@@ -828,7 +837,7 @@ if (error) {
                         </p>
 
                         <p className="mt-2 text-sm font-semibold text-foreground">
-                          €{lead.value.toLocaleString("de-DE")}
+                          €{lead.value.toLocaleString(locale)}
                         </p>
 
                         <span
@@ -854,7 +863,7 @@ if (error) {
                               font-medium
                               text-orange-300
                             ">
-                              High Priority
+                              {isDe ? "Hohe Priorität" : "High Priority"}
                             </span>
                           )}
                         </span>
@@ -867,7 +876,7 @@ if (error) {
                       <HealthRing value={health} />
                       <div>
                       <p className="text-xs text-zinc-400">
-                        Close chance
+                        {isDe ? "Abschlusschance" : "Close chance"}
                       </p>
 
                       <p className="text-lg font-bold text-cyan-400">
@@ -885,18 +894,18 @@ if (error) {
                     ">
 
                     <p className="text-xs text-purple-300">
-                    AI Signal
+                    {isDe ? "KI-Signal" : "AI Signal"}
                     </p>
 
                     <p className="mt-1 text-sm font-semibold text-foreground">
                     {
                     staleDays > 14
-                    ? "Needs attention"
+                    ? (isDe ? "Braucht Aufmerksamkeit" : "Needs attention")
                     : probability > 80
-                    ? "Strong closing signal"
+                    ? (isDe ? "Starkes Abschluss-Signal" : "Strong closing signal")
                     : probability > 60
-                    ? "Positive momentum"
-                    : "Nurturing required"
+                    ? (isDe ? "Positives Momentum" : "Positive momentum")
+                    : (isDe ? "Weitere Pflege noetig" : "Nurturing required")
                     }
                     </p>
 
@@ -904,11 +913,11 @@ if (error) {
                       <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-3 text-left">
 
                         <p className="text-xs text-foreground/55">
-                          Next action
+                          {isDe ? "Nächste Aktion" : "Next action"}
                         </p>
 
                         <p className="mt-1 text-sm text-foreground">
-                          {lead.next_action || "No action planned"}
+                          {lead.next_action || (isDe ? "Keine Aktion geplant" : "No action planned")}
                         </p>
 
 
@@ -920,9 +929,9 @@ if (error) {
                                 : "text-emerald-400"
                             }`}
                           >
-                            Due {new Date(
+                            {isDe ? "Faellig" : "Due"} {new Date(
                               lead.next_action_date
-                            ).toLocaleDateString("de-DE")}
+                            ).toLocaleDateString(locale)}
                           </p>
                         )}
 
@@ -932,7 +941,7 @@ if (error) {
                        <div className="mt-3 flex items-center gap-2 text-xs">
 
                       <span className="text-foreground/65">
-                      Last activity:
+                      {isDe ? "Letzte Aktivität:" : "Last activity:"}
                       </span>
 
                       <span
@@ -945,8 +954,8 @@ if (error) {
                       }
                       >
                       {staleDays === 0
-                      ? "Today"
-                      : `${staleDays} days ago`}
+                      ? (isDe ? "Heute" : "Today")
+                      : isDe ? `vor ${staleDays} Tagen` : `${staleDays} days ago`}
                       </span>
 
                       </div>
@@ -958,6 +967,11 @@ if (error) {
                           <LeadActions
                             leadId={lead.id}
                             currentStatus={lead.status}
+                            phone={lead.phone}
+                            email={lead.email}
+                            onLeadDeleted={() => {
+                              void refresh()
+                            }}
                           />
                         </div>
                       </div>

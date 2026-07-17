@@ -39,6 +39,8 @@ export default function SettingsPage() {
     setTheme: setAppTheme,
     t,
   } = useAppPreferences()
+  const isDe = appLanguage === "de"
+  const locale = isDe ? "de-DE" : "en-US"
 
   const [loading, setLoading] = useState(true)
   const [savingProfile, setSavingProfile] = useState(false)
@@ -70,7 +72,7 @@ export default function SettingsPage() {
   const [sessionCount, setSessionCount] = useState(1)
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
   const [sessionExpiresAt, setSessionExpiresAt] = useState<string | null>(null)
-  const [currentDeviceName, setCurrentDeviceName] = useState("Current browser")
+  const [currentDeviceName, setCurrentDeviceName] = useState("")
   const [mfaAvailable, setMfaAvailable] = useState(false)
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
   const [mfaQrCode, setMfaQrCode] = useState<string | null>(null)
@@ -202,7 +204,7 @@ export default function SettingsPage() {
       setSessionCount(Number(metadata.session_count || (session ? 1 : 0)))
       setTwoFactorEnabled(Boolean(metadata.two_factor_enabled))
       setSessionExpiresAt(session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null)
-      setCurrentDeviceName(window.navigator.userAgent || "Current browser")
+      setCurrentDeviceName(window.navigator.userAgent || (isDe ? "Aktueller Browser" : "Current browser"))
       setMfaAvailable(Boolean((supabase.auth as unknown as { mfa?: unknown }).mfa))
 
       await syncMfaState()
@@ -215,7 +217,7 @@ export default function SettingsPage() {
     }
 
     void loadUser()
-  }, [appLanguage, appTheme, router, setAppLanguage, setAppTheme])
+  }, [appLanguage, appTheme, isDe, router, setAppLanguage, setAppTheme])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -243,9 +245,9 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not save profile")
+      toast.error(error.message || (isDe ? "Profil konnte nicht gespeichert werden" : "Could not save profile"))
     } else {
-      toast.success("Profile and company settings updated")
+      toast.success(isDe ? "Profil- und Firmeneinstellungen aktualisiert" : "Profile and company settings updated")
     }
 
     setSavingProfile(false)
@@ -271,9 +273,9 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not save preferences")
+      toast.error(error.message || (isDe ? "Präferenzen konnten nicht gespeichert werden" : "Could not save preferences"))
     } else {
-      toast.success("Preferences updated")
+      toast.success(isDe ? "Präferenzen aktualisiert" : "Preferences updated")
     }
 
     setSavingPreferences(false)
@@ -291,21 +293,21 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not save API key flags")
+      toast.error(error.message || (isDe ? "API-Key-Status konnte nicht gespeichert werden" : "Could not save API key flags"))
       return
     }
 
-    toast.success("API key settings saved")
+    toast.success(isDe ? "API-Key-Einstellungen gespeichert" : "API key settings saved")
   }
 
   const changePassword = async () => {
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters")
+      toast.error(isDe ? "Passwort muss mindestens 8 Zeichen haben" : "Password must be at least 8 characters")
       return
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match")
+      toast.error(isDe ? "Passwörter stimmen nicht überein" : "Passwords do not match")
       return
     }
 
@@ -316,9 +318,9 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not change password")
+      toast.error(error.message || (isDe ? "Passwort konnte nicht geändert werden" : "Could not change password"))
     } else {
-      toast.success("Password updated")
+      toast.success(isDe ? "Passwort aktualisiert" : "Password updated")
       setNewPassword("")
       setConfirmPassword("")
     }
@@ -343,7 +345,7 @@ export default function SettingsPage() {
 
   const sendMagicLink = async () => {
     if (!email.trim()) {
-      toast.error("No email found for this account")
+      toast.error(isDe ? "Keine E-Mail für dieses Konto gefunden" : "No email found for this account")
       return
     }
 
@@ -355,9 +357,9 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not send magic link")
+      toast.error(error.message || (isDe ? "Magic-Link konnte nicht gesendet werden" : "Could not send magic link"))
     } else {
-      toast.success("Magic link sent")
+      toast.success(isDe ? "Magic-Link gesendet" : "Magic link sent")
     }
   }
 
@@ -365,7 +367,7 @@ export default function SettingsPage() {
     const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
 
     if (!mfaApi?.enroll) {
-      toast.error("MFA is not available in this environment")
+      toast.error(isDe ? "MFA ist in dieser Umgebung nicht verfügbar" : "MFA is not available in this environment")
       return
     }
 
@@ -377,7 +379,7 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not start 2FA setup")
+      toast.error(error.message || (isDe ? "2FA-Setup konnte nicht gestartet werden" : "Could not start 2FA setup"))
       setMfaBusy(false)
       return
     }
@@ -385,7 +387,7 @@ export default function SettingsPage() {
     setMfaFactorId(data?.id || null)
     setMfaQrCode(data?.totp?.qr_code || null)
     setMfaStatus("pending")
-    toast.success("2FA setup started. Scan the QR code and verify.")
+    toast.success(isDe ? "2FA-Setup gestartet. QR-Code scannen und verifizieren." : "2FA setup started. Scan the QR code and verify.")
     setMfaBusy(false)
   }
 
@@ -393,12 +395,12 @@ export default function SettingsPage() {
     const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
 
     if (!mfaApi?.challengeAndVerify || !mfaFactorId) {
-      toast.error("2FA factor is missing")
+      toast.error(isDe ? "2FA-Faktor fehlt" : "2FA factor is missing")
       return
     }
 
     if (!mfaVerifyCode.trim()) {
-      toast.error("Authentication code is required")
+      toast.error(isDe ? "Authentifizierungscode ist erforderlich" : "Authentication code is required")
       return
     }
 
@@ -409,7 +411,7 @@ export default function SettingsPage() {
     })
 
     if (error) {
-      toast.error(error.message || "Could not verify 2FA code")
+      toast.error(error.message || (isDe ? "2FA-Code konnte nicht verifiziert werden" : "Could not verify 2FA code"))
       setMfaBusy(false)
       return
     }
@@ -423,7 +425,7 @@ export default function SettingsPage() {
     setMfaVerifyCode("")
     setMfaQrCode(null)
     await syncMfaState()
-    toast.success("Two-factor authentication enabled")
+    toast.success(isDe ? "Zwei-Faktor-Authentifizierung aktiviert" : "Two-factor authentication enabled")
     setMfaBusy(false)
   }
 
@@ -431,7 +433,7 @@ export default function SettingsPage() {
     const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
 
     if (!mfaApi?.unenroll || !mfaFactorId) {
-      toast.error("No 2FA factor to disable")
+      toast.error(isDe ? "Kein 2FA-Faktor zum Deaktivieren vorhanden" : "No 2FA factor to disable")
       return
     }
 
@@ -439,7 +441,7 @@ export default function SettingsPage() {
     const { error } = await mfaApi.unenroll({ factorId: mfaFactorId })
 
     if (error) {
-      toast.error(error.message || "Could not disable 2FA")
+      toast.error(error.message || (isDe ? "2FA konnte nicht deaktiviert werden" : "Could not disable 2FA"))
       setMfaBusy(false)
       return
     }
@@ -453,7 +455,7 @@ export default function SettingsPage() {
     setMfaVerifyCode("")
     setMfaQrCode(null)
     await syncMfaState()
-    toast.success("Two-factor authentication disabled")
+    toast.success(isDe ? "Zwei-Faktor-Authentifizierung deaktiviert" : "Two-factor authentication disabled")
     setMfaBusy(false)
   }
 
@@ -475,7 +477,7 @@ export default function SettingsPage() {
 
     if (!response.ok) {
       const text = await response.text()
-      toast.error(text || "Could not generate recovery codes")
+      toast.error(text || (isDe ? "Recovery-Codes konnten nicht erstellt werden" : "Could not generate recovery codes"))
       setRecoveryBusy(false)
       return
     }
@@ -484,13 +486,13 @@ export default function SettingsPage() {
     setRecoveryCodes(Array.isArray(data.codes) ? data.codes : [])
     setRecoveryCodeInput("")
     await loadRecoveryStatus()
-    toast.success("Recovery codes generated")
+    toast.success(isDe ? "Recovery-Codes erstellt" : "Recovery codes generated")
     setRecoveryBusy(false)
   }
 
   const consumeRecoveryCode = async () => {
     if (!recoveryCodeInput.trim()) {
-      toast.error("Enter a recovery code")
+      toast.error(isDe ? "Bitte Recovery-Code eingeben" : "Enter a recovery code")
       return
     }
 
@@ -507,14 +509,14 @@ export default function SettingsPage() {
 
     if (!response.ok) {
       const text = await response.text()
-      toast.error(text || "Invalid recovery code")
+      toast.error(text || (isDe ? "Ungültiger Recovery-Code" : "Invalid recovery code"))
       setRecoveryBusy(false)
       return
     }
 
     setRecoveryCodeInput("")
     await loadRecoveryStatus()
-    toast.success("Recovery code accepted and marked as used")
+    toast.success(isDe ? "Recovery-Code akzeptiert und als verwendet markiert" : "Recovery code accepted and marked as used")
     setRecoveryBusy(false)
   }
 
@@ -529,7 +531,7 @@ export default function SettingsPage() {
         <p className="mt-2 text-foreground/65">{t("settings.subtitle", "Manage your CloseFlow workspace, preferences, and security.")}</p>
         <div className="mt-4">
           <Link href="/settings/profile" className="inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-            Open profile settings
+            {isDe ? "Profileinstellungen öffnen" : "Open profile settings"}
           </Link>
         </div>
       </div>
@@ -578,7 +580,7 @@ export default function SettingsPage() {
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
             <img
               src={avatarUrl}
-              alt="Profile preview"
+              alt={isDe ? "Profilvorschau" : "Profile preview"}
               className="h-10 w-10 rounded-full object-cover"
               onError={(event) => {
                 ;(event.currentTarget as HTMLImageElement).style.display = "none"
@@ -711,33 +713,33 @@ export default function SettingsPage() {
         <p className="mt-2 text-sm text-foreground/65">{t("settings.securitySubtitle", "Password, active sessions, and 2FA readiness.")}</p>
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/60 p-4 text-sm text-foreground/75">
-          <p>Current device session: {sessionExpiresAt ? `active until ${new Date(sessionExpiresAt).toLocaleString("de-DE")}` : "not available"}</p>
-          <p className="mt-1">2FA support: {mfaAvailable ? "available in Supabase" : "not available in this environment"}</p>
+          <p>{isDe ? "Aktuelle Gerätesitzung" : "Current device session"}: {sessionExpiresAt ? `${isDe ? "aktiv bis" : "active until"} ${new Date(sessionExpiresAt).toLocaleString(locale)}` : (isDe ? "nicht verfügbar" : "not available")}</p>
+          <p className="mt-1">2FA {isDe ? "Unterstützung" : "support"}: {mfaAvailable ? (isDe ? "in Supabase verfügbar" : "available in Supabase") : (isDe ? "in dieser Umgebung nicht verfügbar" : "not available in this environment")}</p>
         </div>
 
         <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle bg-surface-2/70">
           <table className="w-full text-left text-sm text-foreground/80">
             <thead className="border-b border-border-subtle text-xs uppercase tracking-[0.14em] text-foreground/55">
               <tr>
-                <th className="px-4 py-3">Device</th>
-                <th className="px-4 py-3">Session</th>
-                <th className="px-4 py-3">Expires</th>
+                <th className="px-4 py-3">{isDe ? "Gerät" : "Device"}</th>
+                <th className="px-4 py-3">{isDe ? "Sitzung" : "Session"}</th>
+                <th className="px-4 py-3">{isDe ? "Läuft ab" : "Expires"}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td className="px-4 py-3">{currentDeviceName}</td>
-                <td className="px-4 py-3">Current</td>
-                <td className="px-4 py-3">{sessionExpiresAt ? new Date(sessionExpiresAt).toLocaleString("de-DE") : "Unknown"}</td>
+                <td className="px-4 py-3">{isDe ? "Aktuell" : "Current"}</td>
+                <td className="px-4 py-3">{sessionExpiresAt ? new Date(sessionExpiresAt).toLocaleString(locale) : (isDe ? "Unbekannt" : "Unknown")}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <p className="text-sm font-semibold text-foreground">Authenticator app (TOTP)</p>
+          <p className="text-sm font-semibold text-foreground">{isDe ? "Authenticator-App (TOTP)" : "Authenticator app (TOTP)"}</p>
           <p className="mt-1 text-xs text-foreground/60">
-            Status: {mfaStatus === "enabled" ? "Enabled" : mfaStatus === "pending" ? "Pending verification" : "Disabled"}
+            {isDe ? "Status" : "Status"}: {mfaStatus === "enabled" ? (isDe ? "Aktiviert" : "Enabled") : mfaStatus === "pending" ? (isDe ? "Verifizierung ausstehend" : "Pending verification") : (isDe ? "Deaktiviert" : "Disabled")}
           </p>
 
           {qrImageSrc && mfaStatus === "pending" ? (
@@ -751,7 +753,7 @@ export default function SettingsPage() {
               <input
                 value={mfaVerifyCode}
                 onChange={(event) => setMfaVerifyCode(event.target.value)}
-                placeholder="Enter 6-digit code"
+                placeholder={isDe ? "6-stelligen Code eingeben" : "Enter 6-digit code"}
                 className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
               />
               <button
@@ -759,7 +761,7 @@ export default function SettingsPage() {
                 disabled={mfaBusy}
                 className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-60"
               >
-                Verify 2FA
+                {isDe ? "2FA verifizieren" : "Verify 2FA"}
               </button>
             </div>
           ) : null}
@@ -770,14 +772,14 @@ export default function SettingsPage() {
               disabled={mfaBusy || !mfaAvailable || mfaStatus === "enabled"}
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50"
             >
-              {mfaStatus === "pending" ? "Restart setup" : "Enable 2FA"}
+              {mfaStatus === "pending" ? (isDe ? "Setup neu starten" : "Restart setup") : (isDe ? "2FA aktivieren" : "Enable 2FA")}
             </button>
             <button
               onClick={() => void disableMfa()}
               disabled={mfaBusy || mfaStatus === "disabled"}
               className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-50"
             >
-              Disable 2FA
+              {isDe ? "2FA deaktivieren" : "Disable 2FA"}
             </button>
           </div>
         </div>
@@ -805,28 +807,28 @@ export default function SettingsPage() {
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={() => void sendMagicLink()} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-            Send magic sign-in link
+            {isDe ? "Magic-Anmeldelink senden" : "Send magic sign-in link"}
           </button>
           <button onClick={() => void logoutCurrentSession()} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5">
-            Sign out this device
+            {isDe ? "Dieses Gerät abmelden" : "Sign out this device"}
           </button>
           <button onClick={() => void logoutAllSessions()} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300">
-            Sign out all devices
+            {isDe ? "Alle Geräte abmelden" : "Sign out all devices"}
           </button>
         </div>
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-foreground">Recovery codes</p>
-              <p className="text-xs text-foreground/60">Remaining unused codes: {recoveryRemaining}</p>
+              <p className="text-sm font-semibold text-foreground">{isDe ? "Recovery-Codes" : "Recovery codes"}</p>
+              <p className="text-xs text-foreground/60">{isDe ? "Verbleibende ungenutzte Codes" : "Remaining unused codes"}: {recoveryRemaining}</p>
             </div>
             <button
               onClick={() => void regenerateRecoveryCodes()}
               disabled={recoveryBusy}
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50"
             >
-              Generate new codes
+              {isDe ? "Neue Codes erstellen" : "Generate new codes"}
             </button>
           </div>
 
@@ -844,7 +846,7 @@ export default function SettingsPage() {
             <input
               value={recoveryCodeInput}
               onChange={(event) => setRecoveryCodeInput(event.target.value)}
-              placeholder="Use recovery code"
+              placeholder={isDe ? "Recovery-Code verwenden" : "Use recovery code"}
               className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             />
             <button
@@ -852,7 +854,7 @@ export default function SettingsPage() {
               disabled={recoveryBusy}
               className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-50"
             >
-              Verify code
+              {isDe ? "Code verifizieren" : "Verify code"}
             </button>
           </div>
         </div>

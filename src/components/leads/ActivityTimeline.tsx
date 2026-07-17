@@ -1,4 +1,7 @@
-﻿import { useMemo, useState } from "react"
+﻿"use client"
+
+import { useMemo, useState } from "react"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import type { ActivityType } from "@/types"
 
 type Activity = {
@@ -15,6 +18,9 @@ type ActivityTimelineProps = {
 export default function ActivityTimeline({
   activities,
 }: ActivityTimelineProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+
   const [filter, setFilter] = useState<"all" | "calls" | "emails" | "changes" | "ai">("all")
 
   const getActivityIcon = (type?: ActivityType | string) => {
@@ -58,24 +64,57 @@ export default function ActivityTimeline({
   const getTypeLabel = (type?: ActivityType | string) => {
     switch (type) {
       case "status_changed":
-        return "status change"
+        return isDe ? "Statuswechsel" : "status change"
       case "note_added":
-        return "note"
+        return isDe ? "Notiz" : "note"
       case "email_sent":
-        return "email"
+        return isDe ? "E-Mail" : "email"
       case "call_completed":
-        return "call"
+        return isDe ? "Anruf" : "call"
       case "task_created":
-        return "task"
+        return isDe ? "Aufgabe" : "task"
       case "task_completed":
-        return "task"
+        return isDe ? "Aufgabe" : "task"
       case "created":
-        return "created"
+        return isDe ? "Erstellt" : "created"
       case "ai":
-        return "ai"
+        return isDe ? "KI" : "ai"
       default:
-        return "event"
+        return isDe ? "Ereignis" : "event"
     }
+  }
+
+  const getLocalizedAction = (action: string) => {
+    if (!isDe) return action
+
+    const localizeStatus = (status: string) => {
+      const normalized = status.trim().toLowerCase()
+      if (normalized === "new") return "Neu"
+      if (normalized === "contacted") return "Kontaktiert"
+      if (normalized === "qualified") return "Qualifiziert"
+      if (normalized === "proposal") return "Angebot"
+      if (normalized === "won") return "Gewonnen"
+      if (normalized === "lost") return "Verloren"
+      return status
+    }
+
+    const statusMatch = action.match(/^Status changed from\s+(.+)\s+to\s+(.+)$/i)
+    if (statusMatch) {
+      return `Status geändert von ${localizeStatus(statusMatch[1])} zu ${localizeStatus(statusMatch[2])}`
+    }
+
+    const normalized = action.trim().toLowerCase()
+
+    if (normalized === "lead created") return "Lead erstellt"
+    if (normalized === "lead imported from csv") return "Lead aus CSV importiert"
+    if (normalized === "lead notes updated") return "Lead-Notizen aktualisiert"
+    if (normalized === "lead details updated") return "Lead-Details aktualisiert"
+    if (normalized === "task completed") return "Aufgabe erledigt"
+    if (normalized.startsWith("task created:")) {
+      return `Aufgabe erstellt:${action.slice(action.indexOf(":") + 1)}`
+    }
+
+    return action
   }
 
 
@@ -83,14 +122,14 @@ export default function ActivityTimeline({
     <div className="rounded-xl bg-surface-1 p-6">
 
       <h2 className="mb-4 text-xl font-semibold text-foreground">
-        Activity Timeline
+        {isDe ? "Aktivitätsverlauf" : "Activity Timeline"}
       </h2>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <button onClick={() => setFilter("all")} className={`rounded-full px-3 py-1 text-xs ${filter === "all" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>All</button>
-        <button onClick={() => setFilter("calls")} className={`rounded-full px-3 py-1 text-xs ${filter === "calls" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>Calls</button>
-        <button onClick={() => setFilter("emails")} className={`rounded-full px-3 py-1 text-xs ${filter === "emails" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>Emails</button>
-        <button onClick={() => setFilter("changes")} className={`rounded-full px-3 py-1 text-xs ${filter === "changes" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>Changes</button>
+        <button onClick={() => setFilter("all")} className={`rounded-full px-3 py-1 text-xs ${filter === "all" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>{isDe ? "Alle" : "All"}</button>
+        <button onClick={() => setFilter("calls")} className={`rounded-full px-3 py-1 text-xs ${filter === "calls" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>{isDe ? "Anrufe" : "Calls"}</button>
+        <button onClick={() => setFilter("emails")} className={`rounded-full px-3 py-1 text-xs ${filter === "emails" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>{isDe ? "E-Mails" : "Emails"}</button>
+        <button onClick={() => setFilter("changes")} className={`rounded-full px-3 py-1 text-xs ${filter === "changes" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>{isDe ? "Änderungen" : "Changes"}</button>
         <button onClick={() => setFilter("ai")} className={`rounded-full px-3 py-1 text-xs ${filter === "ai" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}>AI</button>
       </div>
 
@@ -98,7 +137,7 @@ export default function ActivityTimeline({
       {filteredActivities.length === 0 ? (
 
         <p className="text-foreground/55">
-          No activities yet.
+          {isDe ? "Noch keine Aktivitäten." : "No activities yet."}
         </p>
 
       ) : (
@@ -123,8 +162,8 @@ export default function ActivityTimeline({
 
                   <p className="font-medium text-foreground">
                     {a.type === "ai"
-                    ? "AI Assistant: " + a.action
-                    : a.action}
+                    ? (isDe ? "KI-Assistent: " : "AI Assistant: ") + getLocalizedAction(a.action)
+                    : getLocalizedAction(a.action)}
                   </p>
 
 

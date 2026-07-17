@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase/client"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 import type { Lead } from "@/types"
 
@@ -21,6 +22,8 @@ type FollowUp = {
 export default function AILeadSummary({
   lead,
 }: AILeadSummaryProps) {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
 
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<string | null>(null)
@@ -37,7 +40,7 @@ export default function AILeadSummary({
       } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error("Please sign in again to generate AI analysis.")
+        throw new Error(isDe ? "Bitte melde dich erneut an, um die KI-Analyse zu starten." : "Please sign in again to generate AI analysis.")
       }
 
       const response = await fetch(`/api/leads/${lead.id}/ai-analysis`, {
@@ -66,7 +69,7 @@ export default function AILeadSummary({
       )
     } catch (error) {
       console.error(error)
-      setAnalysis("Could not generate AI analysis.")
+      setAnalysis(isDe ? "KI-Analyse konnte nicht erstellt werden." : "Could not generate AI analysis.")
     } finally {
       setLoading(false)
     }
@@ -127,15 +130,15 @@ export default function AILeadSummary({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-cyan-400">
-            AI Insights
+            {isDe ? "KI-Signale" : "AI Insights"}
           </p>
 
           <h2 className="mt-2 text-xl font-bold text-foreground">
-            Deal Analysis
+            {isDe ? "Deal-Analyse" : "Deal Analysis"}
           </h2>
 
           <p className="mt-2 text-sm text-foreground/70">
-            Get AI-powered recommendations for this opportunity.
+            {isDe ? "Erhalte KI-gestützte Empfehlungen für diese Opportunity." : "Get AI-powered recommendations for this opportunity."}
           </p>
         </div>
 
@@ -146,7 +149,7 @@ export default function AILeadSummary({
             disabled={loading}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50"
           >
-            {loading ? "Analyzing..." : "Analyze"}
+            {loading ? (isDe ? "Analysiere..." : "Analyzing...") : (isDe ? "Analysieren" : "Analyze")}
           </button>
 
           <button
@@ -155,7 +158,7 @@ export default function AILeadSummary({
             disabled={followLoading}
             className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/20 disabled:opacity-50"
           >
-            {followLoading ? "Writing..." : "Generate Follow-up"}
+            {followLoading ? (isDe ? "Schreibe..." : "Writing...") : (isDe ? "Follow-up generieren" : "Generate Follow-up")}
           </button>
         </div>
       </div>
@@ -167,7 +170,7 @@ export default function AILeadSummary({
           </p>
         ) : (
           <p className="text-sm text-foreground/50">
-            No AI analysis generated yet.
+            {isDe ? "Noch keine KI-Analyse erstellt." : "No AI analysis generated yet."}
           </p>
         )}
       </div>
@@ -176,7 +179,7 @@ export default function AILeadSummary({
         <div className="mt-5 space-y-4 rounded-xl border border-purple-500/20 bg-surface-2/60 p-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-purple-300">
-              Follow-up draft
+              {isDe ? "Follow-up-Entwurf" : "Follow-up draft"}
             </p>
             <h3 className="mt-2 text-base font-semibold text-foreground">
               {followUp.subject}
@@ -185,11 +188,11 @@ export default function AILeadSummary({
 
           <div className="space-y-3 text-sm text-foreground/80">
             <p>
-              <span className="font-semibold text-foreground">Reason:</span>{" "}
+              <span className="font-semibold text-foreground">{isDe ? "Grund:" : "Reason:"}</span>{" "}
               {followUp.reason}
             </p>
             <p>
-              <span className="font-semibold text-foreground">Next action:</span>{" "}
+              <span className="font-semibold text-foreground">{isDe ? "Nächste Aktion:" : "Next action:"}</span>{" "}
               {followUp.next_action}
             </p>
           </div>
@@ -205,7 +208,7 @@ export default function AILeadSummary({
             onClick={() => void copyFollowUp()}
             className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/20"
           >
-            {followCopied ? "Copied" : "Copy Follow-up"}
+            {followCopied ? (isDe ? "Kopiert" : "Copied") : (isDe ? "Follow-up kopieren" : "Copy Follow-up")}
           </button>
         </div>
       )}

@@ -15,6 +15,8 @@ import AILeadSummary from "@/components/leads/AILeadSummary"
 import { useLeadDetail } from "@/hooks/useLeadDetail"
 import { useLeadActions } from "@/hooks/useLeadActions"
 import { useTasks } from "@/hooks/useTasks"
+import { EmailComposeModal } from "@/components/leads/EmailComposeModal"
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
@@ -27,6 +29,9 @@ import type {
 
 
 export default function LeadDetailPage() {
+  const { language } = useAppPreferences()
+  const isDe = language === "de"
+  const locale = isDe ? "de-DE" : "en-US"
 
   const params = useParams()
   const router = useRouter()
@@ -99,6 +104,8 @@ export default function LeadDetailPage() {
 
   const [formError, setFormError] =
     useState<string | null>(null)
+
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
 
 
 
@@ -253,7 +260,7 @@ export default function LeadDetailPage() {
     if (!name.trim()) {
 
       setFormError(
-        "Lead name is required"
+        isDe ? "Lead-Name ist erforderlich" : "Lead name is required"
       )
 
       return
@@ -263,7 +270,7 @@ export default function LeadDetailPage() {
     if (!company.trim()) {
 
       setFormError(
-        "Company name is required"
+        isDe ? "Firmenname ist erforderlich" : "Company name is required"
       )
 
       return
@@ -276,7 +283,7 @@ export default function LeadDetailPage() {
     ) {
 
       setFormError(
-        "Deal value must be a valid number"
+        isDe ? "Deal-Wert muss eine gültige Zahl sein" : "Deal value must be a valid number"
       )
 
       return
@@ -311,7 +318,7 @@ export default function LeadDetailPage() {
       setSaved(true)
 
       toast.success(
-        "Lead updated"
+        isDe ? "Lead aktualisiert" : "Lead updated"
       )
 
 
@@ -329,12 +336,12 @@ export default function LeadDetailPage() {
       setFormError(
         error instanceof Error
           ? error.message
-          : "Could not save lead"
+          : (isDe ? "Lead konnte nicht gespeichert werden" : "Could not save lead")
       )
 
 
       toast.error(
-        "Could not save lead"
+        isDe ? "Lead konnte nicht gespeichert werden" : "Could not save lead"
       )
 
 
@@ -345,58 +352,30 @@ export default function LeadDetailPage() {
     }
 
   }
-    const handleDelete = async () => {
 
-    if (!lead)
-      return
+  const handleDelete = async () => {
+    if (!lead) return
 
+    const ok = window.confirm(
+      isDe
+        ? "Diesen Lead löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        : "Delete this lead? This action cannot be undone."
+    )
 
-    const ok =
-      window.confirm(
-        "Delete this lead? This action cannot be undone."
-      )
-
-
-    if (!ok)
-      return
-
+    if (!ok) return
 
     try {
-
-      await deleteLead(
-        lead.id
-      )
-
-
-      toast.success(
-        "Lead deleted"
-      )
-
-
-      router.push(
-        "/leads"
-      )
-
-
-    } catch(error) {
-
+      await deleteLead(lead.id)
+      toast.success(isDe ? "Lead gelöscht" : "Lead deleted")
+      router.push("/leads")
+    } catch (error) {
       console.error(error)
-
-
-      toast.error(
-        "Could not delete lead"
-      )
-
+      toast.error(isDe ? "Lead konnte nicht gelöscht werden" : "Could not delete lead")
     }
-
   }
 
-
-
   if (loading) {
-
     return (
-
       <div
         className="
         mx-auto
@@ -410,46 +389,15 @@ export default function LeadDetailPage() {
         "
         aria-busy="true"
       >
-
-        <div className="
-          h-7
-          w-56
-          animate-pulse
-          rounded-full
-          bg-foreground/10
-        "/>
-
-
-        <div className="
-          mt-4
-          h-4
-          w-44
-          animate-pulse
-          rounded-full
-          bg-foreground/10
-        "/>
-
-
-        <div className="
-          mt-8
-          h-32
-          rounded-2xl
-          bg-foreground/10
-        "/>
-
-
+        <div className="h-7 w-56 animate-pulse rounded-full bg-foreground/10" />
+        <div className="mt-4 h-4 w-44 animate-pulse rounded-full bg-foreground/10" />
+        <div className="mt-8 h-32 rounded-2xl bg-foreground/10" />
       </div>
-
     )
-
   }
 
-
-
   if (!lead) {
-
     return (
-
       <div
         className="
         mx-auto
@@ -463,41 +411,19 @@ export default function LeadDetailPage() {
         text-center
         "
       >
-
-        <p className="
-          text-sm
-          uppercase
-          tracking-[0.3em]
-          text-cyan-400
-        ">
-          Lead unavailable
+        <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
+          {isDe ? "Lead nicht verfügbar" : "Lead unavailable"}
         </p>
-
-
-        <h1 className="
-          mt-4
-          text-2xl
-          font-semibold
-          text-foreground
-        ">
-          We could not find this lead.
+        <h1 className="mt-4 text-2xl font-semibold text-foreground">
+          {isDe ? "Wir konnten diesen Lead nicht finden." : "We could not find this lead."}
         </h1>
-
-
-        <p className="
-          mt-3
-          text-sm
-          leading-7
-          text-foreground/65
-        ">
-          The record may have been removed or you may not have access to it.
+        <p className="mt-3 text-sm leading-7 text-foreground/65">
+          {isDe
+            ? "Der Eintrag wurde möglicherweise entfernt oder du hast keinen Zugriff darauf."
+            : "The record may have been removed or you may not have access to it."}
         </p>
-
-
       </div>
-
     )
-
   }
 
 
@@ -541,6 +467,15 @@ export default function LeadDetailPage() {
   const hasEmail =
     Boolean(lead.email?.trim())
 
+  const statusLabel: Record<string, string> = {
+    new: isDe ? "Neu" : "New",
+    contacted: isDe ? "Kontaktiert" : "Contacted",
+    qualified: isDe ? "Qualifiziert" : "Qualified",
+    proposal: isDe ? "Angebot" : "Proposal",
+    won: isDe ? "Gewonnen" : "Won",
+    lost: isDe ? "Verloren" : "Lost",
+  }
+
 
 
   return (
@@ -577,7 +512,7 @@ export default function LeadDetailPage() {
             "
           >
 
-            Changes saved successfully
+            {isDe ? "Änderungen erfolgreich gespeichert" : "Changes saved successfully"}
 
           </div>
 
@@ -629,16 +564,16 @@ export default function LeadDetailPage() {
             text-sm
             text-foreground/65
           ">
-            Deal value:
+            {isDe ? "Deal-Wert:" : "Deal value:"}
             {" "}
             EUR
             {" "}
             {(lead.value || 0)
-              .toLocaleString("de-DE")}
+              .toLocaleString(locale)}
             {" "}
             |
             {" "}
-            AI Score
+            {isDe ? "KI-Score" : "AI Score"}
             {" "}
             {salesScore.priority}
           </p>
@@ -673,7 +608,7 @@ export default function LeadDetailPage() {
             hover:bg-foreground/5
             "
           >
-            Edit
+            {isDe ? "Bearbeiten" : "Edit"}
           </a>
 
 
@@ -694,13 +629,13 @@ export default function LeadDetailPage() {
               hover:bg-foreground/5
               "
             >
-              Call
+              {isDe ? "Anrufen" : "Call"}
             </a>
           ) : (
             <button
               type="button"
               disabled
-              title="No phone number available"
+              title={isDe ? "Keine Telefonnummer verfügbar" : "No phone number available"}
               className="
               rounded-xl
               border
@@ -713,15 +648,16 @@ export default function LeadDetailPage() {
               opacity-60
               "
             >
-              Call
+              {isDe ? "Anrufen" : "Call"}
             </button>
           )}
 
 
 
           {hasEmail ? (
-            <a
-              href={`mailto:${lead.email}`}
+            <button
+              type="button"
+              onClick={() => setEmailModalOpen(true)}
               className="
               rounded-xl
               border
@@ -735,13 +671,13 @@ export default function LeadDetailPage() {
               hover:bg-foreground/5
               "
             >
-              Email
-            </a>
+              {isDe ? "E-Mail" : "Email"}
+            </button>
           ) : (
             <button
               type="button"
               disabled
-              title="No email address available"
+              title={isDe ? "Keine E-Mail-Adresse verfügbar" : "No email address available"}
               className="
               rounded-xl
               border
@@ -754,9 +690,18 @@ export default function LeadDetailPage() {
               opacity-60
               "
             >
-              Email
+              {isDe ? "E-Mail" : "Email"}
             </button>
           )}
+
+          {emailModalOpen ? (
+            <EmailComposeModal
+              leadId={lead.id}
+              defaultTo={lead.email ?? ""}
+              onClose={() => setEmailModalOpen(false)}
+              onSent={() => void refresh()}
+            />
+          ) : null}
 
 
 
@@ -776,7 +721,7 @@ export default function LeadDetailPage() {
             hover:bg-rose-500/20
             "
           >
-            Delete
+            {isDe ? "Löschen" : "Delete"}
           </button>
 
 
@@ -797,7 +742,7 @@ export default function LeadDetailPage() {
               text-cyan-300
               "
             >
-              Open AI Assistant
+              {isDe ? "KI-Assistent öffnen" : "Open AI Assistant"}
             </Link>
 
 
@@ -815,7 +760,7 @@ export default function LeadDetailPage() {
               text-purple-300
               "
             >
-              Generate Analysis
+              {isDe ? "Analyse generieren" : "Generate Analysis"}
             </Link>
 
             </div>
@@ -842,7 +787,7 @@ export default function LeadDetailPage() {
             `}
           >
 
-            {lead.status.toUpperCase()}
+            {(statusLabel[lead.status] || lead.status).toUpperCase()}
 
           </span>
 
@@ -854,1168 +799,242 @@ export default function LeadDetailPage() {
 
 
 
-      <PipelineJourney
-        status={lead.status}
-      />
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <PipelineJourney status={lead.status} />
 
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
-
-
-          <section className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-1
-            p-5
-          ">
-
-            <h2 className="text-lg font-semibold text-foreground">
-              Company Information
-            </h2>
-
+          <section className="rounded-xl border border-border-subtle bg-surface-1 p-5">
+            <h2 className="text-lg font-semibold text-foreground">{isDe ? "Unternehmensinformationen" : "Company Information"}</h2>
             <div className="mt-3 space-y-2 text-sm text-foreground/80">
-
-              <p>
-                Company: {lead.company || "n/a"}
-              </p>
-
-              <p>
-                Industry: n/a
-              </p>
-
-              <p>
-                Website: {lead.website || "n/a"}
-              </p>
-
-              <p>
-                Employees: n/a
-              </p>
-
+              <p>{isDe ? "Firma" : "Company"}: {lead.company || (isDe ? "k. A." : "n/a")}</p>
+              <p>{isDe ? "Branche" : "Industry"}: {isDe ? "k. A." : "n/a"}</p>
+              <p>{isDe ? "Website" : "Website"}: {lead.website || (isDe ? "k. A." : "n/a")}</p>
+              <p>{isDe ? "Mitarbeitende" : "Employees"}: {isDe ? "k. A." : "n/a"}</p>
             </div>
-
           </section>
 
-
-
-          <section className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-1
-            p-5
-          ">
-
-            <h2 className="text-lg font-semibold text-foreground">
-              Contact
-            </h2>
-
-
+          <section className="rounded-xl border border-border-subtle bg-surface-1 p-5">
+            <h2 className="text-lg font-semibold text-foreground">{isDe ? "Kontakt" : "Contact"}</h2>
             <div className="mt-3 space-y-2 text-sm text-foreground/80">
-
-              <p>
-                Name: {lead.name || "n/a"}
-              </p>
-
-              <p>
-                Email: {lead.email || "n/a"}
-              </p>
-
-              <p>
-                Phone: {lead.phone || "n/a"}
-              </p>
-
+              <p>{isDe ? "Name" : "Name"}: {lead.name || (isDe ? "k. A." : "n/a")}</p>
+              <p>{isDe ? "E-Mail" : "Email"}: {lead.email || (isDe ? "k. A." : "n/a")}</p>
+              <p>{isDe ? "Telefon" : "Phone"}: {lead.phone || (isDe ? "k. A." : "n/a")}</p>
             </div>
-
           </section>
 
-
-
-          <section className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-1
-            p-5
-          ">
-
-            <h2 className="text-lg font-semibold text-foreground">
-              Deal Information
-            </h2>
-
-
+          <section className="rounded-xl border border-border-subtle bg-surface-1 p-5">
+            <h2 className="text-lg font-semibold text-foreground">{isDe ? "Deal-Informationen" : "Deal Information"}</h2>
             <div className="mt-3 space-y-2 text-sm text-foreground/80">
-
-              <p>
-                Value:
-                {" "}
-                EUR {(lead.value || 0).toLocaleString("de-DE")}
-              </p>
-
-              <p>
-                Stage:
-                {" "}
-                {lead.status}
-              </p>
-
-              <div className="space-y-2">
-
-              <p>
-              Probability:
-              {" "}
-              {closeProbability}%
-              </p>
-
-
-              <p>
-              AI Health Score:
-              {" "}
-              {salesScore.health}/100
-              </p>
-
-
-              <p>
-              Priority:
-              {" "}
-              {salesScore.priority}
-              </p>
-
-              </div>
-
-              <p>
-                Expected close:
-                {" "}
-                {Math.max(3,30-stageAge)}
-                {" "}
-                days
-              </p>
-
+              <p>{isDe ? "Wert" : "Value"}: EUR {(lead.value || 0).toLocaleString(locale)}</p>
+              <p>{isDe ? "Phase" : "Stage"}: {statusLabel[lead.status] || lead.status}</p>
+              <p>{isDe ? "Wahrscheinlichkeit" : "Probability"}: {closeProbability}%</p>
+              <p>{isDe ? "KI-Gesundheitsscore" : "AI Health Score"}: {salesScore.health}/100</p>
+              <p>{isDe ? "Priorität" : "Priority"}: {salesScore.priority}</p>
+              <p>{isDe ? "Erwarteter Abschluss" : "Expected close"}: {Math.max(3, 30 - stageAge)} {isDe ? "Tage" : "days"}</p>
             </div>
-
           </section>
 
-
-
-          <section className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-1
-            p-5
-          ">
-
-            <h2 className="text-lg font-semibold text-foreground">
-              Notes
-            </h2>
-
-
-            <p className="
-              mt-3
-              text-sm
-              text-foreground/80
-            ">
-              {lead.notes || "No notes yet."}
-            </p>
-
+          <section className="rounded-xl border border-border-subtle bg-surface-1 p-5">
+            <h2 className="text-lg font-semibold text-foreground">{isDe ? "Notizen" : "Notes"}</h2>
+            <p className="mt-3 text-sm text-foreground/80">{lead.notes || (isDe ? "Noch keine Notizen." : "No notes yet.")}</p>
           </section>
-
-
         </div>
 
-
-
-
-
         <div className="space-y-4">
-
-
-          <section className="
-            rounded-xl
-            border
-            border-cyan-500/20
-            bg-gradient-to-br
-            from-cyan-500/10
-            via-blue-500/5
-            to-transparent
-            p-6
-          ">
-
-
-            <p className="
-              text-sm
-              uppercase
-              tracking-widest
-              text-cyan-400
-            ">
-              AI Assistant
+          <section className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
+            <p className="text-sm uppercase tracking-widest text-cyan-400">{isDe ? "KI-Assistent" : "AI Assistant"}</p>
+            <h2 className="mt-2 text-2xl font-bold text-foreground">{isDe ? "KI-Analyse ist zentralisiert" : "AI analysis is centralized"}</h2>
+            <p className="mt-3 text-sm text-foreground/80">
+              {isDe
+                ? "Nutze den KI-Assistenten für Strategie, Coaching, E-Mail-Generierung und Risiko-Erkennung, damit jede Analyse an einem Ort bleibt."
+                : "Use AI Assistant for strategy, coaching, email generation, and risk detection so every analysis stays in one place."}
             </p>
-
-
-            <h2 className="
-              mt-2
-              text-2xl
-              font-bold
-              text-foreground
-            ">
-              AI analysis is centralized
-            </h2>
-
-
-            <p className="
-              mt-3
-              text-sm
-              text-foreground/80
-            ">
-              Use AI Assistant for strategy,
-              coaching, email generation,
-              and risk detection so every
-              analysis stays in one place.
-            </p>
-
-
             <div className="mt-4">
-
               <Link
                 href={`/ai?leadId=${lead.id}`}
-                className="
-                inline-flex
-                rounded-full
-                border
-                border-cyan-500/30
-                bg-cyan-500/10
-                px-4
-                py-2
-                text-sm
-                font-semibold
-                text-cyan-300
-                transition
-                hover:bg-cyan-500/20
-                "
+                className="inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
               >
-
-                Open AI Assistant for this lead
-
+                {isDe ? "KI-Assistent für diesen Lead öffnen" : "Open AI Assistant for this lead"}
               </Link>
-
             </div>
-
-
           </section>
-
-
         </div>
-
-
       </div>
-
-
-
-
 
       <DealMetrics
-
         dealAge={dealAge}
-
         priorityScore={salesScore.priority}
-
         healthScore={salesScore.health}
-
         value={lead.value}
-
         stageAge={stageAge}
-
       />
 
-      <AILeadSummary
-        lead={lead}
-      />
+      <AILeadSummary lead={lead} />
 
+      <div className="space-y-5 rounded-xl border border-border-subtle bg-surface-1 p-6">
+        <h2 className="text-xl font-semibold text-foreground">{isDe ? "Aufgaben" : "Tasks"}</h2>
 
-
-
-
-      <div className="
-        space-y-5
-        rounded-xl
-        border
-        border-border-subtle
-        bg-surface-1
-        p-6
-      ">
-
-
-        <h2 className="
-          text-xl
-          font-semibold
-          text-foreground
-        ">
-          Tasks
-        </h2>
-
-
-
-        <div className="
-          flex
-          flex-col
-          gap-3
-          md:flex-row
-        ">
-
-
+        <div className="flex flex-col gap-3 md:flex-row">
           <input
-
             value={newTask}
-
-            onChange={(event)=>
-              setNewTask(event.target.value)
-            }
-
-            placeholder="Add new task..."
-
-            className="
-            flex-1
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-2
-            px-4
-            py-3
-            text-foreground
-            "
-
+            onChange={(event) => setNewTask(event.target.value)}
+            placeholder={isDe ? "Neue Aufgabe hinzufügen..." : "Add new task..."}
+            className="flex-1 rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground"
           />
-
-
 
           <input
-
             value={newTaskDueDate}
-
-            onChange={(event)=>
-              setNewTaskDueDate(event.target.value)
-            }
-
+            onChange={(event) => setNewTaskDueDate(event.target.value)}
             type="date"
-
-            className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-2
-            px-4
-            py-3
-            text-foreground
-            "
-
+            className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground"
           />
-
-
 
           <select
-
             value={newTaskPriority}
-
-            onChange={(event)=>
-              setNewTaskPriority(
-                event.target.value as TaskPriority
-              )
-            }
-
-            className="
-            rounded-xl
-            border
-            border-border-subtle
-            bg-surface-2
-            px-4
-            py-3
-            text-foreground
-            "
-
+            onChange={(event) => setNewTaskPriority(event.target.value as TaskPriority)}
+            className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground"
           >
-
-            <option value="low">
-              low
-            </option>
-
-            <option value="medium">
-              medium
-            </option>
-
-            <option value="high">
-              high
-            </option>
-
+            <option value="low">{isDe ? "niedrig" : "low"}</option>
+            <option value="medium">{isDe ? "mittel" : "medium"}</option>
+            <option value="high">{isDe ? "hoch" : "high"}</option>
           </select>
 
-
-
           <button
-
-            onClick={async()=>{
-
-              if(!newTask.trim())
-                return
-
-              await addTask(
-                newTask,
-                newTaskDueDate || undefined,
-                newTaskPriority
-              )
-
-
-              setNewTask("")
-              setNewTaskDueDate("")
-              setNewTaskPriority("medium")
-
+            onClick={async () => {
+              if (!newTask.trim()) return
+              try {
+                await addTask(newTask, newTaskDueDate || undefined, newTaskPriority)
+                setNewTask("")
+                setNewTaskDueDate("")
+                setNewTaskPriority("medium")
+                await refresh()
+              } catch (error) {
+                console.error(error)
+                toast.error(isDe ? "Aufgabe konnte nicht hinzugefügt werden" : "Could not add task")
+              }
             }}
-
-            className="
-            rounded-xl
-            bg-foreground
-            px-5
-            py-3
-            font-semibold
-            text-background
-            "
-
+            className="rounded-xl bg-foreground px-5 py-3 font-semibold text-background"
           >
-
-            Add
-
+            {isDe ? "Hinzufügen" : "Add"}
           </button>
-
-
         </div>
 
-                <div className="space-y-3">
-
+        <div className="space-y-3">
           {tasks.map((task) => (
-
             <TaskCard
-
               key={task.id}
-
               title={task.title}
-
               completed={task.completed}
-
               dueDate={task.due_date}
-
               priority={task.priority}
-
-              onToggle={() =>
-                toggleTask(
-                  task.id,
-                  task.completed
-                )
-              }
-
-              onDelete={() =>
-                deleteTask(task.id)
-              }
-
+              onToggle={async () => {
+                await toggleTask(task.id, task.completed)
+                await refresh()
+              }}
+              onDelete={async () => {
+                await deleteTask(task.id)
+                await refresh()
+              }}
             />
-
           ))}
 
-
-          {tasks.length === 0 && (
-
-            <p className="
-              text-sm
-              text-foreground/55
-            ">
-              No tasks yet.
-            </p>
-
-          )}
-
+          {tasks.length === 0 && <p className="text-sm text-foreground/55">{isDe ? "Noch keine Aufgaben." : "No tasks yet."}</p>}
         </div>
-
-
       </div>
 
+      <div id="lead-details" className="space-y-4 rounded-xl border border-border-subtle bg-surface-1 p-6">
+        <h2 className="text-xl font-semibold text-foreground">{isDe ? "Lead-Details" : "Lead Details"}</h2>
 
-
-
-
-      <div
-        id="lead-details"
-        className="
-        space-y-4
-        rounded-xl
-        border
-        border-border-subtle
-        bg-surface-1
-        p-6
-        "
-      >
-
-
-        <h2 className="
-          text-xl
-          font-semibold
-          text-foreground
-        ">
-          Lead Details
-        </h2>
-
-
-
-        <div className="
-          rounded-xl
-          border
-          border-border-subtle
-          bg-surface-2/70
-          p-3
-          text-sm
-          text-foreground/80
-        ">
-
-
-          <p>
-            Created:
-            {" "}
-            {new Date(
-              lead.created_at
-            ).toLocaleString("de-DE")}
-          </p>
-
-
-          <p>
-            Last update:
-            {" "}
-            {
-              lead.updated_at
-                ? new Date(
-                    lead.updated_at
-                  ).toLocaleString("de-DE")
-                : "Not available"
-            }
-          </p>
-
-
+        <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-3 text-sm text-foreground/80">
+          <p>{isDe ? "Erstellt" : "Created"}: {new Date(lead.created_at).toLocaleString(locale)}</p>
+          <p>{isDe ? "Letzte Aktualisierung" : "Last update"}: {lead.updated_at ? new Date(lead.updated_at).toLocaleString(locale) : (isDe ? "Nicht verfügbar" : "Not available")}</p>
         </div>
 
-
-
-
-
-        <div className="
-          grid
-          gap-5
-          md:grid-cols-2
-        ">
-
-
+        <div className="grid gap-5 md:grid-cols-2">
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Contact Name
-            </label>
-
-
-            <input
-
-              value={name}
-
-              onChange={(event)=>
-                setName(
-                  event.target.value
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Kontaktname" : "Contact Name"}</label>
+            <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
 
-
-
-
-
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Company
-            </label>
-
-
-            <input
-
-              value={company}
-
-              onChange={(event)=>
-                setCompany(
-                  event.target.value
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Firma" : "Company"}</label>
+            <input value={company} onChange={(event) => setCompany(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
 
-
-
-
-
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Deal Value
-            </label>
-
-
-            <input
-
-              value={value}
-
-              onChange={(event)=>
-                setValue(
-                  event.target.value
-                )
-              }
-
-              type="number"
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Deal-Wert" : "Deal Value"}</label>
+            <input value={value} onChange={(event) => setValue(event.target.value)} type="number" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
 
-
-
-
-
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Stage
-            </label>
-
-
-            <select
-
-              value={status}
-
-              onChange={(event)=>
-                setStatus(
-                  event.target.value as LeadStatus
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            >
-
-              <option value="new">
-                New
-              </option>
-
-              <option value="contacted">
-                Contacted
-              </option>
-
-              <option value="qualified">
-                Qualified
-              </option>
-
-              <option value="proposal">
-                Proposal
-              </option>
-
-              <option value="won">
-                Won
-              </option>
-
-              <option value="lost">
-                Lost
-              </option>
-
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Phase" : "Stage"}</label>
+            <select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50">
+              <option value="new">{isDe ? "Neu" : "New"}</option>
+              <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
+              <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
+              <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
+              <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
+              <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
             </select>
-
-
           </div>
-                    <div>
 
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Source
-            </label>
-
-
-            <select
-
-              value={source}
-
-              onChange={(event)=>
-                setSource(
-                  event.target.value as LeadSource
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            >
-
-              <option value="website">
-                Website
-              </option>
-
-              <option value="recommendation">
-                Recommendation
-              </option>
-
-              <option value="phone">
-                Phone
-              </option>
-
-              <option value="advertising">
-                Advertising
-              </option>
-
-              <option value="other">
-                Other
-              </option>
-
+          <div>
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Quelle" : "Source"}</label>
+            <select value={source} onChange={(event) => setSource(event.target.value as LeadSource)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50">
+              <option value="website">{isDe ? "Website" : "Website"}</option>
+              <option value="recommendation">{isDe ? "Empfehlung" : "Recommendation"}</option>
+              <option value="phone">{isDe ? "Telefon" : "Phone"}</option>
+              <option value="advertising">{isDe ? "Werbung" : "Advertising"}</option>
+              <option value="other">{isDe ? "Sonstiges" : "Other"}</option>
             </select>
-
           </div>
-
-
-
-
 
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Email
-            </label>
-
-
-            <input
-
-              value={email}
-
-              onChange={(event)=>
-                setEmail(
-                  event.target.value
-                )
-              }
-
-              type="email"
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "E-Mail" : "Email"}</label>
+            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
-
-
-
-
 
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Phone
-            </label>
-
-
-            <input
-
-              value={phone}
-
-              onChange={(event)=>
-                setPhone(
-                  event.target.value
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Telefon" : "Phone"}</label>
+            <input value={phone} onChange={(event) => setPhone(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
-
-
-
-
 
           <div>
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Website
-            </label>
-
-
-            <input
-
-              value={website}
-
-              onChange={(event)=>
-                setWebsite(
-                  event.target.value
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Website" : "Website"}</label>
+            <input value={website} onChange={(event) => setWebsite(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
-
-
-
-
 
           <div className="md:col-span-2">
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Address
-            </label>
-
-
-            <input
-
-              value={address}
-
-              onChange={(event)=>
-                setAddress(
-                  event.target.value
-                )
-              }
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Adresse" : "Address"}</label>
+            <input value={address} onChange={(event) => setAddress(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
-
-
-
-
 
           <div className="md:col-span-2">
-
-            <label className="
-              mb-2
-              block
-              text-sm
-              text-foreground/65
-            ">
-              Tags
-            </label>
-
-
-            <input
-
-              value={tagsInput}
-
-              onChange={(event)=>
-                setTagsInput(
-                  event.target.value
-                )
-              }
-
-              placeholder="Comma separated"
-
-              className="
-              w-full
-              rounded-2xl
-              border
-              border-border-subtle
-              bg-surface-2
-              px-4
-              py-3
-              text-foreground
-              outline-none
-              transition
-              focus:border-cyan-400/50
-              "
-
-            />
-
+            <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Tags" : "Tags"}</label>
+            <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={isDe ? "Kommagetrennt" : "Comma separated"} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
           </div>
-
-
         </div>
-
-
-
-
 
         <div className="mt-6">
-
-
-          <label className="
-            mb-2
-            block
-            text-sm
-            text-foreground/65
-          ">
-            Notes
-          </label>
-
-
-          <textarea
-
-            value={notes}
-
-            onChange={(event)=>
-              setNotes(
-                event.target.value
-              )
-            }
-
-            className="
-            h-40
-            w-full
-            rounded-2xl
-            border
-            border-border-subtle
-            bg-surface-2
-            px-4
-            py-3
-            text-foreground
-            outline-none
-            transition
-            focus:border-cyan-400/50
-            "
-
-          />
-
-
+          <label className="mb-2 block text-sm text-foreground/65">{isDe ? "Notizen" : "Notes"}</label>
+          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="h-40 w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50" />
         </div>
 
+        {formError && (
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {formError}
+          </div>
+        )}
 
-
-
-
-        {
-          formError && (
-
-            <div className="
-              rounded-2xl
-              border
-              border-rose-500/20
-              bg-rose-500/10
-              px-4
-              py-3
-              text-sm
-              text-rose-200
-            ">
-
-              {formError}
-
-            </div>
-
-          )
-        }
-
-
-
-
-
-        <div className="
-          mt-6
-          flex
-          flex-col
-          gap-3
-          sm:flex-row
-        ">
-
-
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
-
             onClick={handleSave}
-
             disabled={saving}
-
-            className="
-            rounded-xl
-            bg-foreground
-            px-6
-            py-3
-            font-semibold
-            text-background
-            transition
-            hover:scale-[1.02]
-            disabled:opacity-60
-            "
-
+            className="rounded-xl bg-foreground px-6 py-3 font-semibold text-background transition hover:scale-[1.02] disabled:opacity-60"
           >
-
-            {
-              saving
-              ? "Saving..."
-              : "Save Changes"
-            }
-
-
+            {saving ? (isDe ? "Speichere..." : "Saving...") : (isDe ? "Änderungen speichern" : "Save Changes")}
           </button>
-
-
         </div>
-
-
       </div>
 
 

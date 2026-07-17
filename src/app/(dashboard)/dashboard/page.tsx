@@ -37,7 +37,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 export default function DashboardPage() {
 
-  const { language } = useAppPreferences()
+  const { language, t } = useAppPreferences()
 
   const {
     leads,
@@ -163,7 +163,7 @@ export default function DashboardPage() {
         ">
 
           <p className="text-lg font-semibold">
-            We could not load your dashboard.
+            {t("dashboard.loadErrorTitle", "We could not load your dashboard.")}
           </p>
 
 
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               py-2
             "
           >
-            Try again
+            {t("dashboard.tryAgain", "Try again")}
           </button>
 
 
@@ -224,12 +224,10 @@ export default function DashboardPage() {
             }
 
 
-            title="Your workspace is ready"
+            title={t("dashboard.workspaceReadyTitle", "Your workspace is ready")}
 
 
-            description="
-            Add your first lead or load demo data to unlock forecasting, AI insights and pipeline analytics.
-            "
+            description={t("dashboard.workspaceReadyDescription", "Add your first lead or load demo data to unlock forecasting, AI insights and pipeline analytics.")}
 
 
             actions={
@@ -246,7 +244,10 @@ export default function DashboardPage() {
 
                     const result = await loadDemoData()
 
-                    setDemoMessage(result.message)
+                    const warning = result.warnings?.length ? ` ${t("dashboard.warnings", "Warnings")}: ${result.warnings.join(" ")}` : ""
+                    setDemoMessage(
+                      `${result.message} ${t("dashboard.leads", "Leads")}: ${result.inserted_leads}, ${t("dashboard.activities", "Activities")}: ${result.inserted_activities}, ${t("dashboard.tasks", "Tasks")}: ${result.inserted_tasks}.${warning}`
+                    )
 
                     await refresh()
 
@@ -257,7 +258,7 @@ export default function DashboardPage() {
                     setDemoMessage(
                       error instanceof Error
                       ? error.message
-                      : "Failed"
+                      : t("dashboard.failed", "Failed")
                     )
 
                   }
@@ -282,8 +283,8 @@ export default function DashboardPage() {
 
                 {
                   demoLoading
-                  ? "Loading..."
-                  : "Load demo data"
+                  ? t("common.loading", "Loading...")
+                  : t("dashboard.loadDemoData", "Load demo data")
                 }
 
 
