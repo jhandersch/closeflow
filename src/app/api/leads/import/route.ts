@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 type ImportIssue = {
   row: number
@@ -49,6 +49,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ error: "Workspace required" }, { status: 403 })
+  }
+
   const body = await request.json()
   const csvText = typeof body.csv === "string" ? body.csv : ""
 
@@ -71,7 +76,7 @@ export async function POST(request: Request) {
   const { data: existingLeads } = await supabase
     .from("leads")
     .select("name, company")
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
 
   const knownKeys = new Set(
     (existingLeads || []).map((lead) => `${(lead.name || "").trim().toLowerCase()}::${(lead.company || "").trim().toLowerCase()}`)
@@ -134,8 +139,23 @@ export async function POST(request: Request) {
       continue
     }
 
+    const { data: membership, error: membershipError } =
+      await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", user.id)
+        .single()
+
+    if (membershipError || !membership) {
+      throw new Error("No workspace found")
+    }
+
+    const workspaceId = membership.workspace_id
+
     const payload = {
+      workspace_id: workspace.id,
       user_id: user.id,
+      created_by: user.id,
       name: name.trim(),
       company: company.trim(),
       status,
@@ -158,6 +178,7 @@ export async function POST(request: Request) {
 
     if (insertResult.error && /column .* does not exist/i.test(insertResult.error.message || "")) {
       const fallbackPayload = {
+        workspace_id: workspace.id,
         user_id: user.id,
         name: name.trim(),
         company: company.trim(),
@@ -186,10 +207,14 @@ export async function POST(request: Request) {
 
     await supabase.from("activities").insert([
       {
+        workspace_id: workspace.id,
         lead_id: insertResult.data.id,
         user_id: user.id,
+        title: "Lead imported from CSV",
+        description: "Lead imported from CSV",
         action: "Lead imported from CSV",
         type: "created",
+        metadata: { source: "csv_import" },
       },
     ])
   }

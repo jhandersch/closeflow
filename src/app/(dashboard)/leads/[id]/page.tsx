@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
@@ -20,12 +20,21 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
+import { supabase } from "@/lib/supabase/client"
 
 import type {
   LeadSource,
   LeadStatus,
   TaskPriority,
 } from "@/types"
+
+type LeadMeeting = {
+  id: string
+  title: string
+  description: string | null
+  scheduled_at: string
+  status: "scheduled" | "completed" | "cancelled"
+}
 
 
 export default function LeadDetailPage() {
@@ -106,6 +115,9 @@ export default function LeadDetailPage() {
     useState<string | null>(null)
 
   const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<"overview" | "activities" | "notes" | "tasks" | "meetings">("overview")
+  const [meetings, setMeetings] = useState<LeadMeeting[]>([])
+  const [meetingsLoading, setMeetingsLoading] = useState(true)
 
 
 
@@ -159,6 +171,36 @@ export default function LeadDetailPage() {
 
 
   }, [lead])
+
+  useEffect(() => {
+    const loadMeetings = async () => {
+      if (!id) {
+        setMeetings([])
+        setMeetingsLoading(false)
+        return
+      }
+
+      setMeetingsLoading(true)
+
+      const { data, error } = await supabase
+        .from("calendar_events")
+        .select("id, title, description, scheduled_at, status")
+        .eq("lead_id", id)
+        .order("scheduled_at", { ascending: false })
+
+      if (error) {
+        console.error(error)
+        setMeetings([])
+        setMeetingsLoading(false)
+        return
+      }
+
+      setMeetings(((data || []) as LeadMeeting[]))
+      setMeetingsLoading(false)
+    }
+
+    void loadMeetings()
+  }, [id])
 
 
 
@@ -799,7 +841,31 @@ export default function LeadDetailPage() {
 
 
 
-      <PipelineJourney status={lead.status} />
+  {activeTab === "overview" ? <PipelineJourney status={lead.status} /> : null}
+
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-border-subtle bg-surface-1 p-3">
+        {([
+          { key: "overview", label: isDe ? "Übersicht" : "Overview" },
+          { key: "activities", label: isDe ? "Aktivitäten" : "Activities" },
+          { key: "notes", label: isDe ? "Notizen" : "Notes" },
+          { key: "tasks", label: isDe ? "Aufgaben" : "Tasks" },
+          { key: "meetings", label: isDe ? "Termine" : "Meetings" },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+              activeTab === tab.key
+                ? "bg-foreground text-background"
+                : "bg-surface-2/80 text-foreground/80 hover:bg-foreground/10"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "overview" ? (
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
@@ -842,7 +908,7 @@ export default function LeadDetailPage() {
 
         <div className="space-y-4">
           <section className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
-            <p className="text-sm uppercase tracking-widest text-cyan-400">{isDe ? "KI-Assistent" : "AI Assistant"}</p>
+            <p className="text-sm uppercase tracking-widest text-cyan-400">{isDe ? "KI-Assistent" : "KI-Assistent"}</p>
             <h2 className="mt-2 text-2xl font-bold text-foreground">{isDe ? "KI-Analyse ist zentralisiert" : "AI analysis is centralized"}</h2>
             <p className="mt-3 text-sm text-foreground/80">
               {isDe
@@ -861,16 +927,23 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      <DealMetrics
-        dealAge={dealAge}
-        priorityScore={salesScore.priority}
-        healthScore={salesScore.health}
-        value={lead.value}
-        stageAge={stageAge}
-      />
+      ) : null}
 
-      <AILeadSummary lead={lead} />
+      {activeTab === "overview" ? (
+        <>
+          <DealMetrics
+            dealAge={dealAge}
+            priorityScore={salesScore.priority}
+            healthScore={salesScore.health}
+            value={lead.value}
+            stageAge={stageAge}
+          />
 
+          <AILeadSummary lead={lead} />
+        </>
+      ) : null}
+
+      {activeTab === "tasks" ? (
       <div className="space-y-5 rounded-xl border border-border-subtle bg-surface-1 p-6">
         <h2 className="text-xl font-semibold text-foreground">{isDe ? "Aufgaben" : "Tasks"}</h2>
 
@@ -903,11 +976,15 @@ export default function LeadDetailPage() {
             onClick={async () => {
               if (!newTask.trim()) return
               try {
-                await addTask(newTask, newTaskDueDate || undefined, newTaskPriority)
+                await addTask(
+                  newTask,
+                  newTaskDueDate || undefined,
+                  newTaskPriority
+                )
+
                 setNewTask("")
                 setNewTaskDueDate("")
                 setNewTaskPriority("medium")
-                await refresh()
               } catch (error) {
                 console.error(error)
                 toast.error(isDe ? "Aufgabe konnte nicht hinzugefügt werden" : "Could not add task")
@@ -928,12 +1005,13 @@ export default function LeadDetailPage() {
               dueDate={task.due_date}
               priority={task.priority}
               onToggle={async () => {
-                await toggleTask(task.id, task.completed)
-                await refresh()
+                await toggleTask(
+                  task.id,
+                  task.completed
+                )
               }}
               onDelete={async () => {
                 await deleteTask(task.id)
-                await refresh()
               }}
             />
           ))}
@@ -941,7 +1019,9 @@ export default function LeadDetailPage() {
           {tasks.length === 0 && <p className="text-sm text-foreground/55">{isDe ? "Noch keine Aufgaben." : "No tasks yet."}</p>}
         </div>
       </div>
+      ) : null}
 
+      {activeTab === "overview" ? (
       <div id="lead-details" className="space-y-4 rounded-xl border border-border-subtle bg-surface-1 p-6">
         <h2 className="text-xl font-semibold text-foreground">{isDe ? "Lead-Details" : "Lead Details"}</h2>
 
@@ -1036,14 +1116,79 @@ export default function LeadDetailPage() {
           </button>
         </div>
       </div>
+      ) : null}
 
 
 
 
 
-      <ActivityTimeline
-        activities={activities}
-      />
+      {activeTab === "notes" ? (
+        <div className="space-y-4 rounded-xl border border-border-subtle bg-surface-1 p-6">
+          <h2 className="text-xl font-semibold text-foreground">{isDe ? "Notizen" : "Notes"}</h2>
+          <p className="text-sm text-foreground/65">
+            {isDe ? "Notizen werden auf dem Lead gespeichert." : "Notes are stored on the lead record."}
+          </p>
+
+          <textarea
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            className="h-52 w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
+          />
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-xl bg-foreground px-6 py-3 font-semibold text-background transition hover:scale-[1.02] disabled:opacity-60"
+            >
+              {saving ? (isDe ? "Speichere..." : "Saving...") : (isDe ? "Notizen speichern" : "Save notes")}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {activeTab === "meetings" ? (
+        <div className="space-y-4 rounded-xl border border-border-subtle bg-surface-1 p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-foreground">{isDe ? "Termine" : "Meetings"}</h2>
+            <Link
+              href="/calendar"
+              className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
+            >
+              {isDe ? "Kalender öffnen" : "Open calendar"}
+            </Link>
+          </div>
+
+          {meetingsLoading ? (
+            <p className="text-sm text-foreground/60">{isDe ? "Termine werden geladen..." : "Loading meetings..."}</p>
+          ) : meetings.length === 0 ? (
+            <p className="text-sm text-foreground/55">{isDe ? "Noch keine Termine für diesen Lead." : "No meetings for this lead yet."}</p>
+          ) : (
+            <div className="space-y-3">
+              {meetings.map((meeting) => (
+                <article key={meeting.id} className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-foreground">{meeting.title}</p>
+                      {meeting.description ? <p className="mt-1 text-sm text-foreground/70">{meeting.description}</p> : null}
+                    </div>
+                    <span className="rounded-full border border-border-subtle bg-surface-1 px-3 py-1 text-xs text-foreground/70">
+                      {meeting.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-foreground/55">{new Date(meeting.scheduled_at).toLocaleString(locale)}</p>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {activeTab === "activities" ? (
+        <ActivityTimeline
+          activities={activities}
+        />
+      ) : null}
 
 
     </div>

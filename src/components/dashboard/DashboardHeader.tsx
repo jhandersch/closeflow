@@ -147,7 +147,7 @@ export default function DashboardHeader({
             md:text-4xl
             "
           >
-            {greeting} 👋
+            {greeting}
           </h1>
 
 

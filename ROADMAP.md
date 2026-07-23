@@ -59,6 +59,11 @@ Status legend:
 - `Done` Schema repair bootstrap script
 - `Done` Schema health-check script
 - `Done` Metadata backfill script for team migration
+- `Done` API tenancy regression guard (`npm run lint:tenancy`)
+- `Done` One-command release gate (`npm run verify:release`)
+- `Done` Production go-live checklist with cross-tenant negative tests (`docs/go-live-checklist.md`)
+- `Done` Cross-tenant probe seeding and full-suite command (`npm run test:cross-tenant:seed`, `npm run test:cross-tenant:suite`)
+- `Done` Explicit release GO/NO-GO decision matrix (`docs/release-acceptance-matrix.md`)
 - `Done` Successful production build validation
 
 ---

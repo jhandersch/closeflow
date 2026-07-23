@@ -50,7 +50,7 @@ export default function ProfileSettingsPage() {
     }
 
     void load()
-  }, [appLanguage])
+  }, [])
 
   const save = async () => {
     setSaving(true)

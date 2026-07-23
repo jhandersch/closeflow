@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 import * as XLSX from "xlsx"
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 
@@ -20,6 +20,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ error: "Workspace required" }, { status: 403 })
+  }
+
   const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "export")
   if (!limitCheck.ok) {
     return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
@@ -28,14 +33,14 @@ export async function GET(request: Request) {
   let { data: leads, error: queryError } = await supabase
     .from("leads")
     .select("name, company, status, value, source, email, phone, website, address, tags, notes")
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
 
   if (queryError && /column .* does not exist/i.test(queryError.message || "")) {
     const fallback = await supabase
       .from("leads")
       .select("name, company, status, value, notes")
-      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false })
 
     leads = fallback.data as typeof leads

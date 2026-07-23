@@ -27,20 +27,20 @@ type PageLink = { href: string; titleEn: string; titleDe: string }
 const pageLinks: PageLink[] = [
   { href: "/dashboard",         titleEn: "Dashboard",          titleDe: "Dashboard" },
   { href: "/leads",             titleEn: "Leads",              titleDe: "Leads" },
-  { href: "/customers",         titleEn: "Customers",          titleDe: "Kunden" },
+  { href: "/customers",         titleEn: "Kunden",             titleDe: "Kunden" },
   { href: "/pipeline",          titleEn: "Pipeline",           titleDe: "Pipeline" },
-  { href: "/tasks",             titleEn: "Tasks",              titleDe: "Aufgaben" },
+  { href: "/tasks",             titleEn: "Aufgaben",           titleDe: "Aufgaben" },
   { href: "/activities",        titleEn: "Activities",         titleDe: "Aktivitäten" },
   { href: "/analytics",         titleEn: "Analytics",          titleDe: "Analysen" },
   { href: "/analytics/revenue", titleEn: "Revenue Analytics",  titleDe: "Umsatz-Analysen" },
   { href: "/forecast",          titleEn: "Forecast",           titleDe: "Prognose" },
-  { href: "/ai",                titleEn: "AI Assistant",       titleDe: "KI-Assistent" },
-  { href: "/automations",       titleEn: "Automations",        titleDe: "Automationen" },
-  { href: "/notifications",     titleEn: "Notifications",      titleDe: "Benachrichtigungen" },
+  { href: "/ai",                titleEn: "KI-Assistent",       titleDe: "KI-Assistent" },
+  { href: "/automations",       titleEn: "Automatisierungen",  titleDe: "Automationen" },
+  { href: "/notifications",     titleEn: "Benachrichtigungen", titleDe: "Benachrichtigungen" },
   { href: "/team",              titleEn: "Team",               titleDe: "Team" },
-  { href: "/billing",           titleEn: "Billing",            titleDe: "Abrechnung" },
-  { href: "/pricing",           titleEn: "Pricing",            titleDe: "Preise" },
-  { href: "/settings",          titleEn: "Settings",           titleDe: "Einstellungen" },
+  { href: "/billing",           titleEn: "Abrechnung",         titleDe: "Abrechnung" },
+  { href: "/pricing",           titleEn: "Preise",             titleDe: "Preise" },
+  { href: "/settings",          titleEn: "Einstellungen",      titleDe: "Einstellungen" },
   { href: "/admin",             titleEn: "Admin",              titleDe: "Admin" },
 ]
 
@@ -78,31 +78,99 @@ export default function SearchPage() {
     const controller = new AbortController()
 
     const run = async () => {
-      setLoading(true)
-      const [leadResponse, userResult] = await Promise.all([
-        fetch(`/api/leads/search?q=${encodeURIComponent(q)}`, { signal: controller.signal }),
-        supabase.auth.getUser(),
-      ])
 
-      if (!controller.signal.aborted && leadResponse.ok) {
-        setLeads((await leadResponse.json()) as LeadResult[])
-      }
+      try {
 
-      const user = userResult.data.user
-      if (user && !controller.signal.aborted) {
-        const { data } = await supabase
-          .from("tasks")
-          .select("id, title, lead_id")
-          .eq("user_id", user.id)
-          .ilike("title", `%${q}%`)
-          .limit(12)
+        setLoading(true)
 
-        if (!controller.signal.aborted) {
-          setTasks((data || []) as TaskResult[])
+        const [leadResponse, userResult] = await Promise.all([
+          fetch(`/api/leads/search?q=${encodeURIComponent(q)}`, {
+            signal: controller.signal,
+            credentials: "include",
+          }),
+          supabase.auth.getUser(),
+        ])
+
+
+        if (
+          controller.signal.aborted
+        ) {
+          return
         }
+
+
+        if (leadResponse.ok) {
+          const leadData = await leadResponse.json()
+
+          setLeads(leadData as LeadResult[])
+        } else {
+          // keep silent; empty result state is handled below
+        }
+
+
+
+        const user =
+          userResult.data.user
+
+
+        if(user){
+
+          const {
+            data
+          } =
+          await supabase
+            .from("tasks")
+            .select(
+              "id,title,lead_id"
+            )
+            .eq(
+              "user_id",
+              user.id
+            )
+            .ilike(
+              "title",
+              `%${q}%`
+            )
+            .limit(12)
+
+
+
+          if(
+            !controller.signal.aborted
+          ){
+
+            setTasks(
+              (data || []) as TaskResult[]
+            )
+
+          }
+
+        }
+
+
+      }
+      catch(error:any){
+
+        if(
+          error.name === "AbortError"
+        ){
+          return
+        }
+
+
+        console.error("Search failed:", error)
+
+      }
+      finally {
+
+        if(
+          !controller.signal.aborted
+        ){
+          setLoading(false)
+        }
+
       }
 
-      if (!controller.signal.aborted) setLoading(false)
     }
 
     void run()
@@ -116,20 +184,20 @@ export default function SearchPage() {
     <AuthGuard>
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Suche" : "Search"}</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Suche" : "Suche"}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Globale Suche" : "Global Search"}</h1>
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3">
-          <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{isDe ? "Suche" : "Search"}</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{isDe ? "Suche" : "Suche"}</span>
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={isDe ? "Leads, Aufgaben, Seiten suchen..." : "Search leads, tasks, pages..."}
+            placeholder={isDe ? "Leads, Aufgaben, Seiten suchen..." : "Leads, Aufgaben und Seiten durchsuchen..."}
             className="w-full bg-transparent text-foreground outline-none placeholder:text-foreground/40"
           />
-          {loading ? <span className="text-xs text-foreground/45">{isDe ? "Suche..." : "Searching..."}</span> : null}
+          {loading ? <span className="text-xs text-foreground/45">{isDe ? "Suche..." : "Suche..."}</span> : null}
         </div>
 
         {query.trim().length >= 2 && !loading && total === 0 ? (
@@ -162,7 +230,7 @@ export default function SearchPage() {
 
         {tasks.length > 0 ? (
           <section>
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{isDe ? "Aufgaben" : "Tasks"} ({tasks.length})</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{isDe ? "Aufgaben" : "Aufgaben"} ({tasks.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {tasks.map((task) => (
                 <Link
@@ -171,7 +239,7 @@ export default function SearchPage() {
                   className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5"
                 >
                   <p className="font-semibold text-foreground">{task.title}</p>
-                  <p className="mt-0.5 text-xs text-foreground/50">{isDe ? "Lead-Aufgabe" : "Lead task"}</p>
+                  <p className="mt-0.5 text-xs text-foreground/50">{isDe ? "Lead-Aufgabe" : "Lead-Aufgabe"}</p>
                 </Link>
               ))}
             </div>
@@ -180,7 +248,7 @@ export default function SearchPage() {
 
         {pageResults.length > 0 ? (
           <section>
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{isDe ? "Seiten" : "Pages"} ({pageResults.length})</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{isDe ? "Seiten" : "Seiten"} ({pageResults.length})</p>
             <div className="grid gap-2 sm:grid-cols-3">
               {pageResults.map((page) => (
                 <Link

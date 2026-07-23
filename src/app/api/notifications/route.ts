@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 type Notification = {
   id: string
@@ -17,9 +17,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json([])
+  }
+
   const [{ data: leads, error: leadsError }, { data: activities, error: activitiesError }] = await Promise.all([
-    supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("user_id", user.id),
-    supabase.from("activities").select("lead_id, created_at").eq("user_id", user.id),
+    supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("workspace_id", workspace.id),
+    supabase.from("activities").select("lead_id, created_at").eq("workspace_id", workspace.id),
   ])
 
   if (leadsError) {

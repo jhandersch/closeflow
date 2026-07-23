@@ -7,12 +7,21 @@ import { supabase } from "@/lib/supabase/client"
 import TaskBoard from "@/components/tasks/TaskBoard"
 import TaskCalendar from "@/components/tasks/TaskCalendar"
 import TaskFilters from "@/components/tasks/TaskFilters"
+import type { Task, TaskPriority } from "@/types"
+
+const normalizePriority = (value: unknown): TaskPriority => {
+  if (value === "low" || value === "medium" || value === "high") {
+    return value
+  }
+
+  return "medium"
+}
 
 export default function TasksPage() {
   const { language } = useAppPreferences()
   const isDe = language === "de"
 
-  const [tasks, setTasks] = useState<Array<{ id: string; title: string; priority: string; due_date: string | null; completed: boolean; user_id: string }>>([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [filter, setFilter] = useState("all")
   const [loading, setLoading] = useState(true)
 
@@ -26,7 +35,13 @@ export default function TasksPage() {
       }
 
       const { data } = await supabase.from("tasks").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
-      setTasks((data || []) as typeof tasks)
+
+      const normalizedTasks = ((data || []) as Task[]).map((task) => ({
+        ...task,
+        priority: normalizePriority(task.priority),
+      }))
+
+      setTasks(normalizedTasks)
       setLoading(false)
     }
 
@@ -55,7 +70,7 @@ export default function TasksPage() {
         <TaskFilters value={filter} onChange={setFilter} />
 
         {loading ? (
-          <p className="text-foreground/65">{isDe ? "Lade..." : "Loading..."}</p>
+          <p className="text-foreground/65">{isDe ? "Lade..." : "Lädt..."}</p>
         ) : (
           <div className="space-y-6">
             <TaskBoard tasks={filteredTasks} />

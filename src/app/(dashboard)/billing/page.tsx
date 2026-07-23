@@ -80,14 +80,14 @@ export default function BillingPage() {
     <AuthGuard>
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Abrechnung" : "Billing"}</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Abrechnung" : "Abrechnung"}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Aktueller Plan" : "Current Plan"}</h1>
         </div>
 
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
           <p className="text-sm text-foreground/60">{isDe ? "Plan" : "Plan"}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">{billingLoading ? (isDe ? "Lade..." : "Loading...") : (billing?.plan || "free").toUpperCase()}</p>
-          <p className="mt-1 text-sm text-foreground/65">{isDe ? "Status" : "Status"}: {billingLoading ? "..." : (billing?.status || (isDe ? "inaktiv" : "inactive"))}</p>
+          <p className="mt-2 text-2xl font-semibold text-foreground">{billingLoading ? (isDe ? "Lade..." : "Lädt...") : (billing?.plan || "free").toUpperCase()}</p>
+          <p className="mt-1 text-sm text-foreground/65">{isDe ? "Status" : "Status"}: {billingLoading ? "..." : (billing?.status || (isDe ? "inaktiv" : "inaktiv"))}</p>
           <p className="mt-3 text-sm text-foreground/65">
             {billing?.current_period_end
               ? (isDe

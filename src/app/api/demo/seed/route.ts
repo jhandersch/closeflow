@@ -121,7 +121,7 @@ export async function POST(request: Request) {
   const existingDemoLeadsResult = await supabase
     .from("leads")
     .select("id")
-    .eq("user_id", user.id)
+    .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
     .ilike("notes", `${DEMO_MARKER}%`)
 
   if (existingDemoLeadsResult.error) {
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     const deleteTasks = await supabase
       .from("tasks")
       .delete()
-      .eq("user_id", user.id)
+      .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
       .ilike("title", `${DEMO_MARKER}%`)
 
     if (deleteTasks.error && !isMissingSchemaError(deleteTasks.error.message || "")) {
@@ -178,6 +178,7 @@ export async function POST(request: Request) {
     const leadInsert = await supabase
       .from("leads")
       .insert({
+        workspace_id: workspaceId,
         user_id: user.id,
         name: leadSeed.name,
         company: leadSeed.company,
@@ -197,10 +198,14 @@ export async function POST(request: Request) {
     insertedLeads += 1
 
     const activityRows = leadSeed.activities.map((activity, index) => ({
+      workspace_id: workspaceId,
       lead_id: leadInsert.data.id,
       user_id: user.id,
+      title: `${DEMO_MARKER} ${activity.action}`,
+      description: `${DEMO_MARKER} ${activity.action}`,
       action: `${DEMO_MARKER} ${activity.action}`,
       type: activity.type || "created",
+      metadata: { seed: "demo" },
       created_at: new Date(Date.now() - (leadSeed.activities.length - index) * 1000 * 60 * 60 * 4).toISOString(),
     }))
 

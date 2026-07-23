@@ -6,7 +6,11 @@ export type DashboardInsight = {
 }
 
 type InsightInput = {
-  leads: Array<{ status: string; value: number; notes?: string }>
+  leads: Array<{
+    status: string
+    value: number
+    notes?: string | null
+  }>
   revenue: number
   forecast: number
   proposalLeads: number

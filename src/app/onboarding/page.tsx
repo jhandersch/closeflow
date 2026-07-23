@@ -156,49 +156,50 @@ export default function OnboardingPage() {
         throw new Error(isDe ? "Du musst angemeldet sein, um das Onboarding abzuschliessen." : "You need to be signed in to complete onboarding.")
       }
 
-      const { error: metadataError } = await supabase.auth.updateUser({
+      const {
         data: {
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString(),
-          company_name: companyName.trim() || null,
-          industry: industry.trim() || null,
-          team_size: teamSize.trim() || null,
+          session,
         },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error(
+          isDe
+            ? "Keine aktive Sitzung gefunden."
+            : "No active session found."
+        )
+      }
+
+
+      const response = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          companyName: companyName.trim(),
+          industry: industry.trim(),
+          teamSize: teamSize.trim(),
+
+          quickStartMode,
+
+          leadName: leadName.trim(),
+          leadCompany: leadCompany.trim(),
+          leadValue: leadValue.trim(),
+          leadStatus,
+        }),
       })
 
-      if (metadataError) {
-        throw metadataError
-      }
 
-      if (quickStartMode === "demo") {
-        await loadDemoData()
-      }
+      const result = await response.json()
 
-      if (quickStartMode === "lead" && (leadName.trim() || leadCompany.trim() || leadValue.trim())) {
-        const { data: insertedLead, error: leadError } = await supabase.from("leads").insert({
-          user_id: user.id,
-          name: leadName.trim() || (isDe ? "Neuer Lead" : "New lead"),
-          company: leadCompany.trim() || companyName.trim() || (isDe ? "Neues Konto" : "New account"),
-          status: leadStatus,
-          value: Number(leadValue) || 0,
-          created_at: new Date().toISOString(),
-          stage_changed_at: new Date().toISOString(),
-          last_activity_at: new Date().toISOString(),
-          notes: isDe ? "Im Onboarding erstellt" : "Created during onboarding",
-        }).select("id").single()
 
-        if (leadError) {
-          throw leadError
-        }
-
-        if (insertedLead?.id) {
-          await supabase.from("activities").insert({
-            lead_id: insertedLead.id,
-            user_id: user.id,
-            action: isDe ? "Lead waehrend Onboarding erstellt" : "Lead created during onboarding",
-            type: "created",
-          })
-        }
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+          "Onboarding failed"
+        )
       }
 
       localStorage.removeItem(ONBOARDING_DRAFT_KEY)
@@ -461,7 +462,7 @@ export default function OnboardingPage() {
                   <div className="flex items-start gap-3">
                     <Building2 className="mt-1 h-5 w-5 text-emerald-300" />
                     <div>
-                      <h2 className="text-2xl font-semibold text-foreground">Dashboard erklaeren</h2>
+                      {isDe ? "Dashboard kennenlernen" : "Explore your dashboard"}
                       <p className="mt-2 text-sm leading-7 text-foreground/80">
                         {isDe
                           ? "Dein Workspace ist bereit. Hier ist der schnellste Weg für deinen täglichen Sales-Flow."
@@ -496,7 +497,7 @@ export default function OnboardingPage() {
                     <p className="mt-2 text-xs text-foreground/65">{isDe ? "Deals per Drag and Drop durch Stufen bewegen." : "Move deals across stages via drag and drop."}</p>
                   </div>
                   <div className="rounded-2xl border border-border-subtle bg-surface-2/70 p-4">
-                    <p className="text-sm font-semibold text-foreground">4) {isDe ? "Einstellungen" : "Settings"}</p>
+                    <p className="text-sm font-semibold text-foreground">4) {isDe ? "Einstellungen" : "Einstellungen"}</p>
                     <p className="mt-2 text-xs text-foreground/65">{isDe ? "Profil, Passwort, Benutzername und Avatar verwalten." : "Manage profile, password, username, and avatar."}</p>
                   </div>
                 </div>
@@ -569,7 +570,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={() => {
                   void loadDemoData().then(() => {
-                    router.replace("/dashboard")
+                    router.replace(nextPath || "/dashboard")
                   }).catch((err) => {
                     setError(err instanceof Error ? err.message : (isDe ? "Demo-Daten konnten nicht geladen werden" : "Demo data could not be loaded"))
                   })

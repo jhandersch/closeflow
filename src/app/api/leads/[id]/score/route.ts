@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
@@ -10,13 +10,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ error: "Workspace required" }, { status: 403 })
+  }
+
   const { id } = await context.params
 
   const { data: lead, error: leadError } = await supabase
     .from("leads")
     .select("*")
     .eq("id", id)
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
     .single()
 
   if (leadError || !lead) {

@@ -68,10 +68,23 @@ export default function AIAssistantPage() {
         return
       }
 
+      const { data: membership, error: membershipError } =
+        await supabase
+          .from("workspace_members")
+          .select("workspace_id")
+          .eq("user_id", user.id)
+          .single()
+
+      if (membershipError || !membership) {
+        throw new Error("No workspace found")
+      }
+
+      const workspaceId = membership.workspace_id
+
       const { data, error: leadsError } = await supabase
         .from("leads")
         .select("id, name, company, status, value, notes")
-        .eq("user_id", user.id)
+        .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false })
         .limit(100)
 

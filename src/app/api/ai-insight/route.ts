@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5.5",
+        model: "gpt-5.5-mini",
         temperature: 0.3,
         messages: [
           {
@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json()
     const content = data?.choices?.[0]?.message?.content ?? ""
-    const parsed = JSON.parse(content)
+    let parsed
+
+    try {
+      parsed = JSON.parse(content)
+    } catch {
+      throw new Error("Invalid AI JSON")
+    }
 
     return NextResponse.json(parsed)
   } catch {

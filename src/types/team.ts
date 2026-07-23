@@ -1,4 +1,9 @@
-export type TeamRole = "Owner" | "Admin" | "Sales Manager" | "Sales" | "Sales Rep" | "Viewer"
+export type TeamRole =
+  | "owner"
+  | "admin"
+  | "sales_manager"
+  | "sales"
+  | "viewer"
 
 export type TeamMemberStatus = "active" | "invited"
 

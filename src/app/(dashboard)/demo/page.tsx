@@ -32,7 +32,7 @@ export default function DemoPage() {
 
         <div className="flex flex-wrap justify-center gap-3">
           <button onClick={() => void startDemo(false)} disabled={loading} className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black disabled:opacity-60">
-            {loading ? "Loading..." : "Load demo data"}
+            {loading ? "Lädt..." : "Demo-Daten laden"}
           </button>
           <button onClick={() => void startDemo(true)} disabled={loading} className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-3 font-semibold text-foreground disabled:opacity-60">
             {loading ? "Reloading..." : "Reload demo data"}

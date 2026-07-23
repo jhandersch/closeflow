@@ -2,29 +2,23 @@
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 type KPIGridProps = {
-  total: number
-  openPipeline: number
+  totalLeads: number
   pipelineValue: number
+  wonDeals: number
   revenue: number
-  winRate: string
   conversionRate: number
-  wonLostLabel: string
-  averageDealValue: number
-  averageSalesCycle: number
-  atRiskDeals: number
+  activitiesThisWeek: number
+  openTasks: number
 }
 
 export default function KPIGrid({
-  total,
-  openPipeline,
+  totalLeads,
   pipelineValue,
+  wonDeals,
   revenue,
-  winRate,
   conversionRate,
-  wonLostLabel,
-  averageDealValue,
-  averageSalesCycle,
-  atRiskDeals,
+  activitiesThisWeek,
+  openTasks,
 }: KPIGridProps) {
   const { t, language } = useAppPreferences()
   const isDe = language === "de"
@@ -35,7 +29,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.totalLeads", "Total Leads")}
-        value={total.toString()}
+        value={totalLeads.toString()}
         hint={t("dashboard.activeOpportunities", "Active opportunities")}
       />
 
@@ -43,11 +37,16 @@ export default function KPIGrid({
       <KpiCard
         label={t("dashboard.pipelineValue", "Pipeline Value")}
         value={`€${pipelineValue.toLocaleString(locale)}`}
-        hint={`${openPipeline} ${t(
-          "dashboard.dealsInProgress",
-          "deals in progress"
-        )}`}
+        hint={t("dashboard.totalOpenDealValue", "Total open deal value")}
         accent="amber"
+      />
+
+
+      <KpiCard
+        label={t("dashboard.wonDeals", "Won Deals")}
+        value={wonDeals.toString()}
+        hint={t("dashboard.closedWonCount", "Closed won opportunities")}
+        accent="emerald"
       />
 
 
@@ -60,63 +59,26 @@ export default function KPIGrid({
 
 
       <KpiCard
-        label={t("dashboard.winRate", "Win Rate")}
-        value={`${winRate}%`}
-        hint={`${wonLostLabel} ${t(
-          "dashboard.wonLost",
-          "won/lost"
-        )} | ${conversionRate}% ${t(
-          "dashboard.conversion",
-          "conversion"
-        )}`}
+        label={t("dashboard.conversionRate", "Conversion Rate")}
+        value={`${conversionRate}%`}
+        hint={t("dashboard.wonVsClosed", "Won vs closed opportunities")}
         accent="cyan"
       />
 
 
       <KpiCard
-        label={t("dashboard.averageDeal", "Average Deal")}
-        value={`€${averageDealValue.toLocaleString(locale)}`}
-        hint={t(
-          "dashboard.averageOpportunitySize",
-          "Average opportunity size"
-        )}
+        label={t("dashboard.activitiesThisWeek", "Activities This Week")}
+        value={activitiesThisWeek.toString()}
+        hint={t("dashboard.activityVolumeHint", "All logged actions over 7 days")}
         accent="purple"
       />
 
 
       <KpiCard
-        label={t("dashboard.salesCycle", "Sales Cycle")}
-        value={`${averageSalesCycle} ${isDe ? "Tage" : "days"}`}
-        hint={t(
-          "dashboard.averageClosingTime",
-          "Average closing time"
-        )}
-        accent="blue"
-      />
-
-
-      <KpiCard
-        label={t(
-          "dashboard.attentionNeeded",
-          "Attention Needed"
-        )}
-        value={atRiskDeals.toString()}
-        hint={t(
-          "dashboard.dealsLosingMomentum",
-          "Deals losing momentum"
-        )}
+        label={t("dashboard.openTasks", "Open Tasks")}
+        value={openTasks.toString()}
+        hint={t("dashboard.tasksPending", "Tasks pending completion")}
         accent="red"
-      />
-
-
-      <KpiCard
-        label={t("dashboard.forecast", "Forecast")}
-        value={`€${pipelineValue.toLocaleString(locale)}`}
-        hint={t(
-          "dashboard.expectedPipeline",
-          "Expected pipeline"
-        )}
-        accent="emerald"
       />
 
     </div>

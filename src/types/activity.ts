@@ -6,17 +6,25 @@ export type ActivityType =
   | "call_completed"
   | "task_created"
   | "task_completed"
+  | "meeting_created"
+  | "meeting_updated"
+  | "meeting_completed"
+  | "meeting_deleted"
   | "ai"
   | "other"
 
+
+
 export type Activity = {
   id: string
+  workspace_id?: string | null
   lead_id: string
   user_id: string
-  action: string
+  type: ActivityType
   title?: string | null
-  description?: string | null
+  description: string | null
+  metadata?: Record<string, unknown> | null
+  action?: string | null
   created_by?: string | null
-  type?: ActivityType
   created_at: string
 }

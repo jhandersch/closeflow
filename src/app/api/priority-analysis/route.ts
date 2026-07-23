@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         },
 
         body: JSON.stringify({
-          model: "gpt-5.5",
+          model: "gpt-5.5-mini",
           temperature: 0.3,
 
           messages: [

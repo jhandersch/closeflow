@@ -20,15 +20,15 @@ export function useLeadActions(
   refresh: () => Promise<void>
 ) {
 
-  const stripExtendedLeadFields = (payload: Record<string, unknown>) => {
-    const sanitized = { ...payload }
-    delete sanitized.source
-    delete sanitized.tags
-    delete sanitized.email
-    delete sanitized.phone
-    delete sanitized.address
-    delete sanitized.website
-    return sanitized
+  const getWorkspaceId = async (userId: string) => {
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle()
+
+    return membership?.workspace_id || null
   }
 
 
@@ -52,21 +52,10 @@ export function useLeadActions(
       updateData.stage_changed_at = new Date().toISOString()
     }
 
-    let { error } = await supabase
+    const { error } = await supabase
       .from("leads")
       .update(updateData)
       .eq("id", leadId)
-
-    if (error && /column .* does not exist/i.test(error.message || "")) {
-      const fallbackPayload = stripExtendedLeadFields(updateData)
-      const retry = await supabase
-        .from("leads")
-        .update(fallbackPayload)
-        .eq("id", leadId)
-      error = retry.error
-    }
-
-
 
     if (error) {
       throw error
@@ -78,39 +67,68 @@ export function useLeadActions(
     const user = userData.user
 
     if (user) {
+      const workspaceId = await getWorkspaceId(user.id)
+
       const activities: Array<{
+        workspace_id: string | null
         lead_id: string
         user_id: string
+        title: string
+        description: string | null
         action: string
         type: ActivityType
+        metadata: Record<string, unknown>
       }> = []
 
       if (oldStatus !== data.status) {
+        const action = `Status changed from ${oldStatus} to ${data.status}`
         activities.push({
+          workspace_id: workspaceId,
           lead_id: leadId,
           user_id: user.id,
-          action: `Status changed from ${oldStatus} to ${data.status}`,
+          title: action,
+          description: action,
+          action,
           type: "status_changed",
+          metadata: {
+            previous_status: oldStatus,
+            next_status: data.status,
+          },
         })
       }
 
       const previousNotes = (beforeUpdateLead?.notes ?? "").trim()
       const updatedNotes = data.notes.trim()
       if (previousNotes !== updatedNotes) {
+        const action = "Lead notes updated"
         activities.push({
+          workspace_id: workspaceId,
           lead_id: leadId,
           user_id: user.id,
-          action: "Lead notes updated",
+          title: action,
+          description: action,
+          action,
           type: "note_added",
+          metadata: {
+            had_notes_before: previousNotes.length > 0,
+            has_notes_now: updatedNotes.length > 0,
+          },
         })
       }
 
       if (activities.length === 0) {
+        const action = "Lead details updated"
         activities.push({
+          workspace_id: workspaceId,
           lead_id: leadId,
           user_id: user.id,
-          action: "Lead details updated",
+          title: action,
+          description: action,
+          action,
           type: "other",
+          metadata: {
+            changed_fields: ["name", "company", "value", "source", "contact"],
+          },
         })
       }
 

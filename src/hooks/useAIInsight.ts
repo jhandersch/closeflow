@@ -12,6 +12,7 @@ export type AIInsight = {
 export function useAIInsight(payload: unknown, fallback: AIInsight, language: "de" | "en" = "de") {
   const [insight, setInsight] = useState<AIInsight>(fallback)
   const [loading, setLoading] = useState(false)
+  const payloadKey = JSON.stringify(payload)
 
   useEffect(() => {
     let cancelled = false
@@ -54,7 +55,10 @@ export function useAIInsight(payload: unknown, fallback: AIInsight, language: "d
     return () => {
       cancelled = true
     }
-  }, [language, JSON.stringify(payload)])
+  }, [
+    language,
+    payloadKey
+  ])
 
   return {
     insight,

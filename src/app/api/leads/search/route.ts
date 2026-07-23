@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 type LeadSearchResult = {
   id: string
@@ -19,6 +19,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json([])
+  }
+
   const url = new URL(request.url)
   const query = (url.searchParams.get("q") || "").trim()
 
@@ -28,9 +33,9 @@ export async function GET(request: Request) {
 
   const likeQuery = `%${query}%`
   const [nameResult, companyResult, emailResult] = await Promise.all([
-    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("name", likeQuery).limit(10),
-    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("company", likeQuery).limit(10),
-    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("user_id", user.id).ilike("email", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).ilike("name", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).ilike("company", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).ilike("email", likeQuery).limit(10),
   ])
 
   const errorMessage = nameResult.error?.message || companyResult.error?.message || emailResult.error?.message

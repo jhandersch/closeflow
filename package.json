@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:tenancy": "node scripts/check-tenancy.js",
+    "verify:release": "node scripts/verify-release.js",
+    "test:cross-tenant": "node scripts/cross-tenant-negative-tests.js",
+    "test:cross-tenant:bootstrap": "node scripts/bootstrap-cross-tenant-env.js",
+    "test:cross-tenant:seed": "node scripts/seed-cross-tenant-probe.js",
+    "test:cross-tenant:suite": "node scripts/run-cross-tenant-suite.js"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

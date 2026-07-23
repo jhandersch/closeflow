@@ -92,7 +92,7 @@ export default function HomePage() {
             {isDe ? "Produkt" : "Product"}
           </a>
           <a href="#pricing" className="transition hover:text-foreground">
-            {isDe ? "Preise" : "Pricing"}
+            {isDe ? "Preise" : "Preise"}
           </a>
           <Link href="/login" className="rounded-full border border-border-subtle px-4 py-2 transition hover:bg-white/5 hover:text-foreground">
             {isDe ? "Anmelden" : "Login"}
@@ -281,7 +281,7 @@ export default function HomePage() {
         <div className="flex gap-4">
           <a href="#features" className="transition hover:text-foreground">{isDe ? "Features" : "Features"}</a>
           <a href="#product" className="transition hover:text-foreground">{isDe ? "Produkt" : "Product"}</a>
-          <a href="#pricing" className="transition hover:text-foreground">{isDe ? "Preise" : "Pricing"}</a>
+          <a href="#pricing" className="transition hover:text-foreground">{isDe ? "Preise" : "Preise"}</a>
           <a href="/login" className="transition hover:text-foreground">{isDe ? "Anmelden" : "Login"}</a>
         </div>
       </footer>

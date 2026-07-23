@@ -182,6 +182,12 @@ create table if not exists public.subscriptions (
   updated_at timestamptz not null default now()
 );
 
+alter table if exists public.subscriptions
+  add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+create unique index if not exists idx_subscriptions_workspace_id_unique
+  on public.subscriptions(workspace_id)
+  where workspace_id is not null;
+
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -192,6 +198,9 @@ create table if not exists public.notifications (
   read_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table if exists public.notifications
+  add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
 
 create table if not exists public.automations (
   id uuid primary key default gen_random_uuid(),
@@ -204,6 +213,9 @@ create table if not exists public.automations (
   updated_at timestamptz not null default now()
 );
 
+alter table if exists public.automations
+  add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
 create table if not exists public.automation_runs (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -213,6 +225,9 @@ create table if not exists public.automation_runs (
   created_at timestamptz not null default now()
 );
 
+alter table if exists public.automation_runs
+  add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
 create table if not exists public.audit_logs (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -221,6 +236,9 @@ create table if not exists public.audit_logs (
   payload jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
+alter table if exists public.audit_logs
+  add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
 
 -- Indexes
 create index if not exists idx_workspace_members_user_id on public.workspace_members(user_id);

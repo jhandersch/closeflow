@@ -120,7 +120,7 @@ export function useDashboardMetrics(leads: Lead[]) {
         (sum,lead)=>{
 
           const weight =
-            stageWeights[lead.status] || 0
+            stageWeights[lead.status] ?? 0
 
 
           return (

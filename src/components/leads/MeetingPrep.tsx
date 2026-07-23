@@ -28,11 +28,11 @@ export default function MeetingPrep({ lead }: Props) {
     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-widest text-cyan-400">Meeting Prep</p>
-          <h3 className="mt-2 text-xl font-semibold text-foreground">Prepare Meeting</h3>
+          <p className="text-xs uppercase tracking-widest text-cyan-400">Meeting-Vorbereitung</p>
+          <h3 className="mt-2 text-xl font-semibold text-foreground">Meeting vorbereiten</h3>
         </div>
         <button type="button" onClick={() => void generate()} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-          {loading ? "Preparing..." : "Prepare Meeting"}
+          {loading ? "Vorbereitung..." : "Meeting vorbereiten"}
         </button>
       </div>
 

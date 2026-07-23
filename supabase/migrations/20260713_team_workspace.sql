@@ -68,13 +68,28 @@ update public.organization_invites
 set email = lower(email)
 where email <> lower(email);
 
-alter table public.organization_members
-  add constraint organization_members_member_email_lowercase
-  check (member_email = lower(member_email));
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'organization_members_member_email_lowercase'
+  ) then
+    alter table public.organization_members
+      add constraint organization_members_member_email_lowercase
+      check (member_email = lower(member_email));
+  end if;
 
-alter table public.organization_invites
-  add constraint organization_invites_email_lowercase
-  check (email = lower(email));
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'organization_invites_email_lowercase'
+  ) then
+    alter table public.organization_invites
+      add constraint organization_invites_email_lowercase
+      check (email = lower(email));
+  end if;
+end $$;
 
 alter table public.organizations enable row level security;
 alter table public.organization_members enable row level security;

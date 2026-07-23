@@ -39,13 +39,34 @@ create table if not exists public.activities (
   id uuid primary key default gen_random_uuid(),
   lead_id uuid not null references public.leads(id) on delete cascade,
   user_id uuid not null,
+  workspace_id uuid,
   action text not null,
-  type text,
+  type text not null default 'other',
+  title text,
+  description text,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
 create index if not exists idx_activities_lead_id on public.activities(lead_id);
 create index if not exists idx_activities_created_at on public.activities(created_at desc);
+create index if not exists idx_activities_workspace_id on public.activities(workspace_id);
+
+create table if not exists public.calendar_events (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid,
+  user_id uuid not null,
+  lead_id uuid references public.leads(id) on delete set null,
+  title text not null,
+  description text,
+  scheduled_at timestamptz not null,
+  status text not null default 'scheduled',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_calendar_events_workspace_scheduled on public.calendar_events(workspace_id, scheduled_at);
+create index if not exists idx_calendar_events_user_scheduled on public.calendar_events(user_id, scheduled_at);
 
 create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),

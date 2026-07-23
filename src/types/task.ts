@@ -7,6 +7,7 @@ export type Task = {
   workspace_id?: string | null
   lead_id: string
   user_id: string
+  created_by?: string | null
   title: string
   description?: string | null
   completed: boolean

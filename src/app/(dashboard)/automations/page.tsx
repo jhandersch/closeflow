@@ -175,7 +175,7 @@ export default function AutomationsPage() {
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Automationen" : "Automations"}</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Automationen" : "Automatisierungen"}</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Workflow-Builder" : "Workflow Builder"}</h1>
             <p className="mt-2 text-sm text-foreground/65">{isDe ? "Automatisiere wiederholbare Aktionen, die durch CRM-Events ausgelöst werden." : "Automate repeatable actions triggered by CRM events."}</p>
           </div>
@@ -249,7 +249,7 @@ export default function AutomationsPage() {
                 })}
               </div>
               <div className="flex justify-end gap-2">
-                <button onClick={() => setBuilderOpen(false)} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/65 hover:bg-foreground/5">{isDe ? "Abbrechen" : "Cancel"}</button>
+                <button onClick={() => setBuilderOpen(false)} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/65 hover:bg-foreground/5">{isDe ? "Abbrechen" : "Abbrechen"}</button>
                 <button onClick={() => void saveAutomation()} disabled={bSaving} className="rounded-xl bg-cyan-600 px-5 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-60">{bSaving ? (isDe ? "Speichere..." : "Saving...") : (isDe ? "Automation speichern" : "Save Automation")}</button>
               </div>
             </div>
@@ -271,7 +271,7 @@ export default function AutomationsPage() {
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
           <h2 className="mb-4 text-base font-semibold text-foreground">{isDe ? `Aktive Automationen (${automations.length})` : `Active automations (${automations.length})`}</h2>
           {loading ? (
-            <p className="text-sm text-foreground/60">{isDe ? "Lade..." : "Loading..."}</p>
+            <p className="text-sm text-foreground/60">{isDe ? "Lade..." : "Lädt..."}</p>
           ) : automations.length === 0 ? (
             <p className="text-sm text-foreground/50">{isDe ? "Noch keine Automationen. Nutze ein Preset oder baue deine eigene." : "No automations yet. Use a preset or build your own."}</p>
           ) : (

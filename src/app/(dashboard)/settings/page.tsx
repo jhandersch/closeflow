@@ -89,6 +89,8 @@ export default function SettingsPage() {
 
   const [openAiKey, setOpenAiKey] = useState("")
   const [webhookKey, setWebhookKey] = useState("")
+  const [deleteConfirmation, setDeleteConfirmation] = useState("")
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const {
@@ -183,8 +185,10 @@ export default function SettingsPage() {
       setCompanyName(metadata.company_name || "")
       setIndustry(metadata.industry || "")
       setTeamSize(metadata.team_size || "")
-      const nextLanguage = (metadata.language as AppLanguage) || appLanguage
-      const nextTheme = (metadata.theme as ThemeOption) || appTheme
+      const savedLanguage = window.localStorage.getItem("closeflow_language") as AppLanguage | null
+      const savedTheme = window.localStorage.getItem("closeflow_theme") as ThemeOption | null
+      const nextLanguage = (metadata.language as AppLanguage) || savedLanguage || "de"
+      const nextTheme = (metadata.theme as ThemeOption) || savedTheme || "dark"
       setLanguage(nextLanguage)
       setTheme(nextTheme)
       setAppLanguage(nextLanguage)
@@ -204,7 +208,7 @@ export default function SettingsPage() {
       setSessionCount(Number(metadata.session_count || (session ? 1 : 0)))
       setTwoFactorEnabled(Boolean(metadata.two_factor_enabled))
       setSessionExpiresAt(session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null)
-      setCurrentDeviceName(window.navigator.userAgent || (isDe ? "Aktueller Browser" : "Current browser"))
+      setCurrentDeviceName(window.navigator.userAgent || "Current browser")
       setMfaAvailable(Boolean((supabase.auth as unknown as { mfa?: unknown }).mfa))
 
       await syncMfaState()
@@ -217,7 +221,7 @@ export default function SettingsPage() {
     }
 
     void loadUser()
-  }, [appLanguage, appTheme, isDe, router, setAppLanguage, setAppTheme])
+  }, [router, setAppLanguage, setAppTheme])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -330,6 +334,36 @@ export default function SettingsPage() {
 
   const logout = async () => {
     await supabase.auth.signOut()
+    router.push("/login")
+  }
+
+  const deleteAccount = async () => {
+    if (deleteConfirmation.trim() !== "DELETE") {
+      toast.error(isDe ? "Bitte zur Bestätigung DELETE eingeben" : "Type DELETE to confirm")
+      return
+    }
+
+    setDeletingAccount(true)
+
+    const authHeaders = await getAuthHeaders()
+    const response = await fetch("/api/profile/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders,
+      },
+      body: JSON.stringify({ confirmation: deleteConfirmation.trim() }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      toast.error(text || (isDe ? "Account konnte nicht gelöscht werden" : "Could not delete account"))
+      setDeletingAccount(false)
+      return
+    }
+
+    await supabase.auth.signOut({ scope: "global" })
+    toast.success(isDe ? "Account gelöscht" : "Account deleted")
     router.push("/login")
   }
 
@@ -521,13 +555,13 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <div className="text-foreground">{t("common.loading", "Loading...")}</div>
+    return <div className="text-foreground">{t("common.loading", "Lädt...")}</div>
   }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">{t("settings.title", "Settings")}</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t("settings.title", "Einstellungen")}</h1>
         <p className="mt-2 text-foreground/65">{t("settings.subtitle", "Manage your CloseFlow workspace, preferences, and security.")}</p>
         <div className="mt-4">
           <Link href="/settings/profile" className="inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
@@ -864,7 +898,32 @@ export default function SettingsPage() {
         <h2 className="text-xl font-semibold text-red-300">{t("settings.accountTitle", "Account")}</h2>
         <p className="mt-2 text-sm text-foreground/65">{t("settings.accountSubtitle", "Sign out from this workspace.")}</p>
 
-        <button onClick={logout} className="mt-4 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white">{t("settings.logout", "Logout")}</button>
+        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+          <p className="text-sm text-red-200/90">
+            {isDe
+              ? "Account löschen ist dauerhaft. Gib DELETE ein, um alle zugehörigen CRM-Daten zu entfernen."
+              : "Account deletion is permanent. Type DELETE to remove all associated CRM data."}
+          </p>
+
+          <input
+            value={deleteConfirmation}
+            onChange={(event) => setDeleteConfirmation(event.target.value)}
+            placeholder="DELETE"
+            className="mt-3 w-full rounded-xl border border-red-500/20 bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-red-400"
+          />
+
+          <button
+            onClick={() => void deleteAccount()}
+            disabled={deletingAccount}
+            className="mt-3 rounded-xl border border-red-500/40 bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-200 disabled:opacity-60"
+          >
+            {deletingAccount
+              ? (isDe ? "Lösche Account..." : "Deleting account...")
+              : (isDe ? "Account dauerhaft löschen" : "Permanently delete account")}
+          </button>
+        </div>
+
+        <button onClick={logout} className="mt-4 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white">{t("settings.logout", "Abmelden")}</button>
       </div>
     </div>
   )

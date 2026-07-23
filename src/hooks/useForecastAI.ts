@@ -6,6 +6,7 @@ import {
   getCloseProbability,
   analyzeLead,
 } from "@/lib/scoring"
+import type { Lead } from "@/types"
 
 
 type ForecastAI = {
@@ -27,7 +28,7 @@ export function useForecastAI(
   pipelineValue: number,
   weightedRevenue: number,
   revenueAtRisk: number,
-  leads: any[],
+  leads: Lead[],
   language: "de" | "en" = "de"
 ) {
 
@@ -48,6 +49,8 @@ export function useForecastAI(
 
 
     if (!leads.length) {
+
+      setAnalysis(null)
 
       return
 
@@ -198,6 +201,7 @@ export function useForecastAI(
                   pipelineValue,
                   weightedRevenue,
                   revenueAtRisk,
+                  pipelineCoverage,
                 },
 
                 leads: analyzedLeads,

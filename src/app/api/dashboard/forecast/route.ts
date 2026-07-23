@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 export async function GET(request: Request) {
   const { supabase, user, error } = await getRouteUser(request)
@@ -8,10 +8,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ pipelineValue: 0, weightedRevenue: 0, winRate: 0 })
+  }
+
   const { data: leads, error: leadsError } = await supabase
     .from("leads")
     .select("value, status")
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
 
   if (leadsError) {
     return NextResponse.json({ error: leadsError.message }, { status: 500 })

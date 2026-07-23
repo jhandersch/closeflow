@@ -230,16 +230,16 @@ export default function CustomersPage() {
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{t("customers.header", "Customers")}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{t("customers.title", "Customer Management")}</h1>
-          <p className="mt-2 text-sm text-foreground/65">{t("customers.subtitle", "Manage active customers, churn risk, and high-value VIP accounts.")}</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{t("customers.header", "Kunden")}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{t("customers.title", "Kundenverwaltung")}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{t("customers.subtitle", "Verwalte aktive Kunden, Abwanderungsrisiken und wichtige VIP-Kunden.")}</p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("customers.searchPlaceholder", "Search customers...")}
+            placeholder={t("customers.searchPlaceholder", "Kunden suchen...")}
             className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground outline-none"
           />
 
@@ -287,7 +287,7 @@ export default function CustomersPage() {
             disabled={importingCsv}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-60"
           >
-            {importingCsv ? t("customers.importing", "Importing...") : t("customers.importFile", "Import File")}
+            {importingCsv ? t("customers.importing", "Import läuft...") : t("customers.importFile", "Datei importieren")}
           </button>
           <input
             ref={fileInputRef}
@@ -320,7 +320,7 @@ export default function CustomersPage() {
         ) : null}
 
         {loading ? (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">{t("customers.loading", "Loading customers...")}</div>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">{t("customers.loading", "Lädt...")}</div>
         ) : filteredCustomers.length === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-sm text-foreground/65">{t("customers.empty", "No customers found for the selected filter.")}</div>
         ) : (

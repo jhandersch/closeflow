@@ -88,6 +88,7 @@ const dictionaries: Record<AppLanguage, DictionaryNode> = {
     },
     auth: {
       welcomeBack: "Welcome back",
+      sessionLoading: "Loading session...",
       createWorkspace: "Create your workspace",
       resetPassword: "Reset your password",
       setPassword: "Set a new password",
@@ -381,6 +382,7 @@ const dictionaries: Record<AppLanguage, DictionaryNode> = {
     },
     auth: {
       welcomeBack: "Willkommen zurück",
+      sessionLoading: "Session wird geladen...",
       createWorkspace: "Workspace erstellen",
       resetPassword: "Passwort zurücksetzen",
       setPassword: "Neues Passwort setzen",

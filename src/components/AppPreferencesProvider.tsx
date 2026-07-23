@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { AppLanguage, getDictionary, translateKey } from "@/lib/i18n"
 
 type ThemeOption = "dark" | "light"
@@ -43,17 +43,17 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     }
   }, [])
 
-  const setTheme = (nextTheme: ThemeOption) => {
+  const setTheme = useCallback((nextTheme: ThemeOption) => {
     setThemeState(nextTheme)
     document.documentElement.setAttribute("data-theme", nextTheme)
     window.localStorage.setItem(STORAGE_KEYS.theme, nextTheme)
-  }
+  }, [])
 
-  const setLanguage = (nextLanguage: AppLanguage) => {
+  const setLanguage = useCallback((nextLanguage: AppLanguage) => {
     setLanguageState(nextLanguage)
     document.documentElement.setAttribute("lang", nextLanguage)
     window.localStorage.setItem(STORAGE_KEYS.language, nextLanguage)
-  }
+  }, [])
 
   const value = useMemo<AppPreferencesContextValue>(() => {
     const dictionary = getDictionary(language)

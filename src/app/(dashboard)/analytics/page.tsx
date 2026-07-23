@@ -29,7 +29,7 @@ export default function AnalyticsPage() {
   const metrics = useDashboardMetrics(leads)
 
   if (loading) {
-    return <AuthGuard><div className="text-foreground">{isDe ? "Lade..." : "Loading..."}</div></AuthGuard>
+    return <AuthGuard><div className="text-foreground">{isDe ? "Lade..." : "Lädt..."}</div></AuthGuard>
   }
 
   return (

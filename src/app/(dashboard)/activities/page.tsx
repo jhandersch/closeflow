@@ -1,11 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import AuthGuard from "@/components/AuthGuard"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
+import { supabase } from "@/lib/supabase/client"
 
 type ActivityItem = {
   id: string
+  lead_id: string | null
   action?: string | null
   type?: string | null
   title?: string | null
@@ -19,12 +22,25 @@ export default function ActivitiesPage() {
   const locale = isDe ? "de-DE" : "en-US"
 
   const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [filter, setFilter] = useState<"today" | "week" | "month">("month")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const response = await fetch("/api/activity?filter=month")
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      const response = await fetch(`/api/activity?filter=${filter}`, {
+        headers: session?.access_token
+          ? {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          : undefined,
+        credentials: "include",
+      })
+
       if (response.ok) {
         setActivities((await response.json()) as ActivityItem[])
       }
@@ -32,7 +48,29 @@ export default function ActivitiesPage() {
     }
 
     void load()
-  }, [])
+  }, [filter])
+
+  const getTypeLabel = (type?: string | null) => {
+    if (!type) return isDe ? "Aktivität" : "Activity"
+
+    const labels: Record<string, string> = {
+      created: isDe ? "Lead erstellt" : "Lead created",
+      status_changed: isDe ? "Status geändert" : "Status changed",
+      note_added: isDe ? "Notiz" : "Note",
+      email_sent: isDe ? "E-Mail" : "Email",
+      call_completed: isDe ? "Anruf" : "Call",
+      task_created: isDe ? "Aufgabe erstellt" : "Task created",
+      task_completed: isDe ? "Aufgabe erledigt" : "Task completed",
+      meeting_created: isDe ? "Termin erstellt" : "Meeting created",
+      meeting_updated: isDe ? "Termin geändert" : "Meeting updated",
+      meeting_completed: isDe ? "Termin abgeschlossen" : "Meeting completed",
+      meeting_deleted: isDe ? "Termin gelöscht" : "Meeting deleted",
+      ai: isDe ? "KI" : "AI",
+      other: isDe ? "Aktualisierung" : "Update",
+    }
+
+    return labels[type] || type
+  }
 
   return (
     <AuthGuard>
@@ -41,6 +79,33 @@ export default function ActivitiesPage() {
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Aktivität" : "Activity"}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Aktivitäts-Timeline" : "Activity Timeline"}</h1>
           <p className="mt-2 text-sm text-foreground/65">{isDe ? "Alle Interaktionen, Statuswechsel, Aufgaben und KI-Aktionen an einem Ort." : "All interactions, stage changes, tasks and AI actions in one place."}</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilter("today")}
+            className={`rounded-full px-3 py-1 text-xs ${
+              filter === "today" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"
+            }`}
+          >
+            {isDe ? "Heute" : "Today"}
+          </button>
+          <button
+            onClick={() => setFilter("week")}
+            className={`rounded-full px-3 py-1 text-xs ${
+              filter === "week" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"
+            }`}
+          >
+            {isDe ? "7 Tage" : "7 days"}
+          </button>
+          <button
+            onClick={() => setFilter("month")}
+            className={`rounded-full px-3 py-1 text-xs ${
+              filter === "month" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"
+            }`}
+          >
+            {isDe ? "30 Tage" : "30 days"}
+          </button>
         </div>
 
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
@@ -52,9 +117,16 @@ export default function ActivitiesPage() {
             <div className="space-y-3">
               {activities.map((activity) => (
                 <article key={activity.id} className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{activity.type || (isDe ? "aktivität" : "activity")}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{getTypeLabel(activity.type)}</p>
                   <p className="mt-2 font-medium text-foreground">{activity.title || activity.action || (isDe ? "Update" : "Update")}</p>
                   {activity.description ? <p className="mt-1 text-sm text-foreground/70">{activity.description}</p> : null}
+                  {activity.lead_id ? (
+                    <div className="mt-2">
+                      <Link href={`/leads/${activity.lead_id}`} className="text-xs text-cyan-300 hover:underline">
+                        {isDe ? "Zum Lead" : "Open lead"}
+                      </Link>
+                    </div>
+                  ) : null}
                   <p className="mt-2 text-xs text-foreground/50">{new Date(activity.created_at).toLocaleString(locale)}</p>
                 </article>
               ))}

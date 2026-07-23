@@ -7,6 +7,7 @@ import { LayoutDashboard, LogOut, Settings2, Users, Workflow, Bot, BarChart3, Cr
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { useSidebar } from "@/components/SidebarContext"
 import { supabase } from "@/lib/supabase/client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 function useNotificationCount() {
   const [count, setCount] = useState(0)
@@ -38,6 +39,11 @@ function useNotificationCount() {
 }
 
 export default function Sidebar() {
+  const {
+    canManageWorkspace,
+    canManageBilling,
+    isPlatformAdmin,
+  } = usePermissions()
   const pathname = usePathname()
   const router = useRouter()
   const { t } = useAppPreferences()
@@ -50,24 +56,30 @@ export default function Sidebar() {
   }, [pathname, setOpen])
 
   const links = [
-    { href: "/search",      label: t("nav.search", "Search"),          icon: SearchIcon },
+    { href: "/search",      label: t("nav.search", "Suche"),           icon: SearchIcon },
     { href: "/dashboard",    label: t("nav.dashboard", "Dashboard"),    icon: LayoutDashboard },
     { href: "/leads",        label: t("nav.leads", "Leads"),            icon: Users },
-    { href: "/customers",   label: t("nav.customers", "Customers"),    icon: UserRoundCheck },
+    { href: "/customers",   label: t("nav.customers", "Kunden"),        icon: UserRoundCheck },
     { href: "/pipeline",    label: t("nav.pipeline", "Pipeline"),      icon: Workflow },
-    { href: "/tasks",       label: t("nav.tasks", "Tasks"),            icon: ListTodo },
+    { href: "/tasks",       label: t("nav.tasks", "Aufgaben"),         icon: ListTodo },
     { href: "/activities",  label: t("nav.activities", "Activities"),  icon: Activity },
-    { href: "/ai",          label: t("nav.ai", "AI Assistant"),        icon: Bot },
+    { href: "/ai",          label: t("nav.ai", "KI-Assistent"),        icon: Bot },
     { href: "/analytics",   label: t("nav.analytics", "Analytics"),    icon: BarChart3 },
     { href: "/forecast",    label: t("nav.forecast", "Forecast"),      icon: Sparkles },
     { href: "/calendar",    label: t("nav.calendar", "Calendar"),      icon: Calendar },
     { href: "/feedback",    label: t("nav.feedback", "Feedback"),      icon: MessageSquare },
-    { href: "/automations", label: t("nav.automations", "Automations"), icon: Sparkles },
-    { href: "/notifications", label: t("nav.notifications", "Notifications"), icon: ListTodo },
-    { href: "/team",        label: t("nav.team", "Team"),              icon: Users },
-    { href: "/billing",     label: t("nav.billing", "Billing"),        icon: CreditCard },
-    { href: "/admin",       label: t("nav.admin", "Admin"),            icon: ShieldCheck },
-    { href: "/settings",    label: t("nav.settings", "Settings"),      icon: Settings2 },
+    { href: "/automations", label: t("nav.automations", "Automatisierungen"), icon: Sparkles },
+    { href: "/notifications", label: t("nav.notifications", "Benachrichtigungen"), icon: ListTodo },
+    ...(canManageWorkspace
+      ? [{ href: "/team", label: t("nav.team", "Team"), icon: Users }]
+      : []),
+    ...(canManageBilling
+      ? [{ href: "/billing", label: t("nav.billing", "Abrechnung"), icon: CreditCard }]
+      : []),
+    ...(isPlatformAdmin
+      ? [{ href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck }]
+      : []),
+    { href: "/settings",    label: t("nav.settings", "Einstellungen"), icon: Settings2 },
   ]
 
   const handleLogout = async () => {
@@ -195,7 +207,7 @@ function SidebarContent({
         className="mt-4 flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-left text-sm text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground"
       >
         <LogOut size={17} />
-        {t("nav.logout", "Logout")}
+        {t("nav.logout", "Abmelden")}
       </button>
     </div>
   )

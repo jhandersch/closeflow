@@ -6,6 +6,7 @@ export type Workspace = {
   owner_id: string
   plan: string
   created_at: string
+  updated_at?: string
 }
 
 export type WorkspaceMember = {
@@ -30,11 +31,13 @@ export type WorkspaceInvite = {
 export type UserProfile = {
   id: string
   full_name: string | null
+  username?: string | null
   avatar_url: string | null
   company_name: string | null
   phone: string | null
   timezone: string | null
   language: string | null
+  onboarding_completed?: boolean
   created_at?: string
 }
 
@@ -80,4 +83,30 @@ export type Usage = {
   ai_requests: number
   lead_count: number
   month: string
+}
+
+export type SalesCopilotResponse = {
+  headline: string
+
+  summary: string
+
+  urgentActions: {
+    leadId: string
+    leadName: string
+    company?: string
+    reason: string
+    action: string
+    priority: "High" | "Medium" | "Low"
+  }[]
+
+  pipelineHealth: {
+    score: number
+    status: "Healthy" | "Warning" | "Critical"
+    explanation: string
+  }
+
+  forecast: {
+    value: number
+    explanation: string
+  }
 }

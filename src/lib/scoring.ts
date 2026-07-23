@@ -1,15 +1,4 @@
-export type Lead = {
-  status: string
-  value: number
-  created_at: string
-  stage_changed_at?: string | null
-  notes?: string | null
-  id?: string
-  company?: string
-  name?: string
-  last_activity?: string | null
-  next_action?: string | null
-}
+import type { Lead } from "@/types"
 
 export function getStaleDays(lead: Lead) {
   const base = lead.stage_changed_at || lead.created_at

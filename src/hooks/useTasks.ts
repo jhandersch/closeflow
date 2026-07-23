@@ -9,9 +9,19 @@ export function useTasks(leadId: string) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
 
-  const loadTasks = async () => {
+  const getWorkspaceId = async (userId: string) => {
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle()
 
-    setLoading(true)
+    return membership?.workspace_id || null
+  }
+
+
+  const loadTasks = async () => {
 
     const {
       data: { user },
@@ -35,9 +45,9 @@ export function useTasks(leadId: string) {
 
 
     setTasks(data || [])
-
     setLoading(false)
   }
+
 
 
   useEffect(() => {
@@ -49,11 +59,13 @@ export function useTasks(leadId: string) {
   }, [leadId])
 
 
+
   const addTask = async (
     title: string,
     dueDate?: string,
     priority: TaskPriority = "medium"
   ) => {
+
 
     const {
       data: { user },
@@ -62,67 +74,67 @@ export function useTasks(leadId: string) {
 
     if (!user) return
 
-    const { data: leadWorkspace } = await supabase
-      .from("leads")
-      .select("workspace_id")
-      .eq("id", leadId)
-      .limit(1)
-      .maybeSingle()
-
-    const { data: workspaceMember } = await supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle()
-
-    const workspaceId = leadWorkspace?.workspace_id || workspaceMember?.workspace_id || null
-
-    const insertPayload: Record<string, unknown> = {
-      user_id: user.id,
-      lead_id: leadId,
-      title,
-      due_date: dueDate || null,
-      priority,
-    }
-
-    if (workspaceId) {
-      insertPayload.workspace_id = workspaceId
-    }
+    const workspaceId = await getWorkspaceId(user.id)
 
 
-    let { error } = await supabase
+
+    const {
+      data: createdTask,
+      error
+    } = await supabase
       .from("tasks")
-      .insert(insertPayload)
+      .insert({
+        workspace_id: workspaceId,
+        user_id: user.id,
+        lead_id: leadId,
+        title,
+        due_date: dueDate || null,
+        priority,
+        completed: false,
+      })
+      .select()
+      .single()
 
-    if (error && /column .* does not exist/i.test(error.message || "")) {
-      const retry = await supabase
-        .from("tasks")
-        .insert({
-          user_id: user.id,
-          lead_id: leadId,
-          title,
-          due_date: dueDate || null,
-        })
-      error = retry.error
-    }
 
-    if (error) {
+
+    if(error) {
       throw error
     }
+
+
+
+    if(createdTask){
+
+      setTasks(prev => [
+        createdTask,
+        ...prev
+      ])
+
+    }
+
+
 
     await supabase
       .from("activities")
       .insert({
+        workspace_id: workspaceId,
         lead_id: leadId,
         user_id: user.id,
-        action: `Task created: ${title}`,
-        type: "task_created" as ActivityType,
+        title: `Task created: ${title}`,
+        description: `Task created: ${title}`,
+        action:`Task created: ${title}`,
+        type:"task_created" as ActivityType,
+        metadata: {
+          task_id: createdTask?.id || null,
+          due_date: dueDate || null,
+          priority,
+        },
       })
 
-
-    loadTasks()
   }
+
+
+
 
 
   const toggleTask = async (
@@ -130,48 +142,86 @@ export function useTasks(leadId: string) {
     completed:boolean
   ) => {
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
 
     const nextCompleted = !completed
+
+
+
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === id
+        ? {
+            ...task,
+            completed:nextCompleted
+          }
+        : task
+      )
+    )
+
 
 
     await supabase
       .from("tasks")
       .update({
-        completed: nextCompleted,
+        completed:nextCompleted
       })
-      .eq("id", id)
+      .eq("id",id)
 
-    if (user && nextCompleted) {
-      await supabase
-        .from("activities")
-        .insert({
-          lead_id: leadId,
-          user_id: user.id,
-          action: "Task completed",
-          type: "task_completed" as ActivityType,
-        })
+
+
+    if(nextCompleted){
+
+      const {
+        data:{user}
+      } = await supabase.auth.getUser()
+
+
+      if(user){
+        const workspaceId = await getWorkspaceId(user.id)
+
+        await supabase
+          .from("activities")
+          .insert({
+            workspace_id: workspaceId,
+            lead_id:leadId,
+            user_id:user.id,
+            title:"Task completed",
+            description:"Task completed",
+            action:"Task completed",
+            type:"task_completed" as ActivityType,
+            metadata: {
+              task_id: id,
+            },
+          })
+
+      }
+
     }
 
-
-    loadTasks()
   }
+
+
 
 
   const deleteTask = async (
     id:string
   ) => {
 
+
+    setTasks(prev =>
+      prev.filter(
+        task=>task.id!==id
+      )
+    )
+
+
     await supabase
       .from("tasks")
       .delete()
-      .eq("id", id)
+      .eq("id",id)
 
-
-    loadTasks()
   }
+
 
 
   return {

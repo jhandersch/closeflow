@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
@@ -42,14 +42,9 @@ export async function POST(request: Request) {
     reason,
   }
 
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle()
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
 
-  if (membership?.workspace_id && lead.id) {
+  if (workspace?.id && lead.id) {
     await supabase.from("lead_scores").insert({
       lead_id: lead.id,
       score,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 
 type ImportIssue = {
   row: number
@@ -49,6 +49,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ error: "Workspace required" }, { status: 403 })
+  }
+
   const body = await request.json()
   const csvText = typeof body.csv === "string" ? body.csv : ""
 
@@ -71,7 +76,7 @@ export async function POST(request: Request) {
   const { data: existingLeads } = await supabase
     .from("leads")
     .select("name, company")
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
 
   const knownKeys = new Set(
     (existingLeads || []).map(
@@ -136,6 +141,7 @@ export async function POST(request: Request) {
     }
 
     const payload = {
+      workspace_id: workspace.id,
       user_id: user.id,
       name: contact.trim(),
       company: company.trim(),
@@ -169,10 +175,14 @@ export async function POST(request: Request) {
 
     await supabase.from("activities").insert([
       {
+        workspace_id: workspace.id,
         lead_id: insertedLead.id,
         user_id: user.id,
+        title: "Customer imported from file",
+        description: "Customer imported from file",
         action: "Customer imported from file",
         type: "created",
+        metadata: { source: "customers_import" },
       },
     ])
   }

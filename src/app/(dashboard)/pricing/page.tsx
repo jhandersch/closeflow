@@ -144,15 +144,15 @@ export default function PricingPage() {
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Preise" : "Pricing"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Wähle deinen Wachstumsplan" : "Choose your growth plan"}</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{isDe ? "Preise" : "Preise"}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Wähle deinen Wachstumsplan" : "Wähle deinen Wachstumsplan"}</h1>
           <p className="mt-3 max-w-3xl text-sm text-foreground/70">
             {isDe
               ? "Starte kostenlos und schalte mit wachsender Pipeline KI-Ausführung, höhere Limits und Team-Skalierung frei."
               : "Start free, then unlock AI execution, higher limits, and team scale as your pipeline grows."}
           </p>
           <p className="mt-2 text-xs text-foreground/55">
-            {isDe ? "Aktueller Plan" : "Current plan"}: {billingLoading ? (isDe ? "Lade..." : "Loading...") : (billing?.plan || "free").toUpperCase()} ({billing?.status || (isDe ? "inaktiv" : "inactive")})
+            {isDe ? "Aktueller Plan" : "Aktueller Plan"}: {billingLoading ? (isDe ? "Lade..." : "Lädt...") : (billing?.plan || "free").toUpperCase()} ({billing?.status || (isDe ? "inaktiv" : "inaktiv")})
           </p>
         </div>
 

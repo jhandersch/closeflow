@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -330,9 +330,12 @@ if (error) {
     await supabase.from("activities").insert([
       {
         lead_id: leadData.id,
+        
         user_id: user.id,
         action: "Lead created",
         type: "created",
+        
+        
       },
     ])
 
@@ -644,7 +647,7 @@ if (error) {
                 }}
                 className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80"
               >
-                {isDe ? "Abbrechen" : "Cancel"}
+                {isDe ? "Abbrechen" : "Abbrechen"}
               </button>
             </div>
           </div>

@@ -23,15 +23,15 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-foreground">Invite member</h2>
+          <h2 className="text-xl font-semibold text-foreground">Mitglied einladen</h2>
           <button type="button" onClick={onClose} className="text-sm text-foreground/55 hover:text-foreground">
-            Close
+            Schließen
           </button>
         </div>
 
         <div className="mt-5 space-y-4">
           <label className="block text-sm text-foreground/70">
-            Email
+            E-Mail
             <input
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -41,7 +41,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Role
+            Rolle
             <div className="mt-2">
               <RoleSelector value={role} onChange={setRole} />
             </div>
@@ -49,7 +49,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/75 hover:bg-foreground/5">
-              Cancel
+              Abbrechen
             </button>
             <button
               type="button"
@@ -65,7 +65,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
               }}
               className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
             >
-              {saving ? "Inviting..." : "Invite"}
+              {saving ? "Wird eingeladen..." : "Einladen"}
             </button>
           </div>
         </div>

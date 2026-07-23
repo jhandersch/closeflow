@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import * as XLSX from "xlsx"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 
 type CustomerSummary = {
@@ -30,6 +30,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { workspace } = await loadWorkspaceForUser(supabase, user.id)
+  if (!workspace?.id) {
+    return NextResponse.json({ error: "Workspace required" }, { status: 403 })
+  }
+
   const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "export")
   if (!limitCheck.ok) {
     return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
@@ -38,14 +43,14 @@ export async function GET(request: Request) {
   const primaryQuery = await supabase
     .from("leads")
     .select("name, company, status, value, last_activity_at, updated_at, created_at")
-    .eq("user_id", user.id)
+    .eq("workspace_id", workspace.id)
 
   const fallbackQuery =
     primaryQuery.error && /column .* does not exist/i.test(primaryQuery.error.message || "")
       ? await supabase
           .from("leads")
           .select("name, company, status, value, last_activity_at, created_at")
-          .eq("user_id", user.id)
+          .eq("workspace_id", workspace.id)
       : null
 
   const leads = (fallbackQuery?.data || primaryQuery.data) as Array<{

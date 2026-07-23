@@ -6,6 +6,7 @@ import AuthGuard from "@/components/AuthGuard"
 import { supabase } from "@/lib/supabase/client"
 import { useLeadsData } from "@/hooks/useLeadsData"
 import type { Lead } from "@/types"
+import toast from "react-hot-toast"
 
 type StageKey = "new" | "contacted" | "qualified" | "proposal" | "won" | "lost"
 
@@ -25,6 +26,15 @@ const normalizeStage = (status: string): StageKey => {
   if (status === "won") return "won"
   if (status === "lost") return "lost"
   return "new"
+}
+
+const stageLabel: Record<StageKey, string> = {
+  new: "New",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  proposal: "Proposal",
+  won: "Won",
+  lost: "Lost",
 }
 
 export default function PipelinePage() {
@@ -69,6 +79,9 @@ export default function PipelinePage() {
 
     if (!lead) return
 
+    const previousColumns = columns
+    const previousStage = normalizeStage(lead.status)
+
     setColumns((current) => {
       const next = { ...current }
       const sourceStage = source.droppableId as StageKey
@@ -87,17 +100,49 @@ export default function PipelinePage() {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) return
+    if (!user) {
+      setColumns(previousColumns)
+      return
+    }
 
-    await supabase
+    const nowIso = new Date().toISOString()
+
+    const { error: updateError } = await supabase
       .from("leads")
       .update({
         status: nextStage,
-        stage_changed_at: new Date().toISOString(),
-        last_activity_at: new Date().toISOString(),
+        stage_changed_at: nowIso,
+        last_activity_at: nowIso,
       })
       .eq("id", lead.id)
       .eq("user_id", user.id)
+
+    if (updateError) {
+      setColumns(previousColumns)
+      toast.error("Pipeline update failed")
+      return
+    }
+
+    const { error: activityError } = await supabase
+      .from("activities")
+      .insert({
+        workspace_id: lead.workspace_id || null,
+        lead_id: lead.id,
+        user_id: user.id,
+        type: "status_changed",
+        title: `Status changed from ${stageLabel[previousStage]} to ${stageLabel[nextStage]}`,
+        description: `${lead.name || "Lead"} moved from ${stageLabel[previousStage]} to ${stageLabel[nextStage]}`,
+        action: `Status changed from ${previousStage} to ${nextStage}`,
+        metadata: {
+          previous_status: previousStage,
+          next_status: nextStage,
+          trigger: "pipeline_drag_drop",
+        },
+      })
+
+    if (activityError) {
+      toast.error("Status history could not be saved")
+    }
   }
 
   return (

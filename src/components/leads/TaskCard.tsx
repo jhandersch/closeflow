@@ -2,6 +2,7 @@
 
 import type { TaskPriority } from "@/types"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
+import { translatePriority, translateTaskStatus } from "@/lib/translations/task"
 
 type Props = {
   title:string
@@ -24,6 +25,7 @@ export default function TaskCard({
 const { language } = useAppPreferences()
 const isDe = language === "de"
 
+
 const isOverdue = Boolean(
   dueDate &&
   !completed &&
@@ -31,12 +33,12 @@ const isOverdue = Boolean(
 )
 
 const statusLabel = completed
-  ? (isDe ? "erledigt" : "done")
+  ? translateTaskStatus(true, isDe)
   : isOverdue
-  ? (isDe ? "überfällig" : "overdue")
-  : (isDe ? "offen" : "open")
+  ? (isDe ? "überfällig" : "Overdue")
+  : translateTaskStatus(false, isDe)
 
-const priorityLabel = (priority || "medium").toUpperCase()
+const priorityLabel = translatePriority(priority, isDe)
 
 return (
 
@@ -71,18 +73,17 @@ completed
 <span className="rounded-full bg-surface-2/80 px-2 py-0.5 text-[10px] font-semibold text-foreground/80">
 {priorityLabel}
 </span>
-<span
-className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-statusLabel === "erledigt"
-|| statusLabel === "done"
-? "bg-emerald-500/20 text-emerald-300"
-: statusLabel === (isDe ? "überfällig" : "overdue")
-? "bg-red-500/20 text-red-300"
-: "bg-blue-500/20 text-blue-300"
-}`}
->
-{statusLabel}
-</span>
+  <span
+    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+      ["erledigt", "done", "Done"].includes(statusLabel)
+        ? "bg-emerald-500/20 text-emerald-300"
+        : ["überfällig", "Overdue", "overdue"].includes(statusLabel)
+        ? "bg-red-500/20 text-red-300"
+        : "bg-blue-500/20 text-blue-300"
+    }`}
+  >
+    {statusLabel}
+  </span>
 </div>
 
 

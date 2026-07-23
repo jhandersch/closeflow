@@ -1,75 +1,206 @@
 import { useCallback, useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase/client"
-import type { Lead } from "@/types"
+import type { Activity, Lead } from "@/types"
 
-type Activity = {
-  id: string
-  action: string
-  type?: string
-  created_at: string
-}
 
 type UseLeadsDataOptions = {
   activityLimit?: number
 }
 
-export function useLeadsData({ activityLimit = 6 }: UseLeadsDataOptions = {}) {
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [activities, setActivities] = useState<Activity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
 
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    const user = userData.user
+export function useLeadsData(
+  {
+    activityLimit = 6,
+  }: UseLeadsDataOptions = {}
+) {
 
-    if (userError || !user) {
-      setLeads([])
-      setActivities([])
-      setLoading(false)
-      return
-    }
+  const [leads, setLeads] =
+    useState<Lead[]>([])
 
-    const [{ data: leadsData, error: leadsError }, { data: activityData, error: activityError }] =
-      await Promise.all([
-        supabase
-          .from("leads")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("activities")
-          .select("id, action, type, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(activityLimit),
-      ])
 
-    if (leadsError) {
-      setError(leadsError.message)
-      setLoading(false)
-      return
-    }
+  const [activities, setActivities] =
+    useState<Activity[]>([])
 
-    if (activityError) {
-      setError(activityError.message)
-      setLoading(false)
-      return
-    }
 
-    setLeads((leadsData as Lead[]) || [])
-    setActivities((activityData as Activity[]) || [])
-    setLoading(false)
-  }, [activityLimit])
+  const [loading, setLoading] =
+    useState(true)
 
-  useEffect(() => {
-    void load()
-  }, [load])
 
-  return { leads, activities, loading, error, refresh: load }
+  const [error, setError] =
+    useState<string | null>(null)
+
+
+
+
+
+  const load = useCallback(
+    async () => {
+
+      setLoading(true)
+      setError(null)
+
+
+      try {
+
+
+        const [
+          leadsResponse,
+          activityResponse
+        ] =
+        await Promise.all([
+
+
+          fetch(
+            "/api/leads"
+          ),
+
+
+          fetch(
+            `/api/activity?filter=month&limit=${activityLimit}`
+          ),
+
+
+        ])
+
+
+
+
+
+        const leadsJson =
+          await leadsResponse.json()
+
+
+        const activityJson =
+          await activityResponse.json()
+
+
+
+
+
+        if(!leadsResponse.ok){
+
+          throw new Error(
+            leadsJson.error ||
+            "Failed loading leads"
+          )
+
+        }
+
+
+
+
+        if(!activityResponse.ok){
+
+          throw new Error(
+            activityJson.error ||
+            "Failed loading activities"
+          )
+
+        }
+
+
+
+
+
+        const activityData =
+          Array.isArray(activityJson)
+            ? activityJson.slice(
+                0,
+                activityLimit
+              )
+            : []
+
+
+
+
+
+
+        setLeads(
+          Array.isArray(leadsJson)
+            ? leadsJson as Lead[]
+            : leadsJson.leads ?? []
+        )
+
+
+
+        setActivities(
+          (activityData as Activity[]) || []
+        )
+
+
+
+      }
+      catch(error){
+
+
+        console.error(
+          "DASHBOARD DATA ERROR:",
+          error
+        )
+
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unknown error"
+        )
+
+
+        setLeads([])
+        setActivities([])
+
+
+      }
+      finally{
+
+        setLoading(false)
+
+      }
+
+
+    },
+    [
+      activityLimit
+    ]
+  )
+
+
+
+
+
+  useEffect(
+    () => {
+
+      void load()
+
+    },
+    [
+      load
+    ]
+  )
+
+
+
+
+
+  return {
+
+    leads,
+
+    activities,
+
+    loading,
+
+    error,
+
+    refresh: load,
+
+  }
+
 }
 
-export type { Lead, Activity }
+
+export type {
+  Lead,
+  Activity,
+}

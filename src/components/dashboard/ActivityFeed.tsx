@@ -3,7 +3,8 @@
 type ActivityFeedProps = {
   activities: Array<{
     id: string
-    action: string
+    title?: string | null
+    action?: string | null
     created_at: string
     type?: string
   }>
@@ -23,7 +24,7 @@ function getActivityStyle(type?: string) {
       }
 
 
-    case "status_change":
+    case "status_changed":
       return {
         icon:"🔄",
         color:"text-cyan-300",
@@ -38,6 +39,18 @@ function getActivityStyle(type?: string) {
         color:"text-purple-300",
         bg:"bg-purple-500/10",
         border:"border-purple-500/20"
+      }
+
+
+    case "meeting_created":
+    case "meeting_updated":
+    case "meeting_completed":
+    case "meeting_deleted":
+      return {
+        icon:"📆",
+        color:"text-blue-300",
+        bg:"bg-blue-500/10",
+        border:"border-blue-500/20"
       }
 
 
@@ -163,7 +176,7 @@ export default function ActivityFeed({
                     font-medium
                     text-foreground
                     ">
-                      {activity.action}
+                      {activity.title || activity.action || (isDe ? "Aktivität" : "Activity")}
                     </p>
 
 

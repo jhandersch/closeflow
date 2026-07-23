@@ -77,7 +77,7 @@ export function EmailComposeModal({ leadId, defaultTo = "", onClose, onSent }: E
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-cyan-300">
             <Mail size={18} />
-            <span className="text-sm font-semibold">{isDe ? "E-Mail verfassen" : "Compose Email"}</span>
+            <span className="text-sm font-semibold">{isDe ? "E-Mail verfassen" : "E-Mail schreiben"}</span>
           </div>
           <button
             onClick={onClose}
@@ -99,7 +99,7 @@ export function EmailComposeModal({ leadId, defaultTo = "", onClose, onSent }: E
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">{isDe ? "Betreff" : "Subject"}</label>
+            <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">{isDe ? "Betreff" : "Betreff"}</label>
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -113,7 +113,7 @@ export function EmailComposeModal({ leadId, defaultTo = "", onClose, onSent }: E
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={6}
-              placeholder={isDe ? "Schreibe hier deine E-Mail…" : "Write your email here…"}
+              placeholder={isDe ? "Schreibe hier deine E-Mail..." : "Schreibe hier deine E-Mail..."}
               className="w-full resize-none rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-foreground/35 focus:border-cyan-500/50"
             />
           </div>
@@ -124,7 +124,7 @@ export function EmailComposeModal({ leadId, defaultTo = "", onClose, onSent }: E
             onClick={onClose}
             className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/65 transition hover:bg-foreground/5"
           >
-            {isDe ? "Abbrechen" : "Cancel"}
+            {isDe ? "Abbrechen" : "Abbrechen"}
           </button>
           <button
             onClick={() => void handleSend()}
@@ -132,7 +132,7 @@ export function EmailComposeModal({ leadId, defaultTo = "", onClose, onSent }: E
             className="flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-60"
           >
             <Send size={14} />
-            {sending ? (isDe ? "Protokolliere…" : "Logging…") : (isDe ? "Senden & protokollieren" : "Send & Log")}
+            {sending ? (isDe ? "Protokolliere…" : "Protokolliere…") : (isDe ? "Senden & protokollieren" : "Senden und protokollieren")}
           </button>
         </div>
       </div>

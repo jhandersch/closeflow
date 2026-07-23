@@ -71,7 +71,7 @@ export default function NotificationsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{isDe ? "Posteingang" : "Inbox"}</p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Benachrichtigungen" : "Notifications"}</h1>
+            <h1 className="mt-2 text-3xl font-bold text-foreground">{isDe ? "Benachrichtigungen" : "Benachrichtigungen"}</h1>
             <p className="mt-1 text-sm text-foreground/65">
               {notifications.length} {isDe ? "aktiv" : "active"}{criticalCount > 0 ? `, ${criticalCount} ${isDe ? "kritisch" : "critical"}` : ""}
               {warningCount > 0 ? `, ${warningCount} ${isDe ? "Warnungen" : "warnings"}` : ""}

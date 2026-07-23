@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 import { captureWorkspaceError } from "@/lib/errorMonitoring"
 import { recordAiUsageEvent } from "@/lib/aiCost"
@@ -23,12 +23,7 @@ export async function POST(req: Request) {
 
     userId = user.id
 
-    const { data: membership } = await supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle()
+    const { workspace } = await loadWorkspaceForUser(supabase, user.id)
 
     const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "ai")
     if (!limitCheck.ok) {
@@ -163,10 +158,10 @@ Focus on:
 
       })
 
-    if (membership?.workspace_id) {
+    if (workspace?.id) {
       await recordAiUsageEvent(
         supabase,
-        membership.workspace_id,
+        workspace.id,
         user.id,
         "sales_copilot",
         "gpt-4.1-mini",

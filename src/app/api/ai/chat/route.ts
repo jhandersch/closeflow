@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { getRouteUser } from "@/lib/supabase/route"
+import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 import { captureWorkspaceError } from "@/lib/errorMonitoring"
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits"
 import { recordAiUsageEvent } from "@/lib/aiCost"
@@ -31,12 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "message is required" }, { status: 400 })
     }
 
-    const { data: membership } = await supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle()
+    const { workspace } = await loadWorkspaceForUser(supabase, user.id)
 
     const apiKey = process.env.OPENAI_API_KEY
 
@@ -71,10 +66,10 @@ export async function POST(request: Request) {
       sources: Array.isArray(result.sources) ? result.sources : [],
     }
 
-    if (membership?.workspace_id) {
+    if (workspace?.id) {
       await recordAiUsageEvent(
         supabase,
-        membership.workspace_id,
+        workspace.id,
         user.id,
         "ai_chat",
         "gpt-4.1-mini",
@@ -83,7 +78,7 @@ export async function POST(request: Request) {
       )
 
       await supabase.from("ai_conversations").insert({
-        workspace_id: membership.workspace_id,
+        workspace_id: workspace.id,
         user_id: user.id,
         lead_id: leadId,
         messages: [

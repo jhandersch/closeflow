@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import AuthGuard from "@/components/AuthGuard"
 
@@ -15,6 +15,7 @@ import KPIGrid from "@/components/dashboard/KPIGrid"
 import PipelineChart from "@/components/dashboard/PipelineChart"
 import PriorityDealsCard from "@/components/dashboard/PriorityDealsCard"
 import RevenueForecastChart from "@/components/dashboard/RevenueForecastChart"
+import ActivityTrendChart from "@/components/dashboard/ActivityTrendChart"
 import RevenueForecastAI from "@/components/dashboard/RevenueForecastAI"
 import RevenueForecast from "@/components/dashboard/RevenueForecast"
 import AIForecastCard from "@/components/dashboard/AIForecastCard"
@@ -46,7 +47,7 @@ export default function DashboardPage() {
     error,
     refresh,
   } = useLeadsData({
-    activityLimit: 5,
+    activityLimit: 240,
   })
 
   const metrics = useDashboardMetrics(leads)
@@ -105,6 +106,45 @@ export default function DashboardPage() {
 
   const [demoLoading,setDemoLoading] = useState(false)
   const [demoMessage,setDemoMessage] = useState<string | null>(null)
+
+  const activitiesThisWeek = useMemo(() => {
+    const fromMs = Date.now() - 7 * 24 * 60 * 60 * 1000
+    return activities.filter((item) => new Date(item.created_at).getTime() >= fromMs).length
+  }, [activities])
+
+  const activityTrendData = useMemo(() => {
+    const now = new Date()
+    const weekStarts = Array.from({ length: 8 }).map((_, index) => {
+      const date = new Date(now)
+      date.setDate(date.getDate() - (7 - index) * 7)
+      date.setHours(0, 0, 0, 0)
+      return date
+    })
+
+    const labels = weekStarts.map((date) =>
+      date.toLocaleDateString(language === "de" ? "de-DE" : "en-US", {
+        day: "2-digit",
+        month: "2-digit",
+      })
+    )
+
+    const buckets = weekStarts.map((start, index) => {
+      const end = new Date(start)
+      end.setDate(end.getDate() + 7)
+
+      const value = activities.filter((item) => {
+        const ts = new Date(item.created_at).getTime()
+        return ts >= start.getTime() && ts < end.getTime()
+      }).length
+
+      return {
+        label: labels[index],
+        value,
+      }
+    })
+
+    return buckets
+  }, [activities, language])
 
 
 
@@ -283,7 +323,7 @@ export default function DashboardPage() {
 
                 {
                   demoLoading
-                  ? t("common.loading", "Loading...")
+                  ? t("common.loading", "Lädt...")
                   : t("dashboard.loadDemoData", "Load demo data")
                 }
 
@@ -364,27 +404,13 @@ export default function DashboardPage() {
 
 
         <KPIGrid
-
-          total={metrics.total}
-
-          openPipeline={metrics.openPipeline}
-
+          totalLeads={metrics.total}
           pipelineValue={metrics.pipelineValue}
-
+          wonDeals={metrics.won}
           revenue={metrics.revenue}
-
-          winRate={metrics.winRate}
-
           conversionRate={metrics.conversionRate}
-
-          wonLostLabel={metrics.wonLostLabel}
-
-          averageDealValue={metrics.averageDealValue}
-
-          averageSalesCycle={metrics.averageSalesCycle}
-
-          atRiskDeals={metrics.atRiskDeals.length}
-
+          activitiesThisWeek={activitiesThisWeek}
+          openTasks={taskSummary.open}
         />
 
 
@@ -417,12 +443,17 @@ export default function DashboardPage() {
         <div className="
           grid
           gap-6
-          xl:grid-cols-[1.2fr_0.8fr]
+          xl:grid-cols-3
         ">
 
 
           <RevenueForecastChart
             data={metrics.forecastTrend}
+          />
+
+
+          <ActivityTrendChart
+            data={activityTrendData}
           />
 
 
@@ -499,7 +530,7 @@ export default function DashboardPage() {
 
           <ActivityFeed
 
-            activities={activities}
+            activities={activities.slice(0, 12)}
 
           />
 
