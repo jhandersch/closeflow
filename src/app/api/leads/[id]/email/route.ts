@@ -31,6 +31,7 @@ export async function POST(
     lead_id: leadId,
     user_id: user.id,
     action: `Email sent to ${to}: "${subject}"`,
+    
     type: "email_sent",
     title: subject,
     description: bodyText,

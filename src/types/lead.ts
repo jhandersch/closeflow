@@ -17,81 +17,43 @@ export type LeadSource =
 
 
 export type Lead = {
+  id: string
+  workspace_id?: string | null
+  user_id?: string | null
 
-  id:string
+  name: string
+  company: string
+  status: LeadStatus
+  value: number
 
-  workspace_id:string
+  created_at: string
+  updated_at?: string | null
 
-  user_id:string
+  stage_changed_at?: string | null
 
+  notes?: string | null
 
-  name:string
+  source?: LeadSource | null
+  industry?: string | null
+  employees?: number | null
+  country?: string | null
 
-  company:string
+  tags?: string[] | null
 
-  status:LeadStatus
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  website?: string | null
 
+  assigned_to?: string | null
+  owner_id?: string | null
 
-  value:number
+  next_action?: string | null
+  last_activity_at?: string | null
+  last_contact_at?: string | null
+  next_action_date?: string | null
 
+  lost_reason?: string | null
 
-  created_at:string
-
-  updated_at?:string | null
-
-
-  stage_changed_at?:string | null
-
-
-
-  notes?:string | null
-
-
-  source?:LeadSource | null
-
-
-  industry?:string | null
-
-  employees?:number | null
-
-  country?:string | null
-
-
-  tags?:string[] | null
-
-
-
-  email?:string | null
-
-  phone?:string | null
-
-  address?:string | null
-
-  website?:string | null
-
-
-
-  assigned_to?:string | null
-
-  owner_id?:string | null
-
-
-
-  next_action?:string | null
-
-
-  last_activity_at?:string | null
-
-  last_contact_at?:string | null
-
-
-  next_action_date?:string | null
-
-
-
-  lost_reason?:string | null
-
-
-  probability?:number | null
-
+  probability?: number | null
 }

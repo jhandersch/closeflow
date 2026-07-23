@@ -1,9 +1,4 @@
-type Lead = {
-  value?: number
-  status?: string
-  created_at?: string
-  stage_changed_at?: string
-}
+import type { Lead } from "@/types"
 
 
 type ScoreResult = {
