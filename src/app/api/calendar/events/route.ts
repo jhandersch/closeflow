@@ -265,10 +265,14 @@ export async function PUT(request: Request) {
     .eq("id", id)
     .eq("workspace_id", workspace.id)
     .select(selectClause)
-    .single()
+    .maybeSingle()
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 })
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 })
   }
 
   await createCalendarActivity({

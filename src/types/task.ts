@@ -1,6 +1,6 @@
 export type TaskStatus = "open" | "completed" | "overdue"
 
-export type TaskPriority = "low" | "medium" | "high"
+export type TaskPriority = "low" | "medium" | "high" | "urgent"
 
 export type Task = {
   id: string

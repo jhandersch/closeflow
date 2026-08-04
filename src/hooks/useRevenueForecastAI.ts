@@ -6,14 +6,52 @@ type ForecastSummary = {
   pipelineValue: number
   weightedRevenue: number
   revenueAtRisk: number
+
+  commitRevenue: number
+  bestCaseRevenue: number
+
+  confidence: number
+
+  averageHealth: number
+  averageProbability: number
+
+  activeDeals: number
+
+  topRiskDeals?: {
+    name: string
+    company: string
+    value: number
+  }[]
+
+  topOpportunities?: {
+    name: string
+    company: string
+    value: number
+  }[]
 }
 
 type RevenueForecastInsight = {
-  explanation: string
-  positiveDrivers: string[]
-  risks: string[]
-  recommendation: string
   confidence: number
+
+  health:
+    | "Excellent"
+    | "Healthy"
+    | "Warning"
+    | "Critical"
+
+  headline: string
+
+  summary: string
+
+  topDrivers: string[]
+
+  risks: string[]
+
+  recommendations: string[]
+
+  pipelineComment: string
+
+  singleDealRisk: number
 }
 
 type Lead = {
@@ -22,6 +60,7 @@ type Lead = {
   company: string
   status: string
   value: number
+  probability?: number | null
   created_at: string
   stage_changed_at?: string | null
   notes?: string | null
@@ -51,10 +90,10 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary, l
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            leads,
+            leads: leads.slice(0, 20),
             forecast,
             language,
-          }),
+          })
         })
 
         if (!response.ok) {
@@ -72,10 +111,14 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary, l
         if (active) {
           setInsight({
             confidence: 0.2,
-            explanation: language === "de" ? "KI-Umsatzanalyse ist vorübergehend nicht verfügbar." : "AI revenue intelligence is temporarily unavailable.",
-            positiveDrivers: [],
+            health: "Critical",
+            headline: language === "de" ? "KI-Umsatzanalyse nicht verfügbar" : "AI revenue intelligence unavailable",
+            summary: language === "de" ? "KI-Umsatzanalyse ist vorübergehend nicht verfügbar." : "AI revenue intelligence is temporarily unavailable.",
+            topDrivers: [],
             risks: [language === "de" ? "Forecast-Daten konnten nicht automatisch analysiert werden." : "Forecast data could not be analyzed automatically."],
-            recommendation: language === "de" ? "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals." : "Review the pipeline manually and focus on the largest open deals.",
+            recommendations: [language === "de" ? "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals." : "Review the pipeline manually and focus on the largest open deals."],
+            pipelineComment: "",
+            singleDealRisk: 0,
           })
         }
       } finally {

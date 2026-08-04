@@ -5,11 +5,15 @@ type LeadFiltersProps = {
   status: string
   priority: string
   source: string
+  dateRange: string
+  owner: string
   sortBy: "created_at" | "value" | "priority"
   onSearchChange: (value: string) => void
   onStatusChange: (value: string) => void
   onPriorityChange: (value: string) => void
   onSourceChange: (value: string) => void
+  onDateRangeChange: (value: string) => void
+  onOwnerChange: (value: string) => void
   onSortChange: (value: "created_at" | "value" | "priority") => void
 }
 
@@ -18,22 +22,26 @@ export default function LeadFilters({
   status,
   priority,
   source,
+  dateRange,
+  owner,
   sortBy,
   onSearchChange,
   onStatusChange,
   onPriorityChange,
   onSourceChange,
+  onDateRangeChange,
+  onOwnerChange,
   onSortChange,
 }: LeadFiltersProps) {
   const { language } = useAppPreferences()
   const isDe = language === "de"
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr]">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_0.8fr_0.8fr]">
       <input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder={isDe ? "Leads suchen..." : "Search leads..."}
+        placeholder={isDe ? "Name, Firma, E-Mail oder Telefon" : "Name, company, email, or phone"}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       />
 
@@ -72,6 +80,28 @@ export default function LeadFilters({
         <option value="recommendation">{isDe ? "Empfehlung" : "Referral"}</option>
         <option value="advertising">{isDe ? "Werbung" : "Ads"}</option>
         <option value="other">{isDe ? "Manuell" : "Manual"}</option>
+      </select>
+
+      <select
+        value={dateRange}
+        onChange={(event) => onDateRangeChange(event.target.value)}
+        className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
+      >
+        <option value="all">{isDe ? "Alle Daten" : "All dates"}</option>
+        <option value="today">{isDe ? "Heute" : "Today"}</option>
+        <option value="last7">{isDe ? "Letzte 7 Tage" : "Last 7 days"}</option>
+        <option value="last30">{isDe ? "Letzte 30 Tage" : "Last 30 days"}</option>
+        <option value="older30">{isDe ? "Aelter als 30 Tage" : "Older than 30 days"}</option>
+      </select>
+
+      <select
+        value={owner}
+        onChange={(event) => onOwnerChange(event.target.value)}
+        className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
+      >
+        <option value="all">{isDe ? "Alle Besitzer" : "All owners"}</option>
+        <option value="mine">{isDe ? "Meine Leads" : "My leads"}</option>
+        <option value="unassigned">{isDe ? "Ohne Besitzer" : "Unassigned"}</option>
       </select>
 
       <select

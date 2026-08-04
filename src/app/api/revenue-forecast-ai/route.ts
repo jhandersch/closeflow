@@ -13,150 +13,327 @@ type LeadPayload = {
   next_action?: string | null
 }
 
+
 type ForecastPayload = {
   pipelineValue?: number
   weightedRevenue?: number
   revenueAtRisk?: number
 }
 
+
 type RevenueForecastAIResponse = {
   confidence: number
-  explanation: string
-  positiveDrivers: string[]
+
+  health:
+    | "Excellent"
+    | "Healthy"
+    | "Warning"
+    | "Critical"
+
+  headline: string
+
+  summary: string
+
+  topDrivers: string[]
+
   risks: string[]
-  recommendation: string
+
+  recommendations: string[]
+
+  pipelineComment: string
+
+  singleDealRisk: number
 }
 
-const fallbackInsight = (locale: "de" | "en" = "de"): RevenueForecastAIResponse => {
+
+
+const fallbackInsight = (
+  locale: "de" | "en" = "de"
+): RevenueForecastAIResponse => {
+
   if (locale === "en") {
     return {
-      confidence: 0.2,
-      explanation: "Revenue insights could not be generated automatically.",
-      positiveDrivers: [],
-      risks: ["Forecast data could not be analyzed automatically."],
-      recommendation: "Review the pipeline manually and focus on the largest open deals.",
+      confidence: 20,
+      health: "Warning",
+      headline: "Revenue analysis unavailable",
+      summary:
+        "Revenue intelligence could not be generated automatically.",
+      topDrivers: [],
+      risks: [
+        "Forecast data could not be analyzed automatically.",
+      ],
+      recommendations: [
+        "Review your largest open opportunities manually.",
+      ],
+      pipelineComment:
+        "Pipeline requires manual review.",
+      singleDealRisk: 0,
     }
   }
+
 
   return {
-    confidence: 0.2,
-    explanation: "Umsatz-Insights konnten nicht automatisch erstellt werden.",
-    positiveDrivers: [],
-    risks: ["Forecast-Daten konnten nicht automatisch analysiert werden."],
-    recommendation: "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals.",
+    confidence: 20,
+    health: "Warning",
+    headline:
+      "Umsatzanalyse nicht verfügbar",
+    summary:
+      "Umsatz-Insights konnten nicht automatisch erstellt werden.",
+    topDrivers: [],
+    risks: [
+      "Forecast-Daten konnten nicht analysiert werden.",
+    ],
+    recommendations: [
+      "Prüfe die größten offenen Deals manuell.",
+    ],
+    pipelineComment:
+      "Pipeline benötigt eine manuelle Prüfung.",
+    singleDealRisk: 0,
   }
 }
+
+
 
 export async function POST(req: Request) {
-  try {
-    const { leads, forecast, language } = (await req.json()) as {
-      leads?: LeadPayload[]
-      forecast?: ForecastPayload
-      language?: "de" | "en"
-    }
 
-    const locale = language === "en" ? "en" : "de"
+  try {
+
+    const {
+      leads,
+      forecast,
+      language,
+    } =
+      (await req.json()) as {
+        leads?: LeadPayload[]
+        forecast?: ForecastPayload
+        language?: "de" | "en"
+      }
+
+
+    const locale =
+      language === "en"
+        ? "en"
+        : "de"
+
+
 
     if (!Array.isArray(leads) || leads.length === 0) {
-      return NextResponse.json(fallbackInsight(locale))
+      return NextResponse.json(
+        fallbackInsight(locale)
+      )
     }
 
-    const apiKey = process.env.OPENAI_API_KEY
+
+
+    const apiKey =
+      process.env.OPENAI_API_KEY
+
+
 
     if (!apiKey) {
-      return NextResponse.json(fallbackInsight(locale))
+      return NextResponse.json(
+        fallbackInsight(locale)
+      )
     }
 
-    const leadSummary = leads
-      .map((lead) => {
-        const value = lead.value ?? 0
-        const stage = lead.status ?? "Unknown"
-        const stageChanged = lead.stage_changed_at ? `Stage changed at ${lead.stage_changed_at}` : "No stage change timestamp"
-        const notes = lead.notes ? `Notes: ${lead.notes}` : "No notes"
-        const nextAction = lead.next_action ? `Next action: ${lead.next_action}` : "No next action"
 
-        return [
-          `- ${lead.name ?? "Unknown lead"} at ${lead.company ?? "Unknown company"}`,
-          `  Stage: ${stage}`,
-          `  Value: €${value}`,
-          `  ${stageChanged}`,
-          `  ${notes}`,
-          `  ${nextAction}`,
-        ].join("\n")
-      })
-      .join("\n\n")
+
+    const leadSummary =
+      leads
+        .map((lead) => {
+
+          return [
+            `Lead: ${lead.name ?? "Unknown"}`,
+            `Company: ${lead.company ?? "Unknown"}`,
+            `Stage: ${lead.status ?? "Unknown"}`,
+            `Value: €${lead.value ?? 0}`,
+            `Notes: ${lead.notes ?? "None"}`,
+            `Next action: ${lead.next_action ?? "None"}`,
+          ].join("\n")
+
+        })
+        .join("\n\n")
+
+
 
     const prompt = `
-You are an AI revenue analyst for a sales CRM.
 
-Analyze the current forecast and explain why revenue is expected, which deals are driving it, what risks exist, and what the sales team should do now.
+You are an enterprise CRM Revenue Intelligence AI.
 
-Forecast snapshot:
-- Pipeline value: €${forecast?.pipelineValue ?? 0}
-- Weighted revenue: €${forecast?.weightedRevenue ?? 0}
-- Revenue at risk: €${forecast?.revenueAtRisk ?? 0}
+Analyze this sales pipeline like a VP of Sales.
+
+Evaluate:
+
+- pipeline health
+- revenue concentration
+- deal quality
+- inactivity risk
+- proposal maturity
+- forecast confidence
+- biggest opportunities
+- biggest threats
+- recommended actions
+
+
+Forecast:
+
+Pipeline value:
+€${forecast?.pipelineValue ?? 0}
+
+Weighted revenue:
+€${forecast?.weightedRevenue ?? 0}
+
+Revenue at risk:
+€${forecast?.revenueAtRisk ?? 0}
+
 
 Deals:
+
 ${leadSummary}
 
-Return JSON only in the following shape:
+
+Return ONLY JSON:
+
 {
-  "confidence": 0.0,
-  "explanation": "string",
-  "positiveDrivers": ["string"],
-  "risks": ["string"],
-  "recommendation": "string"
+ "confidence": number,
+ "health": "Excellent | Healthy | Warning | Critical",
+ "headline": "string",
+ "summary": "string",
+ "topDrivers": ["string"],
+ "risks": ["string"],
+ "recommendations": ["string"],
+ "pipelineComment": "string",
+ "singleDealRisk": number
 }
 
-Analyze:
-- deal values and concentration
-- pipeline stage maturity
-- activity and movement signals
-- risks and likely close outcomes
-- the most useful next action for the sales team
-- Write all text fields in ${locale === "de" ? "German" : "English"}
+
+Language:
+${locale === "de" ? "German" : "English"}
+
+Keep it concise.
+
 `
 
-    const openai = new OpenAI({ apiKey })
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert revenue intelligence analyst for a B2B sales CRM. Return valid JSON only and write text fields in ${locale === "de" ? "German" : "English"}.`,
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      response_format: {
-        type: "json_object",
-      },
-    })
 
-    const result = JSON.parse(completion.choices[0]?.message?.content ?? "{}") as Partial<RevenueForecastAIResponse>
+
+    const openai =
+      new OpenAI({
+        apiKey,
+      })
+
+
+
+    const completion =
+      await openai.chat.completions.create({
+
+        model:
+          "gpt-4.1-mini",
+
+        messages: [
+
+          {
+            role:"system",
+            content:
+              "Return valid JSON only.",
+          },
+
+          {
+            role:"user",
+            content:prompt,
+          },
+
+        ],
+
+        response_format:{
+          type:"json_object",
+        },
+
+      })
+
+
+
+    const raw =
+      completion
+        .choices[0]
+        ?.message
+        ?.content
+
+
+
+    const result =
+      JSON.parse(
+        raw ?? "{}"
+      ) as Partial<RevenueForecastAIResponse>
+
+
 
     return NextResponse.json({
-      confidence: typeof result.confidence === "number" ? result.confidence : 0.5,
-      explanation: typeof result.explanation === "string" ? result.explanation : (locale === "de" ? "Umsatztreiber wurden automatisch zusammengefasst." : "Revenue drivers were summarized automatically."),
-      positiveDrivers: Array.isArray(result.positiveDrivers) ? result.positiveDrivers.filter((item): item is string => typeof item === "string") : [],
-      risks: Array.isArray(result.risks) ? result.risks.filter((item): item is string => typeof item === "string") : [],
-      recommendation: typeof result.recommendation === "string" ? result.recommendation : (locale === "de" ? "Prüfe die Pipeline manuell." : "Review the pipeline manually."),
+
+      confidence:
+        typeof result.confidence === "number"
+          ? result.confidence
+          : 50,
+
+
+      health:
+        result.health ??
+        "Warning",
+
+
+      headline:
+        result.headline ??
+        "Pipeline analysis completed.",
+
+
+      summary:
+        result.summary ??
+        "No summary available.",
+
+
+      topDrivers:
+        Array.isArray(result.topDrivers)
+          ? result.topDrivers
+          : [],
+
+
+      risks:
+        Array.isArray(result.risks)
+          ? result.risks
+          : [],
+
+
+      recommendations:
+        Array.isArray(result.recommendations)
+          ? result.recommendations
+          : [],
+
+
+      pipelineComment:
+        result.pipelineComment ??
+        "",
+
+
+      singleDealRisk:
+        typeof result.singleDealRisk === "number"
+          ? result.singleDealRisk
+          : 0,
+
     })
-  } catch (error) {
-    console.error("Revenue forecast AI failed:", error)
 
-    const openAiLikeError = error as { status?: number; code?: string; type?: string } | undefined
-    const isRecoverableOpenAIError =
-      openAiLikeError?.status === 429 ||
-      openAiLikeError?.code === "insufficient_quota" ||
-      openAiLikeError?.type === "insufficient_quota"
 
-    if (isRecoverableOpenAIError) {
-      return NextResponse.json(fallbackInsight("de"))
-    }
 
-    return NextResponse.json(fallbackInsight("de"))
+  } catch(error) {
+
+    console.error(
+      "Revenue forecast AI failed:",
+      error
+    )
+
+
+    return NextResponse.json(
+      fallbackInsight("de")
+    )
+
   }
+
 }

@@ -278,11 +278,15 @@ export default function HomePage() {
 
       <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-8 text-sm text-foreground/55 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
         <p>© 2026 CloseFlow</p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <a href="#features" className="transition hover:text-foreground">{isDe ? "Features" : "Features"}</a>
           <a href="#product" className="transition hover:text-foreground">{isDe ? "Produkt" : "Product"}</a>
           <a href="#pricing" className="transition hover:text-foreground">{isDe ? "Preise" : "Preise"}</a>
-          <a href="/login" className="transition hover:text-foreground">{isDe ? "Anmelden" : "Login"}</a>
+          <Link href="/login" className="transition hover:text-foreground">{isDe ? "Anmelden" : "Login"}</Link>
+          <Link href="/impressum" className="transition hover:text-foreground">Impressum</Link>
+          <Link href="/datenschutz" className="transition hover:text-foreground">Datenschutz</Link>
+          <Link href="/cookies" className="transition hover:text-foreground">Cookies</Link>
+          <Link href="/agb" className="transition hover:text-foreground">AGB</Link>
         </div>
       </footer>
     </div>

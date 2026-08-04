@@ -75,18 +75,24 @@ export async function GET(
         id,
         name,
         company,
-        email
+        email,
+        phone
         `
       )
       .eq(
         "workspace_id",
         workspace.id
       )
+      .is(
+        "deleted_at",
+        null
+      )
       .or(
         `
         name.ilike.%${query}%,
         company.ilike.%${query}%,
-        email.ilike.%${query}%
+        email.ilike.%${query}%,
+        phone.ilike.%${query}%
         `
       )
       .limit(10)
@@ -107,6 +113,7 @@ export async function GET(
           subtitle:
             lead.company ||
             lead.email ||
+            lead.phone ||
             "",
 
           href:

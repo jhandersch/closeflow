@@ -143,12 +143,12 @@ export default function AIAssistantPage() {
     const nextQuestion = (presetQuestion || question).trim()
 
     if (!nextQuestion) {
-      setError(t("ai.errors.enterQuestion", "Bitte gib eine Frage für den KI-Assistenten ein."))
+      setError(t("ai.errors.enterQuestion", "Enter a question for AI Assistant"))
       return
     }
 
     if (mode !== "pipeline-analysis" && !selectedLead) {
-      setError(t("ai.errors.selectLead", "Bitte wähle zuerst einen Lead aus."))
+      setError(t("ai.errors.selectLead", "Select a lead first"))
       return
     }
 
@@ -179,7 +179,7 @@ export default function AIAssistantPage() {
       } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error(t("ai.errors.auth", "Bitte melde dich erneut an."))
+        throw new Error(t("ai.errors.auth", "Please sign in again."))
       }
 
       const response = await fetch("/api/sales-copilot", {
@@ -212,11 +212,11 @@ export default function AIAssistantPage() {
       const summary = [payload.strategy, payload.nextBestAction, payload.dealSummary]
         .filter(Boolean)
         .join("\n\n")
-      setChat((current) => [...current, { role: "assistant", content: summary || t("ai.generated", "KI-Antwort erstellt.") }])
+      setChat((current) => [...current, { role: "assistant", content: summary || t("ai.generated", "AI response generated.") }])
       setQuestion("")
     } catch (runError) {
-      setError(runError instanceof Error ? runError.message : t("ai.errors.generate", "KI-Ausgabe konnte nicht erstellt werden."))
-      setChat((current) => [...current, { role: "assistant", content: t("ai.errors.chatFallback", "Ich konnte keine Antwort erstellen. Bitte versuche es erneut.") }])
+      setError(runError instanceof Error ? runError.message : t("ai.errors.generate", "Could not generate AI output"))
+      setChat((current) => [...current, { role: "assistant", content: t("ai.errors.chatFallback", "I could not generate a response. Please try again.") }])
     } finally {
       setRunning(false)
     }
@@ -231,26 +231,24 @@ export default function AIAssistantPage() {
     setAutoRanForLeadId(leadIdFromQuery)
     void runCopilot(
       "lead-analysis",
-      language === "de"
-        ? "Analysiere diesen Lead und gib mir die besten nächsten Schritte."
-        : "Analyze this lead and give me the best next actions."
+      t("ai.prompts.autoLeadAnalysis", "Analyze this lead and give me the best next actions.")
     )
-  }, [autoRanForLeadId, language, leadIdFromQuery, running, selectedLead])
+  }, [autoRanForLeadId, leadIdFromQuery, running, selectedLead, t])
 
   return (
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
           <p className="cf-label text-cyan-400">AI</p>
-          <h1 className="cf-title mt-2 text-3xl font-bold text-foreground">{t("nav.ai", "KI-Assistent")}</h1>
-          <p className="mt-2 text-sm text-foreground/65">{t("ai.subtitle", "Frage nach Leads, Pipeline-Risiken, Verhandlungs-Coaching, E-Mail-Entwürfen und Forecast-Sicherheit.")}</p>
+          <h1 className="cf-title mt-2 text-3xl font-bold text-foreground">{t("nav.ai", "AI Assistant")}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{t("ai.subtitle", "Ask about leads, pipeline risk, negotiation coaching, email drafts, and forecast confidence.")}</p>
           {selectedLead ? (
             <div className="mt-3">
               <Link
                 href={`/leads/${selectedLead.id}`}
                 className="inline-flex rounded-full border border-border-subtle bg-surface-2/70 px-3 py-1 text-xs font-medium text-foreground/75 transition hover:text-foreground"
               >
-                {t("ai.openLead", "Lead-Detail öffnen")}
+                {t("ai.openLead", "Open lead detail")}
               </Link>
             </div>
           ) : null}
@@ -264,8 +262,8 @@ export default function AIAssistantPage() {
               disabled={loadingLeads || leads.length === 0}
               className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400 disabled:opacity-50"
             >
-              {loadingLeads ? <option>{t("ai.loadingLeads", "Leads werden geladen...")}</option> : null}
-              {!loadingLeads && leads.length === 0 ? <option>{t("ai.noLeads", "Keine Leads verfügbar")}</option> : null}
+              {loadingLeads ? <option>{t("ai.loadingLeads", "Loading leads...")}</option> : null}
+              {!loadingLeads && leads.length === 0 ? <option>{t("ai.noLeads", "No leads available")}</option> : null}
               {leads.map((lead) => (
                 <option key={lead.id} value={lead.id}>
                   {lead.name} - {lead.company} ({lead.status})
@@ -278,27 +276,27 @@ export default function AIAssistantPage() {
               disabled={running || loadingLeads || !selectedLead}
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 disabled:opacity-50"
             >
-              {running ? t("ai.generating", "Wird erstellt...") : t("ai.runLeadAnalysis", "Lead-Analyse starten")}
+              {running ? t("ai.generating", "Generating...") : t("ai.runLeadAnalysis", "Run Lead Analysis")}
             </button>
           </div>
 
           <div className="mt-3 grid gap-2 md:grid-cols-5">
-            <button onClick={() => void runCopilot("pipeline-analysis", language === "de" ? "Analysiere meine Pipeline und sag mir, worauf ich mich heute fokussieren soll." : "Analyze my pipeline and tell me what to focus on today.")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.pipeline", "Pipeline analysieren")}</button>
-            <button onClick={() => void runCopilot("sales-coach", language === "de" ? "Wie sollte ich diesen Deal verhandeln?" : "How should I negotiate this deal?")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.coach", "Verkaufs-Coach")}</button>
-            <button onClick={() => void runCopilot("email-generator", language === "de" ? "Schreibe eine Follow-up-E-Mail, die ich jetzt senden kann." : "Write a follow-up email I can send now.")} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.email", "E-Mail-Generator")}</button>
-            <button onClick={() => void runCopilot("risk-detection", language === "de" ? "Welche Deals sterben gerade und warum?" : "Which deals are dying and why?")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.risk", "Risiko-Erkennung")}</button>
-            <button onClick={() => void runCopilot("pipeline-analysis", language === "de" ? "Erreiche ich mein Umsatzziel in diesem Monat?" : "Will I hit my revenue target this month?")} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.forecast", "Prognose")}</button>
+            <button onClick={() => void runCopilot("pipeline-analysis", t("ai.prompts.pipelineFocus", "Analyze my pipeline and tell me what to focus on today."))} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.pipeline", "Analyze my pipeline")}</button>
+            <button onClick={() => void runCopilot("sales-coach", t("ai.prompts.salesCoach", "How should I negotiate this deal?"))} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.coach", "Sales coach")}</button>
+            <button onClick={() => void runCopilot("email-generator", t("ai.prompts.emailGenerator", "Write a follow-up email I can send now."))} disabled={running || !selectedLead} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.email", "Email generator")}</button>
+            <button onClick={() => void runCopilot("risk-detection", t("ai.prompts.riskDetection", "Which deals are dying and why?"))} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.risk", "Risk detection")}</button>
+            <button onClick={() => void runCopilot("pipeline-analysis", t("ai.prompts.forecast", "Will I hit my revenue target this month?"))} disabled={running} className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5">{t("ai.quick.forecast", "Forecast")}</button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
             <input
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder={t("ai.inputPlaceholder", "Welche Leads sollte ich heute kontaktieren?")}
+              placeholder={t("ai.inputPlaceholder", "Which leads should I contact today?")}
               className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400"
             />
             <button onClick={() => void runCopilot("lead-analysis")} disabled={running || !question.trim()} className="rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background disabled:opacity-60">
-              {t("ai.ask", "KI fragen")}
+              {t("ai.ask", "Ask AI")}
             </button>
           </div>
 
@@ -310,14 +308,14 @@ export default function AIAssistantPage() {
         </div>
 
         <div className="cf-card cf-enter p-5">
-          <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.chatTitle", "Assistent-Chat")}</h2>
+          <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.chatTitle", "Assistant Chat")}</h2>
           <div className="mt-4 space-y-3">
             {chat.length === 0 ? (
-              <p className="text-sm text-foreground/55">{t("ai.chatEmpty", "Starte mit einer Frage oder nutze eine Schnellaktion für Empfehlungen.")}</p>
+              <p className="text-sm text-foreground/55">{t("ai.chatEmpty", "Start with a question or use a quick action to generate recommendations.")}</p>
             ) : (
               chat.map((message, index) => (
                 <div key={`${message.role}-${index}`} className={`rounded-xl border p-3 text-sm ${message.role === "user" ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-200" : "border-border-subtle bg-surface-2/70 text-foreground/85"}`}>
-                  <p className="mb-1 text-xs uppercase tracking-[0.2em] text-foreground/55">{message.role === "user" ? t("ai.you", "Du") : (isDe ? "KI" : "AI")}</p>
+                  <p className="mb-1 text-xs uppercase tracking-[0.2em] text-foreground/55">{message.role === "user" ? t("ai.you", "You") : t("ai.assistant", "AI")}</p>
                   <p className="whitespace-pre-wrap">{message.content}</p>
                 </div>
               ))
@@ -328,25 +326,25 @@ export default function AIAssistantPage() {
         {result ? (
           <div className="grid gap-4 md:grid-cols-2">
             <div className="cf-card cf-enter p-5">
-              <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "Strategie" : "Strategy"}</h2>
-              <p className="mt-2 text-sm text-foreground/80">{result.strategy || (language === "de" ? "Keine Strategie zurückgegeben." : "No strategy returned.")}</p>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.strategy", "Strategy")}</h2>
+              <p className="mt-2 text-sm text-foreground/80">{result.strategy || t("ai.noStrategy", "No strategy returned.")}</p>
             </div>
 
             <div className="cf-card cf-enter p-5">
-              <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "Nächste beste Aktion" : "Next Best Action"}</h2>
-              <p className="mt-2 text-sm text-foreground/80">{result.nextBestAction || (language === "de" ? "Keine Aktion zurückgegeben." : "No action returned.")}</p>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.nextBestAction", "Next Best Action")}</h2>
+              <p className="mt-2 text-sm text-foreground/80">{result.nextBestAction || t("ai.noNextBestAction", "No action returned.")}</p>
             </div>
 
             <div className="cf-card cf-enter p-5">
-              <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "Gesprächsvorbereitung" : "Call Preparation"}</h2>
-              <p className="mt-2 text-sm text-foreground/80">{language === "de" ? "Ziel" : "Goal"}: {result.callPreparation?.goal || "-"}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{language === "de" ? "Gesprächspunkte" : "Talking points"}</p>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.callPreparation", "Call Preparation")}</h2>
+              <p className="mt-2 text-sm text-foreground/80">{t("ai.goal", "Goal")}: {result.callPreparation?.goal || "-"}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{t("ai.talkingPoints", "Talking points")}</p>
               <ul className="mt-2 space-y-1 text-sm text-foreground/80">
                 {(result.callPreparation?.talkingPoints || []).map((item, index) => (
                   <li key={`tp-${index}`}>- {item}</li>
                 ))}
               </ul>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{language === "de" ? "Fragen" : "Questions"}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">{t("ai.questions", "Questions")}</p>
               <ul className="mt-2 space-y-1 text-sm text-foreground/80">
                 {(result.callPreparation?.questions || []).map((item, index) => (
                   <li key={`q-${index}`}>- {item}</li>
@@ -355,17 +353,17 @@ export default function AIAssistantPage() {
             </div>
 
             <div className="cf-card cf-enter p-5">
-              <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "E-Mail-Entwurf" : "Email Draft"}</h2>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">{result.emailDraft || (language === "de" ? "Kein E-Mail-Entwurf zurückgegeben." : "No email draft returned.")}</p>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.emailDraft", "Email Draft")}</h2>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">{result.emailDraft || t("ai.noEmailDraft", "No email draft returned.")}</p>
             </div>
 
             <div className="cf-card cf-enter p-5 md:col-span-2">
-              <h2 className="cf-title text-lg font-semibold text-foreground">{language === "de" ? "Einwände" : "Objections"}</h2>
+              <h2 className="cf-title text-lg font-semibold text-foreground">{t("ai.objections", "Objections")}</h2>
               <div className="mt-3 space-y-2">
                 {(result.objections || []).map((item, index) => (
                   <div key={`obj-${index}`} className="cf-card-soft p-3">
-                    <p className="text-sm font-semibold text-foreground">{item.objection || (language === "de" ? "Einwand" : "Objection")}</p>
-                    <p className="mt-1 text-sm text-foreground/80">{item.response || (language === "de" ? "Keine Antwort zurückgegeben." : "No response returned.")}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.objection || t("ai.objection", "Objection")}</p>
+                    <p className="mt-1 text-sm text-foreground/80">{item.response || t("ai.noObjectionResponse", "No response returned.")}</p>
                   </div>
                 ))}
               </div>

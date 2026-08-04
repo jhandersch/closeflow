@@ -8,6 +8,7 @@ type ThemeOption = "dark" | "light"
 type AppPreferencesContextValue = {
   language: AppLanguage
   theme: ThemeOption
+  hydrated: boolean
   setLanguage: (language: AppLanguage) => void
   setTheme: (theme: ThemeOption) => void
   t: (key: string, fallback?: string) => string
@@ -23,6 +24,7 @@ const AppPreferencesContext = createContext<AppPreferencesContextValue | null>(n
 export function AppPreferencesProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<AppLanguage>("de")
   const [theme, setThemeState] = useState<ThemeOption>("dark")
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem(STORAGE_KEYS.theme) as ThemeOption | null
@@ -41,6 +43,8 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     } else {
       document.documentElement.setAttribute("lang", "de")
     }
+
+    setHydrated(true)
   }, [])
 
   const setTheme = useCallback((nextTheme: ThemeOption) => {
@@ -61,11 +65,12 @@ export function AppPreferencesProvider({ children }: { children: React.ReactNode
     return {
       language,
       theme,
+      hydrated,
       setLanguage,
       setTheme,
       t: (key: string, fallback?: string) => translateKey(dictionary, key, fallback),
     }
-  }, [language, theme])
+  }, [hydrated, language, theme])
 
   return <AppPreferencesContext.Provider value={value}>{children}</AppPreferencesContext.Provider>
 }

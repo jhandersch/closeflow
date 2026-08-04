@@ -3,8 +3,16 @@
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
 export default function LoadingPage() {
-  const { language, t } = useAppPreferences()
+  const { language, hydrated, t } = useAppPreferences()
   const isDe = language === "de"
+  const loadingTitle = hydrated
+    ? t("auth.sessionLoading", "Loading session...")
+    : "Loading session..."
+  const loadingBody = hydrated
+    ? isDe
+      ? "Wir laden deine Daten und stellen die Seite sauber wieder her."
+      : "We are loading your data and restoring the page cleanly."
+    : "We are loading your data and restoring the page cleanly."
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
@@ -14,7 +22,7 @@ export default function LoadingPage() {
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">CloseFlow</p>
             <h1 className="mt-1 text-xl font-semibold text-foreground">
-              {t("auth.sessionLoading", isDe ? "Session wird geladen..." : "Loading session...")}
+              {loadingTitle}
             </h1>
           </div>
         </div>
@@ -26,9 +34,7 @@ export default function LoadingPage() {
         </div>
 
         <p className="mt-6 text-sm leading-7 text-foreground/65">
-          {isDe
-            ? "Wir laden deine Daten und stellen die Seite sauber wieder her."
-            : "We are loading your data and restoring the page cleanly."}
+          {loadingBody}
         </p>
       </div>
     </div>

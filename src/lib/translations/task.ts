@@ -14,6 +14,9 @@ export function translatePriority(
 
 
   switch (value.toLowerCase()) {
+    case "urgent":
+      return "Dringend"
+
     case "high":
       return "Hoch"
 

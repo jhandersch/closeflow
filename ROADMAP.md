@@ -2,10 +2,102 @@
 
 This document translates the full product vision into an execution-ready plan with clear status.
 
+Operational execution board:
+- `docs/roadmap-execution-board-2026-08-04.md`
+
 Status legend:
 - `Now`: Implemented and available in current app
 - `Next`: High-priority build targets for the next release cycle
 - `Later`: Strategic features after core product hardening
+
+---
+
+## Strategic Posture (2026-08-04)
+
+### Current product maturity
+- `State`: Production-near SaaS MVP / release candidate
+- CloseFlow is no longer a learning CRM project.
+- The primary bottleneck is no longer feature surface.
+- The primary bottleneck is product quality, consistency, and operational trust.
+
+### What not to do now
+- `Do not` add more feature pages before hardening current flows.
+- `Do not` expand AI breadth before current AI outputs are grounded in product data.
+- `Do not` introduce more parallel domain models unless they replace an existing one.
+- `Do not` expand schema complexity before V1 release and post-release stabilization are complete.
+
+### Immediate goal
+- Move from `CONDITIONAL GO` to `GO`.
+
+### Phase 1: Release hardening now
+1. Production environment validation
+- Production Supabase linked and migrated
+- RLS confirmed in target environment
+- Storage policies checked
+- Secrets and domain configured
+
+2. Full UI smoke test
+- New user path: Signup -> Onboarding -> Workspace -> Dashboard
+- CRM path: Lead create -> Contacted -> Proposal -> Won
+- Confirm automations, activities, notifications, and AI insight outputs
+
+3. Post-deploy monitoring window
+- Observe 24-48h after deployment
+- Watch API, Supabase, auth, RLS, and performance errors
+- Promote to `GO` after stable window
+
+### Phase 2: Architecture cleanup (V1.1)
+- Highest priority technical cleanup: consolidate `organizations/*` and `workspaces/*`
+- Long-term recommendation: `workspaces` becomes single source of truth
+- Avoid keeping both parallel models active for billing, permissions, analytics, and teams
+
+### Phase 3: Reduce direct client Supabase access
+- Preferred shape:
+- Component -> Hook -> API Route -> Supabase
+- Benefits:
+- centralized auth
+- centralized permissions
+- centralized validation
+- centralized logging
+- centralized error handling
+
+### Phase 4: Proper customer domain model
+- Current model is acceptable for V1: won leads are aggregated into customer views
+- Next model should support first-class `customers` with related contacts, deals, invoices, activities, and tasks
+
+### Phase 5: Billing maturity
+- Current state: billing UI and subscription metadata baseline
+- Required for real selling:
+- Stripe Checkout
+- customer portal
+- plan limits
+- trial handling
+- cancellation flow
+- invoice history
+
+### Phase 6: AI professionalization
+- Keep existing AI surfaces
+- Improve factual grounding and explainability
+- Prefer outputs that justify recommendations from deal value, activity recency, stage, and engagement evidence
+
+### 30-day operating plan
+
+#### Week 1
+- Production deployment
+- Smoke tests
+- First users
+
+#### Week 2
+- Stabilization
+- Bug fixes
+- UX polish
+- Performance and logs review
+
+#### Week 3-4
+1. Workspace consolidation
+2. Permission system
+3. Customer entity
+4. Stripe billing
 
 ---
 

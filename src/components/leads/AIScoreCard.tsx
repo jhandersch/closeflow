@@ -1,4 +1,8 @@
-﻿type AIScoreCardProps = {
+﻿"use client"
+
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type AIScoreCardProps = {
   score: number
   health: number
   probability: number
@@ -13,6 +17,7 @@ export default function AIScoreCard({
   risk,
   recommendation,
 }: AIScoreCardProps) {
+  const { t } = useAppPreferences()
 
   return (
     <div className="
@@ -36,7 +41,7 @@ export default function AIScoreCard({
             tracking-widest
             text-cyan-400
           ">
-            AI Sales Intelligence
+            {t("ai.salesIntelligence", "AI Sales Intelligence")}
           </p>
 
 
@@ -46,7 +51,7 @@ export default function AIScoreCard({
             font-bold
             text-foreground
           ">
-            Lead Analysis
+            {t("ai.leadAnalysis", "Lead Analysis")}
           </h2>
 
         </div>
@@ -68,28 +73,28 @@ export default function AIScoreCard({
 
 
         <ScoreBox
-          title="Lead Score"
+          title={t("ai.leadScore", "Lead Score")}
           value={`${score}`}
           color="text-cyan-400"
         />
 
 
         <ScoreBox
-          title="Health"
+          title={t("ai.health", "Health")}
           value={`${health}`}
           color="text-green-400"
         />
 
 
         <ScoreBox
-          title="Win Chance"
+          title={t("ai.winChance", "Win Chance")}
           value={`${probability}%`}
           color="text-purple-400"
         />
 
 
         <ScoreBox
-          title="Risk"
+          title={t("dashboard.risk", "Risk")}
           value={risk}
           color="text-yellow-400"
         />
@@ -108,7 +113,7 @@ export default function AIScoreCard({
       ">
 
         <p className="text-sm text-foreground/55">
-          Recommended Action
+          {t("ai.recommendedAction", "Recommended Action")}
         </p>
 
 

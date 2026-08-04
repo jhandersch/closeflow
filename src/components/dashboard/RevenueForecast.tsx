@@ -2,28 +2,49 @@
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
+
 type Props = {
   pipelineValue: number
   weightedRevenue: number
   revenueAtRisk: number
+
+  commitRevenue: number
+  bestCaseRevenue: number
+
+  confidence: number
+
+  averageHealth: number
+  averageProbability: number
+
+  activeDeals: number
 }
+
+
 
 export default function RevenueForecast({
   pipelineValue,
   weightedRevenue,
   revenueAtRisk,
+  commitRevenue,
+  bestCaseRevenue,
+  confidence,
+  averageHealth,
+  averageProbability,
+  activeDeals,
 }: Props) {
 
-  const { t, language } = useAppPreferences()
-  const locale = language === "de" ? "de-DE" : "en-US"
 
-  const confidence =
-    pipelineValue > 0
-      ? Math.round((weightedRevenue / pipelineValue) * 100)
-      : 0
+  const { t, language } = useAppPreferences()
+
+  const locale =
+    language === "de"
+      ? "de-DE"
+      : "en-US"
+
 
 
   return (
+
     <section
       className="
       rounded-2xl
@@ -33,6 +54,7 @@ export default function RevenueForecast({
       p-6
       "
     >
+
 
       <div
         className="
@@ -47,41 +69,39 @@ export default function RevenueForecast({
 
         <div>
 
-          <p className="
+          <p
+            className="
             text-sm
             uppercase
             tracking-widest
             text-cyan-400
-          ">
-            {t(
-              "dashboard.revenueIntelligence",
-              "Revenue Intelligence"
-            )}
+            "
+          >
+            Revenue Intelligence
           </p>
 
 
-          <h2 className="
+          <h2
+            className="
             mt-2
             text-2xl
             font-bold
             text-foreground
-          ">
-            Sales {t(
-              "dashboard.forecast",
-              "Forecast"
-            )}
+            "
+          >
+            Sales Forecast
           </h2>
 
 
-          <p className="
+          <p
+            className="
             mt-1
             text-sm
             text-foreground/60
-          ">
-            {t(
-              "dashboard.aiWeightedPrediction",
-              "AI-weighted prediction based on your current pipeline."
-            )}
+            "
+          >
+            AI-powered forecast based on pipeline health,
+            activity and deal probability.
           </p>
 
         </div>
@@ -90,7 +110,7 @@ export default function RevenueForecast({
 
         <div
           className="
-          rounded-xl
+          rounded-full
           border
           border-emerald-500/20
           bg-emerald-500/10
@@ -101,14 +121,79 @@ export default function RevenueForecast({
           text-emerald-300
           "
         >
-          {confidence}% {t(
-            "dashboard.confidence",
-            "confidence"
-          )}
+
+          {confidence}% confidence
+
         </div>
 
 
       </div>
+
+
+
+
+
+      <div
+        className="
+        mt-6
+        grid
+        gap-4
+        md:grid-cols-5
+        "
+      >
+
+
+        <Metric
+          label="Pipeline"
+          value={formatMoney(
+            pipelineValue,
+            locale
+          )}
+        />
+
+
+        <Metric
+          label="Commit"
+          value={formatMoney(
+            commitRevenue,
+            locale
+          )}
+          highlight
+        />
+
+
+        <Metric
+          label="Best Case"
+          value={formatMoney(
+            bestCaseRevenue,
+            locale
+          )}
+        />
+
+
+        <Metric
+          label="Expected"
+          value={formatMoney(
+            weightedRevenue,
+            locale
+          )}
+          highlight
+        />
+
+
+        <Metric
+          label="At Risk"
+          value={formatMoney(
+            revenueAtRisk,
+            locale
+          )}
+          danger
+        />
+
+
+      </div>
+
+
 
 
 
@@ -121,36 +206,22 @@ export default function RevenueForecast({
         "
       >
 
-        <ForecastCard
-          label={t(
-            "dashboard.pipelineValue",
-            "Pipeline Value"
-          )}
-          value={pipelineValue}
-          color="text-foreground"
-          locale={locale}
+
+        <InsightCard
+          title="Pipeline Health"
+          value={`${averageHealth}%`}
         />
 
 
-        <ForecastCard
-          label={t(
-            "dashboard.expectedRevenue",
-            "Expected Revenue"
-          )}
-          value={weightedRevenue}
-          color="text-emerald-400"
-          locale={locale}
+        <InsightCard
+          title="Close Probability"
+          value={`${averageProbability}%`}
         />
 
 
-        <ForecastCard
-          label={t(
-            "dashboard.revenueAtRisk",
-            "Revenue At Risk"
-          )}
-          value={revenueAtRisk}
-          color="text-red-400"
-          locale={locale}
+        <InsightCard
+          title="Active Deals"
+          value={String(activeDeals)}
         />
 
 
@@ -158,32 +229,37 @@ export default function RevenueForecast({
 
 
     </section>
+
   )
+
 }
 
 
 
-function ForecastCard({
+
+
+function Metric({
   label,
   value,
-  color,
-  locale,
+  highlight,
+  danger,
 }: {
   label:string
-  value:number
-  color:string
-  locale:string
+  value:string
+  highlight?:boolean
+  danger?:boolean
 }) {
 
 
   return (
 
     <div
-      className="
+      className={`
       rounded-xl
       bg-surface-2/70
       p-4
-      "
+      ${danger ? "border border-red-500/20" : ""}
+      `}
     >
 
       <p
@@ -198,18 +274,96 @@ function ForecastCard({
 
       <p
         className={`
-          mt-2
-          text-3xl
-          font-bold
-          ${color}
+        mt-2
+        text-2xl
+        font-bold
+        ${
+          highlight
+          ? "text-emerald-400"
+          : danger
+          ? "text-red-400"
+          : "text-foreground"
+        }
         `}
       >
-        €{Math.round(value).toLocaleString(locale)}
+
+        {value}
+
       </p>
 
 
     </div>
 
+  )
+
+}
+
+
+
+
+
+function InsightCard({
+  title,
+  value,
+}:{
+  title:string
+  value:string
+}) {
+
+
+  return (
+
+    <div
+      className="
+      rounded-xl
+      border
+      border-border-subtle
+      bg-surface-2/50
+      p-4
+      "
+    >
+
+      <p
+        className="
+        text-sm
+        text-foreground/55
+        "
+      >
+        {title}
+      </p>
+
+
+      <p
+        className="
+        mt-2
+        text-3xl
+        font-bold
+        text-foreground
+        "
+      >
+        {value}
+      </p>
+
+
+    </div>
+
+  )
+
+}
+
+
+
+
+
+function formatMoney(
+  value:number,
+  locale:string
+){
+
+  return (
+    "€" +
+    Math.round(value)
+      .toLocaleString(locale)
   )
 
 }

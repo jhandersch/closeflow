@@ -377,8 +377,6 @@ export default function DashboardPage() {
 
           forecast={metrics.forecast}
 
-          userName="Jan"
-
           totalLeads={metrics.total}
 
           pipelineValue={metrics.pipelineValue}
@@ -423,6 +421,18 @@ export default function DashboardPage() {
           weightedRevenue={forecast.weightedRevenue}
 
           revenueAtRisk={forecast.revenueAtRisk}
+
+          commitRevenue={forecast.commitRevenue}
+
+          bestCaseRevenue={forecast.bestCaseRevenue}
+
+          confidence={forecast.confidence}
+
+          averageHealth={forecast.averageHealth}
+
+          averageProbability={forecast.averageProbability}
+
+          activeDeals={forecast.activeDeals}
 
         />
 

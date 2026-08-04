@@ -1,15 +1,8 @@
 ﻿import { getHealthScore, getPriorityScore } from "@/lib/scoring"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
+import type { Lead } from "@/types"
 
-type FollowUpLead = {
-  id: string
-  name: string
-  company: string
-  status: string
-  value: number
-  created_at: string
-  stage_changed_at?: string
-}
+type FollowUpLead = Pick<Lead, "id" | "name" | "company" | "status" | "value" | "created_at" | "stage_changed_at">
 
 type FollowUpListProps = {
   leads: FollowUpLead[]

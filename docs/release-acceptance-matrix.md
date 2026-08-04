@@ -53,7 +53,7 @@ Use this matrix for final production release decisions.
 Fill before release:
 
 - Release version: closeflow@0.1.0 (workspace hardening milestone)
-- Date/time: 2026-07-20
+- Date/time: 2026-08-04 (latest automated rerun)
 - Environment: linked Supabase project `itqzelpofshmzeajvmma` + local app runtime (`http://localhost:3000`)
 - Incident channel: pending assignment
 - Commander: pending assignment
@@ -61,7 +61,44 @@ Fill before release:
 - Product approver: pending assignment
 - Result: CONDITIONAL GO
 - Notes:
-	- Passed: `npm run verify:release`
-	- Passed: `npm run test:cross-tenant:suite`
-	- Passed: `npx supabase db push` after idempotency fixes in migrations
-	- Pending manual confirmation in target runtime: execute `supabase/schema-health-check.sql` and full UI smoke cycle (lead/task/calendar/pipeline)
+	- Passed (rerun 2026-08-04): `npm run verify:release`
+	- Passed (rerun 2026-08-04): `npm run test:cross-tenant:suite`
+	- Included in rerun: production build (`npm run build`)
+	- Included in rerun: tenancy guard (`npm run lint:tenancy`)
+	- Pending manual confirmation in target runtime: execute `supabase/schema-health-check.sql`
+	- Pending manual confirmation in target runtime: full UI smoke cycle (lead/task/calendar/pipeline)
+	- Pending manual confirmation in target runtime: monitoring window check for no P0/P1 regressions
+
+## Remaining Steps to Move CONDITIONAL GO -> GO
+
+1. Run `supabase/schema-health-check.sql` in the production Supabase target and attach result screenshot/log.
+2. Execute full smoke test in production runtime using:
+	- `docs/production-smoke-run-2026-08-04.md`
+	Evidence requirement:
+	- PASS/FAIL for each section
+	- Notes for any deviation
+	- Timestamped tester and approver fields
+3. Observe 24-48h monitoring window with no unresolved P0/P1 signatures.
+4. Fill commander/approver fields and flip result to `GO`.
+
+## Manual Evidence Artifacts
+
+- Schema health SQL output (screenshot/log)
+- Completed smoke protocol: `docs/production-smoke-run-2026-08-04.md`
+- Monitoring window summary (P0/P1 count, API error rate, auth/db anomalies)
+
+## GO Promotion Rule
+
+Promote `Result` from `CONDITIONAL GO` to `GO` only when all are true:
+- Schema health: PASS
+- Production smoke protocol: PASS
+- Monitoring window: PASS
+
+Keep `CONDITIONAL GO` if any required evidence artifact is missing.
+
+## Final Production Approval Block
+
+- Production approved: YYYY-MM-DD
+- Approved by: <name>
+- Commander: <name>
+- Incident channel: <channel>

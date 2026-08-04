@@ -3,6 +3,8 @@ import {
   getRouteUser,
   loadWorkspaceForUser,
 } from "@/lib/supabase/route"
+import { runLeadAutomation } from "@/lib/automation"
+import type { Lead } from "@/types"
 
 
 export async function GET(req: Request) {
@@ -62,6 +64,10 @@ export async function GET(req: Request) {
         .eq(
           "workspace_id",
           workspace.id
+        )
+        .is(
+          "deleted_at",
+          null
         )
         .order(
           "created_at",
@@ -285,9 +291,20 @@ export async function PUT(req: Request) {
 
 
     const {
-      id,
-      ...updates
-    } = body
+  id,
+  ...updates
+} = body
+
+
+if(updates.status){
+
+  updates.stage_changed_at =
+    new Date().toISOString()
+
+  updates.last_activity_at =
+    new Date().toISOString()
+
+}
 
 
 
@@ -355,6 +372,10 @@ export async function PUT(req: Request) {
           "workspace_id",
           workspace.id
         )
+        .is(
+          "deleted_at",
+          null
+        )
         .single()
 
 
@@ -401,6 +422,10 @@ export async function PUT(req: Request) {
           "workspace_id",
           workspace.id
         )
+        .is(
+          "deleted_at",
+          null
+        )
         .select()
         .maybeSingle()
 
@@ -438,6 +463,41 @@ export async function PUT(req: Request) {
 
     }
 
+    if (
+  updates.status &&
+  oldLead.status !== updates.status
+) {
+
+  try {
+
+    const updatedLead = {
+      ...data,
+      status: updates.status,
+    } as Lead
+
+
+    await runLeadAutomation(
+      updatedLead,
+      oldLead.status
+    )
+
+
+    console.log(
+      "Lead automation executed"
+    )
+
+
+  } catch(error){
+
+    console.error(
+      "Lead automation failed:",
+      error
+    )
+
+  }
+
+}
+
 
 
 
@@ -457,34 +517,43 @@ export async function PUT(req: Request) {
         error:activityError
       } =
         await supabase
-          .from("activities")
-          .insert({
+.from("activities")
+.insert({
 
-            lead_id:id,
+  lead_id:id,
 
-            workspace_id:
-              workspace.id,
+  workspace_id:
+    workspace.id,
 
-            user_id:
-              user.id,
+  user_id:
+    user.id,
 
-            type:
-              "status_changed",
+  type:
+    "status_changed",
 
-            action:
-              "status_changed",
+  action:
+    `Status changed from ${oldLead.status} to ${updates.status}`,
 
-            metadata:{
+  title:
+    `Status changed from ${oldLead.status} to ${updates.status}`,
 
-              from:
-                oldLead.status,
+  description:
+    `Lead moved from ${oldLead.status} to ${updates.status}`,
 
-              to:
-                updates.status
+  metadata:{
 
-            }
+    previous_status:
+      oldLead.status,
 
-          })
+    next_status:
+      updates.status,
+
+    trigger:
+      "lead_actions"
+
+  }
+
+})
 
 
 
@@ -615,11 +684,15 @@ export async function DELETE(req: Request) {
 
 
     const {
+      data,
       error
     } =
       await supabase
         .from("leads")
-        .delete()
+        .update({
+          deleted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq(
           "id",
           id
@@ -628,6 +701,12 @@ export async function DELETE(req: Request) {
           "workspace_id",
           workspace.id
         )
+        .is(
+          "deleted_at",
+          null
+        )
+        .select("id")
+        .maybeSingle()
 
 
 
@@ -655,11 +734,20 @@ export async function DELETE(req: Request) {
 
 
 
-    return NextResponse.json(
-      {
-        success:true
-      }
-    )
+    if(!data){
+      return NextResponse.json(
+        {
+          error:"Lead not found"
+        },
+        {
+          status:404
+        }
+      )
+    }
+
+    return NextResponse.json({
+      success:true
+    })
 
 
 

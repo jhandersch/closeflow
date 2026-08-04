@@ -35,7 +35,7 @@ type DbInviteRow = {
   expires_at: string | null
 }
 
-const roleOptions: TeamRole[] = ["Owner", "Admin", "Sales Manager", "Sales", "Viewer", "Sales Rep"]
+const roleOptions: TeamRole[] = ["owner", "admin", "sales_manager", "sales", "viewer"]
 
 const slugify = (value: string) =>
   value
@@ -195,7 +195,7 @@ export function useTeamWorkspace(inviteToken?: string | null) {
         member_user_id: userId,
         member_email: email.trim().toLowerCase(),
         member_name: displayName,
-        role: "Owner",
+        role: "owner",
         status: "active",
       })
 
@@ -273,7 +273,7 @@ export function useTeamWorkspace(inviteToken?: string | null) {
       id: user.id,
       email,
       name: displayName,
-      role: "Owner",
+      role: "owner",
       status: "active",
     }
 
@@ -535,7 +535,7 @@ export function useTeamWorkspace(inviteToken?: string | null) {
     return {
       activeMembers: workspace.members.length,
       pendingInvites: workspace.invites.length,
-      owners: workspace.members.filter((member) => member.role === "Owner").length,
+      owners: workspace.members.filter((member) => member.role === "owner").length,
     }
   }, [workspace])
 

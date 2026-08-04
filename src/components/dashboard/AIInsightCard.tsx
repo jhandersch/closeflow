@@ -1,4 +1,8 @@
-﻿type AIInsightCardProps = {
+﻿"use client"
+
+import { useAppPreferences } from "@/components/AppPreferencesProvider"
+
+type AIInsightCardProps = {
   insight: {
     headline: string
     detail: string
@@ -8,6 +12,7 @@
 }
 
 export default function AIInsightCard({ insight }: AIInsightCardProps) {
+  const { t } = useAppPreferences()
 
   const confidenceColor =
     insight.confidence === "High"
@@ -37,7 +42,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
           <div>
 
             <p className="text-sm uppercase tracking-widest text-cyan-400">
-              AI Sales Intelligence
+              {t("ai.salesIntelligence", "AI Sales Intelligence")}
             </p>
 
 
@@ -62,7 +67,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
         <div
           className={`rounded-full border px-4 py-2 text-sm font-semibold ${confidenceColor}`}
         >
-          {insight.confidence} confidence
+          {insight.confidence} {t("ai.confidenceLabel", "confidence")}
         </div>
 
 
@@ -73,7 +78,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
       <div className="mt-6">
 
         <p className="mb-3 text-sm text-foreground/55">
-          Recommended actions
+          {t("ai.recommendedActions", "Recommended actions")}
         </p>
 
 

@@ -28,6 +28,7 @@ export type Lead = {
 
   created_at: string
   updated_at?: string | null
+  deleted_at?: string | null
 
   stage_changed_at?: string | null
 
@@ -52,8 +53,23 @@ export type Lead = {
   last_activity_at?: string | null
   last_contact_at?: string | null
   next_action_date?: string | null
+  expected_close_at?: string | null
 
   lost_reason?: string | null
 
   probability?: number | null
+}
+
+export type UpdateLeadData = {
+  name?: string
+  company?: string
+  status?: LeadStatus
+  value?: number
+  notes?: string
+  source?: LeadSource
+  tags?: string[]
+  email?: string
+  phone?: string
+  address?: string
+  website?: string
 }

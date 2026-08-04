@@ -1,12 +1,14 @@
 import { supabase } from "@/lib/supabase/client"
 import type { ActivityType, LeadSource, LeadStatus } from "@/types"
+import { runLeadAutomation } from "@/lib/automation"
+
 
 type UpdateLeadData = {
-  name: string
-  company: string
-  status: LeadStatus
-  value: number
-  notes: string
+  name?: string
+  company?: string
+  status?: LeadStatus
+  value?: number
+  notes?: string
   source?: LeadSource | null
   tags?: string[]
   email?: string
@@ -17,7 +19,7 @@ type UpdateLeadData = {
 
 
 export function useLeadActions(
-  refresh: () => Promise<void>
+  onSuccess?: (newStatus: LeadStatus) => Promise<void>,
 ) {
 
   const getWorkspaceId = async (userId: string) => {
@@ -30,6 +32,38 @@ export function useLeadActions(
 
     return membership?.workspace_id || null
   }
+
+  async function changeLeadStatus(
+  leadId: string,
+  oldStatus: LeadStatus,
+  newStatus: LeadStatus
+) {
+  if (oldStatus === newStatus) return
+
+  const session = await supabase.auth.getSession()
+
+  const response = await fetch("/api/leads", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${
+        session.data.session?.access_token ?? ""
+      }`,
+    },
+    body: JSON.stringify({
+      id: leadId,
+      status: newStatus,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error("Status update failed")
+  }
+
+  if (onSuccess) {
+    await onSuccess(newStatus)
+  }
+}
 
 
   async function saveLead(
@@ -48,94 +82,32 @@ export function useLeadActions(
       last_activity_at: new Date().toISOString(),
     }
 
-    if (oldStatus !== data.status) {
+    if (
+      data.status &&
+      oldStatus !== data.status
+    ) {
       updateData.stage_changed_at = new Date().toISOString()
     }
 
-    const { error } = await supabase
-      .from("leads")
-      .update(updateData)
-      .eq("id", leadId)
+    const session = await supabase.auth.getSession()
 
-    if (error) {
-      throw error
-    }
+const response = await fetch("/api/leads", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${
+      session.data.session?.access_token ?? ""
+    }`,
+  },
+  body: JSON.stringify({
+    id: leadId,
+    ...updateData,
+  }),
+})
 
-
-
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData.user
-
-    if (user) {
-      const workspaceId = await getWorkspaceId(user.id)
-
-      const activities: Array<{
-        workspace_id: string | null
-        lead_id: string
-        user_id: string
-        title: string
-        description: string | null
-        action: string
-        type: ActivityType
-        metadata: Record<string, unknown>
-      }> = []
-
-      if (oldStatus !== data.status) {
-        const action = `Status changed from ${oldStatus} to ${data.status}`
-        activities.push({
-          workspace_id: workspaceId,
-          lead_id: leadId,
-          user_id: user.id,
-          title: action,
-          description: action,
-          action,
-          type: "status_changed",
-          metadata: {
-            previous_status: oldStatus,
-            next_status: data.status,
-          },
-        })
-      }
-
-      const previousNotes = (beforeUpdateLead?.notes ?? "").trim()
-      const updatedNotes = data.notes.trim()
-      if (previousNotes !== updatedNotes) {
-        const action = "Lead notes updated"
-        activities.push({
-          workspace_id: workspaceId,
-          lead_id: leadId,
-          user_id: user.id,
-          title: action,
-          description: action,
-          action,
-          type: "note_added",
-          metadata: {
-            had_notes_before: previousNotes.length > 0,
-            has_notes_now: updatedNotes.length > 0,
-          },
-        })
-      }
-
-      if (activities.length === 0) {
-        const action = "Lead details updated"
-        activities.push({
-          workspace_id: workspaceId,
-          lead_id: leadId,
-          user_id: user.id,
-          title: action,
-          description: action,
-          action,
-          type: "other",
-          metadata: {
-            changed_fields: ["name", "company", "value", "source", "contact"],
-          },
-        })
-      }
-
-      await supabase.from("activities").insert(activities)
-    }
-
-    await refresh()
+if (!response.ok) {
+  throw new Error("Lead update failed")
+}
 
   }
 
@@ -175,6 +147,7 @@ export function useLeadActions(
   return {
     saveLead,
     deleteLead,
+    changeLeadStatus,
   }
 
 }

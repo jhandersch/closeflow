@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRouteUser } from "@/lib/supabase/route"
 import { slugifyWorkspaceName } from "@/lib/supabase/route"
+import { loadWorkspaceForUser } from "@/lib/supabase/route"
 
 export async function POST(request: Request) {
   const { supabase, user, error } = await getRouteUser(request)
@@ -39,19 +40,12 @@ export async function POST(request: Request) {
     }
 
 
-    // Prüfen ob Workspace existiert
-    const { data: existingMember } =
-      await supabase
-        .from("workspace_members")
-        .select("workspace_id")
-        .eq("user_id", user.id)
-        .maybeSingle()
+    const { workspace: existingWorkspace } = await loadWorkspaceForUser(supabase, user.id)
 
-
-    if (existingMember?.workspace_id) {
+    if (existingWorkspace?.id) {
       return NextResponse.json({
         ok: true,
-        workspace_id: existingMember.workspace_id,
+        workspace_id: existingWorkspace.id,
       })
     }
 

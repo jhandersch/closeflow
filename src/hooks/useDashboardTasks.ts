@@ -63,7 +63,9 @@ export function useDashboardTasks() {
     const open = tasks.filter((task) => task.status === "open").length
     const completed = tasks.filter((task) => task.status === "completed").length
     const overdue = tasks.filter((task) => task.status === "overdue").length
-    const highPriorityOpen = tasks.filter((task) => task.status !== "completed" && task.priority === "high").length
+    const highPriorityOpen = tasks.filter(
+      (task) => task.status !== "completed" && (task.priority === "high" || task.priority === "urgent")
+    ).length
     const nextDue = tasks
       .filter((task) => task.status !== "completed" && task.due_date)
       .sort((a, b) => new Date(a.due_date || "").getTime() - new Date(b.due_date || "").getTime())[0] || null

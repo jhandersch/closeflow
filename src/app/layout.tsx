@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Manrope, Space_Grotesk } from "next/font/google"
 import { AppPreferencesProvider } from "@/components/AppPreferencesProvider"
 import ToastProvider from "@/components/ToastProvider"
+import CookieNotice from "@/components/CookieNotice"
 import "./globals.css"
 
 const geistSans = Manrope({
@@ -30,6 +31,7 @@ export default function RootLayout({
         <AppPreferencesProvider>
           <ToastProvider />
           {children}
+          <CookieNotice />
         </AppPreferencesProvider>
       </body>
     </html>

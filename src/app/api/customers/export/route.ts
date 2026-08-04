@@ -13,6 +13,15 @@ type CustomerSummary = {
   last_contact_at: string
 }
 
+type LeadExportRow = {
+  name: string | null
+  company: string | null
+  status: string | null
+  value: number | null
+  last_activity_at?: string | null
+  created_at: string | null
+}
+
 const escapeCsv = (value: unknown) => {
   const text = String(value ?? "")
   if (text.includes(",") || text.includes("\n") || text.includes('"')) {
@@ -40,29 +49,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status })
   }
 
-  const primaryQuery = await supabase
-    .from("leads")
-    .select("name, company, status, value, last_activity_at, updated_at, created_at")
-    .eq("workspace_id", workspace.id)
+  const queryAttempts = [
+    "name, company, status, value, last_activity_at, updated_at, created_at",
+    "name, company, status, value, last_activity_at, created_at",
+    "name, company, status, value, created_at",
+  ]
 
-  const fallbackQuery =
-    primaryQuery.error && /column .* does not exist/i.test(primaryQuery.error.message || "")
-      ? await supabase
-          .from("leads")
-          .select("name, company, status, value, last_activity_at, created_at")
-          .eq("workspace_id", workspace.id)
-      : null
+  let leadsData: LeadExportRow[] | null = null
+  let queryError: { message: string } | null = null
 
-  const leads = (fallbackQuery?.data || primaryQuery.data) as Array<{
-    name: string | null
-    company: string | null
-    status: string | null
-    value: number | null
-    last_activity_at: string | null
-    created_at: string | null
-  }> | null
+  for (const selectClause of queryAttempts) {
+    const result = await supabase
+      .from("leads")
+      .select(selectClause)
+      .eq("workspace_id", workspace.id)
 
-  const queryError = fallbackQuery?.error || primaryQuery.error
+    if (!result.error) {
+      leadsData = (result.data || []) as unknown as LeadExportRow[]
+      queryError = null
+      break
+    }
+
+    queryError = { message: result.error.message }
+
+    // Continue through fallback attempts on schema drift.
+    if (!/column .* does not exist|schema cache/i.test(result.error.message || "")) {
+      break
+    }
+  }
+
+  const leads = leadsData
 
   if (queryError) {
     return NextResponse.json({ error: queryError.message }, { status: 500 })

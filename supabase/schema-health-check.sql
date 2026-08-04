@@ -45,6 +45,7 @@ with expected_columns(table_name, column_name) as (
     ('leads', 'website'),
     ('leads', 'next_action'),
     ('leads', 'next_action_date'),
+    ('leads', 'deleted_at'),
 
     ('activities', 'id'),
     ('activities', 'lead_id'),

@@ -5,18 +5,10 @@ import { getHealthScore, getPriorityScore } from "@/lib/scoring"
 import { usePriorityAI } from "@/hooks/usePriorityAI"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
+import type { Lead } from "@/types"
 
 
-type PriorityLead = {
-  id: string
-  name: string
-  company: string
-  status: string
-  value: number
-  created_at: string
-  notes?: string | null
-  stage_changed_at?: string | null
-}
+type PriorityLead = Pick<Lead, "id" | "name" | "company" | "status" | "value" | "created_at" | "notes" | "stage_changed_at">
 
 
 type PriorityDealsCardProps = {

@@ -120,6 +120,7 @@ Release is approved only if all are true:
 - `npm run verify:release` passes.
 - Migration and schema health checks pass in production target.
 - All cross-tenant negative tests pass.
+- `docs/production-smoke-run-2026-08-04.md` is fully completed and marked PASS.
 - No P0/P1 errors in monitoring during smoke test window.
 
 Use final decision matrix:

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
+  let locale: "de" | "en" = "de"
+
   try {
     const payload = await request.json()
-    const locale = payload?.language === "en" ? "en" : "de"
+    locale = payload?.language === "en" ? "en" : "de"
     const apiKey = process.env.OPENAI_API_KEY
 
     if (!apiKey) {
@@ -85,9 +87,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsed)
   } catch {
     return NextResponse.json({
-      headline: "Die Pipeline entwickelt sich stabil.",
-      detail: "Deine CRM-Daten sind gesund und bereit für Follow-ups.",
-      actions: ["Fasse Leads in der Angebotsphase nach.", "Prüfe risikobehaftete Deals mit niedrigem Health-Score."],
+      headline: locale === "de" ? "Die Pipeline entwickelt sich stabil." : "Pipeline momentum is steady.",
+      detail: locale === "de" ? "Deine CRM-Daten sind gesund und bereit für Follow-ups." : "Your CRM data looks healthy and ready for follow-up.",
+      actions:
+        locale === "de"
+          ? ["Fasse Leads in der Angebotsphase nach.", "Prüfe risikobehaftete Deals mit niedrigem Health-Score."]
+          : ["Follow up on leads in the proposal stage.", "Review at-risk deals with a low health score."],
       confidence: "Medium",
     })
   }

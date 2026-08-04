@@ -184,17 +184,12 @@ export function useLeadsData(
 
 
   return {
-
     leads,
-
+    setLeads,
     activities,
-
     loading,
-
     error,
-
     refresh: load,
-
   }
 
 }

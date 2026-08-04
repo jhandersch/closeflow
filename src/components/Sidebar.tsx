@@ -46,7 +46,7 @@ export default function Sidebar() {
   } = usePermissions()
   const pathname = usePathname()
   const router = useRouter()
-  const { t } = useAppPreferences()
+  const { hydrated, t } = useAppPreferences()
   const { open, setOpen } = useSidebar()
   const notificationCount = useNotificationCount()
 
@@ -92,6 +92,7 @@ export default function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)] lg:flex">
         <SidebarContent
+          hydrated={hydrated}
           links={links}
           t={t}
           pathname={pathname}
@@ -122,6 +123,7 @@ export default function Sidebar() {
           </button>
         </div>
         <SidebarContent
+          hydrated={hydrated}
           links={links}
           t={t}
           pathname={pathname}
@@ -141,6 +143,7 @@ type LinkDef = {
 }
 
 function SidebarContent({
+  hydrated,
   links,
   t,
   pathname,
@@ -148,6 +151,7 @@ function SidebarContent({
   onLinkClick,
   onLogout,
 }: {
+  hydrated: boolean
   links: LinkDef[]
   t: (key: string, fallback: string) => string
   pathname: string
@@ -162,8 +166,8 @@ function SidebarContent({
           CF
         </div>
         <div>
-          <p className="text-lg font-semibold tracking-tight text-foreground">{t("brand.name", "CloseFlow")}</p>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{t("brand.tagline", "Revenue OS")}</p>
+          <p className="text-lg font-semibold tracking-tight text-foreground">{hydrated ? t("brand.name", "CloseFlow") : "CloseFlow"}</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{hydrated ? t("brand.tagline", "Revenue OS") : "Revenue OS"}</p>
         </div>
       </div>
 
@@ -186,7 +190,13 @@ function SidebarContent({
               }`}
             >
               <Icon size={17} />
-              <span className="flex-1">{link.label}</span>
+              {hydrated ? (
+                <span className="flex-1">{link.label}</span>
+              ) : (
+                <span className="flex-1">
+                  <span className="block h-3 w-20 animate-pulse rounded-full bg-foreground/10" />
+                </span>
+              )}
               {isSearch ? (
                 <span className="rounded-md border border-border-subtle px-1.5 py-0.5 text-[10px] text-foreground/55">
                   Ctrl+K
@@ -207,7 +217,7 @@ function SidebarContent({
         className="mt-4 flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-left text-sm text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground"
       >
         <LogOut size={17} />
-        {t("nav.logout", "Abmelden")}
+        {hydrated ? t("nav.logout", "Logout") : <span className="block h-3 w-16 animate-pulse rounded-full bg-foreground/10" />}
       </button>
     </div>
   )

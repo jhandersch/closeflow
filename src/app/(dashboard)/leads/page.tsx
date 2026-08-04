@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import AuthGuard from "@/components/AuthGuard"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
@@ -16,6 +16,7 @@ import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
 import { loadDemoData } from "@/lib/demoData"
 import type { LeadSource, LeadStatus } from "@/types"
+import { Star } from "lucide-react"
 import * as XLSX from "xlsx"
 
 type ImportIssue = {
@@ -24,6 +25,8 @@ type ImportIssue = {
   name?: string
   company?: string
 }
+
+const LEAD_FAVORITES_STORAGE_KEY = "closeflow_lead_favorites"
 
 const escapeCsv = (value: unknown) => {
   const text = String(value ?? "")
@@ -35,7 +38,7 @@ const escapeCsv = (value: unknown) => {
 
 
 export default function LeadsPage() {
-  const { leads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
+  const { leads, setLeads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
   const { language } = useAppPreferences()
   const isDe = language === "de"
   const locale = isDe ? "de-DE" : "en-US"
@@ -44,6 +47,8 @@ export default function LeadsPage() {
   const [status, setStatus] = useState("all")
   const [priority, setPriority] = useState("all")
   const [sourceFilter, setSourceFilter] = useState("all")
+  const [dateRange, setDateRange] = useState("all")
+  const [ownerFilter, setOwnerFilter] = useState("all")
   const [sortBy, setSortBy] = useState<"created_at" | "value" | "priority">("priority")
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
@@ -65,37 +70,96 @@ export default function LeadsPage() {
   const [demoMessage, setDemoMessage] = useState<string | null>(null)
   const [importingCsv, setImportingCsv] = useState(false)
   const [importIssues, setImportIssues] = useState<ImportIssue[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
  
 
+  useEffect(() => {
+    const storedFavorites = window.localStorage.getItem(LEAD_FAVORITES_STORAGE_KEY)
+
+    if (!storedFavorites) {
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(storedFavorites) as unknown
+      if (Array.isArray(parsed)) {
+        setFavorites(parsed.filter((value): value is string => typeof value === "string"))
+      }
+    } catch {
+      window.localStorage.removeItem(LEAD_FAVORITES_STORAGE_KEY)
+    }
+  }, [])
+
   const toggleFavorite = (id: string) => {
-  setFavorites((current) =>
-    current.includes(id)
-      ? current.filter((item) => item !== id)
-      : [...current, id]
-  )
-} 
+    setFavorites((current) => {
+      const nextFavorites = current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+
+      window.localStorage.setItem(LEAD_FAVORITES_STORAGE_KEY, JSON.stringify(nextFavorites))
+
+      return nextFavorites
+    })
+  }
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setCurrentUserId(user?.id || null)
+    }
+
+    void loadCurrentUser()
+  }, [])
 
   const filteredLeads = useMemo(() => {
     const query = search.trim().toLowerCase()
+    const now = Date.now()
+    const dayMs = 1000 * 60 * 60 * 24
 
     return [...leads]
       .filter((lead) => {
-        const matchesQuery = !query || `${leadDisplayName(lead)} ${leadCompany(lead)}`.toLowerCase().includes(query)
+        const leadOwnerId = lead.owner_id || lead.assigned_to || lead.user_id || null
+        const searchableText = `${leadDisplayName(lead)} ${leadCompany(lead)} ${lead.email || ""} ${lead.phone || ""}`.toLowerCase()
+        const createdAtMs = new Date(lead.created_at).getTime()
+
+        const matchesQuery = !query || searchableText.includes(query)
         const matchesStatus = status === "all" || lead.status === status
         const score = getPriorityScore(lead)
         const priorityLabel = score >= 75 ? "hot" : score >= 45 ? "warm" : "cold"
         const matchesPriority = priority === "all" || priorityLabel === priority
         const matchesSource = sourceFilter === "all" || (lead.source || "other") === sourceFilter
+        const matchesOwner =
+          ownerFilter === "all" ||
+          (ownerFilter === "mine" && !!currentUserId && leadOwnerId === currentUserId) ||
+          (ownerFilter === "unassigned" && !leadOwnerId)
 
-        return matchesQuery && matchesStatus && matchesPriority && matchesSource
+        const ageInDays = (now - createdAtMs) / dayMs
+        const matchesDateRange =
+          dateRange === "all" ||
+          (dateRange === "today" && ageInDays < 1) ||
+          (dateRange === "last7" && ageInDays <= 7) ||
+          (dateRange === "last30" && ageInDays <= 30) ||
+          (dateRange === "older30" && ageInDays > 30)
+
+        return matchesQuery && matchesStatus && matchesPriority && matchesSource && matchesOwner && matchesDateRange
       })
       .sort((a, b) => {
+        const aPinned = favorites.includes(a.id)
+        const bPinned = favorites.includes(b.id)
+
+        if (aPinned !== bPinned) {
+          return aPinned ? -1 : 1
+        }
+
         if (sortBy === "value") return (b.value || 0) - (a.value || 0)
         if (sortBy === "created_at") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         return getPriorityScore(b) - getPriorityScore(a)
       })
-  }, [leads, priority, search, sortBy, sourceFilter, status])
+  }, [currentUserId, dateRange, favorites, leads, ownerFilter, priority, search, sortBy, sourceFilter, status])
 
   const getAuthHeaders = async (includeJson = false) => {
     const {
@@ -264,6 +328,7 @@ const { data: existingLeads, error: duplicateCheckError } = await supabase
   .from("leads")
   .select("id, name, company")
   .eq("user_id", user.id)
+  .is("deleted_at", null)
 
 if (duplicateCheckError) {
   setFormError(duplicateCheckError.message)
@@ -460,11 +525,15 @@ if (error) {
           status={status}
           priority={priority}
           source={sourceFilter}
+          dateRange={dateRange}
+          owner={ownerFilter}
           sortBy={sortBy}
           onSearchChange={setSearch}
           onStatusChange={setStatus}
           onPriorityChange={setPriority}
           onSourceChange={setSourceFilter}
+          onDateRangeChange={setDateRange}
+          onOwnerChange={setOwnerFilter}
           onSortChange={setSortBy}
         />
 
@@ -826,11 +895,14 @@ if (error) {
                               event.stopPropagation()
                               toggleFavorite(lead.id)
                             }}
-                            className="text-xl"
+                            aria-label={favorites.includes(lead.id) ? (isDe ? "Fixierung entfernen" : "Remove pin") : (isDe ? "Lead fixieren" : "Pin lead")}
+                            title={favorites.includes(lead.id) ? (isDe ? "Fixiert" : "Pinned") : (isDe ? "Fixieren" : "Pin")}
+                            className="rounded-full p-1.5 text-foreground/45 transition hover:bg-foreground/5 hover:text-amber-300"
                           >
-                            {favorites.includes(lead.id)
-                              ? (isDe ? "Fixiert" : "Pinned")
-                              : (isDe ? "Fixieren" : "Pin")}
+                            <Star
+                              size={18}
+                              className={favorites.includes(lead.id) ? "fill-amber-300 text-amber-300" : "text-foreground/45"}
+                            />
                           </button>
 
                         </div>
@@ -967,13 +1039,25 @@ if (error) {
                             event.stopPropagation()
                           }}
                         >
-                          <LeadActions
+                         <LeadActions
                             leadId={lead.id}
                             currentStatus={lead.status}
                             phone={lead.phone}
                             email={lead.email}
                             onLeadDeleted={() => {
                               void refresh()
+                            }}
+                            onStatusChanged={(leadId, newStatus) => {
+                              setLeads((current) =>
+                                current.map((lead) =>
+                                  lead.id === leadId
+                                    ? {
+                                        ...lead,
+                                        status: newStatus,
+                                      }
+                                    : lead
+                                )
+                              )
                             }}
                           />
                         </div>

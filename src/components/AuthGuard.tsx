@@ -10,7 +10,7 @@ export default function AuthGuard({
 }: {
   children: React.ReactNode
 }) {
-  const { language, t } = useAppPreferences()
+  const { language, hydrated, t } = useAppPreferences()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -54,6 +54,16 @@ export default function AuthGuard({
   }, [encodedNextPath, router])
 
   if (loading) {
+    const loadingTitle = hydrated
+      ? t("auth.sessionLoading", "Loading session...")
+      : "Loading session..."
+
+    const loadingBody = hydrated
+      ? language === "de"
+        ? "Wir bereiten deinen Workspace vor und stellen deine Sitzung sicher wieder her."
+        : "We are preparing your workspace and restoring your session securely."
+      : "We are preparing your workspace and restoring your session securely."
+
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
         <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8 shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_8%,transparent)]">
@@ -62,7 +72,7 @@ export default function AuthGuard({
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">CloseFlow</p>
               <h1 className="mt-1 text-xl font-semibold text-foreground">
-                {t("auth.sessionLoading", language === "de" ? "Session wird geladen..." : "Loading session...")}
+                {loadingTitle}
               </h1>
             </div>
           </div>
@@ -74,9 +84,7 @@ export default function AuthGuard({
           </div>
 
           <p className="mt-6 text-sm leading-7 text-foreground/65">
-            {language === "de"
-              ? "Wir bereiten deinen Workspace vor und stellen deine Sitzung sicher wieder her."
-              : "We are preparing your workspace and restoring your session securely."}
+            {loadingBody}
           </p>
         </div>
       </div>

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
+const DASHBOARD_NAME_CACHE_KEY = "closeflow_dashboard_name"
+
 type DashboardHeaderProps = {
   forecast: number
   userName?: string
@@ -22,7 +24,16 @@ export default function DashboardHeader({
   attentionCount,
 }: DashboardHeaderProps) {
 
-  const [name, setName] = useState(userName?.trim() || "")
+  const [name, setName] = useState(() => {
+    if (typeof window !== "undefined") {
+      const cachedName = window.localStorage.getItem(DASHBOARD_NAME_CACHE_KEY)?.trim()
+      if (cachedName) {
+        return cachedName
+      }
+    }
+
+    return userName?.trim() || ""
+  })
   const { t, language } = useAppPreferences()
 
   const locale = language === "de" ? "de-DE" : "en-US"
@@ -51,9 +62,12 @@ export default function DashboardHeader({
 
         if(metadataName){
           setName(metadataName)
+          window.localStorage.setItem(DASHBOARD_NAME_CACHE_KEY, metadataName)
         }
         else if(user.email){
-          setName(user.email.split("@")[0])
+          const fallbackName = user.email.split("@")[0]
+          setName(fallbackName)
+          window.localStorage.setItem(DASHBOARD_NAME_CACHE_KEY, fallbackName)
         }
 
       }

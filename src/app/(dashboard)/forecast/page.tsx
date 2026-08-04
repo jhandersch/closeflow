@@ -12,21 +12,11 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 export default function ForecastPage() {
   const { language } = useAppPreferences()
   const isDe = language === "de"
-  const locale = isDe ? "de-DE" : "en-US"
   const { leads } = useLeadsData({ activityLimit: 10 })
   const forecast = calculateForecast(leads)
   const { insight, loading: insightLoading } = useRevenueForecastAI(leads, forecast, language)
 
-  const chartData = leads
-    .reduce((acc, lead) => {
-      const month = new Date(lead.created_at).toLocaleDateString(locale, { month: "short", year: "2-digit" })
-      const weighted = Number(lead.value || 0) * ((Number(lead.probability || 0) || 0) / 100)
-      acc.set(month, (acc.get(month) || 0) + weighted)
-      return acc
-    }, new Map<string, number>())
-
-  const forecastSeries = Array.from(chartData.entries()).map(([month, value]) => ({ month, value }))
-
+  const forecastSeries = forecast.monthlyForecast
   return (
     <AuthGuard>
       <div className="space-y-6">
@@ -40,6 +30,12 @@ export default function ForecastPage() {
           pipelineValue={forecast.pipelineValue}
           weightedRevenue={forecast.weightedRevenue}
           revenueAtRisk={forecast.revenueAtRisk}
+          commitRevenue={forecast.commitRevenue}
+          bestCaseRevenue={forecast.bestCaseRevenue}
+          confidence={forecast.confidence}
+          averageHealth={forecast.averageHealth}
+          averageProbability={forecast.averageProbability}
+          activeDeals={forecast.activeDeals}
         />
         <RevenueForecastChart data={forecastSeries} />
         <RevenueForecastAI insight={insight} loading={insightLoading} />

@@ -139,19 +139,6 @@ export async function POST(request: Request) {
       continue
     }
 
-    const { data: membership, error: membershipError } =
-      await supabase
-        .from("workspace_members")
-        .select("workspace_id")
-        .eq("user_id", user.id)
-        .single()
-
-    if (membershipError || !membership) {
-      throw new Error("No workspace found")
-    }
-
-    const workspaceId = membership.workspace_id
-
     const payload = {
       workspace_id: workspace.id,
       user_id: user.id,
