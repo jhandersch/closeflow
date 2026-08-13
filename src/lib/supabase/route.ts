@@ -512,49 +512,41 @@ export async function loadWorkspaceForUser(
 
 
 
-  const {
-    data:workspace,
-    error:workspaceError
-  }
-  =
-    await supabase
-      .from("workspaces")
-      .select(
-        "id,name,owner_id,plan,created_at"
-      )
-      .eq(
-        "id",
-        membership.workspace_id
-      )
-      .single()
+const {
+  data: workspace,
+  error: workspaceError
+} =
+await supabase
+  .from("workspaces")
+  .select(
+    "id,name,owner_id,plan,created_at"
+  )
+  .eq(
+    "id",
+    membership.workspace_id
+  )
+  .single()
 
 
+if(workspaceError){
 
-  if(workspaceError){
-
-    console.error(
-      "WORKSPACE ERROR:",
-      workspaceError
-    )
-
-
-    return {
-      error:workspaceError,
-      workspace:null
-    }
-
-  }
-
-
+  console.error(
+    "WORKSPACE ERROR:",
+    workspaceError
+  )
 
   return {
-
-    error:null,
-
-    workspace:
-      workspace as Workspace
-
+    error:workspaceError,
+    workspace:null
   }
+
+}
+
+
+return {
+  error:null,
+  workspace:workspace as Workspace
+}
 
 }
 

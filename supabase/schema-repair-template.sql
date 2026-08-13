@@ -37,7 +37,7 @@ create index if not exists idx_leads_status on public.leads(status);
 
 create table if not exists public.activities (
   id uuid primary key default gen_random_uuid(),
-  lead_id uuid not null references public.leads(id) on delete cascade,
+  lead_id uuid references public.leads(id) on delete cascade,
   user_id uuid not null,
   workspace_id uuid,
   action text not null,

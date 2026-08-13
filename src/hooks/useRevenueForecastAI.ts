@@ -6,51 +6,27 @@ type ForecastSummary = {
   pipelineValue: number
   weightedRevenue: number
   revenueAtRisk: number
-
   commitRevenue: number
   bestCaseRevenue: number
-
   confidence: number
-
   averageHealth: number
   averageProbability: number
-
   activeDeals: number
-
-  topRiskDeals?: {
-    name: string
-    company: string
-    value: number
-  }[]
-
-  topOpportunities?: {
-    name: string
-    company: string
-    value: number
-  }[]
 }
 
 type RevenueForecastInsight = {
   confidence: number
-
   health:
     | "Excellent"
     | "Healthy"
     | "Warning"
     | "Critical"
-
   headline: string
-
   summary: string
-
   topDrivers: string[]
-
   risks: string[]
-
   recommendations: string[]
-
   pipelineComment: string
-
   singleDealRisk: number
 }
 
@@ -67,62 +43,125 @@ type Lead = {
   next_action?: string | null
 }
 
-export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary, language: "de" | "en" = "de") {
-  const [insight, setInsight] = useState<RevenueForecastInsight | null>(null)
-  const [loading, setLoading] = useState(false)
+export function useRevenueForecastAI(
+  leads: Lead[],
+  forecast: ForecastSummary,
+  language: "de" | "en" = "de"
+) {
+  const [insight, setInsight] =
+    useState<RevenueForecastInsight | null>(null)
+
+  const [loading, setLoading] =
+    useState(false)
+
+  const [error, setError] =
+    useState<string | null>(null)
 
   useEffect(() => {
     if (!leads.length) {
       setInsight(null)
+      setError(null)
       setLoading(false)
       return
     }
 
-    let active = true
+    const controller = new AbortController()
 
     async function generate() {
       setLoading(true)
+      setError(null)
 
       try {
-        const response = await fetch("/api/revenue-forecast-ai", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            leads: leads.slice(0, 20),
-            forecast,
-            language,
-          })
-        })
+        const response = await fetch(
+          "/api/revenue-forecast-ai",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              leads: leads.slice(0, 20),
+              forecast,
+              language,
+            }),
+          }
+        )
+
+        const data =
+          await response.json()
 
         if (!response.ok) {
-          throw new Error("Revenue forecast AI request failed")
+          throw new Error(
+            data?.error ||
+              "Revenue forecast AI request failed"
+          )
         }
 
-        const data = (await response.json()) as RevenueForecastInsight
+        setInsight({
+          confidence:
+            typeof data.confidence === "number"
+              ? data.confidence
+              : 0,
 
-        if (active) {
-          setInsight(data)
-        }
+          health:
+            data.health ?? "Warning",
+
+          headline:
+            data.headline ?? "",
+
+          summary:
+            data.summary ?? "",
+
+          topDrivers:
+            Array.isArray(data.topDrivers)
+              ? data.topDrivers
+              : [],
+
+          risks:
+            Array.isArray(data.risks)
+              ? data.risks
+              : [],
+
+          recommendations:
+            Array.isArray(data.recommendations)
+              ? data.recommendations
+              : [],
+
+          pipelineComment:
+            data.pipelineComment ?? "",
+
+          singleDealRisk:
+            typeof data.singleDealRisk === "number"
+              ? data.singleDealRisk
+              : 0,
+        })
+
+        setError(null)
       } catch (error) {
-        console.error(error)
-
-        if (active) {
-          setInsight({
-            confidence: 0.2,
-            health: "Critical",
-            headline: language === "de" ? "KI-Umsatzanalyse nicht verfügbar" : "AI revenue intelligence unavailable",
-            summary: language === "de" ? "KI-Umsatzanalyse ist vorübergehend nicht verfügbar." : "AI revenue intelligence is temporarily unavailable.",
-            topDrivers: [],
-            risks: [language === "de" ? "Forecast-Daten konnten nicht automatisch analysiert werden." : "Forecast data could not be analyzed automatically."],
-            recommendations: [language === "de" ? "Prüfe die Pipeline manuell und fokussiere die größten offenen Deals." : "Review the pipeline manually and focus on the largest open deals."],
-            pipelineComment: "",
-            singleDealRisk: 0,
-          })
+        if (
+          error instanceof Error &&
+          error.name === "AbortError"
+        ) {
+          return
         }
+
+        console.error(
+          "Revenue Forecast AI:",
+          error
+        )
+
+        setInsight(null)
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : language === "de"
+              ? "Die Revenue-Analyse konnte nicht erstellt werden."
+              : "Revenue analysis could not be generated."
+        )
       } finally {
-        if (active) {
+        if (!controller.signal.aborted) {
           setLoading(false)
         }
       }
@@ -131,12 +170,25 @@ export function useRevenueForecastAI(leads: Lead[], forecast: ForecastSummary, l
     void generate()
 
     return () => {
-      active = false
+      controller.abort()
     }
-  }, [forecast, language, leads])
+  }, [
+    leads,
+    forecast.pipelineValue,
+    forecast.weightedRevenue,
+    forecast.revenueAtRisk,
+    forecast.commitRevenue,
+    forecast.bestCaseRevenue,
+    forecast.confidence,
+    forecast.averageHealth,
+    forecast.averageProbability,
+    forecast.activeDeals,
+    language,
+  ])
 
   return {
     insight,
     loading,
+    error,
   }
 }

@@ -10,9 +10,15 @@ import { useLeadActions } from "@/hooks/useLeadActions"
 import { useTasks } from "@/hooks/useTasks"
 
 
+
 import {
   useAppPreferences
 } from "@/components/AppPreferencesProvider"
+
+import type {
+  Activity,
+  TaskPriority,
+} from "@/types"
 
 
 import LeadHeader from "@/components/leads/detail/LeadHeader"
@@ -95,13 +101,120 @@ const {
 
 
 const {
- tasks,
- addTask,
- toggleTask,
- deleteTask
+  tasks,
+  addTask: addLeadTask,
+  toggleTask: toggleLeadTask,
+  editTask: editLeadTask,
+  deleteTask: deleteLeadTask,
+} = useTasks(id)
 
-}=useTasks(id)
+const [localTaskActivities, setLocalTaskActivities] =
+useState<Activity[]>([])
 
+const addLocalTaskActivity = (
+  title: string,
+  event:
+    | "task_created"
+    | "task_updated"
+    | "task_completed"
+    | "task_reopened"
+    | "task_deleted",
+  taskId?: string
+) => {
+  const localActivity: Activity = {
+    id: `local-${Date.now()}-${Math.random()}`,
+    lead_id: id,
+    user_id: lead?.user_id || "local",
+    type:
+      event === "task_created"
+      ? "task_created"
+      : event === "task_completed"
+      ? "task_completed"
+      : "other",
+    title,
+    description: title,
+    action: title,
+    metadata: {
+      event,
+      task_id: taskId || null,
+      optimistic: true,
+    },
+    created_at: new Date().toISOString(),
+  }
+
+  setLocalTaskActivities((previous) => [
+    localActivity,
+    ...previous,
+  ])
+}
+
+const timelineActivities = [
+  ...localTaskActivities,
+  ...activities,
+]
+
+const addTask = async (
+  title: string,
+  dueDate?: string,
+  priority?: TaskPriority
+) => {
+  await addLeadTask(title, dueDate, priority)
+  addLocalTaskActivity(
+    `Task created: ${title.trim()}`,
+    "task_created"
+  )
+  await refresh()
+}
+
+const editTask = async (
+  taskId: string,
+  updates: {
+    title: string
+    priority: TaskPriority
+    due_date: string | null
+  }
+) => {
+  await editLeadTask(taskId, updates)
+  addLocalTaskActivity(
+    `Task updated: ${updates.title.trim()}`,
+    "task_updated",
+    taskId
+  )
+  await refresh()
+}
+
+const toggleTask = async (
+  taskId: string,
+  completed: boolean
+) => {
+  await toggleLeadTask(taskId, completed)
+  addLocalTaskActivity(
+    completed
+    ? "Task reopened"
+    : "Task completed",
+    completed
+    ? "task_reopened"
+    : "task_completed",
+    taskId
+  )
+  await refresh()
+}
+
+const deleteTask = async (
+  taskId: string
+) => {
+  const task = tasks.find(
+    (entry) => entry.id === taskId
+  )
+
+  await deleteLeadTask(taskId)
+  addLocalTaskActivity(
+    `Task deleted: ${task?.title || taskId}`,
+    "task_deleted",
+    taskId
+  )
+  await refresh()
+}
 
 
 const [activeTab,setActiveTab]=
@@ -351,6 +464,8 @@ saveLead={saveLead}
 
 isDe={isDe}
 
+onSaved={refresh}
+
 />
 
 
@@ -369,7 +484,7 @@ activeTab==="activities"
 
 <ActivityTimeline
 
-activities={activities}
+activities={timelineActivities}
 
 />
 
@@ -384,17 +499,12 @@ activeTab==="tasks"
 &&
 
 <LeadTasks
-
-tasks={tasks}
-
-addTask={addTask}
-
-toggleTask={toggleTask}
-
-deleteTask={deleteTask}
-
-isDe={isDe}
-
+  tasks={tasks}
+  addTask={addTask}
+  editTask={editTask}
+  toggleTask={toggleTask}
+  deleteTask={deleteTask}
+  isDe={isDe}
 />
 
 }

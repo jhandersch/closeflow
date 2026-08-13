@@ -3,7 +3,28 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, LogOut, Settings2, Users, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, Sparkles, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare } from "lucide-react"
+import {
+  LayoutDashboard,
+  LogOut,
+  Settings2,
+  UsersRound,
+  Workflow,
+  Bot,
+  BarChart3,
+  CreditCard,
+  ListTodo,
+  UserRoundCheck,
+  Activity,
+  TrendingUp,
+  ShieldCheck,
+  Search as SearchIcon,
+  X,
+  Calendar,
+  MessageSquare,
+  Zap,
+  Bell,
+  UserRound,
+} from "lucide-react"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { useSidebar } from "@/components/SidebarContext"
 import { supabase } from "@/lib/supabase/client"
@@ -56,30 +77,35 @@ export default function Sidebar() {
   }, [pathname, setOpen])
 
   const links = [
-    { href: "/search",      label: t("nav.search", "Suche"),           icon: SearchIcon },
-    { href: "/dashboard",    label: t("nav.dashboard", "Dashboard"),    icon: LayoutDashboard },
-    { href: "/leads",        label: t("nav.leads", "Leads"),            icon: Users },
-    { href: "/customers",   label: t("nav.customers", "Kunden"),        icon: UserRoundCheck },
-    { href: "/pipeline",    label: t("nav.pipeline", "Pipeline"),      icon: Workflow },
-    { href: "/tasks",       label: t("nav.tasks", "Aufgaben"),         icon: ListTodo },
-    { href: "/activities",  label: t("nav.activities", "Activities"),  icon: Activity },
-    { href: "/ai",          label: t("nav.ai", "KI-Assistent"),        icon: Bot },
-    { href: "/analytics",   label: t("nav.analytics", "Analytics"),    icon: BarChart3 },
-    { href: "/forecast",    label: t("nav.forecast", "Forecast"),      icon: Sparkles },
-    { href: "/calendar",    label: t("nav.calendar", "Calendar"),      icon: Calendar },
-    { href: "/feedback",    label: t("nav.feedback", "Feedback"),      icon: MessageSquare },
-    { href: "/automations", label: t("nav.automations", "Automatisierungen"), icon: Sparkles },
-    { href: "/notifications", label: t("nav.notifications", "Benachrichtigungen"), icon: ListTodo },
-    ...(canManageWorkspace
-      ? [{ href: "/team", label: t("nav.team", "Team"), icon: Users }]
-      : []),
+    { href: "/search",        label: t("nav.search", "Suche"),                     icon: SearchIcon },
+    { href: "/dashboard",     label: t("nav.dashboard", "Dashboard"),              icon: LayoutDashboard },
+
+    { href: "/leads",         label: t("nav.leads", "Leads"),                      icon: UserRoundCheck },
+    { href: "/customers",     label: t("nav.customers", "Kunden"),                 icon: UsersRound },
+    { href: "/pipeline",      label: t("nav.pipeline", "Pipeline"),                icon: Workflow },
+    { href: "/tasks",         label: t("nav.tasks", "Aufgaben"),                   icon: ListTodo },
+    { href: "/activities",    label: t("nav.activities", "Activities"),            icon: Activity },
+
+    { href: "/ai",            label: t("nav.ai", "KI-Assistent"),                  icon: Bot },
+    { href: "/analytics",     label: t("nav.analytics", "Analytics"),              icon: BarChart3 },
+    { href: "/forecast",      label: t("nav.forecast", "Forecast"),                icon: TrendingUp },
+    { href: "/calendar",      label: t("nav.calendar", "Calendar"),                icon: Calendar },
+    { href: "/automations",   label: t("nav.automations", "Automatisierungen"),     icon: Zap },
+
+    { href: "/notifications", label: t("nav.notifications", "Benachrichtigungen"), icon: Bell },
+    { href: "/feedback",      label: t("nav.feedback", "Feedback"),                icon: MessageSquare },
+
+    { href: "/team",          label: t("nav.team", "Team"),                        icon: UserRound },
+
     ...(canManageBilling
       ? [{ href: "/billing", label: t("nav.billing", "Abrechnung"), icon: CreditCard }]
       : []),
+
     ...(isPlatformAdmin
       ? [{ href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck }]
       : []),
-    { href: "/settings",    label: t("nav.settings", "Einstellungen"), icon: Settings2 },
+
+    { href: "/settings",      label: t("nav.settings", "Einstellungen"),           icon: Settings2 },
   ]
 
   const handleLogout = async () => {

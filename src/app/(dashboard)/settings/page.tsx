@@ -266,14 +266,13 @@ export default function SettingsPage() {
 
     const { error } = await supabase.auth.updateUser({
       data: {
-        language,
-        theme,
-        notifications,
-        subscription_plan: subscriptionPlan,
-        integrations,
-        session_count: sessionCount,
-        two_factor_enabled: twoFactorEnabled,
-      },
+      language,
+      theme,
+      notifications,
+      subscription_plan: subscriptionPlan,
+      integrations,
+      session_count: sessionCount,
+    },
     })
 
     if (error) {
@@ -463,34 +462,140 @@ export default function SettingsPage() {
     setMfaBusy(false)
   }
 
-  const disableMfa = async () => {
+  const elevateMfaSession = async () => {
     const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
 
-    if (!mfaApi?.unenroll || !mfaFactorId) {
-      toast.error(isDe ? "Kein 2FA-Faktor zum Deaktivieren vorhanden" : "No 2FA factor to disable")
+    if (!mfaApi?.challenge || !mfaApi?.verify || !mfaFactorId) {
+      toast.error(
+        isDe
+          ? "2FA-Sitzung konnte nicht gestartet werden."
+          : "Could not start MFA session."
+      )
+      return
+    }
+
+    const code = window.prompt(
+      isDe
+        ? "Gib den 6-stelligen Code aus deiner Authenticator-App ein:"
+        : "Enter the 6-digit code from your authenticator app:"
+    )
+
+    if (!code?.trim()) {
       return
     }
 
     setMfaBusy(true)
-    const { error } = await mfaApi.unenroll({ factorId: mfaFactorId })
 
-    if (error) {
-      toast.error(error.message || (isDe ? "2FA konnte nicht deaktiviert werden" : "Could not disable 2FA"))
+    try {
+      const { data: challengeData, error: challengeError } =
+        await mfaApi.challenge({
+          factorId: mfaFactorId,
+        })
+
+      if (challengeError) {
+        throw challengeError
+      }
+
+      const { error: verifyError } = await mfaApi.verify({
+        factorId: mfaFactorId,
+        challengeId: challengeData.id,
+        code: code.trim(),
+      })
+
+      if (verifyError) {
+        throw verifyError
+      }
+
+      toast.success(
+        isDe
+          ? "2FA-Sitzung aktiviert. AAL2 ist jetzt aktiv."
+          : "MFA session verified. AAL2 is now active."
+      )
+    } catch (error) {
+      console.error("MFA ELEVATION ERROR:", error)
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : isDe
+            ? "2FA konnte nicht verifiziert werden."
+            : "Could not verify MFA."
+      )
+    } finally {
       setMfaBusy(false)
+    }
+  }
+
+  const disableMfa = async () => {
+    const mfaApi = (supabase.auth as unknown as { mfa?: any }).mfa
+
+    if (!mfaApi?.unenroll || !mfaFactorId) {
+      toast.error(
+        isDe
+          ? "Kein 2FA-Faktor zum Deaktivieren vorhanden"
+          : "No 2FA factor to disable"
+      )
       return
     }
 
-    await supabase.auth.updateUser({
-      data: {
-        two_factor_enabled: false,
-      },
-    })
+    setMfaBusy(true)
 
-    setMfaVerifyCode("")
-    setMfaQrCode(null)
-    await syncMfaState()
-    toast.success(isDe ? "Zwei-Faktor-Authentifizierung deaktiviert" : "Two-factor authentication disabled")
-    setMfaBusy(false)
+    try {
+      const { data: aal, error: aalError } =
+        await mfaApi.getAuthenticatorAssuranceLevel()
+
+      if (aalError) {
+        toast.error(
+          aalError.message ||
+            (isDe
+              ? "AAL-Status konnte nicht geprüft werden"
+              : "Could not check authentication assurance level")
+        )
+        return
+      }
+
+      if (aal.currentLevel !== "aal2") {
+        toast.error(
+          isDe
+            ? "Bitte bestätige zuerst deine 2FA mit deinem Authenticator-Code."
+            : "Please verify your 2FA with your authenticator code first."
+        )
+        return
+      }
+
+      const { error } = await mfaApi.unenroll({
+        factorId: mfaFactorId,
+      })
+
+      if (error) {
+        toast.error(
+          error.message ||
+            (isDe
+              ? "2FA konnte nicht deaktiviert werden"
+              : "Could not disable 2FA")
+        )
+        return
+      }
+
+      await supabase.auth.updateUser({
+        data: {
+          two_factor_enabled: false,
+        },
+      })
+
+      setMfaVerifyCode("")
+      setMfaQrCode(null)
+
+      await syncMfaState()
+
+      toast.success(
+        isDe
+          ? "Zwei-Faktor-Authentifizierung deaktiviert"
+          : "Two-factor authentication disabled"
+      )
+    } finally {
+      setMfaBusy(false)
+    }
   }
 
   const qrImageSrc = mfaQrCode
@@ -815,18 +920,33 @@ export default function SettingsPage() {
             >
               {isDe ? "2FA deaktivieren" : "Disable 2FA"}
             </button>
+
+            <button
+              onClick={() => void elevateMfaSession()}
+              disabled={mfaBusy || mfaStatus !== "enabled"}
+              className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50"
+            >
+              {isDe ? "2FA für Sitzung bestätigen" : "Verify 2FA for this session"}
+            </button>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        
+
+        <div className="mt-4">
           <label className="text-sm text-foreground/70">
             {t("settings.activeSessions", "Active sessions")}
-            <input type="number" min={1} value={sessionCount} onChange={(event) => setSessionCount(Math.max(1, Number(event.target.value) || 1))} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
-          </label>
-
-          <label className="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80">
-            {t("settings.twoFactor", "Two-factor authentication (2FA)")}
-            <input type="checkbox" checked={twoFactorEnabled} onChange={(event) => setTwoFactorEnabled(event.target.checked)} />
+            <input
+              type="number"
+              min={1}
+              value={sessionCount}
+              onChange={(event) =>
+                setSessionCount(
+                  Math.max(1, Number(event.target.value) || 1)
+                )
+              }
+              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
+            />
           </label>
         </div>
 

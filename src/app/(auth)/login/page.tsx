@@ -32,46 +32,132 @@ export default function LoginPage() {
   const [mfaRecoveryCode, setMfaRecoveryCode] = useState("")
   const [useRecoveryCode, setUseRecoveryCode] = useState(false)
 
-  useEffect(() => {
-    const modeParam = searchParams.get("mode")
-    const oauthError = searchParams.get("oauthError")
 
-    if (modeParam === "reset") {
-      setMode("reset")
+useEffect(() => {
+  const modeParam = searchParams.get("mode")
+  const oauthError = searchParams.get("oauthError")
+  const queryType = searchParams.get("type")
+
+  if (oauthError) {
+    setError(oauthError)
+  }
+
+  const initRecoverySession = async () => {
+    const hashParams = new URLSearchParams(
+      window.location.hash.replace("#", "")
+    )
+
+    const hashType = hashParams.get("type")
+
+    const isRecoveryFlow =
+      modeParam === "reset" ||
+      queryType === "recovery" ||
+      hashType === "recovery"
+
+    if (!isRecoveryFlow) {
+      return
     }
 
-    if (oauthError) {
-      setError(oauthError)
+    // Sofort im Reset-Modus bleiben.
+    // Der normale Login-Redirect darf hier niemals greifen.
+    setMode("reset")
+    setError(null)
+    setSuccess(null)
+
+    /*
+     * Supabase verarbeitet den Recovery-Token
+     * über den Browser-Client.
+     *
+     * Kurz warten, damit der Auth-State aus der URL
+     * übernommen werden kann.
+     */
+    await new Promise((resolve) =>
+      setTimeout(resolve, 500)
+    )
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      setError(
+        t(
+          "auth.recoverySessionMissing",
+          "Recovery session missing. Open the reset link again."
+        )
+      )
+
+      setMode("forgot")
+      return
     }
 
-    const hashParams = new URLSearchParams(window.location.hash.replace("#", ""))
-    if (hashParams.get("type") === "recovery") {
-      setMode("reset")
-      setSuccess(t("auth.recoveryVerified", "Recovery link verified. Set your new password."))
+    setMode("reset")
+    setError(null)
+    setSuccess(
+      t(
+        "auth.recoveryVerified",
+        "Recovery link verified. Set your new password."
+      )
+    )
+  }
+
+  void initRecoverySession()
+}, [searchParams, t])
+
+
+
+useEffect(() => {
+  const checkUser = async () => {
+    /*
+     * NEVER redirect during password recovery.
+     *
+     * Supabase may already have created a temporary
+     * recovery session, but the recovery flow must stay
+     * on the reset-password screen.
+     */
+    if (
+      mode === "reset" ||
+      searchParams.get("mode") === "reset" ||
+      searchParams.get("type") === "recovery"
+    ) {
+      return
     }
-  }, [searchParams, t])
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      if (user) {
-        if (mode === "reset" || mode === "mfa") {
-          return
-        }
-        if (user.user_metadata?.onboarding_completed) {
-          router.replace(nextPath || "/dashboard")
-        } else {
-          const onboardingTarget = nextPath ? `/onboarding?next=${encodeURIComponent(nextPath)}` : "/onboarding"
-          router.replace(onboardingTarget)
-        }
-      }
+    if (!user) {
+      return
     }
 
-    void checkUser()
-  }, [mode, nextPath, router])
+    if (
+      user.user_metadata?.onboarding_completed
+    ) {
+      router.replace(
+        nextPath || "/dashboard"
+      )
+    } else {
+      const onboardingTarget = nextPath
+        ? `/onboarding?next=${encodeURIComponent(
+            nextPath
+          )}`
+        : "/onboarding"
+
+      router.replace(
+        onboardingTarget
+      )
+    }
+  }
+
+  void checkUser()
+}, [
+  mode,
+  nextPath,
+  router,
+  searchParams,
+])
+
 
   const getAuthRedirectPath = () => {
     const callbackUrl = new URL("/auth/callback", window.location.origin)
@@ -167,9 +253,47 @@ export default function LoginPage() {
           }
         }
       } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/login?mode=reset`,
-        })
+        const redirectTo = new URL(
+          "/auth/callback",
+          window.location.origin
+        )
+
+        redirectTo.searchParams.set("next", "/login?mode=reset")
+
+      
+          const callbackUrl = new URL(
+            "/auth/callback",
+            window.location.origin
+          )
+
+          callbackUrl.searchParams.set(
+            "next",
+            "/login?mode=reset"
+          )
+
+          const { error } =
+            await supabase.auth.resetPasswordForEmail(
+              email,
+              {
+                redirectTo:
+                  `${window.location.origin}/login?mode=reset`,
+              }
+            )
+
+          if (error) {
+            throw error
+          }
+
+          setSuccess(
+            t(
+              "auth.passwordResetSent",
+              "Password reset link sent. Check your inbox."
+            )
+          )
+
+          setMode("login")
+
+
 
         if (error) {
           throw error

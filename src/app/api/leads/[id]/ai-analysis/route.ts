@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/server"
+import {
+  getRouteUser,
+  loadWorkspaceForUser,
+} from "@/lib/supabase/route"
 
 export async function POST(
   request: NextRequest,
@@ -11,83 +13,63 @@ export async function POST(
   try {
     const { id } = await context.params
 
-    const cookieSupabase = await createClient()
-    const authorization = request.headers.get("authorization")
-    const bearerToken = authorization?.startsWith("Bearer ")
-      ? authorization.slice(7)
-      : null
-
-    const supabase = bearerToken
-      ? createSupabaseClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            global: {
-              headers: {
-                Authorization: `Bearer ${bearerToken}`,
-              },
-            },
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-            },
-          }
-        )
-      : cookieSupabase
-
-
-    const {
-      data: {
-        user
-      },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-
-    if (userError || !user) {
+    if (!id) {
       return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
+        { error: "Missing lead id" },
+        { status: 400 }
       )
     }
 
+    const {
+      supabase,
+      user,
+      error: authError,
+    } = await getRouteUser(request)
 
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    const {
+      workspace,
+      error: workspaceError,
+    } = await loadWorkspaceForUser(
+      supabase,
+      user.id
+    )
+
+    if (workspaceError || !workspace?.id) {
+      return NextResponse.json(
+        { error: "Workspace required" },
+        { status: 403 }
+      )
+    }
 
     const {
       data: lead,
       error: leadError,
-    } =
-      await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single()
-
-
+    } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .eq("workspace_id", workspace.id)
+      .is("deleted_at", null)
+      .single()
 
     if (leadError || !lead) {
-
       console.error(
-        "Lead lookup error:",
+        "AI LEAD LOOKUP ERROR:",
         leadError
       )
 
       return NextResponse.json(
-        {
-          error: "Lead not found",
-        },
-        {
-          status:404,
-        }
+        { error: "Lead not found" },
+        { status: 404 }
       )
-
     }
-
-
 
     const analysis = `
 AI Deal Analysis
@@ -96,14 +78,13 @@ Lead:
 ${lead.name}
 
 Company:
-${lead.company}
+${lead.company ?? "—"}
 
 Deal Value:
 €${lead.value ?? 0}
 
 Current Stage:
 ${lead.status}
-
 
 Recommendation:
 
@@ -112,44 +93,36 @@ Recommendation:
 - Keep activity history updated.
 - Prioritize communication if the deal is valuable.
 
-
 Risk Level:
 ${
   lead.status === "new"
-  ? "Medium"
-  : "Low"
+    ? "Medium"
+    : "Low"
 }
 
 Opportunity:
 This lead has potential and should remain actively managed.
 `
 
-
-
     return NextResponse.json({
-
       analysis,
-
     })
-
-
-  } catch(error) {
-
+  } catch (error) {
     console.error(
-      "AI analysis error:",
+      "AI ANALYSIS ERROR:",
       error
     )
 
-
     return NextResponse.json(
       {
-        error:"Internal server error"
+        error:
+          error instanceof Error
+            ? error.message
+            : "Internal server error",
       },
       {
-        status:500
+        status: 500,
       }
     )
-
   }
-
 }

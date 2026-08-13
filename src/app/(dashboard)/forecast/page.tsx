@@ -14,7 +14,7 @@ export default function ForecastPage() {
   const isDe = language === "de"
   const { leads } = useLeadsData({ activityLimit: 10 })
   const forecast = calculateForecast(leads)
-  const { insight, loading: insightLoading } = useRevenueForecastAI(leads, forecast, language)
+  const { insight, loading: insightLoading, error: insightError } = useRevenueForecastAI(leads, forecast, language)
 
   const forecastSeries = forecast.monthlyForecast
   return (
@@ -38,7 +38,7 @@ export default function ForecastPage() {
           activeDeals={forecast.activeDeals}
         />
         <RevenueForecastChart data={forecastSeries} />
-        <RevenueForecastAI insight={insight} loading={insightLoading} />
+        <RevenueForecastAI insight={insight} loading={insightLoading} error={insightError} />
       </div>
     </AuthGuard>
   )

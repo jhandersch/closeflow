@@ -49,10 +49,6 @@ const createCalendarActivity = async ({
   description: string | null
   metadata: Record<string, unknown>
 }) => {
-  if (!leadId) {
-    return
-  }
-
   await supabase.from("activities").insert({
     workspace_id: workspaceId,
     user_id: userId,
@@ -61,7 +57,10 @@ const createCalendarActivity = async ({
     title,
     description,
     action: title,
-    metadata,
+    metadata: {
+      ...metadata,
+      event: type,
+    },
   })
 }
 

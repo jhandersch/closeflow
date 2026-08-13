@@ -21,6 +21,19 @@ export default function LeadPipeline({
 const { language } = useAppPreferences()
 const isDe = language === "de"
 
+const getStatusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    new: isDe ? "Neu" : "New",
+    contacted: isDe ? "Kontaktiert" : "Contacted",
+    qualified: isDe ? "Qualifiziert" : "Qualified",
+    proposal: isDe ? "Angebot" : "Proposal",
+    won: isDe ? "Gewonnen" : "Won",
+    lost: isDe ? "Verloren" : "Lost",
+  }
+
+  return labels[status] ?? status
+}
+
 const stages = [
   { id: "new", label: isDe ? "Neu" : "New" },
   { id: "contacted", label: isDe ? "Kontaktiert" : "Contacted" },

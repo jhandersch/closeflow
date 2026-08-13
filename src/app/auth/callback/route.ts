@@ -1,267 +1,170 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-
 const sanitizeNextPath = (nextPath: string | null) => {
-
   if (!nextPath) return null
-
   if (!nextPath.startsWith("/")) return null
-
   if (nextPath.startsWith("//")) return null
 
   return nextPath
-
 }
-
-
 
 const toLoginRedirect = (
   request: NextRequest,
   nextPath: string | null,
   oauthError: string
 ) => {
+  const loginUrl = new URL("/login", request.url)
 
-  const loginUrl =
-    new URL("/login", request.url)
-
-
-  if(nextPath){
-
-    loginUrl.searchParams.set(
-      "next",
-      nextPath
-    )
-
+  if (nextPath) {
+    loginUrl.searchParams.set("next", nextPath)
   }
 
-
-  loginUrl.searchParams.set(
-    "oauthError",
-    oauthError
-  )
-
+  loginUrl.searchParams.set("oauthError", oauthError)
 
   return NextResponse.redirect(loginUrl)
-
 }
 
-
-
-
-
 async function syncProfile(
-  supabase:any,
-  user:any
-){
-
-  const metadata =
-    user.user_metadata || {}
-
-
+  supabase: any,
+  user: any
+) {
+  const metadata = user.user_metadata || {}
 
   await supabase
     .from("profiles")
     .upsert({
-
-      id:user.id,
-
+      id: user.id,
       full_name:
         metadata.full_name ||
         metadata.name ||
         "",
-
-
       username:
         metadata.username ||
         "",
-
-
       company_name:
         metadata.company_name ||
         "",
-
-
       avatar_url:
         metadata.avatar_url ||
         metadata.picture ||
         "",
-
-
       language:
         metadata.language ||
         "de",
-
-
-      role:
-        "owner"
-
+      role: "owner",
     })
-
 }
 
-
-
-
-
 export async function GET(
-  request:NextRequest
-){
-
-
-  const requestUrl =
-    new URL(request.url)
-
-
+  request: NextRequest
+) {
+  const requestUrl = new URL(request.url)
 
   const code =
-    requestUrl.searchParams.get(
-      "code"
-    )
+    requestUrl.searchParams.get("code")
 
+  const type =
+    requestUrl.searchParams.get("type")
 
   const oauthError =
-    requestUrl.searchParams.get(
-      "error"
-    )
-
+    requestUrl.searchParams.get("error")
 
   const oauthErrorDescription =
     requestUrl.searchParams.get(
       "error_description"
     )
 
-
   const nextPath =
     sanitizeNextPath(
-      requestUrl.searchParams.get(
-        "next"
-      )
+      requestUrl.searchParams.get("next")
     )
 
-
-
-
-
-  if(oauthError){
-
+  if (oauthError) {
     return toLoginRedirect(
       request,
       nextPath,
       oauthErrorDescription ||
-      oauthError
+        oauthError
     )
-
   }
 
-
-
-
-
-  if(!code){
-
+  if (!code) {
     return toLoginRedirect(
       request,
       nextPath,
-      "OAuth callback without code"
+      "Authentication callback without code"
     )
-
   }
-
-
-
-
-
 
   const supabase =
     await createClient()
 
 
-
-
-
-
   const {
-    error
+    data: { user },
   } =
-  await supabase.auth.exchangeCodeForSession(
-    code
-  )
+    await supabase.auth.getUser()
 
-
-
-
-  if(error){
-
-    return toLoginRedirect(
-      request,
-      nextPath,
-      error.message ||
-      "OAuth sign-in failed"
-    )
-
-  }
-
-
-
-
-
-  const {
-    data:{
-      user
-    }
-
-  } =
-  await supabase.auth.getUser()
-
-
-
-
-
-  if(user){
-
+  if (user) {
     await syncProfile(
       supabase,
       user
     )
-
   }
 
-
-
-
-
-  let destination =
-    nextPath ||
-    "/dashboard"
-
-
-
-
-
-  if(
-    user &&
-    !user.user_metadata?.onboarding_completed
-  ){
-
-    destination =
-      nextPath
-      ?
-      `/onboarding?next=${encodeURIComponent(nextPath)}`
-      :
-      "/onboarding"
-
+  /*
+   * PASSWORD RECOVERY
+   *
+   * Recovery must go to the reset-password
+   * UI and must NOT go directly to the dashboard.
+   */
+  if (type === "recovery") {
+    return NextResponse.redirect(
+      new URL(
+        "/login?mode=reset",
+        request.url
+      )
+    )
   }
 
+  /*
+   * Normal OAuth / authentication flow.
+   */
+const isPasswordRecovery =
+  type === "recovery" ||
+  nextPath === "/login?mode=reset"
 
-
-
+if (isPasswordRecovery) {
   return NextResponse.redirect(
     new URL(
-      destination,
+      "/login?mode=reset",
       request.url
     )
   )
+}
 
+let destination =
+  nextPath ||
+  "/dashboard"
+
+if (
+  user &&
+  !user.user_metadata
+    ?.onboarding_completed
+) {
+  destination = nextPath
+    ? `/onboarding?next=${encodeURIComponent(
+        nextPath
+      )}`
+    : "/onboarding"
+}
+
+return NextResponse.redirect(
+  new URL(
+    destination,
+    request.url
+  )
+)
 
 }

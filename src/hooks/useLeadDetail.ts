@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import type { Lead, Activity } from "@/types"
 
@@ -7,36 +7,89 @@ export function useLeadDetail(id: string) {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!id) {
+      setLead(null)
+      setActivities([])
       setLoading(false)
       return
     }
 
     setLoading(true)
 
-    const { data: leadData } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("id", id)
-      .single()
+    try {
+      /*
+       * =========================
+       * LOAD LEAD
+       * =========================
+       */
 
-    const { data: activityData } = await supabase
-      .from("activities")
-      .select("*")
-      .eq("lead_id", id)
-      .order("created_at", {
-        ascending: false,
-      })
+      const {
+        data: leadData,
+        error: leadError,
+      } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", id)
+        .single()
 
-    setLead(leadData)
-    setActivities(activityData || [])
-    setLoading(false)
-  }
+      if (leadError) {
+        console.error("Failed to load lead:", leadError)
+        setLead(null)
+      } else {
+        setLead(leadData)
+      }
+
+      /*
+       * =========================
+       * LOAD ACTIVITIES
+       * =========================
+       */
+
+      const {
+        data: activityData,
+        error: activityError,
+      } = await supabase
+        .from("activities")
+        .select("*")
+        .eq("lead_id", id)
+        .order("created_at", {
+          ascending: false,
+        })
+
+      if (activityError) {
+        console.error(
+          "Failed to load activities:",
+          activityError
+        )
+
+        setActivities([])
+      } else {
+        console.log(
+          "Loaded activities:",
+          activityData
+        )
+
+        setActivities(
+          (activityData || []) as Activity[]
+        )
+      }
+    } catch (error) {
+      console.error(
+        "Unexpected error loading lead:",
+        error
+      )
+
+      setLead(null)
+      setActivities([])
+    } finally {
+      setLoading(false)
+    }
+  }, [id])
 
   useEffect(() => {
     void load()
-  }, [id])
+  }, [load])
 
   return {
     lead,

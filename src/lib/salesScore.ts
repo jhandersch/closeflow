@@ -1,7 +1,6 @@
 import type { Lead } from "@/types"
 
-
-type ScoreResult = {
+export type ScoreResult = {
   priority: number
   health: number
   activity: number
@@ -10,17 +9,17 @@ type ScoreResult = {
   probability: number
 }
 
-
-
 export function calculateSalesScore(
   lead: Lead,
   staleDays: number
 ): ScoreResult {
 
-
   /*
-    DEAL VALUE SCORE
-    Große Deals bekommen mehr Gewicht
+    =========================
+    DEAL VALUE
+    =========================
+
+    €50.000 = 100 Punkte
   */
 
   const valueScore =
@@ -32,151 +31,198 @@ export function calculateSalesScore(
     )
 
 
-
   /*
+    =========================
     PIPELINE STAGE
+    =========================
+
+    Höhere Phase =
+    höhere Abschlusswahrscheinlichkeit.
   */
 
-  const stageScore =
-    lead.status === "won"
-      ? 100
-      : lead.status === "proposal"
-      ? 80
-      : lead.status === "contacted"
-      ? 50
-      : 25
+  const stageScore: Record<string, number> = {
+    new: 25,
+    contacted: 50,
+    qualified: 65,
+    proposal: 80,
+    won: 100,
+    lost: 0,
+  }
 
+  const currentStageScore =
+    stageScore[lead.status] ?? 25
 
 
   /*
-    ACTIVITY MOMENTUM
+    =========================
+    ACTIVITY
+    =========================
 
-    Frische Aktivität = besser
+    Frische Leads sind gesünder.
   */
 
   const activityScore =
     staleDays === 0
       ? 100
       : staleDays <= 3
-      ? 85
-      : staleDays <= 7
-      ? 60
-      : staleDays <= 14
-      ? 35
-      : 15
-
+        ? 85
+        : staleDays <= 7
+          ? 60
+          : staleDays <= 14
+            ? 35
+            : 15
 
 
   /*
+    =========================
     ENGAGEMENT
+    =========================
 
-    Kombination aus Stage + Aktivität
+    Pipeline-Fortschritt +
+    Aktivität.
   */
 
   const engagement =
     Math.round(
-      (stageScore * 0.5)
-      +
+      (currentStageScore * 0.5) +
       (activityScore * 0.5)
     )
 
 
-
   /*
+    =========================
     RISK
+    =========================
 
-    Inaktivität erhöht Risiko
+    Inaktivität erhöht Risiko.
   */
 
   const risk =
     staleDays > 14
       ? 90
       : staleDays > 7
-      ? 60
-      : 20
-
+        ? 60
+        : staleDays > 3
+          ? 40
+          : 20
 
 
   /*
+    =========================
     HEALTH
+    =========================
 
-    Gegenteil von Risiko,
-    aber mit Aktivität kombiniert
+    Aktivität + geringes Risiko.
   */
 
   const health =
     Math.round(
-      (activityScore * 0.6)
-      +
-      ((100-risk) * 0.4)
+      (activityScore * 0.6) +
+      ((100 - risk) * 0.4)
     )
-
 
 
   /*
-    FINAL CONVERSION PROBABILITY
+    =========================
+    CLOSE PROBABILITY
+    =========================
 
     Gewichtung:
 
-    30% Value
-    25% Stage
-    20% Activity
-    15% Engagement
-    10% Risk
+    Value       30%
+    Stage       25%
+    Activity    20%
+    Engagement  15%
+    Risk        10%
   */
 
-
-  const probability =
+  let probability =
     Math.round(
-
-      (valueScore * 0.30)
-
-      +
-
-      (stageScore * 0.25)
-
-      +
-
-      (activityScore * 0.20)
-
-      +
-
-      (engagement * 0.15)
-
-      +
-
-      ((100-risk) * 0.10)
-
+      (valueScore * 0.30) +
+      (currentStageScore * 0.25) +
+      (activityScore * 0.20) +
+      (engagement * 0.15) +
+      ((100 - risk) * 0.10)
     )
 
 
+  /*
+    WON / LOST SIND FINALE ZUSTÄNDE
+  */
+
+  if (lead.status === "won") {
+    probability = 100
+  }
+
+  if (lead.status === "lost") {
+    probability = 0
+  }
+
+
+  /*
+    =========================
+    PRIORITY
+    =========================
+
+    Deal Value 40%
+    Stage      30%
+    Activity   30%
+  */
+
+  let priority =
+    Math.round(
+      (valueScore * 0.40) +
+      (currentStageScore * 0.30) +
+      (activityScore * 0.30)
+    )
+
+
+  /*
+    WON / LOST NICHT MEHR
+    ALS AKTIVE PRIORITÄTEN
+  */
+
+  if (lead.status === "won") {
+    priority = 0
+  }
+
+  if (lead.status === "lost") {
+    priority = 0
+  }
+
+
+  /*
+    =========================
+    FINAL LIMITS
+    =========================
+  */
 
   return {
-
     priority:
-      Math.round(
-        (valueScore * 0.4)
-        +
-        (stageScore * 0.3)
-        +
-        (activityScore * 0.3)
+      Math.max(
+        0,
+        Math.min(priority, 100)
       ),
 
-
-    health,
+    health:
+      Math.max(
+        0,
+        Math.min(health, 100)
+      ),
 
     activity:
       activityScore,
 
+    engagement:
+      engagement,
 
-    engagement,
+    risk:
+      risk,
 
-
-    risk,
-
-
-    probability,
-
+    probability:
+      Math.max(
+        0,
+        Math.min(probability, 100)
+      ),
   }
-
 }

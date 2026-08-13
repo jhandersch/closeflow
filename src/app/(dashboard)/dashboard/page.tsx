@@ -59,7 +59,10 @@ export default function DashboardPage() {
 
 
 
-  const forecast = calculateForecast(leads)
+  const forecast = useMemo(
+  () => calculateForecast(leads),
+  [leads]
+)
 
 
 
@@ -79,6 +82,7 @@ export default function DashboardPage() {
   const {
     insight: revenueInsight,
     loading: revenueInsightLoading,
+    error: revenueInsightError,
   } = useRevenueForecastAI(
     leads,
     forecast,
@@ -483,6 +487,8 @@ export default function DashboardPage() {
           insight={revenueInsight}
 
           loading={revenueInsightLoading}
+
+          error={revenueInsightError}
 
         />
 

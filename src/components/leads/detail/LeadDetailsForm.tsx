@@ -24,6 +24,8 @@ type Props = {
 
   isDe:boolean
 
+  onSaved: () => Promise<void>
+
 }
 
 
@@ -31,7 +33,8 @@ type Props = {
 export default function LeadDetailsForm({
   lead,
   saveLead,
-  isDe
+  isDe,
+  onSaved,
 }:Props){
 
 
@@ -182,6 +185,8 @@ tags
 }
 
 )
+
+await onSaved()
 
 
 

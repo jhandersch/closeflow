@@ -13,6 +13,7 @@ type ActivityItem = {
   type?: string | null
   title?: string | null
   description?: string | null
+  metadata?: Record<string, unknown> | null
   created_at: string
 }
 
@@ -72,6 +73,99 @@ export default function ActivitiesPage() {
     return labels[type] || type
   }
 
+  const getCalendarTitle = (type?: string | null) => {
+    switch (type) {
+      case "meeting_created":
+        return isDe ? "Termin erstellt" : "Meeting created"
+      case "meeting_updated":
+        return isDe ? "Termin geändert" : "Meeting updated"
+      case "meeting_completed":
+        return isDe ? "Termin abgeschlossen" : "Meeting completed"
+      case "meeting_deleted":
+        return isDe ? "Termin gelöscht" : "Meeting deleted"
+      default:
+        return null
+    }
+  }
+
+  const getLocalizedTitle = (activity: ActivityItem) => {
+    const raw = (activity.title || activity.action || "").trim()
+    const normalized = raw.toLowerCase()
+    const event =
+      typeof activity.metadata?.event === "string"
+        ? activity.metadata.event.toLowerCase()
+        : ""
+
+    if (event === "task_updated") {
+      return isDe ? "Aufgabe aktualisiert" : "Task updated"
+    }
+
+    if (event === "task_deleted") {
+      return isDe ? "Aufgabe gelöscht" : "Task deleted"
+    }
+
+    if (event === "task_reopened") {
+      return isDe ? "Aufgabe wieder geöffnet" : "Task reopened"
+    }
+
+    const calendarTitle =
+      getCalendarTitle(activity.type) ||
+      getCalendarTitle(event)
+
+    if (calendarTitle) {
+      return calendarTitle
+    }
+
+    if (normalized === "lead_created" || normalized === "lead created") {
+      return isDe ? "Lead erstellt" : "Lead created"
+    }
+
+    const taskCreatedMatch = raw.match(/^task created:\s*(.+)$/i)
+    if (taskCreatedMatch) {
+      return isDe
+        ? `Aufgabe erstellt: ${taskCreatedMatch[1]}`
+        : `Task created: ${taskCreatedMatch[1]}`
+    }
+
+    const taskUpdatedMatch = raw.match(/^task updated:\s*(.+)$/i)
+    if (taskUpdatedMatch) {
+      return isDe
+        ? `Aufgabe aktualisiert: ${taskUpdatedMatch[1]}`
+        : `Task updated: ${taskUpdatedMatch[1]}`
+    }
+
+    const taskDeletedMatch = raw.match(/^task deleted:\s*(.+)$/i)
+    if (taskDeletedMatch) {
+      return isDe
+        ? `Aufgabe gelöscht: ${taskDeletedMatch[1]}`
+        : `Task deleted: ${taskDeletedMatch[1]}`
+    }
+
+    const translations: Record<string, string> = isDe
+      ? {
+          "task completed": "Aufgabe erledigt",
+          "task reopened": "Aufgabe wieder geöffnet",
+          "email sent": "E-Mail gesendet",
+          "activity updated": "Aktivität aktualisiert",
+          "meeting created": "Termin erstellt",
+          "meeting updated": "Termin geändert",
+          "meeting completed": "Termin abgeschlossen",
+          "meeting deleted": "Termin gelöscht",
+        }
+      : {
+          "task completed": "Task completed",
+          "task reopened": "Task reopened",
+          "email sent": "Email sent",
+          "activity updated": "Activity updated",
+          "meeting created": "Meeting created",
+          "meeting updated": "Meeting updated",
+          "meeting completed": "Meeting completed",
+          "meeting deleted": "Meeting deleted",
+        }
+
+    return translations[normalized] || raw || (isDe ? "Aktivität" : "Activity")
+  }
+
   return (
     <AuthGuard>
       <div className="mx-auto max-w-4xl space-y-6">
@@ -118,7 +212,7 @@ export default function ActivitiesPage() {
               {activities.map((activity) => (
                 <article key={activity.id} className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{getTypeLabel(activity.type)}</p>
-                  <p className="mt-2 font-medium text-foreground">{activity.title || activity.action || (isDe ? "Update" : "Update")}</p>
+                  <p className="mt-2 font-medium text-foreground">{getLocalizedTitle(activity)}</p>
                   {activity.description ? <p className="mt-1 text-sm text-foreground/70">{activity.description}</p> : null}
                   {activity.lead_id ? (
                     <div className="mt-2">

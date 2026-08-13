@@ -40,6 +40,8 @@ export async function GET(req: Request) {
     )
 
 
+
+
     if (!workspace?.id) {
 
       return NextResponse.json(
@@ -151,6 +153,8 @@ export async function POST(req: Request) {
     const body =
       await req.json()
 
+      
+
 
 
     const {
@@ -160,6 +164,12 @@ export async function POST(req: Request) {
         supabase,
         user.id
       )
+
+          console.log("=== CREATE LEAD DEBUG ===")
+    console.log("User:", user.id)
+    console.log("Workspace:", workspace)
+    console.log("Workspace ID:", workspace?.id)
+    console.log("Body:", body)
 
 
 
@@ -477,10 +487,12 @@ if(updates.status){
 
 
     await runLeadAutomation(
+      supabase,
+      user.id,
+      workspace.id,
       updatedLead,
       oldLead.status
     )
-
 
     console.log(
       "Lead automation executed"
@@ -500,78 +512,98 @@ if(updates.status){
 
 
 
+/*
+  Activity Events
+*/
 
+const statusChanged =
+  updates.status &&
+  oldLead.status !== updates.status
 
-    /*
-      Neues Activity Event
-      nur bei echtem Statuswechsel
-    */
+/*
+  Statuswechsel:
+  genau eine Activity für die Statusänderung
+*/
+if (statusChanged) {
+  const { error: activityError } = await supabase
+    .from("activities")
+    .insert({
+      lead_id: id,
+      workspace_id: workspace.id,
+      user_id: user.id,
+      type: "status_changed",
+      action: `Status changed from ${oldLead.status} to ${updates.status}`,
+      title: `Status changed from ${oldLead.status} to ${updates.status}`,
+      description: `Lead moved from ${oldLead.status} to ${updates.status}`,
+      metadata: {
+        previous_status: oldLead.status,
+        next_status: updates.status,
+        trigger: "lead_actions",
+      },
+    })
 
-    if(
-      updates.status &&
-      oldLead.status !== updates.status
-    ){
-
-
-      const {
-        error:activityError
-      } =
-        await supabase
-.from("activities")
-.insert({
-
-  lead_id:id,
-
-  workspace_id:
-    workspace.id,
-
-  user_id:
-    user.id,
-
-  type:
-    "status_changed",
-
-  action:
-    `Status changed from ${oldLead.status} to ${updates.status}`,
-
-  title:
-    `Status changed from ${oldLead.status} to ${updates.status}`,
-
-  description:
-    `Lead moved from ${oldLead.status} to ${updates.status}`,
-
-  metadata:{
-
-    previous_status:
-      oldLead.status,
-
-    next_status:
-      updates.status,
-
-    trigger:
-      "lead_actions"
-
+  if (activityError) {
+    console.error(
+      "CREATE STATUS ACTIVITY ERROR:",
+      activityError
+    )
   }
+}
 
-})
+/*
+  Normales Lead-Update:
+  Eine Activity, wenn relevante Lead-Daten
+  tatsächlich geändert wurden.
 
+  Statuswechsel wird hier ausgeschlossen,
+  damit kein zweiter Activity-Eintrag entsteht.
+*/
 
+const trackedFields = [
+  "name",
+  "company",
+  "value",
+  "notes",
+  "source",
+  "tags",
+  "email",
+  "phone",
+  "address",
+  "website",
+]
 
-      if(activityError){
+const changedFields = trackedFields.filter(
+  (field) =>
+    Object.prototype.hasOwnProperty.call(updates, field)
+)
 
-        console.error(
-          "CREATE ACTIVITY ERROR:",
-          activityError
-        )
+if (!statusChanged && changedFields.length > 0) {
+  const { error: activityError } = await supabase
+    .from("activities")
+    .insert({
+      lead_id: id,
+      workspace_id: workspace.id,
+      user_id: user.id,
+      type: "lead_updated",
+      action: "lead_updated",
+      title: "Lead updated",
+      description: `Updated: ${changedFields.join(", ")}`,
+      metadata: {
+        changed_fields: changedFields,
+        trigger: "lead_actions",
+      },
+    })
 
-      }
+  if (activityError) {
+    console.error(
+      "CREATE UPDATE ACTIVITY ERROR:",
+      activityError
+    )
+  }
+}
 
-    }
+return NextResponse.json(data)
 
-
-
-
-    return NextResponse.json(data)
 
 
 

@@ -1,19 +1,52 @@
 import { NextResponse } from "next/server"
-import { getRouteUser } from "@/lib/supabase/route"
-import { slugifyWorkspaceName } from "@/lib/supabase/route"
-import { loadWorkspaceForUser } from "@/lib/supabase/route"
+
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+
+import {
+  slugifyWorkspaceName,
+  loadWorkspaceForUser,
+} from "@/lib/supabase/route"
 
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getRouteUser(request)
+  const supabase = await createClient()
 
-  if (error || !user) {
+  // --------------------------------------------------
+  // 1. Authentifizierten User holen
+  // --------------------------------------------------
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    console.error(
+      "ONBOARDING AUTH ERROR:",
+      userError
+    )
+
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }
     )
   }
 
+  console.log(
+    "ONBOARDING USER:",
+    user.id
+  )
+
+  console.log(
+    "ONBOARDING AUTH UID:",
+    user.id
+  )
+
   try {
+    // --------------------------------------------------
+    // 2. Request Body
+    // --------------------------------------------------
+
     const body = await request.json()
 
     const companyName =
@@ -31,99 +64,181 @@ export async function POST(request: Request) {
         ? body.teamSize.trim()
         : ""
 
-
     if (!companyName) {
       return NextResponse.json(
-        { error: "Company name required" },
-        { status: 400 }
+        {
+          error: "Company name required",
+        },
+        {
+          status: 400,
+        }
       )
     }
 
+    // --------------------------------------------------
+    // 3. Prüfen, ob bereits Workspace existiert
+    // --------------------------------------------------
 
-    const { workspace: existingWorkspace } = await loadWorkspaceForUser(supabase, user.id)
+    const {
+      workspace: existingWorkspace,
+    } = await loadWorkspaceForUser(
+      supabase,
+      user.id
+    )
 
     if (existingWorkspace?.id) {
+      console.log(
+        "EXISTING WORKSPACE:",
+        existingWorkspace.id
+      )
+
       return NextResponse.json({
         ok: true,
         workspace_id: existingWorkspace.id,
       })
     }
 
+    // --------------------------------------------------
+    // 4. Admin Client erstellen
+    // --------------------------------------------------
 
+    const admin = createAdminClient()
 
-    // Workspace erstellen
-    const { data: workspace, error: workspaceError } =
-      await supabase
-        .from("workspaces")
-        .insert({
-          name: companyName,
-          slug: slugifyWorkspaceName(companyName),
-          industry,
-          size: teamSize,
-          owner_id: user.id,
-          plan: "free",
-        })
-        .select()
-        .single()
+    const slug =
+      slugifyWorkspaceName(companyName)
 
+    // --------------------------------------------------
+    // 5. Workspace erstellen
+    // --------------------------------------------------
+
+    const {
+      data: workspace,
+      error: workspaceError,
+    } = await admin
+      .from("workspaces")
+      .insert({
+        name: companyName,
+        slug,
+        industry,
+        size: teamSize,
+        owner_id: user.id,
+        plan: "free",
+      })
+      .select()
+      .single()
 
     if (workspaceError) {
+      console.error(
+        "ONBOARDING WORKSPACE ERROR:",
+        workspaceError
+      )
+
       throw workspaceError
     }
 
+    if (!workspace) {
+      throw new Error(
+        "Workspace creation returned no workspace"
+      )
+    }
 
+    console.log(
+      "WORKSPACE CREATED:",
+      workspace.id
+    )
 
-    // Owner hinzufügen
-    const { error: memberError } =
-      await supabase
-        .from("workspace_members")
-        .insert({
-          workspace_id: workspace.id,
-          user_id: user.id,
-          role: "owner",
-          permissions: {},
-        })
+    // --------------------------------------------------
+    // 6. Owner als Workspace Member hinzufügen
+    // --------------------------------------------------
 
+    const {
+      error: memberError,
+    } = await admin
+      .from("workspace_members")
+      .insert({
+        workspace_id: workspace.id,
+        user_id: user.id,
+        role: "owner",
+        permissions: {},
+      })
 
     if (memberError) {
+      console.error(
+        "ONBOARDING MEMBER ERROR:",
+        memberError
+      )
+
       throw memberError
     }
 
+    console.log(
+      "WORKSPACE OWNER CREATED:",
+      user.id
+    )
 
+    // --------------------------------------------------
+    // 7. Profil aktualisieren
+    // --------------------------------------------------
 
-    // Profil aktualisieren
-    const { error: profileError } =
-      await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          company_name: companyName,
-        })
-
+    const {
+      error: profileError,
+    } = await admin
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        company_name: companyName,
+      })
 
     if (profileError) {
+      console.error(
+        "ONBOARDING PROFILE ERROR:",
+        profileError
+      )
+
       throw profileError
     }
 
+    // --------------------------------------------------
+    // 8. Onboarding abschließen
+    // --------------------------------------------------
 
-
-    // Onboarding abschließen
-    await supabase.auth.updateUser({
+    const {
+      error: metadataError,
+    } = await supabase.auth.updateUser({
       data: {
         onboarding_completed: true,
         workspace_id: workspace.id,
       },
     })
 
+    if (metadataError) {
+      console.error(
+        "ONBOARDING METADATA ERROR:",
+        metadataError
+      )
 
+      throw metadataError
+    }
+
+    // --------------------------------------------------
+    // 9. Fertig
+    // --------------------------------------------------
+
+    console.log(
+      "ONBOARDING COMPLETED:",
+      workspace.id
+    )
 
     return NextResponse.json({
       ok: true,
       workspace_id: workspace.id,
     })
 
-
   } catch (err) {
+    console.error(
+      "ONBOARDING FAILED:",
+      err
+    )
 
     return NextResponse.json(
       {
@@ -136,6 +251,5 @@ export async function POST(request: Request) {
         status: 500,
       }
     )
-
   }
 }

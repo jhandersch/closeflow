@@ -288,15 +288,6 @@ export default function LeadsPage() {
     setFormError(null)
     setSubmitting(true)
 
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData.user
-
-    if (!user) {
-      setFormError(isDe ? "Du brauchst eine aktive Sitzung, um einen Lead zu erstellen." : "You need an active session to create a lead.")
-      setSubmitting(false)
-      return
-    }
-
     if (!name.trim()) {
   setFormError(isDe ? "Lead-Name ist erforderlich" : "Lead name is required")
   setSubmitting(false)
@@ -324,19 +315,7 @@ if (isNaN(dealValue) || dealValue < 0) {
 const normalizedName = name.trim().toLowerCase()
 const normalizedCompany = company.trim().toLowerCase()
 
-const { data: existingLeads, error: duplicateCheckError } = await supabase
-  .from("leads")
-  .select("id, name, company")
-  .eq("user_id", user.id)
-  .is("deleted_at", null)
-
-if (duplicateCheckError) {
-  setFormError(duplicateCheckError.message)
-  setSubmitting(false)
-  return
-}
-
-const duplicateLead = (existingLeads || []).find((lead) => {
+const duplicateLead = leads.find((lead) => {
   const sameName = (lead.name || "").trim().toLowerCase() === normalizedName
   const sameCompany = (lead.company || "").trim().toLowerCase() === normalizedCompany
   return sameName && sameCompany
@@ -349,7 +328,6 @@ if (duplicateLead) {
 }
 
 const baseInsertPayload = {
-  user_id: user.id,
   name: name.trim(),
   company: company.trim(),
   status: leadStatus,
@@ -369,40 +347,31 @@ const extendedInsertPayload = {
   website: website.trim() || null,
 }
 
-let { data: leadData, error } = await supabase
-  .from("leads")
-  .insert([extendedInsertPayload])
-  .select()
-  .single()
+const response = await fetch("/api/leads", {
+  method: "POST",
+  headers: await getAuthHeaders(true),
+  credentials: "include",
+  body: JSON.stringify(extendedInsertPayload),
+})
 
-if (error && /column .* does not exist/i.test(error.message || "")) {
-  const retry = await supabase
-    .from("leads")
-    .insert([baseInsertPayload])
-    .select()
-    .single()
-  leadData = retry.data
-  error = retry.error
-}
+if (!response.ok) {
+  let message = isDe ? "Lead konnte nicht erstellt werden." : "Failed to create lead."
+  try {
+    const payload = (await response.json()) as { error?: string }
+    if (payload.error) {
+      message = payload.error
+    }
+  } catch {
+    const text = await response.text()
+    if (text) {
+      message = text
+    }
+  }
 
-
-if (error) {
-  setFormError(error.message)
+  setFormError(message)
   setSubmitting(false)
   return
 }
-
-    await supabase.from("activities").insert([
-      {
-        lead_id: leadData.id,
-        
-        user_id: user.id,
-        action: "Lead created",
-        type: "created",
-        
-        
-      },
-    ])
 
     setName("")
     setCompany("")

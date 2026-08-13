@@ -33,6 +33,14 @@ type Props = {
     id:string
   )=>Promise<void>
 
+  editTask:(
+    id:string,
+    updates:{
+      title:string
+      priority:TaskPriority
+      due_date:string | null
+    }
+  )=>Promise<void>
   isDe:boolean
 }
 
@@ -41,6 +49,7 @@ type Props = {
 export default function LeadTasks({
  tasks,
  addTask,
+ editTask,
  toggleTask,
  deleteTask,
  isDe
@@ -209,20 +218,19 @@ text-background
 tasks.map(task=>(
 
 <TaskCard
-key={task.id}
-title={task.title}
-completed={task.completed}
-dueDate={task.due_date}
-priority={task.priority}
-onToggle={
-()=>toggleTask(
-task.id,
-task.completed
-)
-}
-onDelete={
-()=>deleteTask(task.id)
-}
+  key={task.id}
+  id={task.id}
+  title={task.title}
+  completed={task.completed}
+  dueDate={task.due_date}
+  priority={task.priority}
+  onToggle={() =>
+    toggleTask(task.id, task.completed)
+  }
+  onDelete={() =>
+    deleteTask(task.id)
+  }
+  onEdit={editTask}
 />
 
 ))

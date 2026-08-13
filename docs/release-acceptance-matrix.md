@@ -74,6 +74,8 @@ Fill before release:
 1. Run `supabase/schema-health-check.sql` in the production Supabase target and attach result screenshot/log.
 2. Execute full smoke test in production runtime using:
 	- `docs/production-smoke-run-2026-08-04.md`
+	- Release decision is based on `Layer A - Release Blocking Checks`.
+	- `Layer B - Product Maturity Coverage` is recommended and should be tracked, but is not blocking unless explicitly escalated by release commander.
 	Evidence requirement:
 	- PASS/FAIL for each section
 	- Notes for any deviation

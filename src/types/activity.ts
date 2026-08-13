@@ -18,7 +18,7 @@ export type ActivityType =
 export type Activity = {
   id: string
   workspace_id?: string | null
-  lead_id: string
+  lead_id: string | null
   user_id: string
   type: ActivityType
   title?: string | null

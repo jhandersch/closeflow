@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-export type AiFeature = "ai_chat" | "sales_copilot"
+export type AiFeature =
+  | "ai_chat"
+  | "sales_copilot"
+  | "revenue_forecast"
 
 type AiUsageBreakdown = {
   prompt_tokens: number
