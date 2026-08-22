@@ -24,6 +24,15 @@ type ImportIssue = {
   reason: string
   name?: string
   company?: string
+  status?: string
+  value?: string
+  email?: string
+  phone?: string
+  website?: string
+  address?: string
+  source?: string
+  tags?: string
+  notes?: string
 }
 
 const LEAD_FAVORITES_STORAGE_KEY = "closeflow_lead_favorites"
@@ -68,10 +77,23 @@ export default function LeadsPage() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoMessage, setDemoMessage] = useState<string | null>(null)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
   const [importingCsv, setImportingCsv] = useState(false)
   const [importIssues, setImportIssues] = useState<ImportIssue[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!importMessage) return
+
+    const timer = window.setTimeout(() => {
+      setImportMessage(null)
+    }, 10000)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [importMessage])
  
 
   useEffect(() => {
@@ -214,6 +236,7 @@ export default function LeadsPage() {
 
   const importFile = async (file: File) => {
     setImportingCsv(true)
+    setImportMessage(null)
     setDemoMessage(null)
     setImportIssues([])
 
@@ -250,11 +273,12 @@ export default function LeadsPage() {
       const data = (await response.json()) as { inserted?: number; skipped?: number; issues?: ImportIssue[] }
       const issues = Array.isArray(data.issues) ? data.issues : []
       setImportIssues(issues)
-      setDemoMessage(
+      setImportMessage(
         isDe
           ? `Import abgeschlossen. ${data.inserted || 0} Leads hinzugefügt, ${data.skipped || 0} übersprungen${issues.length ? `. ${issues.length} Problem(e) im Bericht verfügbar.` : "."}`
           : `Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
       )
+      
       await refresh()
     } catch (error) {
       setDemoMessage(error instanceof Error ? error.message : (isDe ? "Import fehlgeschlagen." : "Import failed."))
@@ -266,16 +290,46 @@ export default function LeadsPage() {
   const downloadImportIssuesReport = () => {
     if (!importIssues.length) return
 
-    const headers = ["row", "reason", "name", "company"]
+    const headers = [
+  "row",
+  "reason",
+  "name",
+  "company",
+  "status",
+  "value",
+  "email",
+  "phone",
+  "website",
+  "address",
+  "source",
+  "tags",
+  "notes",
+]
     const rows = importIssues.map((issue) => [
       issue.row,
       issue.reason,
       issue.name || "",
       issue.company || "",
+      issue.status || "",
+      issue.value || "",
+      issue.email || "",
+      issue.phone || "",
+      issue.website || "",
+      issue.address || "",
+      issue.source || "",
+      issue.tags || "",
+      issue.notes || "",
     ])
 
-    const csv = [headers.join(","), ...rows.map((row) => row.map(escapeCsv).join(","))].join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const csv = [
+      headers.join(";"),
+      ...rows.map((row) => row.map(escapeCsv).join(";")),
+    ].join("\r\n")
+
+    const blob = new Blob(
+      ["\uFEFF" + csv],
+      { type: "text/csv;charset=utf-8;" }
+    )
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
@@ -481,6 +535,7 @@ if (!response.ok) {
             ) : null}
 
           </div>
+          
         </div>
 
         {error ? (
@@ -573,6 +628,12 @@ if (!response.ok) {
           </div>
 
         </div>
+
+        {importMessage ? (
+  <div className="w-full rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+    {importMessage}
+  </div>
+) : null}
 
         {showForm ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
@@ -1014,6 +1075,10 @@ if (!response.ok) {
                             phone={lead.phone}
                             email={lead.email}
                             onLeadDeleted={() => {
+                              if (leads.length === 1) {
+                                setImportIssues([])
+                              }
+
                               void refresh()
                             }}
                             onStatusChanged={(leadId, newStatus) => {

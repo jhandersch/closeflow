@@ -114,31 +114,27 @@ if (!response.ok) {
 
 
   async function deleteLead(leadId: string) {
-    const { error: taskError } = await supabase
-      .from("tasks")
-      .delete()
-      .eq("lead_id", leadId)
+    const session = await supabase.auth.getSession()
 
-    if (taskError) {
-      throw taskError
-    }
+    const response = await fetch(
+      `/api/leads?id=${encodeURIComponent(leadId)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${
+            session.data.session?.access_token ?? ""
+          }`,
+        },
+      }
+    )
 
-    const { error: activityError } = await supabase
-      .from("activities")
-      .delete()
-      .eq("lead_id", leadId)
+    if (!response.ok) {
+      const body = await response.json().catch(() => null)
 
-    if (activityError) {
-      throw activityError
-    }
-
-    const { error } = await supabase
-      .from("leads")
-      .delete()
-      .eq("id", leadId)
-
-    if (error) {
-      throw error
+      throw new Error(
+        body?.error || "Lead deletion failed"
+      )
     }
   }
 

@@ -26,7 +26,7 @@ type WorkspaceUsageContext = {
 
 const PLAN_LIMITS: Record<PlanTier, Limits> = {
   free: {
-    aiRequestsMonthly: 1,
+    aiRequestsMonthly: 10,
     exportsMonthly: 5,
     teamSeats: 1,
   },

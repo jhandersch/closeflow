@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings2,
+  Trash2,
   UsersRound,
   Workflow,
   Bot,
@@ -101,11 +102,12 @@ export default function Sidebar() {
       ? [{ href: "/billing", label: t("nav.billing", "Abrechnung"), icon: CreditCard }]
       : []),
 
-    ...(isPlatformAdmin
-      ? [{ href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck }]
-      : []),
+        ...(isPlatformAdmin
+        ? [{ href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck }]
+        : []),
 
-    { href: "/settings",      label: t("nav.settings", "Einstellungen"),           icon: Settings2 },
+      { href: "/trash",         label: t("nav.trash", "Papierkorb"),                 icon: Trash2 },
+      { href: "/settings",      label: t("nav.settings", "Einstellungen"),           icon: Settings2 },
   ]
 
   const handleLogout = async () => {

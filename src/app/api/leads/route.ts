@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/route"
 import { runLeadAutomation } from "@/lib/automation"
 import type { Lead } from "@/types"
+import {rateLimit} from "@/lib/rateLimit"
 
 
 export async function GET(req: Request) {
@@ -147,6 +148,35 @@ export async function POST(req: Request) {
         }
       )
 
+    }
+
+    const rateLimitResult = rateLimit(
+      `leads:create:${user.id}`,
+      {
+        limit: 30,
+        windowMs: 60 * 1000,
+      }
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many requests",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.max(
+                1,
+                Math.ceil(
+                  (rateLimitResult.resetAt - Date.now()) / 1000
+                )
+              )
+            ),
+          },
+        }
+      )
     }
 
 
@@ -766,20 +796,51 @@ export async function DELETE(req: Request) {
 
 
 
-    if(!data){
-      return NextResponse.json(
-        {
-          error:"Lead not found"
-        },
-        {
-          status:404
-        }
-      )
+    if (!data) {
+  return NextResponse.json(
+    {
+      error: "Lead not found",
+    },
+    {
+      status: 404,
     }
+  )
+}
 
-    return NextResponse.json({
-      success:true
-    })
+// Activity für Soft Delete erstellen
+const { data: deletedLead } = await supabase
+  .from("leads")
+  .select("name")
+  .eq("id", id)
+  .eq("workspace_id", workspace.id)
+  .single()
+
+const { error: activityError } = await supabase
+  .from("activities")
+  .insert({
+    lead_id: id,
+    workspace_id: workspace.id,
+    user_id: user.id,
+    type: "lead_deleted",
+    action: "lead_deleted",
+    title: "Lead deleted",
+    description: `${deletedLead?.name ?? "Lead"} was moved to the trash`,
+    metadata: {
+      trigger: "lead_actions",
+      action: "soft_delete",
+    },
+  })
+
+if (activityError) {
+  console.error(
+    "CREATE DELETE ACTIVITY ERROR:",
+    activityError
+  )
+}
+
+return NextResponse.json({
+  success: true,
+})
 
 
 
@@ -803,4 +864,120 @@ export async function DELETE(req: Request) {
 
   }
 
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const {
+      supabase,
+      user,
+      error: authError,
+    } = await getRouteUser(req)
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    const url = new URL(req.url)
+    const id = url.searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing id" },
+        { status: 400 }
+      )
+    }
+
+    const { workspace } = await loadWorkspaceForUser(
+      supabase,
+      user.id
+    )
+
+    if (!workspace?.id) {
+      return NextResponse.json(
+        { error: "Workspace required" },
+        { status: 403 }
+      )
+    }
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("leads")
+      .update({
+        deleted_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("workspace_id", workspace.id)
+      .not("deleted_at", "is", null)
+      .select()
+      .maybeSingle()
+
+    if (error) {
+      console.error(
+        "RESTORE LEAD ERROR:",
+        error
+      )
+
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
+  return NextResponse.json(
+    { error: "Deleted lead not found" },
+    { status: 404 }
+  )
+}
+
+// Activity für Restore erstellen
+const { error: activityError } = await supabase
+  .from("activities")
+  .insert({
+    lead_id: id,
+    workspace_id: workspace.id,
+    user_id: user.id,
+    type: "lead_restored",
+    action: "lead_restored",
+    title: "Lead restored",
+    description: `${data.name ?? "Lead"} was restored from the trash`,
+    metadata: {
+      trigger: "lead_actions",
+      action: "restore",
+    },
+  })
+
+if (activityError) {
+  console.error(
+    "CREATE RESTORE ACTIVITY ERROR:",
+    activityError
+  )
+}
+
+return NextResponse.json(data)
+
+  } catch (error) {
+
+    console.error(
+      "RESTORE LEAD CRASH:",
+      error
+    )
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+      { status: 500 }
+    )
+  }
 }

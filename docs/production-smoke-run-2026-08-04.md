@@ -369,82 +369,135 @@ Workspace isolation is enforced through the existing Supabase/workspace access l
 ### A8) Export and Import
 
 Export:
-- [ ] CSV export works
-- [ ] Excel export works (if available)
+- [x] CSV export works
+- [x] Excel export works (if available)
 - [x] workspace isolation preserved (no foreign data)
-PASS: [ ]
+PASS: [x]
 Notes:
+CSV and Excel exports were tested successfully. Exported data respects workspace isolation.
 
 Import:
-- [ ] CSV import accepted
-- [ ] invalid row reporting works
-- [ ] duplicate handling works
-- [ ] update behavior works
-PASS: [ ]
+- [x] CSV import accepted
+- [x] invalid row reporting works
+- [x] duplicate handling works
+- [x] update behavior works
+PASS: [x]
 Notes:
+CSV import, invalid row reporting, duplicate handling, and update behavior were tested successfully.
+
 
 ### A9) Security Gate
 
-- [x] cross-tenant checks remain green
-- [ ] API authorization enforced on protected routes
-- [ ] no obvious XSS vectors in key forms
-- [ ] CSRF protections are effective where applicable
-- [ ] no SQL injection behavior in user input paths
-- [ ] rate limiting or quota behavior works as designed
-PASS: [ ]
+* [x] cross-tenant checks remain green
+* [x] API authorization enforced on protected routes
+* [x] no obvious XSS vectors in key forms
+* [x] CSRF protections are effective where applicable
+* [x] no SQL injection behavior in user input paths
+* [x] rate limiting or quota behavior works as designed
+  PASS: [x]
+
 Notes:
+
+POST /api/leads correctly returned 401 Unauthorized when called without an authenticated session.
+
+Protected API access correctly rejects unauthenticated requests with 401 Unauthorized. XSS payloads in key lead fields were rendered safely without script execution.
+
+CSRF protections were reviewed for applicable protected API routes; same-origin/session requirements prevent unauthorized cross-site state-changing requests.
+
+SQL injection testing against lead input fields did not produce unexpected database behavior; user input is handled through Supabase query methods rather than raw SQL.
+
+Rate limiting was tested by sending 35 consecutive authenticated POST requests to `/api/leads`. The endpoint successfully created 29 leads before returning `429 Too Many Requests`, demonstrating that the configured rate limit is actively enforced and prevents uncontrolled request volume.
+
+
 
 ### A10) Monitoring Window (24-48h)
 
 Observation start:
 Observation end:
 
+### A10) Monitoring Window (24-48h)
+
+Observation start: 2026-08-18
+Observation end: 2026-08-20
+
 Checks:
-- [ ] P0 count = 0
-- [ ] P1 count = 0
-- [ ] API error rate within threshold
-- [ ] no unusual API 500 peaks
-- [ ] no unusual auth error peaks
-- [ ] no unresolved RLS/database isolation errors
-- [ ] no AI error spikes
-- [ ] no critical performance regression alerts
-PASS: [ ]
+
+* [x] P0 count = 0
+* [x] P1 count = 0
+* [x] API error rate within threshold
+* [x] no unusual API 500 peaks
+* [x] no unusual auth error peaks
+* [x] no unresolved RLS/database isolation errors
+* [x] no AI error spikes
+* [x] no critical performance regression alerts
+PASS: [x]
 Notes:
+
+CloseFlow was repeatedly used and observed over approximately 48 hours across multiple development sessions. The local development server was stopped between sessions and restarted when work resumed.
+
+No P0 or P1 incidents were observed. No unusual API 500 errors, authentication failures, RLS/database isolation issues, AI error spikes, or critical performance regressions were encountered during the observation period.
+
+The application remained stable across repeated normal usage sessions.
+
 
 ### A11) Backup and Recovery
 
 - [ ] scheduled database backups verified
 - [ ] point-in-time recovery available
-- [ ] restore procedure documented
+- [x] restore procedure documented
 - [ ] storage backups verified (if applicable)
 
 PASS: [ ]
 Notes:
+Supabase confirms that scheduled project backups are not included on the Free Plan; scheduled backups are available with Pro.
+Point-in-Time Recovery is not available on the current Free Plan and requires the corresponding Pro add-on.
+A database restore procedure can be documented, but an actual restore has not been verified on this plan.
+Storage backup verification is not applicable unless CloseFlow is actively using Supabase Storage buckets for production data.
 
 ### A12) API Smoke
 
-- [ ] authentication endpoints
-- [ ] leads API
-- [ ] customers API
-- [ ] tasks API
-- [ ] calendar API
-- [ ] AI endpoints
-- [ ] export endpoints
-- [ ] import endpoints
+- [x] authentication endpoints
+- [x] leads API
+- [x] customers API
+- [x] tasks API
+- [x] calendar API
+- [x] AI endpoints
+- [x] export endpoints
+- [x] import endpoints
 
-PASS: [ ]
+PASS: [x]
 Notes:
+Authentication and protected API access were verified successfully.
+Leads, customers, tasks, and calendar endpoints returned successful responses for authenticated requests.
+AI endpoint smoke testing completed successfully.
+Export and import endpoints were previously verified successfully during A8, including workspace isolation and import behavior.
+No unexpected API errors were observed during the smoke tests.
+
 
 ### A13) Data Integrity
 
-- [ ] no orphaned records
-- [ ] foreign keys enforced
-- [ ] soft delete works
-- [ ] restore works
-- [ ] duplicate prevention works
+- [x] no orphaned records
+- [x] foreign keys enforced
+- [x] soft delete works
+- [x] restore works
+- [x] duplicate prevention works
 
-PASS: [ ]
+PASS: [x]
+
 Notes:
+
+Foreign-key constraints are enforced for workspace-related records.
+
+No orphaned records were detected.
+
+Soft delete correctly sets `deleted_at`.
+
+Restore correctly resets `deleted_at` to null.
+
+Duplicate prevention was tested and behaved as designed.
+
+Delete and restore actions are correctly recorded in the activity timeline as `lead_deleted` and `lead_restored`.
+
 
 ### A14) Deployment Verification
 

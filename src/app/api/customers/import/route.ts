@@ -6,6 +6,7 @@ type ImportIssue = {
   reason: string
   company: string
   contact: string
+  
 }
 
 const MAX_ISSUES_RETURNED = 500
