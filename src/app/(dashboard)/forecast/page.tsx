@@ -37,6 +37,9 @@ export default function ForecastPage() {
           averageProbability={forecast.averageProbability}
           activeDeals={forecast.activeDeals}
           singleDealRisk={forecast.singleDealRisk}
+          dealsWithNextAction={forecast.dealsWithNextAction}
+          dealsWithoutNextAction={forecast.dealsWithoutNextAction}
+          nextActionCoverage={forecast.nextActionCoverage}
         />
         <RevenueForecastChart data={forecastSeries} />
         <RevenueForecastAI insight={insight} loading={insightLoading} error={insightError} />
