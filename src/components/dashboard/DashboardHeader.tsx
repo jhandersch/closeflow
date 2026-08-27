@@ -4,11 +4,12 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
+import type { ForecastSummary } from "@/types/forecast"
 
 const DASHBOARD_NAME_CACHE_KEY = "closeflow_dashboard_name"
 
 type DashboardHeaderProps = {
-  forecast: number
+  forecast: ForecastSummary
   userName?: string
   totalLeads: number
   pipelineValue: number
@@ -300,7 +301,7 @@ export default function DashboardHeader({
             text-foreground
             "
           >
-            €{Math.round(forecast).toLocaleString(locale)}
+            €{Math.round(forecast.weightedRevenue).toLocaleString(locale)}
           </p>
 
 

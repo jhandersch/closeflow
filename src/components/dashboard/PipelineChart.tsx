@@ -235,15 +235,9 @@ export default function PipelineChart({
                 borderRadius:"12px",
               }}
 
-              formatter={(value)=>[
-                `${value} ${t(
-                  "dashboard.deals",
-                  "deals"
-                )}`,
-                t(
-                  "dashboard.pipeline",
-                  "Pipeline"
-                )
+              formatter={(value) => [
+                `${value} ${t("dashboard.deals", "deals")}`,
+                t("dashboard.deals", "Deals"),
               ]}
 
             />

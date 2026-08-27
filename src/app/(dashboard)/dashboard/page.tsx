@@ -30,7 +30,6 @@ import { useAIInsight } from "@/hooks/useAIInsight"
 import { useForecastAI } from "@/hooks/useForecastAI"
 import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI"
 
-import { calculateForecast } from "@/lib/forecast"
 import { loadDemoData } from "@/lib/demoData"
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
@@ -39,6 +38,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 export default function DashboardPage() {
 
   const { language, t } = useAppPreferences()
+  const isDe = language === "de"
 
   const {
     leads,
@@ -52,6 +52,8 @@ export default function DashboardPage() {
 
   const metrics = useDashboardMetrics(leads)
 
+  const forecast = metrics.forecastData
+
   const {
     summary: taskSummary,
     loading: tasksLoading,
@@ -59,20 +61,11 @@ export default function DashboardPage() {
 
 
 
-  const forecast = useMemo(
-  () => calculateForecast(leads),
-  [leads]
-)
-
-
-
   const {
     analysis: forecastAnalysis,
     loading: forecastLoading,
   } = useForecastAI(
-    forecast.pipelineValue,
-    forecast.weightedRevenue,
-    forecast.revenueAtRisk,
+    forecast,
     leads,
     language
   )
@@ -419,25 +412,19 @@ export default function DashboardPage() {
 
 
         <RevenueForecast
-
           pipelineValue={forecast.pipelineValue}
-
           weightedRevenue={forecast.weightedRevenue}
-
           revenueAtRisk={forecast.revenueAtRisk}
-
           commitRevenue={forecast.commitRevenue}
-
           bestCaseRevenue={forecast.bestCaseRevenue}
-
           confidence={forecast.confidence}
-
           averageHealth={forecast.averageHealth}
-
           averageProbability={forecast.averageProbability}
-
           activeDeals={forecast.activeDeals}
-
+          singleDealRisk={forecast.singleDealRisk}
+          dealsWithNextAction={forecast.dealsWithNextAction}
+          dealsWithoutNextAction={forecast.dealsWithoutNextAction}
+          nextActionCoverage={forecast.nextActionCoverage}
         />
 
 
@@ -485,6 +472,8 @@ export default function DashboardPage() {
         <RevenueForecastAI
 
           insight={revenueInsight}
+
+          isDe={isDe}
 
           loading={revenueInsightLoading}
 

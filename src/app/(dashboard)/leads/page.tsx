@@ -71,6 +71,8 @@ export default function LeadsPage() {
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [website, setWebsite] = useState("")
+  const [nextAction, setNextAction] = useState("")
+  const [nextActionDate, setNextActionDate] = useState("")
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [view, setView] = useState<"list" | "pipeline">("list")
@@ -399,6 +401,10 @@ const extendedInsertPayload = {
   phone: phone.trim() || null,
   address: address.trim() || null,
   website: website.trim() || null,
+  next_action: nextAction.trim() || null,
+  next_action_date: nextActionDate
+    ? new Date(nextActionDate).toISOString()
+    : null,
 }
 
 const response = await fetch("/api/leads", {
@@ -437,6 +443,8 @@ if (!response.ok) {
     setPhone("")
     setAddress("")
     setWebsite("")
+    setNextAction("")
+    setNextActionDate("")
     setLeadStatus("new")
     setShowForm(false)
     setSubmitting(false)
@@ -722,6 +730,24 @@ if (!response.ok) {
                 placeholder={isDe ? "Adresse" : "Address"}
                 className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
               />
+
+              <input
+                value={nextAction}
+                onChange={(event) => setNextAction(event.target.value)}
+                placeholder={
+                  isDe
+                    ? "Nächste Aktion"
+                    : "Next action"
+                }
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
+
+              <input
+                value={nextActionDate}
+                onChange={(event) => setNextActionDate(event.target.value)}
+                type="datetime-local"
+                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
+              />
               <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
@@ -951,9 +977,13 @@ if (!response.ok) {
                               ? "bg-blue-500/20 text-blue-300"
                               : lead.status === "contacted"
                               ? "bg-yellow-500/20 text-yellow-300"
+                              : lead.status === "qualified"
+                              ? "bg-cyan-500/20 text-cyan-300"
                               : lead.status === "proposal"
                               ? "bg-orange-500/20 text-orange-300"
-                              : "bg-green-500/20 text-green-300"
+                              : lead.status === "won"
+                              ? "bg-green-500/20 text-green-300"
+                              : "bg-red-500/20 text-red-300"
                           }`}
                         >
                           {lead.status}

@@ -36,6 +36,7 @@ export default function ForecastPage() {
           averageHealth={forecast.averageHealth}
           averageProbability={forecast.averageProbability}
           activeDeals={forecast.activeDeals}
+          singleDealRisk={forecast.singleDealRisk}
         />
         <RevenueForecastChart data={forecastSeries} />
         <RevenueForecastAI insight={insight} loading={insightLoading} error={insightError} />

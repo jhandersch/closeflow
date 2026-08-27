@@ -110,10 +110,7 @@ export default function RevenueForecastAI({
     )
   }
 
-  const confidence =
-    insight.confidence > 1
-      ? Math.round(insight.confidence)
-      : Math.round(insight.confidence * 100)
+  const confidence = Math.round(insight.confidence)
 
   const healthColor =
     insight.health === "Excellent"

@@ -1,98 +1,554 @@
 import { NextRequest, NextResponse } from "next/server"
 
+type Locale = "de" | "en"
+
+type InsightResponse = {
+  headline: string
+  detail: string
+  actions: string[]
+  confidence: "High" | "Medium" | "Low"
+}
+
 export async function POST(request: NextRequest) {
-  let locale: "de" | "en" = "de"
+  let locale: Locale = "de"
 
   try {
     const payload = await request.json()
-    locale = payload?.language === "en" ? "en" : "de"
-    const apiKey = process.env.OPENAI_API_KEY
+
+    locale =
+      payload?.language === "en"
+        ? "en"
+        : "de"
+
+    const apiKey =
+      process.env.OPENAI_API_KEY
+
+    /*
+     * =========================
+     * FALLBACK
+     * =========================
+     */
+
+    const atRiskDeals =
+      Number(payload?.atRiskDeals || 0)
+
+    const proposalLeads =
+      Number(payload?.proposalLeads || 0)
+
+    const activeDeals =
+      Number(
+        payload?.forecast?.activeDeals || 0
+      )
+
+    const pipelineValue =
+      Number(
+        payload?.forecast?.pipelineValue || 0
+      )
+
+    const averageHealth =
+      Number(
+        payload?.forecast?.averageHealth || 0
+      )
+
+    const averageProbability =
+      Number(
+        payload?.forecast?.averageProbability || 0
+      )
+
+    const revenueAtRisk =
+      Number(
+        payload?.forecast?.revenueAtRisk || 0
+      )
+
+    const nextActionCoverage =
+      activeDeals > 0
+        ? Math.round(
+            (
+              Number(
+                payload?.forecast
+                  ?.dealsWithNextAction || 0
+              ) /
+                activeDeals
+            ) * 100
+          )
+        : 0
+
+    let fallback: InsightResponse
+
+    /*
+     * NO ACTIVE DEALS
+     */
+
+    if (activeDeals === 0) {
+      fallback = {
+        headline:
+          locale === "de"
+            ? "Keine aktiven Opportunities."
+            : "No active opportunities.",
+
+        detail:
+          locale === "de"
+            ? "Deine Pipeline enthält aktuell keine offenen Deals."
+            : "Your pipeline currently contains no open deals.",
+
+        actions:
+          locale === "de"
+            ? [
+                "Erstelle neue Leads.",
+                "Definiere klare nächste Schritte für neue Opportunities.",
+              ]
+            : [
+                "Create new leads.",
+                "Define clear next steps for new opportunities.",
+              ],
+
+        confidence: "High",
+      }
+    }
+
+    /*
+     * AT RISK
+     */
+
+    else if (
+      atRiskDeals > 0 ||
+      revenueAtRisk > 0
+    ) {
+      fallback = {
+        headline:
+          locale === "de"
+            ? "Mehrere Opportunities benötigen Aufmerksamkeit."
+            : "Several opportunities need attention.",
+
+        detail:
+          locale === "de"
+            ? `${atRiskDeals} aktive ${
+                atRiskDeals === 1
+                  ? "Opportunity zeigt"
+                  : "Opportunities zeigen"
+              } erhöhtes Risiko.`
+            : `${atRiskDeals} active ${
+                atRiskDeals === 1
+                  ? "opportunity shows"
+                  : "opportunities show"
+              } elevated risk.`,
+
+        actions:
+          locale === "de"
+            ? [
+                `Prüfe ${atRiskDeals} ${
+                  atRiskDeals === 1
+                    ? "risikobehafteten Deal"
+                    : "risikobehaftete Deals"
+                }.`,
+                "Definiere konkrete nächste Schritte.",
+                "Priorisiere gefährdete Deals mit hohem Umsatzpotenzial.",
+              ]
+            : [
+                `Review the ${atRiskDeals} ${
+                  atRiskDeals === 1
+                    ? "at-risk deal"
+                    : "at-risk deals"
+                }.`,
+                "Define concrete next steps.",
+                "Prioritize at-risk deals with high revenue potential.",
+              ],
+
+        confidence: "High",
+      }
+    }
+
+    /*
+     * LOW NEXT ACTION COVERAGE
+     */
+
+    else if (
+      nextActionCoverage < 50
+    ) {
+      fallback = {
+        headline:
+          locale === "de"
+            ? "Deine Pipeline braucht mehr nächste Schritte."
+            : "Your pipeline needs clearer next actions.",
+
+        detail:
+          locale === "de"
+            ? `Nur ${nextActionCoverage}% der aktiven Deals haben aktuell eine definierte nächste Aktion. Die Pipeline ist gesund, aber fehlende Follow-ups erhöhen das Inaktivitätsrisiko.`
+            : `Only ${nextActionCoverage}% of active deals currently have a defined next action. The pipeline is healthy, but missing follow-ups increase inactivity risk.`,
+
+        actions:
+          locale === "de"
+            ? [
+                "Definiere nächste Aktionen für Deals ohne Follow-up.",
+                "Priorisiere aktive Deals mit hohem Umsatzpotenzial.",
+                proposalLeads > 0
+                  ? "Fasse die Deals in der Angebotsphase zeitnah nach."
+                  : "Halte aktive Opportunities in Bewegung.",
+              ]
+            : [
+                "Define next actions for deals without follow-ups.",
+                "Prioritize active deals with high revenue potential.",
+                proposalLeads > 0
+                  ? "Follow up on deals currently in the proposal stage."
+                  : "Keep active opportunities moving.",
+              ],
+
+        confidence: "High",
+      }
+    }
+
+    /*
+     * PROPOSAL STAGE
+     */
+
+    else if (
+      proposalLeads > 0
+    ) {
+      fallback = {
+        headline:
+          locale === "de"
+            ? "Angebote benötigen Follow-up."
+            : "Proposal-stage opportunities need follow-up.",
+
+        detail:
+          locale === "de"
+            ? `${proposalLeads} aktive ${
+                proposalLeads === 1
+                  ? "Opportunity befindet sich"
+                  : "Opportunities befinden sich"
+              } in der Angebotsphase innerhalb einer Pipeline von €${pipelineValue.toLocaleString(
+                "de-DE"
+              )}.`
+            : `${proposalLeads} active ${
+                proposalLeads === 1
+                  ? "opportunity is"
+                  : "opportunities are"
+              } in the proposal stage within a €${pipelineValue.toLocaleString(
+                "en-US"
+              )} pipeline.`,
+
+        actions:
+          locale === "de"
+            ? [
+                "Fasse die Angebote zeitnah nach.",
+                "Definiere den nächsten konkreten Abschluss-Schritt.",
+                "Überwache die Entwicklung der Proposal-Deals.",
+              ]
+            : [
+                "Follow up on the proposal-stage opportunities.",
+                "Define the next concrete closing step.",
+                "Monitor proposal progression closely.",
+              ],
+
+        confidence: "High",
+      }
+    }
+
+    /*
+     * HEALTHY PIPELINE
+     */
+
+    else {
+      fallback = {
+        headline:
+          locale === "de"
+            ? "Die Pipeline entwickelt sich stabil."
+            : "Pipeline momentum is steady.",
+
+        detail:
+          locale === "de"
+            ? `Deine Pipeline umfasst ${activeDeals} aktive Deals im Wert von €${pipelineValue.toLocaleString(
+                "de-DE"
+              )}, mit einer durchschnittlichen Gesundheit von ${averageHealth}% und einer Abschlusswahrscheinlichkeit von ${averageProbability}%.`
+            : `Your pipeline contains ${activeDeals} active deals worth €${pipelineValue.toLocaleString(
+                "en-US"
+              )}, with an average health of ${averageHealth}% and close probability of ${averageProbability}%.`,
+
+        actions:
+          locale === "de"
+            ? [
+                "Halte aktive Opportunities in Bewegung.",
+                "Definiere klare nächste Schritte für wichtige Deals.",
+              ]
+            : [
+                "Keep active opportunities moving.",
+                "Define clear next steps for important deals.",
+              ],
+
+        confidence:
+          averageHealth >= 75 &&
+          averageProbability >= 60
+            ? "High"
+            : "Medium",
+      }
+    }
+
+    /*
+     * =========================
+     * NO OPENAI KEY
+     * =========================
+     */
 
     if (!apiKey) {
-      return NextResponse.json({
-        headline: locale === "de" ? "Die Pipeline entwickelt sich stabil." : "Pipeline momentum is steady.",
-        detail: payload?.detail ?? (locale === "de" ? "Deine aktuellen Daten zeigen eine aktive und gesunde Pipeline." : "Your current data suggests a healthy, active pipeline."),
-        actions: payload?.actions ?? [],
-        confidence: "Medium",
-      })
+      return NextResponse.json(
+        fallback
+      )
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-5.5-mini",
-        temperature: 0.3,
-        messages: [
-          {
-            role: "system",
-            content: `
-        You are an expert B2B sales strategist.
+    /*
+     * =========================
+     * OPENAI
+     * =========================
+     */
 
-        Analyze the CRM data.
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
 
-        Always return ONLY valid JSON.
+        headers: {
+          Authorization:
+            `Bearer ${apiKey}`,
 
-        Format:
+          "Content-Type":
+            "application/json",
+        },
 
-        {
-          "headline":"...",
-          "detail":"...",
-          "actions":[
-            "...",
-            "...",
-            "..."
+        body: JSON.stringify({
+          model: "gpt-5.5-mini",
+
+          temperature: 0.2,
+
+          response_format: {
+            type: "json_object",
+          },
+
+          messages: [
+            {
+              role: "system",
+
+              content: `
+You are the AI sales intelligence engine inside a professional CRM.
+
+Analyze the provided CRM data and produce a concise dashboard insight.
+
+IMPORTANT:
+You must base every statement and recommendation strictly on the provided data.
+
+NEVER invent customers, deals, values, risks, activities or probabilities.
+
+CRITICAL BUSINESS RULES:
+
+1. Only describe deals as "at risk" when atRiskDeals > 0 OR revenueAtRisk > 0.
+
+2. If atRiskDeals = 0 AND revenueAtRisk = 0:
+   NEVER recommend reviewing at-risk deals.
+
+3. If next action coverage is low:
+   recommend defining next actions and follow-ups.
+
+4. If proposalLeads > 0:
+   proposal-stage deals may be recommended for follow-up.
+
+5. If there are no active deals:
+   recommend creating new opportunities.
+
+6. Prefer actionable recommendations over generic statements.
+
+7. Do not contradict the numerical CRM data.
+
+8. All monetary values are in EURO.
+   ALWAYS use the € symbol.
+   NEVER use "$", "USD", or any other currency.
+
+9. Keep the insight concise.
+
+10. Return ONLY valid JSON.
+
+Required format:
+
+{
+  "headline": "...",
+  "detail": "...",
+  "actions": [
+    "...",
+    "...",
+    "..."
+  ],
+  "confidence": "High | Medium | Low"
+}
+
+Confidence must be exactly one of:
+
+High
+Medium
+Low
+
+Language:
+${locale === "de" ? "German" : "English"}
+`,
+            },
+
+            {
+              role: "user",
+
+              content: JSON.stringify(
+                {
+                  ...payload,
+
+                  derived_metrics: {
+                    nextActionCoverage,
+                  },
+
+                  fallback_reference:
+                    fallback,
+                },
+                null,
+                2
+              ),
+            },
           ],
-          "confidence":"High"
-        }
+        }),
+      }
+    )
 
-        confidence must be one of:
-
-        High
-        Medium
-        Low
-
-        No markdown.
-        No explanations.
-        Only JSON.
-        Keep confidence enum values exactly as High, Medium, Low.
-        Write headline/detail/actions in ${locale === "de" ? "German" : "English"}.
-        `,
-          },
-          {
-            role: "user",
-            content: JSON.stringify(payload),
-          },
-        ],
-      }),
-    })
+    /*
+     * =========================
+     * OPENAI ERROR
+     * =========================
+     */
 
     if (!response.ok) {
-      throw new Error("OpenAI request failed")
+      throw new Error(
+        `OpenAI request failed with status ${response.status}`
+      )
     }
 
-    const data = await response.json()
-    const content = data?.choices?.[0]?.message?.content ?? ""
-    let parsed
+    const data =
+      await response.json()
 
-    try {
-      parsed = JSON.parse(content)
-    } catch {
-      throw new Error("Invalid AI JSON")
+    const content =
+      data?.choices?.[0]?.message?.content
+
+    if (!content) {
+      throw new Error(
+        "No AI response"
+      )
     }
 
-    return NextResponse.json(parsed)
-  } catch {
+    const parsed =
+      JSON.parse(content)
+
+    /*
+     * =========================
+     * VALIDATE AI RESPONSE
+     * =========================
+     */
+
+    const validConfidence = [
+      "High",
+      "Medium",
+      "Low",
+    ]
+
+    const confidence =
+      validConfidence.includes(
+        parsed?.confidence
+      )
+        ? parsed.confidence
+        : fallback.confidence
+
+    const actions =
+      Array.isArray(
+        parsed?.actions
+      )
+        ? parsed.actions
+            .filter(
+              (action: unknown) =>
+                typeof action ===
+                "string"
+            )
+            .slice(0, 3)
+        : fallback.actions
+
+    /*
+     * Safety check:
+     * If there are no at-risk deals,
+     * remove any AI recommendation
+     * that incorrectly mentions risk.
+     */
+
+    const safeActions =
+      atRiskDeals === 0 &&
+      revenueAtRisk === 0
+        ? actions.filter(
+            (action: string) =>
+              !/at.?risk|risiko|risk/i.test(
+                action
+              )
+          )
+        : actions
+
+    /*
+     * If the AI returned no usable
+     * actions after validation,
+     * use our deterministic fallback.
+     */
+
+    if (
+      !parsed?.headline ||
+      !parsed?.detail ||
+      safeActions.length === 0
+    ) {
+      return NextResponse.json(
+        fallback
+      )
+    }
+
     return NextResponse.json({
-      headline: locale === "de" ? "Die Pipeline entwickelt sich stabil." : "Pipeline momentum is steady.",
-      detail: locale === "de" ? "Deine CRM-Daten sind gesund und bereit für Follow-ups." : "Your CRM data looks healthy and ready for follow-up.",
+      headline:
+        String(parsed.headline),
+
+      detail:
+        String(parsed.detail),
+
+      actions:
+        safeActions,
+
+      confidence,
+    })
+  } catch (error) {
+    console.error(
+      "AI INSIGHT ERROR:",
+      error
+    )
+
+    /*
+     * Minimal safe fallback
+     */
+
+    return NextResponse.json({
+      headline:
+        locale === "de"
+          ? "Pipeline-Analyse verfügbar"
+          : "Pipeline analysis available",
+
+      detail:
+        locale === "de"
+          ? "Deine aktuellen CRM-Daten wurden analysiert."
+          : "Your current CRM data has been analyzed.",
+
       actions:
         locale === "de"
-          ? ["Fasse Leads in der Angebotsphase nach.", "Prüfe risikobehaftete Deals mit niedrigem Health-Score."]
-          : ["Follow up on leads in the proposal stage.", "Review at-risk deals with a low health score."],
+          ? [
+              "Prüfe deine wichtigsten aktiven Opportunities.",
+              "Definiere klare nächste Schritte.",
+            ]
+          : [
+              "Review your most important active opportunities.",
+              "Define clear next steps.",
+            ],
+
       confidence: "Medium",
     })
   }

@@ -7,6 +7,7 @@ import {
   analyzeLead,
 } from "@/lib/scoring"
 import type { Lead } from "@/types"
+import type { ForecastSummary } from "@/types/forecast"
 
 type ForecastAI = {
   summary: string
@@ -16,9 +17,7 @@ type ForecastAI = {
 }
 
 export function useForecastAI(
-  pipelineValue: number,
-  weightedRevenue: number,
-  revenueAtRisk: number,
+  forecast: ForecastSummary,
   leads: Lead[],
   language: "de" | "en" = "de"
 ) {
@@ -89,20 +88,11 @@ export function useForecastAI(
           .slice(0, 20)
 
         /*
-         * Forecast coverage
-         */
-
-        const pipelineCoverage =
-          pipelineValue > 0
-            ? Math.round(
-                (weightedRevenue /
-                  pipelineValue) *
-                  100
-              )
-            : 0
-
-        /*
          * API request
+         *
+         * Send the canonical calculateForecast()
+         * output as-is so the AI sees the exact
+         * same numbers shown in the UI.
          */
 
         const res =
@@ -119,15 +109,7 @@ export function useForecastAI(
               body: JSON.stringify({
                 language,
 
-                forecast: {
-                  pipelineValue,
-
-                  weightedRevenue,
-
-                  revenueAtRisk,
-
-                  pipelineCoverage,
-                },
+                forecast,
 
                 leads:
                   analyzedLeads,
@@ -239,9 +221,15 @@ export function useForecastAI(
     }
   }, [
     language,
-    pipelineValue,
-    weightedRevenue,
-    revenueAtRisk,
+    forecast.pipelineValue,
+    forecast.weightedRevenue,
+    forecast.revenueAtRisk,
+    forecast.commitRevenue,
+    forecast.bestCaseRevenue,
+    forecast.confidence,
+    forecast.averageHealth,
+    forecast.averageProbability,
+    forecast.activeDeals,
     leads,
   ])
 

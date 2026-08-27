@@ -2,15 +2,8 @@ import { useMemo } from "react"
 import { generateDashboardInsight } from "@/lib/openai"
 import { analyzeLead, getHealthScore } from "@/lib/scoring"
 import type { Lead } from "@/types"
+import { calculateForecast } from "@/lib/forecast"
 
-const stageWeights: Record<string, number> = {
-  new: 0.1,
-  contacted: 0.3,
-  qualified: 0.5,
-  proposal: 0.7,
-  won: 1,
-  lost: 0,
-}
 
 const stageOrder = [
   "new",
@@ -21,14 +14,6 @@ const stageOrder = [
   "lost",
 ] as const
 
-const monthLabel = (date: Date) =>
-  date.toLocaleDateString("de-DE", {
-    month: "short",
-    year: "2-digit",
-  })
-
-const monthKey = (date: Date) =>
-  `${date.getFullYear()}-${date.getMonth()}`
 
 export function useDashboardMetrics(leads: Lead[]) {
   return useMemo(() => {
@@ -80,19 +65,15 @@ export function useDashboardMetrics(leads: Lead[]) {
      * WEIGHTED FORECAST
      */
 
-    const forecast = openLeads.reduce(
-      (sum, lead) => {
-        const weight =
-          stageWeights[lead.status] ?? 0
+    const forecastData = calculateForecast(leads)
 
-        return (
-          sum +
-          (lead.value || 0) * weight
-        )
-      },
-      0
-    )
+    const forecast = forecastData
 
+    const forecastTrend =
+      forecastData.monthlyForecast.map((item) => ({
+        month: item.month,
+        value: Math.round(item.value),
+      }))
     /*
      * PIPELINE DATA
      */
@@ -105,15 +86,19 @@ export function useDashboardMetrics(leads: Lead[]) {
       (lead) => lead.status === "contacted"
     )
 
-    const highValueDeals = leads.filter(
-      (lead) => (lead.value || 0) >= 5000
-    )
+    const highValueDeals = openLeads.filter(
+    (lead) => (lead.value || 0) >= 5000
+  )
 
     /*
      * HEALTH / RISK
+     *
+     * Scoped to active (open) deals only, so
+     * this stays consistent with RevenueForecast's
+     * active-deal health/probability averages.
      */
 
-    const atRiskDeals = leads
+    const atRiskDeals = openLeads
       .filter(
         (lead) =>
           getHealthScore(lead) < 50
@@ -124,14 +109,14 @@ export function useDashboardMetrics(leads: Lead[]) {
           (a.value || 0)
       )
 
-    const healthyLeadCount = leads.filter(
+    const healthyLeadCount = openLeads.filter(
       (lead) =>
         getHealthScore(lead) >= 70
     ).length
 
     const watchlistCount = Math.max(
       0,
-      total -
+      openPipeline -
         healthyLeadCount -
         atRiskDeals.length
     )
@@ -180,282 +165,15 @@ export function useDashboardMetrics(leads: Lead[]) {
 
     /*
      * MONTH BUCKETS
-     *
-     * Last 6 months.
      */
 
-    const monthBuckets = Array.from(
-      { length: 6 }
-    ).map((_, index) => {
-      const date = new Date()
-
-      date.setMonth(
-        date.getMonth() -
-          (5 - index)
-      )
-
-      date.setHours(
-        0,
-        0,
-        0,
-        0
-      )
-
-      return {
-        key: monthKey(date),
-        month: monthLabel(date),
-        value: 0,
-      }
-    })
-
-    /*
+      /*
      * WON DEALS
-     *
-     * IMPORTANT:
-     * Declare wonLeads BEFORE using it.
      */
 
     const wonLeads = leads.filter(
-      (lead) =>
-        lead.status === "won"
+      (lead) => lead.status === "won"
     )
-
-    /*
-     * HISTORICAL WON REVENUE
-     */
-
-    const wonRevenueByMonth =
-      new Map<string, number>()
-
-    wonLeads.forEach((lead) => {
-      const closeDate = new Date(
-        lead.stage_changed_at ||
-          lead.updated_at ||
-          lead.created_at
-      )
-
-      const key =
-        monthKey(closeDate)
-
-      const current =
-        wonRevenueByMonth.get(key) ||
-        0
-
-      wonRevenueByMonth.set(
-        key,
-        current + (lead.value || 0)
-      )
-    })
-
-/*
- * FORECAST MOMENTUM
- *
- * Past:
- *   Actual won revenue
- *
- * Future:
- *   Weighted open pipeline
- *
- * Deals with expected_close_at are placed
- * into their expected closing month.
- *
- * Deals without expected_close_at use a
- * stage-based fallback.
- */
-
-const weightedPipeline =
-  openLeads.reduce(
-    (sum, lead) => {
-      const weight =
-        stageWeights[lead.status] ?? 0
-
-      return (
-        sum +
-        (lead.value || 0) * weight
-      )
-    },
-    0
-  )
-
-/*
- * Future forecast revenue by month
- */
-
-const forecastRevenueByMonth =
-  new Map<string, number>()
-
-const now = new Date()
-
-now.setDate(1)
-now.setHours(0, 0, 0, 0)
-
-openLeads.forEach((lead) => {
-  const weight =
-    stageWeights[lead.status] ?? 0
-
-  const weightedValue =
-    (lead.value || 0) * weight
-
-  if (weightedValue <= 0) {
-    return
-  }
-
-  let forecastDate: Date
-
-  /*
-   * Best case:
-   * Use the actual expected close date.
-   */
-
-  if (lead.expected_close_at) {
-    forecastDate =
-      new Date(
-        lead.expected_close_at
-      )
-  } else {
-    /*
-     * Fallback based on pipeline stage.
-     *
-     * New        → +3 months
-     * Contacted  → +2 months
-     * Qualified  → +2 months
-     * Proposal   → +1 month
-     */
-
-    const monthsToClose =
-      lead.status === "proposal"
-        ? 1
-        : lead.status === "qualified"
-        ? 2
-        : lead.status === "contacted"
-        ? 2
-        : 3
-
-    forecastDate =
-      new Date(now)
-
-    forecastDate.setMonth(
-      forecastDate.getMonth() +
-        monthsToClose
-    )
-  }
-
-  /*
-   * If the expected close date is already
-   * in the past, put the deal into the
-   * current month.
-   */
-
-  if (
-    forecastDate.getTime() <
-    now.getTime()
-  ) {
-    forecastDate =
-      new Date(now)
-  }
-
-  forecastDate.setDate(1)
-  forecastDate.setHours(0, 0, 0, 0)
-
-  const key =
-    monthKey(forecastDate)
-
-  forecastRevenueByMonth.set(
-    key,
-    (forecastRevenueByMonth.get(key) || 0) +
-      weightedValue
-  )
-})
-
-/*
- * Build 6-month momentum timeline.
- *
- * 2 historical months
- * +
- * current month
- * +
- * 3 forecast months
- */
-
-const forecastTrend =
-  Array.from({ length: 6 }).map(
-    (_, index) => {
-      const date =
-        new Date(now)
-
-      date.setMonth(
-        now.getMonth() -
-          2 +
-          index
-      )
-
-      date.setDate(1)
-
-      const key =
-        monthKey(date)
-
-      const historicalRevenue =
-        wonRevenueByMonth.get(key) || 0
-
-      const futureRevenue =
-        forecastRevenueByMonth.get(key) || 0
-
-      const isPast =
-        date.getTime() <
-        now.getTime()
-
-      return {
-        month:
-          monthLabel(date),
-
-        value:
-          Math.round(
-            isPast
-              ? historicalRevenue
-              : historicalRevenue +
-                  futureRevenue
-          ),
-      }
-    }
-  )
-
-    const statusChartData = [
-      {
-        name: "New",
-        value: leads.filter(
-          (lead) =>
-            lead.status === "new"
-        ).length,
-      },
-
-      {
-        name: "Contacted",
-        value: contactedLeads.length,
-      },
-
-      {
-        name: "Qualified",
-        value: leads.filter(
-          (lead) =>
-            lead.status === "qualified"
-        ).length,
-      },
-
-      {
-        name: "Proposal",
-        value: proposalLeads.length,
-      },
-
-      {
-        name: "Won",
-        value: won,
-      },
-
-      {
-        name: "Lost",
-        value: lost,
-      },
-    ]
 
     /*
      * DEAL VALUE
@@ -463,12 +181,10 @@ const forecastTrend =
 
     const averageDealValue =
       won > 0
+        ? Math.round(revenue / won)
+        : openPipeline > 0
         ? Math.round(
-            revenue / won
-          )
-        : total > 0
-        ? Math.round(
-            pipelineValue / total
+            pipelineValue / openPipeline
           )
         : 0
 
@@ -476,35 +192,25 @@ const forecastTrend =
      * SALES CYCLE
      */
 
-    const wonCycleDays =
-      wonLeads.map((lead) => {
-        const created =
-          new Date(
+    const wonCycleDays = wonLeads.map((lead) => {
+      const created =
+        new Date(lead.created_at).getTime()
+
+      const closed =
+        new Date(
+          lead.stage_changed_at ||
+            lead.updated_at ||
             lead.created_at
-          ).getTime()
+        ).getTime()
 
-        const closed =
-          new Date(
-            lead.stage_changed_at ||
-              lead.updated_at ||
-              lead.created_at
-          ).getTime()
-
-        return Math.max(
-          0,
-          Math.round(
-            (
-              closed - created
-            ) /
-              (
-                1000 *
-                60 *
-                60 *
-                24
-              )
-          )
+      return Math.max(
+        0,
+        Math.round(
+          (closed - created) /
+            (1000 * 60 * 60 * 24)
         )
-      })
+      )
+    })
 
     const averageSalesCycle =
       wonCycleDays.length > 0
@@ -512,8 +218,7 @@ const forecastTrend =
             wonCycleDays.reduce(
               (a, b) => a + b,
               0
-            ) /
-              wonCycleDays.length
+            ) / wonCycleDays.length
           )
         : 0
 
@@ -525,8 +230,7 @@ const forecastTrend =
       wonOrLost > 0
         ? Number(
             (
-              (won /
-                wonOrLost) *
+              (won / wonOrLost) *
               100
             ).toFixed(1)
           )
@@ -540,8 +244,7 @@ const forecastTrend =
       revenue > 0
         ? Number(
             (
-              pipelineValue /
-              revenue
+              pipelineValue / revenue
             ).toFixed(1)
           )
         : 0
@@ -552,9 +255,11 @@ const forecastTrend =
 
     const insight =
       generateDashboardInsight({
+
+    
         leads,
         revenue,
-        forecast,
+        forecast: forecast,
         proposalLeads:
           proposalLeads.length,
         atRiskDeals:
@@ -562,6 +267,44 @@ const forecastTrend =
         highValueDeals:
           highValueDeals.length,
       })
+
+    /*
+   * =========================
+   * SINGLE DEAL CONCENTRATION
+   * =========================
+   *
+   * Measures how dependent the
+   * active pipeline is on its
+   * largest opportunity.
+   */
+
+  let largestActiveDeal = 0
+
+  for (const lead of leads) {
+    if (
+      lead.status === "won" ||
+      lead.status === "lost"
+    ) {
+      continue
+    }
+
+    const value = Number(
+      lead.value || 0
+    )
+
+    if (value > largestActiveDeal) {
+      largestActiveDeal = value
+    }
+  }
+
+  const singleDealRisk =
+    pipelineValue > 0
+      ? Math.round(
+          (largestActiveDeal /
+            pipelineValue) *
+            100
+        )
+      : 0
 
     /*
      * RETURN
@@ -580,7 +323,14 @@ const forecastTrend =
 
       revenue,
 
+      /*
+      * Weighted forecast value.
+      * The complete canonical forecast is available
+      * through forecastData.
+      */
       forecast,
+
+      forecastData,
 
       proposalLeads,
 
@@ -597,18 +347,58 @@ const forecastTrend =
       priorityDeals,
 
       /*
-       * IMPORTANT:
-       * This is now the real Forecast Momentum
-       * data used by RevenueForecastChart.
+       * Forecast chart
        */
-      forecastTrend,
 
-      statusChartData,
+      forecastTrend,
+      singleDealRisk,
+
+      /*
+       * Pipeline chart
+       */
+
+      statusChartData: [
+        {
+          name: "New",
+          value: leads.filter(
+            (lead) =>
+              lead.status === "new"
+          ).length,
+        },
+
+        {
+          name: "Contacted",
+          value: contactedLeads.length,
+        },
+
+        {
+          name: "Qualified",
+          value: leads.filter(
+            (lead) =>
+              lead.status === "qualified"
+          ).length,
+        },
+
+        {
+          name: "Proposal",
+          value: proposalLeads.length,
+        },
+
+        {
+          name: "Won",
+          value: won,
+        },
+
+        {
+          name: "Lost",
+          value: lost,
+        },
+      ],
 
       winRate:
-        total > 0
+        wonOrLost > 0
           ? (
-              (won / total) *
+              (won / wonOrLost) *
               100
             ).toFixed(1)
           : "0",
@@ -628,7 +418,7 @@ const forecastTrend =
         Math.max(
           0,
           Math.round(
-            forecast -
+            forecast.weightedRevenue -
               revenue
           )
         ),
@@ -638,9 +428,10 @@ const forecastTrend =
       insight,
 
       currentMonthRevenue:
-        forecastTrend[
-          forecastTrend.length - 1
+        forecastData.monthlyForecast[
+          forecastData.monthlyForecast.length - 1
         ]?.value || 0,
     }
   }, [leads])
 }
+    

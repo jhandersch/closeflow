@@ -501,24 +501,63 @@ Delete and restore actions are correctly recorded in the activity timeline as `l
 
 ### A14) Deployment Verification
 
-- [ ] latest commit deployed
-- [ ] environment variables loaded
-- [ ] production build hash correct
+- [x] latest commit deployed
+- [x] environment variables loaded
+- [x] production build successful
+- [x] production deployment ready
+- [x] production URL accessible
 - [ ] build version visible (if available)
-- [ ] rollback procedure documented
+- [x] rollback procedure documented
 
-PASS: [ ]
+PASS: [x]
+
 Notes:
+
+Production deployment was successfully verified on Vercel.
+
+The latest production commit was deployed successfully:
+9f8c4a5 - fix: make forecast ai production safe
+
+The production build completed successfully with:
+npm run build
+
+Next.js 16.2.6 production build completed without errors.
+
+Vercel reported the deployment as READY and assigned the production
+alias:
+
+https://closeflow-green.vercel.app
+
+Production environment variables were loaded successfully.
+
+The application was manually verified in the production environment
+and the previously completed production smoke tests remained valid.
+
+Build version visibility is not currently implemented as a dedicated
+in-app version indicator.
+
+Rollback can be performed by redeploying a previously known-good
+Vercel deployment or reverting the corresponding Git commit and
+deploying the resulting main branch.
+
 
 ### A15) Observability
 
-- [ ] health endpoint reachable
-- [ ] monitoring dashboards online
+- [x] health endpoint reachable
+- [x] monitoring dashboards online
 - [ ] alerting works
-- [ ] error reporting active
+- [x] error reporting active
 
 PASS: [ ]
+
 Notes:
+
+Production health endpoint verified successfully.
+Monitoring dashboard successfully displays workspace-scoped application errors.
+Error reporting is active and captures client, server and API errors.
+
+Automated alerting has not yet been implemented/verified.
+
 
 ## Layer B - Product Maturity Coverage (Recommended)
 
@@ -526,14 +565,14 @@ These checks are not strict release blockers unless explicitly flagged by releas
 
 ### B1) Dashboard
 
-- [ ] KPI cards correct
-- [ ] charts correct
-- [ ] forecast correct
-- [ ] AI insight correct
-- [ ] priority deals correct
-- [ ] revenue trend correct
-- [ ] activity feed correct
-PASS: [ ]
+- [x] KPI cards correct
+- [x] charts correct
+- [x] forecast correct
+- [x] AI insight correct
+- [x] priority deals correct
+- [x] revenue trend correct
+- [x] activity feed correct
+PASS: [x]
 Notes:
 
 ### B2) Leads

@@ -15,6 +15,7 @@ type LeadPayload = {
   stage_changed_at?: string | null
   notes?: string | null
   next_action?: string | null
+  next_action_due?: string | null
 }
 
 type ForecastPayload = {
@@ -27,6 +28,10 @@ type ForecastPayload = {
   averageHealth?: number
   averageProbability?: number
   activeDeals?: number
+  singleDealRisk?: number
+  dealsWithNextAction?: number
+  dealsWithoutNextAction?: number
+  nextActionCoverage?: number
   pipelineCoverage?: number
 }
 
@@ -43,11 +48,17 @@ type RevenueForecastAIResponse = {
 }
 
 function fallbackInsight(
-  locale: "de" | "en"
+  locale: "de" | "en",
+  forecastConfidence?: number
 ): RevenueForecastAIResponse {
+  const confidence =
+    typeof forecastConfidence === "number"
+      ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
+      : 20
+
   if (locale === "en") {
     return {
-      confidence: 20,
+      confidence,
       health: "Warning",
       headline: "Revenue analysis temporarily unavailable",
       summary:
@@ -67,7 +78,7 @@ function fallbackInsight(
   }
 
   return {
-    confidence: 20,
+    confidence,
     health: "Warning",
     headline: "Umsatzanalyse momentan nicht verfügbar",
     summary:
@@ -88,7 +99,9 @@ function fallbackInsight(
 
 function normalizeResponse(
   value: Partial<RevenueForecastAIResponse>,
-  locale: "de" | "en"
+  locale: "de" | "en",
+  forecastConfidence?: number,
+  forecastSingleDealRisk?: number
 ): RevenueForecastAIResponse {
   const validHealth =
     value.health === "Excellent" ||
@@ -99,13 +112,20 @@ function normalizeResponse(
       : "Warning"
 
   return {
+    /*
+     * Confidence is authoritative from calculateForecast();
+     * the model's own confidence guess is never used when
+     * a forecast confidence value was supplied.
+     */
     confidence:
-      typeof value.confidence === "number"
-        ? Math.max(
-            0,
-            Math.min(100, value.confidence)
-          )
-        : 50,
+      typeof forecastConfidence === "number"
+        ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
+        : typeof value.confidence === "number"
+          ? Math.max(
+              0,
+              Math.min(100, value.confidence)
+            )
+          : 50,
 
     health: validHealth,
 
@@ -155,20 +175,36 @@ function normalizeResponse(
         : "",
 
     singleDealRisk:
-      typeof value.singleDealRisk === "number"
-        ? Math.max(
-            0,
-            Math.min(
-              100,
+  typeof forecastSingleDealRisk === "number"
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            forecastSingleDealRisk
+          )
+        )
+      )
+    : typeof value.singleDealRisk === "number"
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
               value.singleDealRisk
             )
           )
-        : 0,
+        )
+      : 0,
   }
 }
 
+
+
 export async function POST(req: Request) {
   const supabase = await createClient()
+
+  
 
   /*
    * AUTHENTICATION
@@ -282,23 +318,56 @@ export async function POST(req: Request) {
      * Prevent unnecessarily large AI requests.
      */
 
-    const leadSummary = leads
+    const formatLead = (lead: LeadPayload) =>
+      [
+        `Lead: ${lead.name ?? "Unknown"}`,
+        `Company: ${lead.company ?? "Unknown"}`,
+        `Stage: ${lead.status ?? "Unknown"}`,
+        `Value: €${Number(
+          lead.value ?? 0
+        )}`,
+        `Notes: ${lead.notes ?? "None"}`,
+        `Next action: ${
+          lead.next_action ?? "None"
+        }`,
+      ].join("\n")
+
+    /*
+     * Won/lost deals are closed revenue, not
+     * active opportunities. Keep them separate
+     * so the AI cannot call a won deal an
+     * "opportunity".
+     */
+
+    const activeLeads = leads
       .slice(0, 20)
-      .map((lead) =>
-        [
-          `Lead: ${lead.name ?? "Unknown"}`,
-          `Company: ${lead.company ?? "Unknown"}`,
-          `Stage: ${lead.status ?? "Unknown"}`,
-          `Value: €${Number(
-            lead.value ?? 0
-          )}`,
-          `Notes: ${lead.notes ?? "None"}`,
-          `Next action: ${
-            lead.next_action ?? "None"
-          }`,
-        ].join("\n")
+      .filter(
+        (lead) =>
+          lead.status !== "won" &&
+          lead.status !== "lost"
       )
-      .join("\n\n")
+
+    const closedLeads = leads
+      .slice(0, 20)
+      .filter(
+        (lead) =>
+          lead.status === "won" ||
+          lead.status === "lost"
+      )
+
+    const activeLeadSummary =
+      activeLeads.length > 0
+        ? activeLeads
+            .map(formatLead)
+            .join("\n\n")
+        : "None"
+
+    const closedLeadSummary =
+      closedLeads.length > 0
+        ? closedLeads
+            .map(formatLead)
+            .join("\n\n")
+        : "None"
 
     /*
      * PROMPT
@@ -320,6 +389,18 @@ Evaluate:
 - biggest opportunities
 - biggest threats
 - recommended actions
+
+The FORECAST numbers below are pre-calculated by the
+system and are ground truth. They are not estimates for
+you to re-derive. Your analysis must be consistent with
+them in every field you return (summary, headline, risks,
+recommendations, pipelineComment). Never state a different
+number of active deals, a different probability, or a
+different health level than what is provided. If
+Active deals is 0, say there are no active deals; if it is
+greater than 0, you must acknowledge that active deals
+exist and reference the given Average health / Average
+probability instead of inventing your own.
 
 FORECAST
 
@@ -348,6 +429,11 @@ Best case revenue:
       forecast.bestCaseRevenue ?? 0
     )}
 
+Forecast confidence:
+${Number(
+  forecast.confidence ?? 0
+)}%
+
 Average health:
 ${Number(
       forecast.averageHealth ?? 0
@@ -363,9 +449,35 @@ ${Number(
       forecast.activeDeals ?? 0
     )}
 
-DEALS
+Deals with next action:
+${Number(
+  forecast.dealsWithNextAction ?? 0
+)}
 
-${leadSummary}
+Deals without next action:
+${Number(
+  forecast.dealsWithoutNextAction ?? 0
+)}
+
+Next action coverage:
+${Number(
+  forecast.nextActionCoverage ?? 0
+)}%
+
+  Single deal concentration risk:
+${Number(
+  forecast.singleDealRisk ?? 0
+)}%
+
+ACTIVE OPPORTUNITIES (open, not won or lost)
+
+${activeLeadSummary}
+
+CLOSED DEALS (won or lost — reference only, these are
+NOT active opportunities and must never be described as
+"the largest opportunity" or similar)
+
+${closedLeadSummary}
 
 Return ONLY valid JSON with exactly this structure:
 
@@ -393,6 +505,14 @@ Rules:
 - Keep the response concise
 - Do not invent deals or numbers
 - Base the analysis only on the supplied data
+- Never contradict the FORECAST values above (active deals, average health, average probability, revenue figures); treat them as factual
+- confidence must equal the FORECAST confidence value above; never calculate or report a different confidence
+- Only deals listed under ACTIVE OPPORTUNITIES may be referred to as an "opportunity", "biggest opportunity", or similar; deals listed under CLOSED DEALS are closed revenue and must only be described as such (e.g. "closed won revenue")
+- singleDealRisk must equal the supplied FORECAST singleDealRisk value
+- Never invent or calculate a different singleDealRisk
+- Never invent or calculate a different nextActionCoverage
+- Never invent or calculate a different number of deals with or without next actions
+- If nextActionCoverage is provided, all statements about next actions must be consistent with it
 
 Language:
 ${
@@ -446,7 +566,7 @@ ${
        */
 
       return NextResponse.json(
-        fallbackInsight(locale),
+        fallbackInsight(locale, forecast.confidence),
         {
           status: 200,
           headers: {
@@ -504,7 +624,7 @@ ${
       )
 
       return NextResponse.json(
-        fallbackInsight(locale),
+        fallbackInsight(locale, forecast.confidence),
         {
           status: 200,
           headers: {
@@ -532,7 +652,7 @@ ${
       )
 
       return NextResponse.json(
-        fallbackInsight(locale),
+        fallbackInsight(locale, forecast.confidence),
         {
           status: 200,
           headers: {
@@ -549,7 +669,9 @@ ${
     const result =
       normalizeResponse(
         parsed,
-        locale
+        locale,
+        forecast.confidence,
+        forecast.singleDealRisk
       )
 
     console.log(

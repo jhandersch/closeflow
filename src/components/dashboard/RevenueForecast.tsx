@@ -2,7 +2,6 @@
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider"
 
-
 type Props = {
   pipelineValue: number
   weightedRevenue: number
@@ -17,9 +16,12 @@ type Props = {
   averageProbability: number
 
   activeDeals: number
+  singleDealRisk: number
+
+  dealsWithNextAction: number
+  dealsWithoutNextAction: number
+  nextActionCoverage: number
 }
-
-
 
 export default function RevenueForecast({
   pipelineValue,
@@ -31,126 +33,113 @@ export default function RevenueForecast({
   averageHealth,
   averageProbability,
   activeDeals,
+  singleDealRisk,
+  dealsWithNextAction,
+  dealsWithoutNextAction,
+  nextActionCoverage,
 }: Props) {
-
-
-  const { t, language } = useAppPreferences()
+  const { language } = useAppPreferences()
 
   const locale =
     language === "de"
       ? "de-DE"
       : "en-US"
 
-
+  const isDe = language === "de"
 
   return (
-
     <section
       className="
-      rounded-2xl
-      border
-      border-border-subtle
-      bg-surface-1
-      p-6
+        rounded-2xl
+        border
+        border-border-subtle
+        bg-surface-1
+        p-6
       "
     >
-
-
       <div
         className="
-        flex
-        flex-col
-        gap-4
-        md:flex-row
-        md:items-center
-        md:justify-between
+          flex
+          flex-col
+          gap-4
+          md:flex-row
+          md:items-center
+          md:justify-between
         "
       >
-
         <div>
-
           <p
             className="
-            text-sm
-            uppercase
-            tracking-widest
-            text-cyan-400
+              text-sm
+              uppercase
+              tracking-widest
+              text-cyan-400
             "
           >
             Revenue Intelligence
           </p>
 
-
           <h2
             className="
-            mt-2
-            text-2xl
-            font-bold
-            text-foreground
+              mt-2
+              text-2xl
+              font-bold
+              text-foreground
             "
           >
             Sales Forecast
           </h2>
 
-
           <p
             className="
-            mt-1
-            text-sm
-            text-foreground/60
+              mt-1
+              text-sm
+              text-foreground/60
             "
           >
-            AI-powered forecast based on pipeline health,
-            activity and deal probability.
+            {isDe
+              ? "KI-basierte Prognose auf Basis von Pipeline-Gesundheit, Aktivität und Abschlusswahrscheinlichkeit."
+              : "AI-powered forecast based on pipeline health, activity and deal probability."}
           </p>
-
         </div>
-
-
 
         <div
           className="
-          rounded-full
-          border
-          border-emerald-500/20
-          bg-emerald-500/10
-          px-4
-          py-2
-          text-sm
-          font-semibold
-          text-emerald-300
+            rounded-full
+            border
+            border-emerald-500/20
+            bg-emerald-500/10
+            px-4
+            py-2
+            text-sm
+            font-semibold
+            text-emerald-300
           "
         >
-
-          {confidence}% confidence
-
+          {confidence}%{" "}
+          {isDe
+            ? "Sicherheit"
+            : "confidence"}
         </div>
-
-
       </div>
 
-
-
-
+      {/* REVENUE METRICS */}
 
       <div
         className="
-        mt-6
-        grid
-        gap-4
-        md:grid-cols-5
+          mt-6
+          grid
+          gap-4
+          md:grid-cols-5
         "
       >
-
-
         <Metric
-          label="Pipeline"
+          label={isDe ? "Pipeline" : "Pipeline"}
           value={formatMoney(
             pipelineValue,
             locale
           )}
         />
-
 
         <Metric
           label="Commit"
@@ -161,7 +150,6 @@ export default function RevenueForecast({
           highlight
         />
 
-
         <Metric
           label="Best Case"
           value={formatMoney(
@@ -170,9 +158,12 @@ export default function RevenueForecast({
           )}
         />
 
-
         <Metric
-          label="Expected"
+          label={
+            isDe
+              ? "Erwartet"
+              : "Expected"
+          }
           value={formatMoney(
             weightedRevenue,
             locale
@@ -180,63 +171,137 @@ export default function RevenueForecast({
           highlight
         />
 
-
         <Metric
-          label="At Risk"
+          label={
+            isDe
+              ? "Risiko"
+              : "At Risk"
+          }
           value={formatMoney(
             revenueAtRisk,
             locale
           )}
           danger
         />
-
-
       </div>
 
+      {/* INTELLIGENCE METRICS */}
 
-
-
-
-      <div
-        className="
+    <div
+      className="
         mt-6
         grid
         gap-4
-        md:grid-cols-3
-        "
-      >
+        md:grid-cols-2
+        xl:grid-cols-3
+      "
+    >
+      <InsightCard
+        title={
+          isDe
+            ? "Pipeline Health"
+            : "Pipeline Health"
+        }
+        value={`${averageHealth}%`}
+        subtitle={
+          isDe
+            ? "Durchschnitt aktiver Deals"
+            : "Average health of active deals"
+        }
+      />
 
+      <InsightCard
+        title={
+          isDe
+            ? "Abschlusswahrscheinlichkeit"
+            : "Close Probability"
+        }
+        value={`${averageProbability}%`}
+        subtitle={
+          isDe
+            ? "Durchschnitt aktiver Deals"
+            : "Average active-deal probability"
+        }
+      />
 
-        <InsightCard
-          title="Pipeline Health"
-          value={`${averageHealth}%`}
-        />
+      <InsightCard
+        title={
+          isDe
+            ? "Aktive Deals"
+            : "Active Deals"
+        }
+        value={String(activeDeals)}
+        subtitle={
+          isDe
+            ? "Offene Opportunities"
+            : "Open opportunities"
+        }
+      />
 
+      <InsightCard
+        title={
+          isDe
+            ? "Deal-Konzentration"
+            : "Deal Concentration"
+        }
+        value={`${singleDealRisk}%`}
+        subtitle={
+          singleDealRisk > 50
+            ? isDe
+              ? "Hohe Konzentration"
+              : "High concentration risk"
+            : singleDealRisk >= 30
+              ? isDe
+                ? "Konzentration beobachten"
+                : "Watch concentration"
+              : isDe
+                ? "Gesunde Verteilung"
+                : "Healthy distribution"
+        }
+        risk={singleDealRisk}
+      />
 
-        <InsightCard
-          title="Close Probability"
-          value={`${averageProbability}%`}
-        />
+      <InsightCard
+        title={
+          isDe
+            ? "Next-Action-Abdeckung"
+            : "Next Action Coverage"
+        }
+        value={`${nextActionCoverage}%`}
+        subtitle={
+          isDe
+            ? `${dealsWithNextAction} von ${activeDeals} aktiven Deals haben eine nächste Aktion`
+            : `${dealsWithNextAction} of ${activeDeals} active deals have a next action`
+        }
+        risk={100 - nextActionCoverage}
+      />
 
-
-        <InsightCard
-          title="Active Deals"
-          value={String(activeDeals)}
-        />
-
-
-      </div>
-
-
+      <InsightCard
+        title={
+          isDe
+            ? "Ohne nächste Aktion"
+            : "Without Next Action"
+        }
+        value={String(dealsWithoutNextAction)}
+        subtitle={
+          isDe
+            ? "Aktive Deals benötigen Follow-up"
+            : "Active deals needing follow-up"
+        }
+        risk={
+          activeDeals > 0
+            ? Math.round(
+                (dealsWithoutNextAction /
+                  activeDeals) *
+                  100
+              )
+            : 0
+        }
+      />
+    </div>
     </section>
-
   )
-
 }
-
-
-
-
 
 function Metric({
   label,
@@ -244,126 +309,128 @@ function Metric({
   highlight,
   danger,
 }: {
-  label:string
-  value:string
-  highlight?:boolean
-  danger?:boolean
+  label: string
+  value: string
+  highlight?: boolean
+  danger?: boolean
 }) {
-
-
   return (
-
     <div
       className={`
-      rounded-xl
-      bg-surface-2/70
-      p-4
-      ${danger ? "border border-red-500/20" : ""}
+        rounded-xl
+        bg-surface-2/70
+        p-4
+        ${danger
+          ? "border border-red-500/20"
+          : ""}
       `}
     >
-
       <p
         className="
-        text-sm
-        text-foreground/55
+          text-sm
+          text-foreground/55
         "
       >
         {label}
       </p>
 
-
       <p
         className={`
-        mt-2
-        text-2xl
-        font-bold
-        ${
-          highlight
-          ? "text-emerald-400"
-          : danger
-          ? "text-red-400"
-          : "text-foreground"
-        }
+          mt-2
+          text-2xl
+          font-bold
+          ${
+            highlight
+              ? "text-emerald-400"
+              : danger
+                ? "text-red-400"
+                : "text-foreground"
+          }
         `}
       >
-
         {value}
-
       </p>
-
-
     </div>
-
   )
-
 }
-
-
-
-
 
 function InsightCard({
   title,
   value,
-}:{
-  title:string
-  value:string
+  subtitle,
+  risk,
+}: {
+  title: string
+  value: string
+  subtitle?: string
+  risk?: number
 }) {
-
+  const riskClass =
+    typeof risk === "number"
+      ? risk >= 60
+        ? "text-red-400"
+        : risk >= 40
+          ? "text-amber-400"
+          : "text-emerald-400"
+      : "text-foreground"
 
   return (
-
     <div
       className="
-      rounded-xl
-      border
-      border-border-subtle
-      bg-surface-2/50
-      p-4
+        rounded-xl
+        border
+        border-border-subtle
+        bg-surface-2/50
+        p-4
       "
     >
-
       <p
         className="
-        text-sm
-        text-foreground/55
+          text-sm
+          text-foreground/55
         "
       >
         {title}
       </p>
 
-
       <p
-        className="
-        mt-2
-        text-3xl
-        font-bold
-        text-foreground
-        "
+        className={`
+          mt-2
+          text-3xl
+          font-bold
+          ${
+            typeof risk === "number"
+              ? riskClass
+              : "text-foreground"
+          }
+        `}
       >
         {value}
       </p>
 
-
+      {subtitle && (
+        <p
+          className="
+            mt-1
+            text-xs
+            text-foreground/45
+          "
+        >
+          {subtitle}
+        </p>
+      )}
     </div>
-
   )
-
 }
 
-
-
-
-
 function formatMoney(
-  value:number,
-  locale:string
-){
-
+  value: number,
+  locale: string
+) {
   return (
     "€" +
-    Math.round(value)
-      .toLocaleString(locale)
+    Math.round(value).toLocaleString(
+      locale
+    )
   )
-
 }

@@ -12,7 +12,17 @@ type InsightInput = {
     notes?: string | null
   }>
   revenue: number
-  forecast: number
+  forecast: {
+    pipelineValue: number
+    weightedRevenue: number
+    revenueAtRisk: number
+    commitRevenue: number
+    bestCaseRevenue: number
+    confidence: number
+    averageHealth: number
+    averageProbability: number
+    activeDeals: number
+  }
   proposalLeads: number
   atRiskDeals: number
   highValueDeals: number
@@ -20,35 +30,47 @@ type InsightInput = {
 
 export function generateDashboardInsight({
   leads,
-  revenue,
   forecast,
   proposalLeads,
   atRiskDeals,
   highValueDeals,
 }: InsightInput): DashboardInsight {
-  const total = leads.length
-  const upside = Math.max(0, Math.round(forecast - revenue))
-  const highValue = highValueDeals > 0
-  const hasRisk = atRiskDeals > 0
-  const hasProposals = proposalLeads > 0
+  const activeLeads = leads.filter(
+    (lead) =>
+      lead.status !== "won" &&
+      lead.status !== "lost"
+  )
 
-  if (total === 0) {
+  const activePipeline = forecast.pipelineValue
+
+  const hasRisk =
+    forecast.revenueAtRisk > 0 ||
+    atRiskDeals > 0
+  const hasProposals = proposalLeads > 0
+  const hasHighValue = highValueDeals > 0
+
+  if (activeLeads.length === 0) {
     return {
-      headline: "Start by adding fresh leads.",
-      detail: "No opportunities are queued yet, so the next step is to grow your pipeline.",
-      actions: ["Add a few new leads to build momentum.", "Tag your next best opportunities with clear follow-up tasks."],
-      confidence: "Medium",
+      headline: "No active opportunities.",
+      detail:
+        "Your pipeline currently has no open deals. Focus on creating new opportunities.",
+      actions: [
+        "Add new leads to rebuild the pipeline.",
+        "Define clear next actions for new opportunities.",
+      ],
+      confidence: "High",
     }
   }
 
-  if (hasProposals && hasRisk) {
+  if (hasRisk) {
     return {
-      headline: "A strong closing window is opening.",
-      detail: `${proposalLeads} deals are in proposal stage and ${atRiskDeals} need immediate follow-up.`,
+      headline: "Several opportunities need attention.",
+      detail:
+        `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
       actions: [
-        `Book ${proposalLeads} follow-up calls this week.`,
-        `Re-engage ${atRiskDeals} low-health opportunities before they stall.`,
-        `Prioritize ${highValueDeals} high-value deals above €5k.`,
+        `Review ${atRiskDeals} at-risk ${atRiskDeals === 1 ? "deal" : "deals"}.`,
+        "Define clear next actions for all active opportunities.",
+        "Prioritize high-value opportunities that are close to advancing.",
       ],
       confidence: "High",
     }
@@ -56,43 +78,56 @@ export function generateDashboardInsight({
 
   if (hasProposals) {
     return {
-      headline: "Your pipeline is warming up.",
-      detail: `You have ${proposalLeads} proposals ready to close, with ${upside}€ of upside versus current revenue.`,
+      headline: "Proposal-stage opportunities need follow-up.",
+      detail:
+      `${proposalLeads} active ${
+        proposalLeads === 1 ? "deal is" : "deals are"
+      } currently in proposal stage within a €${activePipeline.toLocaleString(
+        "de-DE"
+      )} active pipeline. Average close probability is ${
+        forecast.averageProbability
+      }%.`,
       actions: [
-        `Prepare closing messages for ${proposalLeads} active proposals.`,
-        `Focus on ${highValueDeals} high-value opportunities.`,
+        `Follow up on the ${proposalLeads === 1 ? "proposal" : "proposals"}.`,
+        "Define the next action and expected close step.",
+        "Monitor proposal progression closely.",
       ],
-      confidence: "Medium",
+      confidence: "High",
     }
   }
 
-  if (hasRisk) {
+  if (hasHighValue) {
     return {
-      headline: "Several deals need attention.",
-      detail: `${atRiskDeals} active opportunities show low health and may stall without intervention.`,
+      headline: "High-value opportunities are in the pipeline.",
+      detail:
+        `${highValueDeals} active ${highValueDeals === 1 ? "deal exceeds" : "deals exceed"} €5,000 and should receive focused follow-up.`,
       actions: [
-        `Inspect ${atRiskDeals} opportunities that need a health boost.`,
-        `Keep nurturing the highest-value opportunities in your pipeline.`,
+        "Prioritize the highest-value active opportunities.",
+        "Define concrete next actions for each priority deal.",
       ],
-      confidence: "Medium",
-    }
-  }
-
-  if (highValue) {
-    return {
-      headline: "High-value momentum is building.",
-      detail: `Your pipeline includes ${highValueDeals} strong opportunities above €5k.`,
-      actions: ["Prioritize strategic follow-up for premium accounts.", "Prepare tailored closing narratives for your largest deals."],
       confidence: "Medium",
     }
   }
 
   return {
-    headline: "Momentum is steady.",
-    detail: `Your current funnel is converting well and forecasted revenue sits ${upside}€ above closed revenue.`,
+    headline: "Pipeline momentum is steady.",
+    detail:
+      `Your active pipeline contains ${
+        forecast.activeDeals
+      } ${
+        forecast.activeDeals === 1
+          ? "opportunity"
+          : "opportunities"
+      } worth €${activePipeline.toLocaleString(
+        "de-DE"
+      )}, with ${
+        forecast.averageHealth
+      }% average health and ${
+        forecast.averageProbability
+      }% average close probability.`,
     actions: [
-      `Inspect ${atRiskDeals} opportunities that need a health boost.`,
-      `Keep nurturing the highest-value opportunities in your pipeline.`,
+      "Keep active opportunities moving to the next stage.",
+      "Define clear next actions to prevent inactivity.",
     ],
     confidence: "Medium",
   }

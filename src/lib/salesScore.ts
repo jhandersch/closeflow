@@ -138,10 +138,10 @@ export function calculateSalesScore(
 
   let probability =
     Math.round(
-      (valueScore * 0.30) +
-      (currentStageScore * 0.25) +
-      (activityScore * 0.20) +
-      (engagement * 0.15) +
+      (currentStageScore * 0.40) +
+      (activityScore * 0.25) +
+      (engagement * 0.20) +
+      (valueScore * 0.05) +
       ((100 - risk) * 0.10)
     )
 

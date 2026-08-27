@@ -1,18 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
-type ForecastSummary = {
-  pipelineValue: number
-  weightedRevenue: number
-  revenueAtRisk: number
-  commitRevenue: number
-  bestCaseRevenue: number
-  confidence: number
-  averageHealth: number
-  averageProbability: number
-  activeDeals: number
-}
+import type { ForecastSummary } from "@/types/forecast"
 
 type RevenueForecastInsight = {
   confidence: number

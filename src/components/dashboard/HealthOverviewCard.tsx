@@ -43,13 +43,17 @@ export default function HealthOverviewCard({
         <div>
 
           <p className="text-sm text-foreground/65">
-            Pipeline Health
+            Health Overview
           </p>
 
 
           <h2 className="text-lg font-semibold text-foreground">
             AI-powered deal health monitoring
           </h2>
+
+          <p className="mt-1 text-xs text-foreground/50">
+            Based on active pipeline deals only (excludes won/lost)
+          </p>
 
         </div>
 
@@ -69,7 +73,7 @@ export default function HealthOverviewCard({
           "
         >
 
-          {healthPercentage}% healthy
+          {healthPercentage}% of active deals healthy
 
         </div>
 
