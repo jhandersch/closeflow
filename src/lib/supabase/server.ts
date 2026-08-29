@@ -23,6 +23,12 @@ export async function createClient() {
 
   const cookieStore = await cookies()
 
+  console.log("SUPABASE SERVER CLIENT:", {
+  url: supabaseUrl,
+  keyPrefix: getSupabasePublicKey().slice(0, 15),
+  keyLength: getSupabasePublicKey().length,
+})
+
 
   return createServerClient(
     supabaseUrl,
