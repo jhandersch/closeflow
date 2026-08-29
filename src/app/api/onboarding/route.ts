@@ -8,6 +8,8 @@ import {
   loadWorkspaceForUser,
 } from "@/lib/supabase/route"
 
+type QuickStartMode = "lead" | "demo"
+
 export async function POST(request: Request) {
   const supabase = await createClient()
 
@@ -21,10 +23,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
 
   if (userError || !user) {
-    console.error(
-      "ONBOARDING AUTH ERROR:",
-      userError
-    )
+    console.error("ONBOARDING AUTH ERROR:", userError)
 
     return NextResponse.json(
       { error: "Unauthorized" },
@@ -32,15 +31,7 @@ export async function POST(request: Request) {
     )
   }
 
-  console.log(
-    "ONBOARDING USER:",
-    user.id
-  )
-
-  console.log(
-    "ONBOARDING AUTH UID:",
-    user.id
-  )
+  console.log("ONBOARDING USER:", user.id)
 
   try {
     // --------------------------------------------------
@@ -64,6 +55,31 @@ export async function POST(request: Request) {
         ? body.teamSize.trim()
         : ""
 
+    const quickStartMode: QuickStartMode =
+      body.quickStartMode === "demo"
+        ? "demo"
+        : "lead"
+
+    const leadName =
+      typeof body.leadName === "string"
+        ? body.leadName.trim()
+        : ""
+
+    const leadCompany =
+      typeof body.leadCompany === "string"
+        ? body.leadCompany.trim()
+        : ""
+
+    const leadValueRaw =
+      typeof body.leadValue === "string"
+        ? body.leadValue.trim()
+        : ""
+
+    const leadStatus =
+      typeof body.leadStatus === "string"
+        ? body.leadStatus.trim()
+        : "new"
+
     if (!companyName) {
       return NextResponse.json(
         {
@@ -76,7 +92,38 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 3. Prüfen, ob bereits Workspace existiert
+    // 3. Lead-Daten validieren
+    // --------------------------------------------------
+
+    if (quickStartMode === "lead") {
+      if (!leadName || !leadCompany) {
+        return NextResponse.json(
+          {
+            error: "Lead name and company are required",
+          },
+          {
+            status: 400,
+          }
+        )
+      }
+
+      if (
+        leadValueRaw &&
+        Number.isNaN(Number(leadValueRaw))
+      ) {
+        return NextResponse.json(
+          {
+            error: "Lead value must be a valid number",
+          },
+          {
+            status: 400,
+          }
+        )
+      }
+    }
+
+    // --------------------------------------------------
+    // 4. Prüfen, ob bereits Workspace existiert
     // --------------------------------------------------
 
     const {
@@ -99,7 +146,7 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 4. Admin Client erstellen
+    // 5. Admin Client erstellen
     // --------------------------------------------------
 
     const admin = createAdminClient()
@@ -108,7 +155,7 @@ export async function POST(request: Request) {
       slugifyWorkspaceName(companyName)
 
     // --------------------------------------------------
-    // 5. Workspace erstellen
+    // 6. Workspace erstellen
     // --------------------------------------------------
 
     const {
@@ -148,7 +195,7 @@ export async function POST(request: Request) {
     )
 
     // --------------------------------------------------
-    // 6. Owner als Workspace Member hinzufügen
+    // 7. Owner als Workspace Member hinzufügen
     // --------------------------------------------------
 
     const {
@@ -177,7 +224,7 @@ export async function POST(request: Request) {
     )
 
     // --------------------------------------------------
-    // 7. Profil aktualisieren
+    // 8. Profil aktualisieren
     // --------------------------------------------------
 
     const {
@@ -199,7 +246,113 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 8. Onboarding abschließen
+    // 9. Quick Start
+    // --------------------------------------------------
+
+    if (quickStartMode === "lead") {
+      // ----------------------------------------------
+      // Ersten Lead erstellen
+      // ----------------------------------------------
+
+      const parsedLeadValue =
+        leadValueRaw
+          ? Number(leadValueRaw)
+          : 0
+
+      const {
+        error: leadError,
+      } = await admin
+        .from("leads")
+        .insert({
+          workspace_id: workspace.id,
+          user_id: user.id,
+          name: leadName,
+          company: leadCompany,
+          status: leadStatus,
+          value: parsedLeadValue,
+          notes: null,
+          stage_changed_at:
+            new Date().toISOString(),
+          last_activity_at:
+            new Date().toISOString(),
+        })
+
+      if (leadError) {
+        console.error(
+          "ONBOARDING LEAD ERROR:",
+          leadError
+        )
+
+        throw leadError
+      }
+
+      console.log(
+        "FIRST LEAD CREATED:",
+        leadName
+      )
+    }
+
+    if (quickStartMode === "demo") {
+      // ----------------------------------------------
+      // Demo-Daten laden
+      // ----------------------------------------------
+
+      const authorization =
+        request.headers.get("authorization") ??
+        request.headers.get("Authorization")
+
+      if (!authorization) {
+        throw new Error(
+          "Authorization header missing for demo seed"
+        )
+      }
+
+      const origin =
+        new URL(request.url).origin
+
+      const demoResponse =
+        await fetch(
+          `${origin}/api/demo/seed`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization:
+                authorization,
+            },
+            body: JSON.stringify({
+              mode: "load",
+            }),
+            cache: "no-store",
+          }
+        )
+
+      const demoResult =
+        await demoResponse
+          .json()
+          .catch(() => null)
+
+      if (!demoResponse.ok) {
+        console.error(
+          "ONBOARDING DEMO ERROR:",
+          demoResult
+        )
+
+        throw new Error(
+          demoResult?.error ||
+          "Failed to load demo data"
+        )
+      }
+
+      console.log(
+        "DEMO DATA LOADED:",
+        demoResult
+      )
+    }
+
+    // --------------------------------------------------
+    // 10. Onboarding abschließen
     // --------------------------------------------------
 
     const {
@@ -221,7 +374,7 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 9. Fertig
+    // 11. Fertig
     // --------------------------------------------------
 
     console.log(
@@ -232,6 +385,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       workspace_id: workspace.id,
+      quick_start_mode: quickStartMode,
     })
 
   } catch (err) {
