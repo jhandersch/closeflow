@@ -13,10 +13,6 @@ type QuickStartMode = "lead" | "demo"
 export async function POST(request: Request) {
   const supabase = await createClient()
 
-  // --------------------------------------------------
-  // 1. Authentifizierten User holen
-  // --------------------------------------------------
-
   const {
     data: { user },
     error: userError,
@@ -34,10 +30,6 @@ export async function POST(request: Request) {
   console.log("ONBOARDING USER:", user.id)
 
   try {
-    // --------------------------------------------------
-    // 2. Request Body
-    // --------------------------------------------------
-
     const body = await request.json()
 
     const companyName =
@@ -82,18 +74,10 @@ export async function POST(request: Request) {
 
     if (!companyName) {
       return NextResponse.json(
-        {
-          error: "Company name required",
-        },
-        {
-          status: 400,
-        }
+        { error: "Company name required" },
+        { status: 400 }
       )
     }
-
-    // --------------------------------------------------
-    // 3. Lead-Daten validieren
-    // --------------------------------------------------
 
     if (quickStartMode === "lead") {
       if (!leadName || !leadCompany) {
@@ -101,9 +85,7 @@ export async function POST(request: Request) {
           {
             error: "Lead name and company are required",
           },
-          {
-            status: 400,
-          }
+          { status: 400 }
         )
       }
 
@@ -115,15 +97,13 @@ export async function POST(request: Request) {
           {
             error: "Lead value must be a valid number",
           },
-          {
-            status: 400,
-          }
+          { status: 400 }
         )
       }
     }
 
     // --------------------------------------------------
-    // 4. Prüfen, ob bereits Workspace existiert
+    // Workspace bereits vorhanden?
     // --------------------------------------------------
 
     const {
@@ -142,11 +122,12 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         workspace_id: existingWorkspace.id,
+        quick_start_mode: quickStartMode,
       })
     }
 
     // --------------------------------------------------
-    // 5. Admin Client erstellen
+    // Admin Client
     // --------------------------------------------------
 
     const admin = createAdminClient()
@@ -155,7 +136,7 @@ export async function POST(request: Request) {
       slugifyWorkspaceName(companyName)
 
     // --------------------------------------------------
-    // 6. Workspace erstellen
+    // Workspace erstellen
     // --------------------------------------------------
 
     const {
@@ -195,7 +176,7 @@ export async function POST(request: Request) {
     )
 
     // --------------------------------------------------
-    // 7. Owner als Workspace Member hinzufügen
+    // Owner als Member hinzufügen
     // --------------------------------------------------
 
     const {
@@ -218,13 +199,8 @@ export async function POST(request: Request) {
       throw memberError
     }
 
-    console.log(
-      "WORKSPACE OWNER CREATED:",
-      user.id
-    )
-
     // --------------------------------------------------
-    // 8. Profil aktualisieren
+    // Profil
     // --------------------------------------------------
 
     const {
@@ -246,14 +222,10 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 9. Quick Start
+    // Quick Start: erster Lead
     // --------------------------------------------------
 
     if (quickStartMode === "lead") {
-      // ----------------------------------------------
-      // Ersten Lead erstellen
-      // ----------------------------------------------
-
       const parsedLeadValue =
         leadValueRaw
           ? Number(leadValueRaw)
@@ -292,11 +264,11 @@ export async function POST(request: Request) {
       )
     }
 
-    if (quickStartMode === "demo") {
-      // ----------------------------------------------
-      // Demo-Daten laden
-      // ----------------------------------------------
+    // --------------------------------------------------
+    // Quick Start: Demo-Daten
+    // --------------------------------------------------
 
+    if (quickStartMode === "demo") {
       const authorization =
         request.headers.get("authorization") ??
         request.headers.get("Authorization")
@@ -352,7 +324,7 @@ export async function POST(request: Request) {
     }
 
     // --------------------------------------------------
-    // 10. Onboarding abschließen
+    // Onboarding abschließen
     // --------------------------------------------------
 
     const {
@@ -373,10 +345,6 @@ export async function POST(request: Request) {
       throw metadataError
     }
 
-    // --------------------------------------------------
-    // 11. Fertig
-    // --------------------------------------------------
-
     console.log(
       "ONBOARDING COMPLETED:",
       workspace.id
@@ -387,7 +355,6 @@ export async function POST(request: Request) {
       workspace_id: workspace.id,
       quick_start_mode: quickStartMode,
     })
-
   } catch (err) {
     console.error(
       "ONBOARDING FAILED:",
@@ -401,9 +368,7 @@ export async function POST(request: Request) {
             ? err.message
             : "Onboarding failed",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     )
   }
 }
