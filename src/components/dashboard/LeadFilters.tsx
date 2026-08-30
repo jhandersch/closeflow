@@ -1,12 +1,5 @@
 ﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
-import type { LeadSortBy } from "@/types"
-
-type LeadSortBy =
-  | "created_at"
-  | "value"
-  | "priority"
-  | "health"
-  | "probability"
+import type { LeadSortBy } from "@/types/lead"
 
 type LeadFiltersProps = {
   search: string

@@ -7,12 +7,21 @@ export type LeadStatus =
   | "lost"
 
 
+
+
 export type LeadSource =
   | "website"
   | "recommendation"
   | "phone"
   | "advertising"
   | "other"
+
+export type LeadSortBy =
+  | "created_at"
+  | "value"
+  | "priority"
+  | "health"
+  | "probability"
 
 
 
