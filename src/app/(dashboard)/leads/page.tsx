@@ -15,7 +15,7 @@ import LeadActions from "@/components/dashboard/LeadActions"
 import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
 import { loadDemoData } from "@/lib/demoData"
-import type { LeadSource, LeadStatus } from "@/types"
+import type { LeadSource, LeadStatus, LeadSortBy } from "@/types"
 import { Star } from "lucide-react"
 import * as XLSX from "xlsx"
 
@@ -58,7 +58,7 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("all")
   const [dateRange, setDateRange] = useState("all")
   const [ownerFilter, setOwnerFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"created_at" | "value" | "priority">("priority")
+  const [sortBy, setSortBy] = useState<LeadSortBy>("priority")
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
   const [company, setCompany] = useState("")
@@ -139,51 +139,149 @@ export default function LeadsPage() {
     void loadCurrentUser()
   }, [])
 
-  const filteredLeads = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    const now = Date.now()
-    const dayMs = 1000 * 60 * 60 * 24
 
-    return [...leads]
-      .filter((lead) => {
-        const leadOwnerId = lead.owner_id || lead.assigned_to || lead.user_id || null
-        const searchableText = `${leadDisplayName(lead)} ${leadCompany(lead)} ${lead.email || ""} ${lead.phone || ""}`.toLowerCase()
-        const createdAtMs = new Date(lead.created_at).getTime()
+const filteredLeads = useMemo(() => {
+  const query = search.trim().toLowerCase()
+  const now = new Date()
 
-        const matchesQuery = !query || searchableText.includes(query)
-        const matchesStatus = status === "all" || lead.status === status
-        const score = getPriorityScore(lead)
-        const priorityLabel = score >= 75 ? "hot" : score >= 45 ? "warm" : "cold"
-        const matchesPriority = priority === "all" || priorityLabel === priority
-        const matchesSource = sourceFilter === "all" || (lead.source || "other") === sourceFilter
-        const matchesOwner =
-          ownerFilter === "all" ||
-          (ownerFilter === "mine" && !!currentUserId && leadOwnerId === currentUserId) ||
-          (ownerFilter === "unassigned" && !leadOwnerId)
+const startOfToday = new Date(now)
+startOfToday.setHours(0, 0, 0, 0)
 
-        const ageInDays = (now - createdAtMs) / dayMs
-        const matchesDateRange =
-          dateRange === "all" ||
-          (dateRange === "today" && ageInDays < 1) ||
-          (dateRange === "last7" && ageInDays <= 7) ||
-          (dateRange === "last30" && ageInDays <= 30) ||
-          (dateRange === "older30" && ageInDays > 30)
+const sevenDaysAgo = new Date(startOfToday)
+sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
 
-        return matchesQuery && matchesStatus && matchesPriority && matchesSource && matchesOwner && matchesDateRange
-      })
-      .sort((a, b) => {
-        const aPinned = favorites.includes(a.id)
-        const bPinned = favorites.includes(b.id)
+const thirtyDaysAgo = new Date(startOfToday)
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
 
-        if (aPinned !== bPinned) {
-          return aPinned ? -1 : 1
-        }
+  return [...leads]
+    .filter((lead) => {
+      const leadOwnerId =
+        lead.owner_id ||
+        lead.assigned_to ||
+        lead.user_id ||
+        null
 
-        if (sortBy === "value") return (b.value || 0) - (a.value || 0)
-        if (sortBy === "created_at") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        return getPriorityScore(b) - getPriorityScore(a)
-      })
-  }, [currentUserId, dateRange, favorites, leads, ownerFilter, priority, search, sortBy, sourceFilter, status])
+      const searchableText = `
+        ${leadDisplayName(lead)}
+        ${leadCompany(lead)}
+        ${lead.email || ""}
+        ${lead.phone || ""}
+      `.toLowerCase()
+
+      const createdAt = new Date(lead.created_at)
+
+      // Suche
+      const matchesQuery =
+        !query || searchableText.includes(query)
+
+      // Status
+      const matchesStatus =
+        status === "all" || lead.status === status
+
+      // Priorität
+      const salesScore = calculateSalesScore(
+  lead,
+  getStaleDays(lead)
+)
+
+const score = salesScore.priority
+
+const priorityLabel =
+  score >= 75
+    ? "hot"
+    : score >= 45
+    ? "warm"
+    : "cold"
+
+      const matchesPriority =
+        priority === "all" ||
+        priorityLabel === priority
+
+      // Quelle
+      const matchesSource =
+        sourceFilter === "all" ||
+        (lead.source || "other") === sourceFilter
+
+      // Besitzer
+      const matchesOwner =
+        ownerFilter === "all" ||
+        (
+          ownerFilter === "mine" &&
+          !!currentUserId &&
+          leadOwnerId === currentUserId
+        ) ||
+        (
+          ownerFilter === "unassigned" &&
+          !leadOwnerId
+        )
+
+      // Zeitraum
+      const matchesDateRange =
+        dateRange === "all" ||
+        (dateRange === "today" && createdAt >= startOfToday) ||
+        (dateRange === "last7" && createdAt >= sevenDaysAgo) ||
+        (dateRange === "last30" && createdAt >= thirtyDaysAgo) ||
+        (dateRange === "older30" && createdAt < thirtyDaysAgo)
+
+      return (
+        matchesQuery &&
+        matchesStatus &&
+        matchesPriority &&
+        matchesSource &&
+        matchesOwner &&
+        matchesDateRange
+      )
+    })
+    .sort((a, b) => {
+      // Favoriten immer zuerst
+      const aPinned = favorites.includes(a.id)
+      const bPinned = favorites.includes(b.id)
+
+      if (aPinned !== bPinned) {
+        return aPinned ? -1 : 1
+      }
+
+      // Sortierung
+      if (sortBy === "value") {
+        return (b.value || 0) - (a.value || 0)
+      }
+
+      if (sortBy === "created_at") {
+        return (
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+        )
+      }
+
+      if (sortBy === "health") {
+        return getHealthScore(b) - getHealthScore(a)
+      }
+
+      if (sortBy === "probability") {
+        const aStaleDays = getStaleDays(a)
+        const bStaleDays = getStaleDays(b)
+
+        const aProbability = calculateSalesScore(a, aStaleDays).probability
+        const bProbability = calculateSalesScore(b, bStaleDays).probability
+
+        return bProbability - aProbability
+      }
+
+      return getPriorityScore(b) - getPriorityScore(a)
+    })
+}, [
+  currentUserId,
+  dateRange,
+  favorites,
+  leads,
+  ownerFilter,
+  priority,
+  search,
+  sortBy,
+  sourceFilter,
+  status,
+])
+
 
   const getAuthHeaders = async (includeJson = false) => {
     const {
@@ -607,8 +705,13 @@ if (!response.ok) {
               €
               {filteredLeads
                 .reduce((sum, lead) => {
-                  const priority = getPriorityScore(lead)
-                  const health = getHealthScore(lead)
+                  const salesScore = calculateSalesScore(
+                    lead,
+                    getStaleDays(lead)
+                  )
+
+                  const priority = salesScore.priority
+                  const health = salesScore.health
 
                   const probability = Math.min(
                     95,
@@ -910,8 +1013,8 @@ if (!response.ok) {
                   key={lead.id}
                   onClick={() => router.push(`/leads/${lead.id}`)}
                   className="
+                    group
                     cursor-pointer
-                    block
                     rounded-2xl
                     border
                     border-border-subtle
@@ -919,31 +1022,54 @@ if (!response.ok) {
                     from-surface-1
                     to-surface-2
                     p-5
-                    transition
-                    hover:-translate-y-1
+                    transition-all
+                    duration-200
+                    hover:-translate-y-0.5
+                    hover:border-cyan-500/20
                     hover:shadow-xl
-                    hover:shadow-cyan-500/10
-                    hover:bg-foreground/5
+                    hover:shadow-cyan-500/5
                   "
                 >
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div className="flex items-start gap-4">
+                  {/* HEADER */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      {/* Avatar */}
+                      <div className="
+                        flex
+                        h-12
+                        w-12
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-gradient-to-br
+                        from-cyan-500
+                        to-blue-600
+                        text-sm
+                        font-bold
+                        text-white
+                        shadow-lg
+                        shadow-cyan-500/10
+                      ">
+                        {leadDisplayName(lead)
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </div>
 
-                              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-lg font-bold text-white shadow-lg">
-                                {leadDisplayName(lead)
-                                  .split(" ")
-                                  .map((part) => part[0])
-                                  .join("")
-                                  .slice(0, 2)
-                                  .toUpperCase()}
-                              </div>
-
-                              <div>
-                                <div className="flex items-center gap-2">
-
-                                  <p className="font-semibold text-lg text-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px] md:max-w-[300px]">
-                                    {leadDisplayName(lead)}
-                                  </p>
+                      {/* Name + Company */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="
+                            truncate
+                            text-base
+                            font-semibold
+                            text-foreground
+                          ">
+                            {leadDisplayName(lead)}
+                          </p>
 
                           <button
                             onClick={(event) => {
@@ -951,182 +1077,255 @@ if (!response.ok) {
                               event.stopPropagation()
                               toggleFavorite(lead.id)
                             }}
-                            aria-label={favorites.includes(lead.id) ? (isDe ? "Fixierung entfernen" : "Remove pin") : (isDe ? "Lead fixieren" : "Pin lead")}
-                            title={favorites.includes(lead.id) ? (isDe ? "Fixiert" : "Pinned") : (isDe ? "Fixieren" : "Pin")}
-                            className="rounded-full p-1.5 text-foreground/45 transition hover:bg-foreground/5 hover:text-amber-300"
+                            aria-label={
+                              favorites.includes(lead.id)
+                                ? (isDe ? "Fixierung entfernen" : "Remove pin")
+                                : (isDe ? "Lead fixieren" : "Pin lead")
+                            }
+                            title={
+                              favorites.includes(lead.id)
+                                ? (isDe ? "Fixiert" : "Pinned")
+                                : (isDe ? "Fixieren" : "Pin")
+                            }
+                            className="
+                              shrink-0
+                              rounded-lg
+                              p-1
+                              text-foreground/35
+                              transition
+                              hover:bg-foreground/5
+                              hover:text-amber-300
+                            "
                           >
                             <Star
-                              size={18}
-                              className={favorites.includes(lead.id) ? "fill-amber-300 text-amber-300" : "text-foreground/45"}
+                              size={17}
+                              className={
+                                favorites.includes(lead.id)
+                                  ? "fill-amber-300 text-amber-300"
+                                  : "text-foreground/35"
+                              }
                             />
                           </button>
-
                         </div>
 
-                        <p className="text-sm text-foreground/65">
+                        <p className="mt-0.5 truncate text-sm text-foreground/55">
                           {leadCompany(lead)}
                         </p>
-
-                        <p className="mt-2 text-sm font-semibold text-foreground">
-                          €{lead.value.toLocaleString(locale)}
-                        </p>
-
-                        <span
-                          className={`inline-flex mt-2 rounded-full px-3 py-1 text-xs font-medium ${
-                            lead.status === "new"
-                              ? "bg-blue-500/20 text-blue-300"
-                              : lead.status === "contacted"
-                              ? "bg-yellow-500/20 text-yellow-300"
-                              : lead.status === "qualified"
-                              ? "bg-cyan-500/20 text-cyan-300"
-                              : lead.status === "proposal"
-                              ? "bg-orange-500/20 text-orange-300"
-                              : lead.status === "won"
-                              ? "bg-green-500/20 text-green-300"
-                              : "bg-red-500/20 text-red-300"
-                          }`}
-                        >
-                          {lead.status}
-                          {probability > 80 && (
-                            <span className="
-                              ml-2
-                              rounded-full
-                              bg-orange-500/20
-                              px-3
-                              py-1
-                              text-xs
-                              font-medium
-                              text-orange-300
-                            ">
-                              {isDe ? "Hohe Priorität" : "High Priority"}
-                            </span>
-                          )}
-                        </span>
                       </div>
-
                     </div>
 
-                    <div className="flex flex-wrap gap-3 text-right md:justify-end">
-                      <PriorityBadge score={priority} />
-                      <HealthRing value={health} />
-                      <div>
-                      <p className="text-xs text-zinc-400">
+                    {/* DEAL VALUE + STATUS */}
+                    <div className="flex shrink-0 items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-xs text-foreground/45">
+                          {isDe ? "Deal-Wert" : "Deal value"}
+                        </p>
+
+                        <p className="mt-0.5 text-base font-bold text-foreground">
+                          €{lead.value.toLocaleString(locale)}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                          lead.status === "new"
+                            ? "bg-blue-500/15 text-blue-300"
+                            : lead.status === "contacted"
+                            ? "bg-yellow-500/15 text-yellow-300"
+                            : lead.status === "qualified"
+                            ? "bg-cyan-500/15 text-cyan-300"
+                            : lead.status === "proposal"
+                            ? "bg-orange-500/15 text-orange-300"
+                            : lead.status === "won"
+                            ? "bg-green-500/15 text-green-300"
+                            : "bg-red-500/15 text-red-300"
+                        }`}
+                      >
+                        {lead.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* DIVIDER */}
+                  <div className="my-5 h-px bg-border-subtle/70" />
+
+                  {/* SALES METRICS */}
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
+                    {/* PRIORITY */}
+                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
+                        Priority
+                      </p>
+
+                      <div className="mt-2">
+                        <PriorityBadge score={priority} />
+                      </div>
+                    </div>
+
+                    {/* HEALTH */}
+                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
+                        Health
+                      </p>
+
+                      <div className="mt-1">
+                        <HealthRing value={health} />
+                      </div>
+                    </div>
+
+                    {/* PROBABILITY */}
+                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
                         {isDe ? "Abschlusschance" : "Close chance"}
                       </p>
 
-                      <p className="text-lg font-bold text-cyan-400">
-                        {probability}%
+                      <div className="mt-2 flex items-end gap-2">
+                        <span className="text-2xl font-bold text-cyan-400">
+                          {probability}%
+                        </span>
+
+                        {probability > 80 && (
+                          <span className="mb-1 text-[11px] font-medium text-orange-300">
+                            {isDe ? "Sehr stark" : "Very strong"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* AI SIGNAL */}
+                    <div className="
+                      rounded-xl
+                      border
+                      border-purple-500/15
+                      bg-purple-500/5
+                      p-3
+                    ">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-purple-300/70">
+                        {isDe ? "KI-Signal" : "AI signal"}
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold text-foreground">
+                        {staleDays > 14
+                          ? (isDe ? "Braucht Aufmerksamkeit" : "Needs attention")
+                          : probability > 80
+                          ? (isDe ? "Starkes Abschluss-Signal" : "Strong closing signal")
+                          : probability > 60
+                          ? (isDe ? "Positives Momentum" : "Positive momentum")
+                          : (isDe ? "Weitere Pflege nötig" : "Nurturing required")}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* NEXT ACTION */}
+                  <div className="
+                    mt-4
+                    flex
+                    flex-col
+                    gap-3
+                    rounded-xl
+                    border
+                    border-border-subtle
+                    bg-surface-2/40
+                    p-4
+                    md:flex-row
+                    md:items-center
+                    md:justify-between
+                  ">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
+                        {isDe ? "Nächste Aktion" : "Next action"}
+                      </p>
+
+                      <p className="mt-1 truncate text-sm font-medium text-foreground">
+                        {lead.next_action ||
+                          (isDe ? "Keine Aktion geplant" : "No action planned")}
                       </p>
                     </div>
 
-                    <div className="
-                    rounded-xl
-                    border
-                    border-purple-500/20
-                    bg-purple-500/10
-                    px-4
-                    py-3
-                    ">
-
-                    <p className="text-xs text-purple-300">
-                    {isDe ? "KI-Signal" : "AI Signal"}
-                    </p>
-
-                    <p className="mt-1 text-sm font-semibold text-foreground">
-                    {
-                    staleDays > 14
-                    ? (isDe ? "Braucht Aufmerksamkeit" : "Needs attention")
-                    : probability > 80
-                    ? (isDe ? "Starkes Abschluss-Signal" : "Strong closing signal")
-                    : probability > 60
-                    ? (isDe ? "Positives Momentum" : "Positive momentum")
-                    : (isDe ? "Weitere Pflege noetig" : "Nurturing required")
-                    }
-                    </p>
-
-                    </div>
-                      <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-3 text-left">
-
-                        <p className="text-xs text-foreground/55">
-                          {isDe ? "Nächste Aktion" : "Next action"}
-                        </p>
-
-                        <p className="mt-1 text-sm text-foreground">
-                          {lead.next_action || (isDe ? "Keine Aktion geplant" : "No action planned")}
-                        </p>
-
-
-                        {lead.next_action_date && (
-                          <p
-                            className={`mt-1 text-xs ${
-                              new Date(lead.next_action_date) < new Date()
-                                ? "text-red-400"
-                                : "text-emerald-400"
-                            }`}
-                          >
-                            {isDe ? "Faellig" : "Due"} {new Date(
-                              lead.next_action_date
-                            ).toLocaleDateString(locale)}
-                          </p>
-                        )}
-
+                    {lead.next_action_date ? (
+                      <div
+                        className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${
+                          new Date(lead.next_action_date) < new Date()
+                            ? "bg-red-500/10 text-red-400"
+                            : "bg-emerald-500/10 text-emerald-400"
+                        }`}
+                      >
+                        {isDe ? "Fällig" : "Due"}{" "}
+                        {new Date(lead.next_action_date).toLocaleDateString(locale)}
                       </div>
+                    ) : (
+                      <span className="shrink-0 text-xs text-foreground/35">
+                        {isDe ? "Kein Termin" : "No date"}
+                      </span>
+                    )}
+                  </div>
 
-                      <div className="mt-2 text-xs text-foreground/55">
-                       <div className="mt-3 flex items-center gap-2 text-xs">
-
-                      <span className="text-foreground/65">
-                      {isDe ? "Letzte Aktivität:" : "Last activity:"}
+                  {/* FOOTER */}
+                  <div className="
+                    mt-4
+                    flex
+                    flex-col
+                    gap-3
+                    md:flex-row
+                    md:items-center
+                    md:justify-between
+                  ">
+                    {/* LAST ACTIVITY */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-foreground/45">
+                        {isDe ? "Letzte Aktivität" : "Last activity"}
                       </span>
 
                       <span
-                      className={
-                      staleDays > 14
-                      ? "font-semibold text-red-400"
-                      : staleDays > 7
-                      ? "font-semibold text-yellow-400"
-                      : "font-semibold text-emerald-400"
-                      }
+                        className={
+                          staleDays > 14
+                            ? "font-semibold text-red-400"
+                            : staleDays > 7
+                            ? "font-semibold text-yellow-400"
+                            : "font-semibold text-emerald-400"
+                        }
                       >
-                      {staleDays === 0
-                      ? (isDe ? "Heute" : "Today")
-                      : isDe ? `vor ${staleDays} Tagen` : `${staleDays} days ago`}
+                        {staleDays === 0
+                          ? (isDe ? "Heute" : "Today")
+                          : isDe
+                          ? `vor ${staleDays} Tagen`
+                          : `${staleDays} days ago`}
                       </span>
+                    </div>
 
-                      </div>
-                        <div
-                          onClick={(event) => {
-                            event.stopPropagation()
-                          }}
-                        >
-                         <LeadActions
-                            leadId={lead.id}
-                            currentStatus={lead.status}
-                            phone={lead.phone}
-                            email={lead.email}
-                            onLeadDeleted={() => {
-                              if (leads.length === 1) {
-                                setImportIssues([])
-                              }
+                    {/* ACTIONS */}
+                    <div
+                      onClick={(event) => {
+                        event.stopPropagation()
+                      }}
+                      className="shrink-0"
+                    >
+                      <LeadActions
+                        leadId={lead.id}
+                        currentStatus={lead.status}
+                        phone={lead.phone}
+                        email={lead.email}
+                        onLeadDeleted={() => {
+                          if (leads.length === 1) {
+                            setImportIssues([])
+                          }
 
-                              void refresh()
-                            }}
-                            onStatusChanged={(leadId, newStatus) => {
-                              setLeads((current) =>
-                                current.map((lead) =>
-                                  lead.id === leadId
-                                    ? {
-                                        ...lead,
-                                        status: newStatus,
-                                      }
-                                    : lead
-                                )
-                              )
-                            }}
-                          />
-                        </div>
-                      </div>
-                      
+                          void refresh()
+                        }}
+                        onStatusChanged={(leadId, newStatus) => {
+                          setLeads((current) =>
+                            current.map((lead) =>
+                              lead.id === leadId
+                                ? {
+                                    ...lead,
+                                    status: newStatus,
+                                  }
+                                : lead
+                            )
+                          )
+                        }}
+                      />
                     </div>
                   </div>
                 </div>

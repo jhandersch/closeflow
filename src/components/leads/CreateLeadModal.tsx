@@ -3,7 +3,7 @@
 import { useState } from "react"
 import toast from "react-hot-toast"
 
-import type { LeadSource, LeadStatus } from "@/types"
+import type { LeadSource, LeadStatus, LeadSortBy } from "@/types"
 
 
 type CreateLeadModalProps = {

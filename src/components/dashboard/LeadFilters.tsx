@@ -1,4 +1,12 @@
 ﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
+import type { LeadSortBy } from "@/types"
+
+type LeadSortBy =
+  | "created_at"
+  | "value"
+  | "priority"
+  | "health"
+  | "probability"
 
 type LeadFiltersProps = {
   search: string
@@ -7,14 +15,14 @@ type LeadFiltersProps = {
   source: string
   dateRange: string
   owner: string
-  sortBy: "created_at" | "value" | "priority"
+  sortBy: LeadSortBy
   onSearchChange: (value: string) => void
   onStatusChange: (value: string) => void
   onPriorityChange: (value: string) => void
   onSourceChange: (value: string) => void
   onDateRangeChange: (value: string) => void
   onOwnerChange: (value: string) => void
-  onSortChange: (value: "created_at" | "value" | "priority") => void
+  onSortChange: (value: LeadSortBy) => void
 }
 
 export default function LeadFilters({
@@ -41,7 +49,11 @@ export default function LeadFilters({
       <input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder={isDe ? "Name, Firma, E-Mail oder Telefon" : "Name, company, email, or phone"}
+        placeholder={
+          isDe
+            ? "Name, Firma, E-Mail oder Telefon"
+            : "Name, company, email, or phone"
+        }
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       />
 
@@ -75,12 +87,31 @@ export default function LeadFilters({
         onChange={(event) => onSourceChange(event.target.value)}
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="all">{isDe ? "Alle Quellen" : "All sources"}</option>
-        <option value="website">{isDe ? "Website" : "Website"}</option>
-        <option value="recommendation">{isDe ? "Empfehlung" : "Referral"}</option>
-        <option value="advertising">{isDe ? "Werbung" : "Ads"}</option>
-        <option value="other">{isDe ? "Manuell" : "Manual"}</option>
+        <option value="all">
+          {isDe ? "Alle Quellen" : "All sources"}
+        </option>
+
+        <option value="website">
+          Website
+        </option>
+
+        <option value="recommendation">
+          {isDe ? "Empfehlung" : "Recommendation"}
+        </option>
+
+        <option value="phone">
+          {isDe ? "Telefon" : "Phone"}
+        </option>
+
+        <option value="advertising">
+          {isDe ? "Werbung" : "Advertising"}
+        </option>
+
+        <option value="other">
+          {isDe ? "Sonstiges" : "Other"}
+        </option>
       </select>
+
 
       <select
         value={dateRange}
@@ -91,7 +122,9 @@ export default function LeadFilters({
         <option value="today">{isDe ? "Heute" : "Today"}</option>
         <option value="last7">{isDe ? "Letzte 7 Tage" : "Last 7 days"}</option>
         <option value="last30">{isDe ? "Letzte 30 Tage" : "Last 30 days"}</option>
-        <option value="older30">{isDe ? "Aelter als 30 Tage" : "Older than 30 days"}</option>
+        <option value="older30">
+          {isDe ? "Älter als 30 Tage" : "Older than 30 days"}
+        </option>
       </select>
 
       <select
@@ -101,19 +134,38 @@ export default function LeadFilters({
       >
         <option value="all">{isDe ? "Alle Besitzer" : "All owners"}</option>
         <option value="mine">{isDe ? "Meine Leads" : "My leads"}</option>
-        <option value="unassigned">{isDe ? "Ohne Besitzer" : "Unassigned"}</option>
+        <option value="unassigned">
+          {isDe ? "Ohne Besitzer" : "Unassigned"}
+        </option>
       </select>
 
       <select
         value={sortBy}
-        onChange={(event) => onSortChange(event.target.value as "created_at" | "value" | "priority")}
+        onChange={(event) =>
+          onSortChange(event.target.value as LeadSortBy)
+        }
         className="w-full rounded-xl border border-border-subtle bg-surface-2/90 px-4 py-2 text-sm text-foreground outline-none"
       >
-        <option value="created_at">{isDe ? "Neueste" : "Newest"}</option>
-        <option value="value">{isDe ? "Höchster Wert" : "Highest Value"}</option>
-        <option value="priority">{isDe ? "Höchster Score" : "Highest Score"}</option>
+        <option value="created_at">
+          {isDe ? "Neueste" : "Newest"}
+        </option>
+
+        <option value="value">
+          {isDe ? "Höchster Wert" : "Highest Value"}
+        </option>
+
+        <option value="priority">
+          {isDe ? "Höchster Priority Score" : "Highest Priority Score"}
+        </option>
+
+        <option value="health">
+          {isDe ? "Höchster Health Score" : "Highest Health Score"}
+        </option>
+
+        <option value="probability">
+          {isDe ? "Höchste Abschlusschance" : "Highest Close Chance"}
+        </option>
       </select>
     </div>
   )
 }
-
