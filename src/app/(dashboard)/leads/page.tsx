@@ -1184,12 +1184,6 @@ if (!response.ok) {
                         <span className="text-2xl font-bold text-cyan-400">
                           {probability}%
                         </span>
-
-                        {probability > 80 && (
-                          <span className="mb-1 text-[11px] font-medium text-orange-300">
-                            {isDe ? "Sehr stark" : "Very strong"}
-                          </span>
-                        )}
                       </div>
                     </div>
 
