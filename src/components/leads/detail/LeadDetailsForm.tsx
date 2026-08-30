@@ -82,6 +82,18 @@ useState(
  lead.address ?? ""
 )
 
+const [nextAction,setNextAction]=
+useState(
+  lead.next_action ?? ""
+)
+
+const [nextActionDate,setNextActionDate]=
+useState(
+  lead.next_action_date
+    ? lead.next_action_date.slice(0, 10)
+    : ""
+)
+
 
 const [notes,setNotes]=
 useState(
@@ -171,6 +183,11 @@ phone,
 website,
 
 address,
+
+next_action: nextAction || undefined,
+
+next_action_date:
+  nextActionDate || undefined,
 
 notes,
 
@@ -384,6 +401,49 @@ setValue={setAddress}
 />
 
 </div>
+
+<div className="grid gap-5 md:grid-cols-2">
+
+  <Input
+    label={
+      isDe
+        ? "Nächste Aktion"
+        : "Next Action"
+    }
+    value={nextAction}
+    setValue={setNextAction}
+  />
+
+  <div>
+    <label className="mb-2 block text-sm text-foreground/65">
+      {
+        isDe
+          ? "Fällig am"
+          : "Due Date"
+      }
+    </label>
+
+    <input
+      type="date"
+      value={nextActionDate}
+      onChange={(e) =>
+        setNextActionDate(e.target.value)
+      }
+      className="
+        w-full
+        rounded-xl
+        border
+        border-border-subtle
+        bg-surface-2
+        px-4
+        py-3
+        outline-none
+      "
+    />
+  </div>
+
+</div>
+
 
 
 <div className="md:col-span-2">

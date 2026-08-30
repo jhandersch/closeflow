@@ -81,4 +81,6 @@ export type UpdateLeadData = {
   phone?: string
   address?: string
   website?: string
+  next_action?: string
+  next_action_date?: string
 }

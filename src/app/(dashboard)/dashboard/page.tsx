@@ -279,7 +279,7 @@ export default function DashboardPage() {
 
                   try{
 
-                    const result = await loadDemoData()
+                    const result = await loadDemoData({ reload: true })
 
                     const warning = result.warnings?.length ? ` ${t("dashboard.warnings", "Warnings")}: ${result.warnings.join(" ")}` : ""
                     setDemoMessage(

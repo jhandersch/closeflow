@@ -971,7 +971,7 @@ if (!response.ok) {
                   setDemoLoading(true)
                   setDemoMessage(null)
                   try {
-                    const result = await loadDemoData()
+                    const result = await loadDemoData({ reload: true })
                     const warning = result.warnings?.length ? ` ${isDe ? "Warnungen" : "Warnings"}: ${result.warnings.join(" ")}` : ""
                     setDemoMessage(
                       `${result.message} ${isDe ? "Leads" : "Leads"}: ${result.inserted_leads}, ${isDe ? "Aktivitäten" : "Activities"}: ${result.inserted_activities}, ${isDe ? "Aufgaben" : "Tasks"}: ${result.inserted_tasks}.${warning}`
