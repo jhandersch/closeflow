@@ -930,67 +930,155 @@ if (!response.ok) {
             ))}
           </div>
         ) : filteredLeads.length === 0 ? (
-          <div className="
-          rounded-2xl
-          border
-          border-border-subtle
-          bg-gradient-to-br
-          from-surface-1
-          to-surface-2
-          p-10
-          text-center
-          ">
-            <div className="mx-auto h-10 w-10 rounded-full border border-cyan-500/30 bg-cyan-500/10" />
-
-            <h3 className="
-            mt-4
-            text-xl
-            font-semibold
-            text-foreground
+          leads.length === 0 ? (
+            <div className="
+              rounded-2xl
+              border
+              border-border-subtle
+              bg-gradient-to-br
+              from-surface-1
+              to-surface-2
+              p-10
+              text-center
             ">
-            {isDe ? "Noch keine Leads" : "No leads yet"}
-            </h3>
+              <div className="mx-auto h-10 w-10 rounded-full border border-cyan-500/30 bg-cyan-500/10" />
 
-            <p className="
-            mt-2
-            text-sm
-            text-foreground/65
+              <h3 className="
+                mt-4
+                text-xl
+                font-semibold
+                text-foreground
+              ">
+                {isDe ? "Noch keine Leads" : "No leads yet"}
+              </h3>
+
+              <p className="
+                mt-2
+                text-sm
+                text-foreground/65
+              ">
+                {isDe
+                  ? "Erstelle deine erste Opportunity und starte den Aufbau deiner Pipeline."
+                  : "Create your first opportunity and start building your pipeline."}
+              </p>
+
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
+                >
+                  {isDe ? "Ersten Lead erstellen" : "Create first lead"}
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setDemoLoading(true)
+                    setDemoMessage(null)
+
+                    try {
+                      const result = await loadDemoData({ reload: true })
+
+                      const warning = result.warnings?.length
+                        ? ` ${isDe ? "Warnungen" : "Warnings"}: ${result.warnings.join(" ")}`
+                        : ""
+
+                      setDemoMessage(
+                        `${result.message} ${isDe ? "Leads" : "Leads"}: ${result.inserted_leads}, ${isDe ? "Aktivitäten" : "Activities"}: ${result.inserted_activities}, ${isDe ? "Aufgaben" : "Tasks"}: ${result.inserted_tasks}.${warning}`
+                      )
+
+                      await refresh()
+                    } catch (error) {
+                      setDemoMessage(
+                        error instanceof Error
+                          ? error.message
+                          : isDe
+                          ? "Demo-Daten konnten nicht geladen werden"
+                          : "Could not load demo data"
+                      )
+                    } finally {
+                      setDemoLoading(false)
+                    }
+                  }}
+                  disabled={demoLoading}
+                  className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60"
+                >
+                  {demoLoading
+                    ? isDe
+                      ? "Lade Demo-Daten..."
+                      : "Loading demo data..."
+                    : isDe
+                    ? "Demo-Daten laden"
+                    : "Load demo data"}
+                </button>
+              </div>
+
+              {demoMessage ? (
+                <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                  {demoMessage}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="
+              rounded-2xl
+              border
+              border-border-subtle
+              bg-gradient-to-br
+              from-surface-1
+              to-surface-2
+              p-10
+              text-center
             ">
-            {isDe ? "Erstelle deine erste Opportunity und starte den Aufbau deiner Pipeline." : "Create your first opportunity and start building your pipeline."}
-            </p>
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+                ×
+              </div>
 
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <h3 className="
+                mt-4
+                text-xl
+                font-semibold
+                text-foreground
+              ">
+                {isDe ? "Keine Leads gefunden" : "No leads found"}
+              </h3>
+
+              <p className="
+                mt-2
+                text-sm
+                text-foreground/65
+              ">
+                {isDe
+                  ? "Für deine aktuelle Suche oder Filter gibt es keine passenden Leads."
+                  : "No leads match your current search or filters."}
+              </p>
+
               <button
-                onClick={() => setShowForm(true)}
-                className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
-              >
-                {isDe ? "Ersten Lead erstellen" : "Create first lead"}
-              </button>
-              <button
-                onClick={async () => {
-                  setDemoLoading(true)
-                  setDemoMessage(null)
-                  try {
-                    const result = await loadDemoData({ reload: true })
-                    const warning = result.warnings?.length ? ` ${isDe ? "Warnungen" : "Warnings"}: ${result.warnings.join(" ")}` : ""
-                    setDemoMessage(
-                      `${result.message} ${isDe ? "Leads" : "Leads"}: ${result.inserted_leads}, ${isDe ? "Aktivitäten" : "Activities"}: ${result.inserted_activities}, ${isDe ? "Aufgaben" : "Tasks"}: ${result.inserted_tasks}.${warning}`
-                    )
-                    await refresh()
-                  } catch (error) {
-                    setDemoMessage(error instanceof Error ? error.message : (isDe ? "Demo-Daten konnten nicht geladen werden" : "Could not load demo data"))
-                  } finally {
-                    setDemoLoading(false)
-                  }
+                onClick={() => {
+                  setSearch("")
+                  setStatus("all")
+                  setPriority("all")
+                  setSourceFilter("all")
+                  setDateRange("all")
+                  setOwnerFilter("all")
                 }}
-                disabled={demoLoading}
-                className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60"
+                className="
+                  mt-5
+                  rounded-xl
+                  border
+                  border-border-subtle
+                  bg-surface-2
+                  px-5
+                  py-2
+                  font-medium
+                  text-foreground/80
+                  transition
+                  hover:bg-foreground/5
+                "
               >
-                {demoLoading ? (isDe ? "Lade Demo-Daten..." : "Loading demo data...") : (isDe ? "Demo-Daten laden" : "Load demo data")}
+                {isDe ? "Filter zurücksetzen" : "Clear filters"}
               </button>
             </div>
-            {demoMessage ? <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{demoMessage}</div> : null}
-          </div>
+          )
         ) : (
           view === "list" ? (
 
