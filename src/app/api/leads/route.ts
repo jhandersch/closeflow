@@ -745,75 +745,72 @@ export async function DELETE(req: Request) {
 
 
 
-    const {
-      data,
-      error
-    } =
-      await supabase
-        .from("leads")
-        .update({
-          deleted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq(
-          "id",
-          id
-        )
-        .eq(
-          "workspace_id",
-          workspace.id
-        )
-        .is(
-          "deleted_at",
-          null
-        )
-        .select("id")
-        .maybeSingle()
+    // Lead zuerst laden, damit wir den Namen für die Activity haben
+const {
+  data: leadToDelete,
+  error: leadError,
+} = await supabase
+  .from("leads")
+  .select("id, name")
+  .eq("id", id)
+  .eq("workspace_id", workspace.id)
+  .is("deleted_at", null)
+  .maybeSingle()
 
+if (leadError) {
+  console.error(
+    "GET LEAD BEFORE DELETE ERROR:",
+    leadError
+  )
 
-
-
-    if(error){
-
-      console.error(
-        "DELETE LEAD ERROR:",
-        error
-      )
-
-
-      return NextResponse.json(
-        {
-          error:error.message
-        },
-        {
-          status:500
-        }
-      )
-
-    }
-
-
-
-
-
-    if (!data) {
   return NextResponse.json(
-    {
-      error: "Lead not found",
-    },
-    {
-      status: 404,
-    }
+    { error: leadError.message },
+    { status: 500 }
   )
 }
 
-// Activity für Soft Delete erstellen
-const { data: deletedLead } = await supabase
+if (!leadToDelete) {
+  return NextResponse.json(
+    { error: "Lead not found" },
+    { status: 404 }
+  )
+}
+
+// Lead soft-deleten
+const {
+  data,
+  error,
+} = await supabase
   .from("leads")
-  .select("name")
+  .update({
+    deleted_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  })
   .eq("id", id)
   .eq("workspace_id", workspace.id)
-  .single()
+  .is("deleted_at", null)
+  .select("id")
+  .maybeSingle()
+
+if (error) {
+  console.error(
+    "DELETE LEAD ERROR:",
+    error
+  )
+
+  return NextResponse.json(
+    { error: error.message },
+    { status: 500 }
+  )
+}
+
+if (!data) {
+  return NextResponse.json(
+    { error: "Lead not found" },
+    { status: 404 }
+  )
+}
+
 
 const { error: activityError } = await supabase
   .from("activities")
@@ -824,7 +821,7 @@ const { error: activityError } = await supabase
     type: "lead_deleted",
     action: "lead_deleted",
     title: "Lead deleted",
-    description: `${deletedLead?.name ?? "Lead"} was moved to the trash`,
+    description: `${leadToDelete?.name ?? "Lead"} was moved to the trash`,
     metadata: {
       trigger: "lead_actions",
       action: "soft_delete",

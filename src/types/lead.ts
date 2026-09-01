@@ -38,6 +38,7 @@ export type Lead = {
   created_at: string
   updated_at?: string | null
   deleted_at?: string | null
+  is_vip?: boolean
 
   stage_changed_at?: string | null
 
@@ -83,4 +84,5 @@ export type UpdateLeadData = {
   website?: string
   next_action?: string
   next_action_date?: string
+  is_vip?: boolean
 }

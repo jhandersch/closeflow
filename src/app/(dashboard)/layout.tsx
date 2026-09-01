@@ -1,5 +1,6 @@
 "use client"
 
+import AuthGuard from "@/components/AuthGuard"
 import Sidebar from "@/components/Sidebar"
 import Search from "@/components/Search"
 import { SidebarProvider, useSidebar } from "@/components/SidebarContext"
@@ -30,21 +31,32 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           >
             <Menu size={18} />
           </button>
-          <span className="text-sm font-semibold text-foreground">CloseFlow</span>
+
+          <span className="text-sm font-semibold text-foreground">
+            CloseFlow
+          </span>
         </div>
 
         <div className="px-4 py-5 sm:px-7 lg:px-10 lg:py-8">
-          <div className="mx-auto w-full max-w-[1320px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1320px]">
+            {children}
+          </div>
         </div>
       </main>
     </div>
   )
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <SidebarProvider>
-      <DashboardContent>{children}</DashboardContent>
-    </SidebarProvider>
+    <AuthGuard>
+      <SidebarProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </SidebarProvider>
+    </AuthGuard>
   )
 }

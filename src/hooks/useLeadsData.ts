@@ -1,106 +1,64 @@
 import { useCallback, useEffect, useState } from "react"
 import type { Activity, Lead } from "@/types"
 
-
 type UseLeadsDataOptions = {
   activityLimit?: number
 }
-
-
 
 export function useLeadsData(
   {
     activityLimit = 6,
   }: UseLeadsDataOptions = {}
 ) {
-
-  const [leads, setLeads] =
-    useState<Lead[]>([])
-
-
-  const [activities, setActivities] =
-    useState<Activity[]>([])
-
-
-  const [loading, setLoading] =
-    useState(true)
-
-
-  const [error, setError] =
-    useState<string | null>(null)
-
-
-
-
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(
-    async () => {
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setRefreshing(true)
+      } else {
+        setLoading(true)
+      }
 
-      setLoading(true)
       setError(null)
 
-
       try {
-
-
         const [
           leadsResponse,
-          activityResponse
-        ] =
-        await Promise.all([
-
-
+          activityResponse,
+        ] = await Promise.all([
+          fetch(`/api/leads?t=${Date.now()}`, {
+            cache: "no-store",
+          }),
           fetch(
-            "/api/leads"
+            `/api/activity?filter=month&limit=${activityLimit}`,
+            {
+              cache: "no-store",
+            }
           ),
-
-
-          fetch(
-            `/api/activity?filter=month&limit=${activityLimit}`
-          ),
-
-
         ])
 
 
+        const leadsJson = await leadsResponse.json()
+        const activityJson = await activityResponse.json()
 
-
-
-        const leadsJson =
-          await leadsResponse.json()
-
-
-        const activityJson =
-          await activityResponse.json()
-
-
-
-
-
-        if(!leadsResponse.ok){
-
+        if (!leadsResponse.ok) {
           throw new Error(
             leadsJson.error ||
-            "Failed loading leads"
+              "Failed loading leads"
           )
-
         }
 
-
-
-
-        if(!activityResponse.ok){
-
+        if (!activityResponse.ok) {
           throw new Error(
             activityJson.error ||
-            "Failed loading activities"
+              "Failed loading activities"
           )
-
         }
-
-
-
-
 
         const activityData =
           Array.isArray(activityJson)
@@ -110,34 +68,20 @@ export function useLeadsData(
               )
             : []
 
-
-
-
-
-
         setLeads(
           Array.isArray(leadsJson)
-            ? leadsJson as Lead[]
+            ? (leadsJson as Lead[])
             : leadsJson.leads ?? []
         )
 
-
-
         setActivities(
-          (activityData as Activity[]) || []
+          activityData as Activity[]
         )
-
-
-
-      }
-      catch(error){
-
-
+      } catch (error) {
         console.error(
           "DASHBOARD DATA ERROR:",
           error
         )
-
 
         setError(
           error instanceof Error
@@ -145,55 +89,40 @@ export function useLeadsData(
             : "Unknown error"
         )
 
-
-        setLeads([])
-        setActivities([])
-
-
+        // Bestehende Daten bei einem Refresh behalten.
+        if (!isRefresh) {
+          setLeads([])
+          setActivities([])
+        }
+      } finally {
+        if (isRefresh) {
+          setRefreshing(false)
+        } else {
+          setLoading(false)
+        }
       }
-      finally{
-
-        setLoading(false)
-
-      }
-
-
     },
-    [
-      activityLimit
-    ]
+    [activityLimit]
   )
 
+  useEffect(() => {
+    void load(false)
+  }, [load])
 
-
-
-
-  useEffect(
-    () => {
-
-      void load()
-
-    },
-    [
-      load
-    ]
-  )
-
-
-
-
+  const refresh = useCallback(async () => {
+    await load(true)
+  }, [load])
 
   return {
     leads,
     setLeads,
     activities,
     loading,
+    refreshing,
     error,
-    refresh: load,
+    refresh,
   }
-
 }
-
 
 export type {
   Lead,

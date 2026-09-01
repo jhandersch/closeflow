@@ -103,6 +103,7 @@ export async function GET(request: Request) {
       .from("leads")
       .select(selectColumns)
       .eq("workspace_id", workspace.id)
+      .is("deleted_at", null)
       .order("created_at", {
         ascending: false,
       })
@@ -118,25 +119,26 @@ export async function GET(request: Request) {
     )
   ) {
     const fallback =
-      await supabase
-        .from("leads")
-        .select(`
-          name,
-          company,
-          status,
-          value,
-          source,
-          email,
-          phone,
-          website,
-          address,
-          tags,
-          notes
-        `)
-        .eq("workspace_id", workspace.id)
-        .order("created_at", {
-          ascending: false,
-        })
+  await supabase
+    .from("leads")
+    .select(`
+      name,
+      company,
+      status,
+      value,
+      source,
+      email,
+      phone,
+      website,
+      address,
+      tags,
+      notes
+    `)
+    .eq("workspace_id", workspace.id)
+    .is("deleted_at", null)
+    .order("created_at", {
+      ascending: false,
+    })
 
     if (fallback.error) {
       return NextResponse.json(

@@ -444,40 +444,59 @@ PASS: [x]
 
 ---
 
-## B2) Leads
+### B2) Leads
 
-* [ ] lead create
-* [ ] lead edit
-* [ ] lead delete
-* [ ] search
-* [ ] sorting
-* [ ] filters
-* [ ] pagination
-* [ ] empty state
-* [ ] loading state
-* [ ] error state
+**Status: TESTED / PASS**
 
-Status:
+* [x] Lead creation 
+* [x] Lead editing 
+* [x] Lead deletion / soft delete
+* [x] Lead search
+* [x] Lead sorting 
+* [x] Lead filters 
+* [x] Pagination 
+* [x] Empty state 
+* [x] Loading state 
+* [x] Error state 
 
-NOT YET TESTED
+Additional verification:
+
+* Deleted leads are excluded from active lead queries and exports.
+* Restoring a deleted lead is supported and logged as an activity.
+* Lead export excludes soft-deleted leads.
+* CSV export uses proper escaping and semicolon delimiters.
 
 ---
 
-## B3) Customers
+### B3) Customers
 
-* [ ] customer create
-* [ ] customer edit
-* [ ] customer delete
-* [ ] customer search
-* [ ] customer timeline
-* [ ] linked leads visible
-* [ ] empty state
-* [ ] loading state
-* [ ] error state
+**Status: TESTED / PASS**
 
-Status:
+* [x] Customer aggregation from leads 
+* [x] Customer editing 
+* [x] Customer deletion / soft delete of linked leads 
+* [x] Customer search 
+* [x] Customer filters 
+* [x] VIP customer handling 
+* [x] Customer timeline 
+* [x] Linked leads visible 
+* [x] Customer export 
+* [x] Customer import 
+* [x] Import duplicate detection 
+* [x] Import issue reporting 
+* [x] Empty state 
+* [x] Loading state 
+* [x] Error state 
 
-NOT YET TESTED
+Additional verification:
+
+* Deleted leads are excluded from customer aggregation.
+* Customer deletion removes the customer from the active customer view without triggering an unnecessary full-page loading state.
+* Customer import supports CSV/XLS/XLSX input.
+* Import feedback and errors are shown separately and automatically disappear after a short period.
+* Customer export supports CSV and XLSX.
+* Customer detail view displays customer name, VIP status, industry, website, address, linked leads and activity timeline.
+
 
 ---
 

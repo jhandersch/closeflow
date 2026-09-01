@@ -14,48 +14,80 @@ export default function AuthGuard({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
   const [loading, setLoading] = useState(true)
 
-  const nextPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`
-  const encodedNextPath = encodeURIComponent(nextPath)
+  const nextPath = `${pathname}${
+    searchParams.toString()
+      ? `?${searchParams.toString()}`
+      : ""
+  }`
 
   useEffect(() => {
+    let mounted = true
+
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession()
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
-      if (!data.session) {
-        router.replace(`/login?next=${encodedNextPath}`)
-        return
+        if (!session) {
+          router.replace(
+            `/login?next=${encodeURIComponent(nextPath)}`
+          )
+          return
+        }
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user?.user_metadata?.onboarding_completed) {
+          router.replace(
+            `/onboarding?next=${encodeURIComponent(nextPath)}`
+          )
+          return
+        }
+
+        if (mounted) {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error("AUTH GUARD ERROR:", error)
+
+        if (mounted) {
+          setLoading(false)
+        }
       }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user?.user_metadata?.onboarding_completed) {
-        router.replace(`/onboarding?next=${encodedNextPath}`)
-        return
-      }
-
-      setLoading(false)
     }
 
     void checkSession()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.replace(`/login?next=${encodedNextPath}`)
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          router.replace(
+            `/login?next=${encodeURIComponent(nextPath)}`
+          )
+        }
       }
-    })
+    )
 
-    return () => subscription.unsubscribe()
-  }, [encodedNextPath, router])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [router, nextPath])
 
   if (loading) {
     const loadingTitle = hydrated
-      ? t("auth.sessionLoading", "Loading session...")
+      ? t(
+          "auth.sessionLoading",
+          "Loading session..."
+        )
       : "Loading session..."
 
     const loadingBody = hydrated
@@ -69,8 +101,12 @@ export default function AuthGuard({
         <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8 shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_8%,transparent)]">
           <div className="flex items-center gap-4">
             <div className="h-11 w-11 animate-pulse rounded-2xl bg-cyan-500/20" />
+
             <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">CloseFlow</p>
+              <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">
+                CloseFlow
+              </p>
+
               <h1 className="mt-1 text-xl font-semibold text-foreground">
                 {loadingTitle}
               </h1>
