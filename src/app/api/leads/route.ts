@@ -57,27 +57,37 @@ export async function GET(req: Request) {
     }
 
 
+    const includeCompleted =
+      new URL(req.url).searchParams.get("includeCompleted") === "true"
+
+    let leadsQuery = supabase
+      .from("leads")
+      .select("*")
+      .eq(
+        "workspace_id",
+        workspace.id
+      )
+      .is(
+        "deleted_at",
+        null
+      )
+
+    if (!includeCompleted) {
+      leadsQuery = leadsQuery.in(
+        "status",
+        ["new", "contacted", "proposal"]
+      )
+    }
+
     const {
       data,
       error
-    } =
-      await supabase
-        .from("leads")
-        .select("*")
-        .eq(
-          "workspace_id",
-          workspace.id
-        )
-        .is(
-          "deleted_at",
-          null
-        )
-        .order(
-          "created_at",
-          {
-            ascending:false
-          }
-        )
+    } = await leadsQuery.order(
+      "created_at",
+      {
+        ascending:false
+      }
+    )
 
 
     if (error) {

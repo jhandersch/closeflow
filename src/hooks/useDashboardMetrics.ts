@@ -20,7 +20,14 @@ export function useDashboardMetrics(leads: Lead[]) {
      * BASIC METRICS
      */
 
-    const total = leads.length
+    const openLeads = leads.filter(
+      (lead) =>
+        lead.status === "new" ||
+        lead.status === "contacted" ||
+        lead.status === "proposal"
+    )
+
+    const total = openLeads.length
 
     const won = leads.filter(
       (lead) => lead.status === "won"
@@ -46,12 +53,6 @@ export function useDashboardMetrics(leads: Lead[]) {
     /*
      * OPEN PIPELINE
      */
-
-    const openLeads = leads.filter(
-      (lead) =>
-        lead.status !== "won" &&
-        lead.status !== "lost"
-    )
 
     const pipelineValue = openLeads.reduce(
       (sum, lead) => sum + (lead.value || 0),

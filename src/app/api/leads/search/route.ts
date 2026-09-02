@@ -34,10 +34,10 @@ export async function GET(request: Request) {
 
   const likeQuery = `%${query}%`
   const [nameResult, companyResult, emailResult, phoneResult] = await Promise.all([
-    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).ilike("name", likeQuery).limit(10),
-    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).ilike("company", likeQuery).limit(10),
-    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).ilike("email", likeQuery).limit(10),
-    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).ilike("phone", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]).ilike("name", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]).ilike("company", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]).ilike("email", likeQuery).limit(10),
+    supabase.from("leads").select("id, name, company, email, phone, status, value, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]).ilike("phone", likeQuery).limit(10),
   ])
 
   const errorMessage = nameResult.error?.message || companyResult.error?.message || emailResult.error?.message || phoneResult.error?.message

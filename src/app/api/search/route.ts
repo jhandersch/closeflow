@@ -87,6 +87,10 @@ export async function GET(
         "deleted_at",
         null
       )
+      .in(
+        "status",
+        ["new", "contacted", "proposal"]
+      )
       .or(
         `
         name.ilike.%${query}%,

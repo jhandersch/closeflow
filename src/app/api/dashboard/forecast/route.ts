@@ -22,7 +22,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: leadsError.message }, { status: 500 })
   }
 
-  const pipelineValue = (leads || []).reduce((sum, lead) => sum + (lead.value || 0), 0)
+  const activeLeads = (leads || []).filter(
+    (lead) =>
+      lead.status === "new" ||
+      lead.status === "contacted" ||
+      lead.status === "proposal"
+  )
+  const pipelineValue = activeLeads.reduce((sum, lead) => sum + (lead.value || 0), 0)
   const weightedRevenue = (leads || []).reduce((sum, lead) => {
     const weight = lead.status === "won" ? 1 : lead.status === "proposal" ? 0.7 : lead.status === "contacted" ? 0.3 : lead.status === "new" ? 0.1 : 0
     return sum + (lead.value || 0) * weight

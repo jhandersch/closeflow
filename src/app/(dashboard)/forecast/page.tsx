@@ -12,7 +12,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 export default function ForecastPage() {
   const { language } = useAppPreferences()
   const isDe = language === "de"
-  const { leads } = useLeadsData({ activityLimit: 10 })
+  const { leads } = useLeadsData({ activityLimit: 10, includeCompleted: true })
   const forecast = calculateForecast(leads)
   const { insight, loading: insightLoading, error: insightError } = useRevenueForecastAI(leads, forecast, language)
 

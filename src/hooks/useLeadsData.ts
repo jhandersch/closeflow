@@ -3,11 +3,13 @@ import type { Activity, Lead } from "@/types"
 
 type UseLeadsDataOptions = {
   activityLimit?: number
+  includeCompleted?: boolean
 }
 
 export function useLeadsData(
   {
     activityLimit = 6,
+    includeCompleted = false,
   }: UseLeadsDataOptions = {}
 ) {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -31,9 +33,12 @@ export function useLeadsData(
           leadsResponse,
           activityResponse,
         ] = await Promise.all([
-          fetch(`/api/leads?t=${Date.now()}`, {
+          fetch(
+            `/api/leads?${includeCompleted ? "includeCompleted=true&" : ""}t=${Date.now()}`,
+            {
             cache: "no-store",
-          }),
+            }
+          ),
           fetch(
             `/api/activity?filter=month&limit=${activityLimit}`,
             {
@@ -102,7 +107,7 @@ export function useLeadsData(
         }
       }
     },
-    [activityLimit]
+    [activityLimit, includeCompleted]
   )
 
   useEffect(() => {

@@ -16,7 +16,7 @@ import { leadDisplayName, leadCompany } from "@/lib/utils"
 import { calculateSalesScore } from "@/lib/salesScore"
 import { loadDemoData } from "@/lib/demoData"
 import type { LeadSource, LeadStatus, LeadSortBy } from "@/types"
-import { Star } from "lucide-react"
+import { Plus, Star } from "lucide-react"
 import * as XLSX from "xlsx"
 
 type ImportIssue = {
@@ -285,7 +285,6 @@ const priorityLabel =
   sourceFilter,
   status,
 ])
-
 
   const getAuthHeaders = async (includeJson = false) => {
     const {
@@ -938,7 +937,9 @@ if (!response.ok) {
               p-10
               text-center
             ">
-              <div className="mx-auto h-10 w-10 rounded-full border border-cyan-500/30 bg-cyan-500/10" />
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+                <Plus size={18} aria-hidden="true" />
+              </div>
 
               <h3 className="
                 mt-4
@@ -946,7 +947,7 @@ if (!response.ok) {
                 font-semibold
                 text-foreground
               ">
-                {isDe ? "Noch keine Leads" : "No leads yet"}
+                {isDe ? "Keine Leads gefunden" : "No leads found"}
               </h3>
 
               <p className="
@@ -964,7 +965,7 @@ if (!response.ok) {
                   onClick={() => setShowForm(true)}
                   className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
                 >
-                  {isDe ? "Ersten Lead erstellen" : "Create first lead"}
+                  {isDe ? "Ersten Lead erstellen" : "Create First Lead"}
                 </button>
 
                 <button
@@ -1005,7 +1006,7 @@ if (!response.ok) {
                       : "Loading demo data..."
                     : isDe
                     ? "Demo-Daten laden"
-                    : "Load demo data"}
+                    : "Load Demo Data"}
                 </button>
               </div>
 
@@ -1391,13 +1392,22 @@ if (!response.ok) {
                           void refresh()
                         }}
                         onStatusChanged={(updatedLead) => {
-                          setLeads((current) =>
-                            current.map((lead) =>
+                          setLeads((current) => {
+                            if (
+                              updatedLead.status === "won" ||
+                              updatedLead.status === "lost"
+                            ) {
+                              return current.filter(
+                                (lead) => lead.id !== updatedLead.id
+                              )
+                            }
+
+                            return current.map((lead) =>
                               lead.id === updatedLead.id
                                 ? updatedLead
                                 : lead
                             )
-                          )
+                          })
                         }}
                       />
                     </div>

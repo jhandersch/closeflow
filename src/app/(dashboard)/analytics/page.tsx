@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
   const isDe = language === "de"
   const locale = isDe ? "de-DE" : "en-US"
 
-  const { leads, loading } = useLeadsData({ activityLimit: 5 })
+  const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true })
   const metrics = useDashboardMetrics(leads)
 
   if (loading) {

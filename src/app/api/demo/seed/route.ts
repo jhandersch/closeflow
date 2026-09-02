@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
+import { runLeadAutomation } from "@/lib/automation"
+import type { Lead } from "@/types"
 
 type DemoLeadSeed = {
   name: string
@@ -122,6 +124,8 @@ export async function POST(request: Request) {
     .from("leads")
     .select("id")
     .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
+    .is("deleted_at", null)
+    .in("status", ["new", "contacted", "proposal"])
     .ilike("notes", `${DEMO_MARKER}%`)
 
   if (existingDemoLeadsResult.error) {
@@ -197,6 +201,32 @@ export async function POST(request: Request) {
 
     insertedLeads += 1
 
+    if (
+      leadSeed.status === "contacted" ||
+      leadSeed.status === "proposal"
+    ) {
+      const automatedLead = {
+        id: leadInsert.data.id,
+        name: leadSeed.name,
+        company: leadSeed.company,
+        status: leadSeed.status,
+        value: leadSeed.value,
+      } as Lead
+
+      const previousStatus =
+        leadSeed.status === "contacted"
+          ? "new"
+          : "contacted"
+
+      await runLeadAutomation(
+        supabase,
+        user.id,
+        workspaceId || "",
+        automatedLead,
+        previousStatus
+      )
+    }
+
     const activityRows = leadSeed.activities.map((activity, index) => ({
       workspace_id: workspaceId,
       lead_id: leadInsert.data.id,
@@ -217,7 +247,10 @@ export async function POST(request: Request) {
       insertedActivities += activityRows.length
     }
 
-    const taskRows = leadSeed.tasks.map((task) => ({
+    const taskRows =
+      leadSeed.status === "won" || leadSeed.status === "lost"
+        ? []
+        : leadSeed.tasks.map((task) => ({
       workspace_id: workspaceId,
       lead_id: leadInsert.data.id,
       user_id: user.id,
@@ -227,7 +260,7 @@ export async function POST(request: Request) {
       priority: task.priority,
       due_date: new Date(Date.now() + task.dueInDays * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString(),
-    }))
+        }))
 
     if (taskRows.length > 0) {
       const taskInsert = await supabase.from("tasks").insert(taskRows)

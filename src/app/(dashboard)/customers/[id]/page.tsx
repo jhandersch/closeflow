@@ -45,6 +45,7 @@ export default function CustomerDetailPage() {
     error,
   } = useLeadsData({
     activityLimit: 25,
+    includeCompleted: true,
   })
 
   const [editedCustomer, setEditedCustomer] =

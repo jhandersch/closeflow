@@ -14,7 +14,7 @@ export default function RevenueAnalyticsPage() {
   const isDe = language === "de"
   const locale = isDe ? "de-DE" : "en-US"
 
-  const { leads, loading } = useLeadsData({ activityLimit: 5 })
+  const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true })
   const metrics = useDashboardMetrics(leads)
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
   const [revenueEvents, setRevenueEvents] = useState<Array<{ month: string; value: number }>>([])

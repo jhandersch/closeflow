@@ -48,6 +48,7 @@ export default function DashboardPage() {
     refresh,
   } = useLeadsData({
     activityLimit: 240,
+    includeCompleted: true,
   })
 
   const metrics = useDashboardMetrics(leads)

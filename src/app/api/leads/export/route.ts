@@ -104,6 +104,7 @@ export async function GET(request: Request) {
       .select(selectColumns)
       .eq("workspace_id", workspace.id)
       .is("deleted_at", null)
+      .in("status", ["new", "contacted", "proposal"])
       .order("created_at", {
         ascending: false,
       })
@@ -136,6 +137,7 @@ export async function GET(request: Request) {
     `)
     .eq("workspace_id", workspace.id)
     .is("deleted_at", null)
+    .in("status", ["new", "contacted", "proposal"])
     .order("created_at", {
       ascending: false,
     })

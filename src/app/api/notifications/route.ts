@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
 
   const [{ data: leads, error: leadsError }, { data: activities, error: activitiesError }] = await Promise.all([
-    supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null),
+    supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]),
     supabase.from("activities").select("lead_id, created_at").eq("workspace_id", workspace.id),
   ])
 

@@ -50,6 +50,7 @@ const escapeCsv = (value: unknown) => {
 export default function CustomersPage() {
   const { leads, loading, error, refresh } = useLeadsData({
     activityLimit: 0,
+    includeCompleted: true,
   })
 
   const { language, t } = useAppPreferences()
@@ -777,7 +778,7 @@ const downloadImportIssuesReport = () => {
               <p className="mt-2 text-sm text-foreground/65">
                 {t(
                   "customers.noCustomersYetDescription",
-                  "Customers will appear here once you have leads with a company."
+                  "Customers will appear here once your deals are completed."
                 )}
               </p>
             </div>
