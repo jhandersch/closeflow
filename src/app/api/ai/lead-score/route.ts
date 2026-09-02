@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const ageDays = Math.max(0, Math.floor((Date.now() - new Date(lead.stage_changed_at || lead.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24)))
   const contactDays = lastContactAt ? Math.floor((Date.now() - lastContactAt) / (1000 * 60 * 60 * 24)) : 99
 
-  const stageScore: Record<string, number> = { new: 12, contacted: 28, qualified: 48, proposal: 72, won: 92, lost: 8 }
+  const stageScore: Record<string, number> = { new: 15, contacted: 50, proposal: 80, won: 100, lost: 0 }
   const score = clamp(
     Math.round((stageScore[status] || 20) + (value >= 50000 ? 12 : value >= 20000 ? 8 : value >= 10000 ? 5 : 2) + (contactDays <= 2 ? 15 : contactDays <= 7 ? 8 : -10) + (ageDays <= 7 ? 5 : -5))
   )

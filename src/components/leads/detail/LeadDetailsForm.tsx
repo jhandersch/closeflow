@@ -343,10 +343,6 @@ New
 Contacted
 </option>
 
-<option value="qualified">
-Qualified
-</option>
-
 <option value="proposal">
 Proposal
 </option>

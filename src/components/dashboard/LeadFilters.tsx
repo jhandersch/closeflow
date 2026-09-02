@@ -58,7 +58,6 @@ export default function LeadFilters({
         <option value="all">{isDe ? "Alle Status" : "All status"}</option>
         <option value="new">{isDe ? "Neu" : "New"}</option>
         <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
-        <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
         <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
         <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
         <option value="lost">{isDe ? "Verloren" : "Lost"}</option>

@@ -4,7 +4,7 @@ import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route"
 type DemoLeadSeed = {
   name: string
   company: string
-  status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost"
+  status: "new" | "contacted" | "proposal" | "won" | "lost"
   value: number
   notes: string
   activities: Array<{ action: string; type?: string }>

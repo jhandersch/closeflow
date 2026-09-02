@@ -448,12 +448,6 @@ const priorityLabel =
   return
 }
 
-if (!company.trim()) {
-  setFormError(isDe ? "Firmenname ist erforderlich" : "Company name is required")
-  setSubmitting(false)
-  return
-}
-
 const dealValue = Number(value)
 const parsedTags = tagsInput
   .split(",")
@@ -780,7 +774,6 @@ if (!response.ok) {
               >
                 <option value="new">{isDe ? "Neu" : "New"}</option>
                 <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
-                <option value="qualified">{isDe ? "Qualifiziert" : "Qualified"}</option>
                 <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
                 <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
                 <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
@@ -1220,8 +1213,6 @@ if (!response.ok) {
                             ? "bg-blue-500/15 text-blue-300"
                             : lead.status === "contacted"
                             ? "bg-yellow-500/15 text-yellow-300"
-                            : lead.status === "qualified"
-                            ? "bg-cyan-500/15 text-cyan-300"
                             : lead.status === "proposal"
                             ? "bg-orange-500/15 text-orange-300"
                             : lead.status === "won"

@@ -1,7 +1,6 @@
 export type LeadStatus =
   | "new"
   | "contacted"
-  | "qualified"
   | "proposal"
   | "won"
   | "lost"

@@ -25,7 +25,6 @@ const getStatusLabel = (status: string) => {
   const labels: Record<string, string> = {
     new: isDe ? "Neu" : "New",
     contacted: isDe ? "Kontaktiert" : "Contacted",
-    qualified: isDe ? "Qualifiziert" : "Qualified",
     proposal: isDe ? "Angebot" : "Proposal",
     won: isDe ? "Gewonnen" : "Won",
     lost: isDe ? "Verloren" : "Lost",
@@ -37,7 +36,6 @@ const getStatusLabel = (status: string) => {
 const stages = [
   { id: "new", label: isDe ? "Neu" : "New" },
   { id: "contacted", label: isDe ? "Kontaktiert" : "Contacted" },
-  { id: "qualified", label: isDe ? "Qualifiziert" : "Qualified" },
   { id: "proposal", label: isDe ? "Angebot" : "Proposal" },
   { id: "won", label: isDe ? "Gewonnen" : "Won" },
   { id: "lost", label: isDe ? "Verloren" : "Lost" },

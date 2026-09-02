@@ -18,7 +18,6 @@ import toast from "react-hot-toast"
 type StageKey =
   | "new"
   | "contacted"
-  | "qualified"
   | "proposal"
   | "won"
   | "lost"
@@ -35,10 +34,6 @@ const stageOrder: Array<{
   {
     key: "contacted",
     label: "KONTAKTIERT",
-  },
-  {
-    key: "qualified",
-    label: "QUALIFIZIERT",
   },
   {
     key: "proposal",
@@ -61,9 +56,6 @@ const normalizeStage = (
 
   if (status === "contacted")
     return "contacted"
-
-  if (status === "qualified")
-    return "qualified"
 
   if (status === "proposal")
     return "proposal"
@@ -96,7 +88,6 @@ export default function PipelinePage() {
     useState<Record<StageKey, Lead[]>>({
       new: [],
       contacted: [],
-      qualified: [],
       proposal: [],
       won: [],
       lost: [],
@@ -111,7 +102,6 @@ export default function PipelinePage() {
     const grouped: Record<StageKey, Lead[]> = {
       new: [],
       contacted: [],
-      qualified: [],
       proposal: [],
       won: [],
       lost: [],

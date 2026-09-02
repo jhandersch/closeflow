@@ -131,7 +131,6 @@ export default function AIAssistantPage() {
       statusBreakdown: {
         new: leads.filter((lead) => lead.status === "new").length,
         contacted: leads.filter((lead) => lead.status === "contacted").length,
-        qualified: leads.filter((lead) => lead.status === "qualified").length,
         proposal: proposalCount,
         won: wonLeads.length,
         lost: leads.filter((lead) => lead.status === "lost").length,

@@ -31,7 +31,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const stageScores: Record<string, number> = {
     new: 12,
     contacted: 28,
-    qualified: 48,
     proposal: 72,
     won: 92,
     lost: 10,

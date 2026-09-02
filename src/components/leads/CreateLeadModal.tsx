@@ -97,8 +97,8 @@ export default function CreateLeadModal({
 
   setError(null)
 
-  if (!name.trim() || !company.trim()) {
-    setError(isDe ? "Name und Firma sind erforderlich" : "Name and company are required")
+  if (!name.trim()) {
+    setError(isDe ? "Name ist erforderlich" : "Name is required")
     return
   }
 
@@ -471,10 +471,6 @@ export default function CreateLeadModal({
 
               <option value="contacted">
                 Kontaktiert
-              </option>
-
-              <option value="qualified">
-                Qualifiziert
               </option>
 
               <option value="proposal">

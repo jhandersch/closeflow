@@ -249,16 +249,12 @@ export async function POST(request: Request) {
     const valueText = getValue(values, "value")
     const parsedValue = parseNumber(valueText)
 
-    if (!name || !company) {
+    if (!name) {
       skipped += 1
 
       addIssue({
         row: rowNumber,
-        reason: !name && !company
-          ? "Missing required fields: name and company"
-          : !name
-            ? "Missing required field: name"
-            : "Missing required field: company",
+        reason: "Missing required field: name",
         name,
         company,
         status,

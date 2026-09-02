@@ -31,8 +31,6 @@ const stageColors: Record<string,string> = {
 
   Contacted:"#facc15",
 
-  Qualified:"#a78bfa",
-
   Proposal:"#fb923c",
 
   Won:"#34d399",
@@ -62,11 +60,6 @@ export default function PipelineChart({
     Contacted: t(
       "pipeline.contacted",
       "Contacted"
-    ),
-
-    Qualified: t(
-      "pipeline.qualified",
-      "Qualified"
     ),
 
     Proposal: t(

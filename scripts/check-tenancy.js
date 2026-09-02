@@ -14,6 +14,8 @@ const ALLOWLIST = new Set([
   "src/app/api/security/recovery-codes/verify/route.ts",
   "src/app/api/workspaces/create/route.ts",
   "src/app/api/workspaces/route.ts",
+  "src/app/api/me/permissions/route.ts",
+  "src/app/api/workspaces/invite/accept/route.ts",
 ])
 
 const walk = (dir) => {

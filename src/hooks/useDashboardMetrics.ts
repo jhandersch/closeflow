@@ -8,7 +8,6 @@ import { calculateForecast } from "@/lib/forecast"
 const stageOrder = [
   "new",
   "contacted",
-  "qualified",
   "proposal",
   "won",
   "lost",
@@ -369,14 +368,6 @@ export function useDashboardMetrics(leads: Lead[]) {
         {
           name: "Contacted",
           value: contactedLeads.length,
-        },
-
-        {
-          name: "Qualified",
-          value: leads.filter(
-            (lead) =>
-              lead.status === "qualified"
-          ).length,
         },
 
         {

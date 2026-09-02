@@ -42,12 +42,6 @@ const statuses: Array<{
     color: "bg-yellow-500/20 text-yellow-300 border-yellow-400/30",
   },
   {
-    value: "qualified",
-    de: "Qualifiziert",
-    en: "Qualified",
-    color: "bg-purple-500/20 text-purple-300 border-purple-400/30",
-  },
-  {
     value: "proposal",
     de: "Angebot",
     en: "Proposal",

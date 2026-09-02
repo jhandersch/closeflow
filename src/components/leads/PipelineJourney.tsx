@@ -6,7 +6,7 @@ type PipelineJourneyProps = {
   status: string
 }
 
-const stages = ["new", "contacted", "qualified", "proposal", "won", "lost"]
+const stages = ["new", "contacted", "proposal", "won", "lost"]
 
 export default function PipelineJourney({
   status,
@@ -18,7 +18,6 @@ export default function PipelineJourney({
   const labels: Record<string, string> = {
     new: isDe ? "Neu" : "New",
     contacted: isDe ? "Kontaktiert" : "Contacted",
-    qualified: isDe ? "Qualifiziert" : "Qualified",
     proposal: isDe ? "Angebot" : "Proposal",
     won: isDe ? "Gewonnen" : "Won",
     lost: isDe ? "Verloren" : "Lost",

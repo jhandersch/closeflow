@@ -43,7 +43,6 @@ export function calculateSalesScore(
   const stageScore: Record<string, number> = {
     new: 25,
     contacted: 50,
-    qualified: 65,
     proposal: 80,
     won: 100,
     lost: 0,
