@@ -155,6 +155,10 @@ thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
 
   return [...leads]
     .filter((lead) => {
+      if (lead.status === "won" || lead.status === "lost") {
+        return false
+      }
+
       const leadOwnerId =
         lead.owner_id ||
         lead.assigned_to ||
@@ -1386,14 +1390,11 @@ if (!response.ok) {
 
                           void refresh()
                         }}
-                        onStatusChanged={(leadId, newStatus) => {
+                        onStatusChanged={(updatedLead) => {
                           setLeads((current) =>
                             current.map((lead) =>
-                              lead.id === leadId
-                                ? {
-                                    ...lead,
-                                    status: newStatus,
-                                  }
+                              lead.id === updatedLead.id
+                                ? updatedLead
                                 : lead
                             )
                           )

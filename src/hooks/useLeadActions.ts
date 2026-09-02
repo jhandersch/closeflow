@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase/client"
-import type { ActivityType, LeadSource, LeadStatus } from "@/types"
+import type {
+  ActivityType,
+  Lead,
+  LeadSource,
+  LeadStatus,
+} from "@/types"
 import { runLeadAutomation } from "@/lib/automation"
 
 
@@ -37,8 +42,8 @@ export function useLeadActions(
   leadId: string,
   oldStatus: LeadStatus,
   newStatus: LeadStatus
-) {
-  if (oldStatus === newStatus) return
+): Promise<Lead | null> {
+  if (oldStatus === newStatus) return null
 
   const session = await supabase.auth.getSession()
 
@@ -60,9 +65,13 @@ export function useLeadActions(
     throw new Error("Status update failed")
   }
 
+  const updatedLead = (await response.json()) as Lead
+
   if (onSuccess) {
     await onSuccess(newStatus)
   }
+
+  return updatedLead
 }
 
 
@@ -70,7 +79,8 @@ export function useLeadActions(
     leadId: string,
     oldStatus: LeadStatus,
     data: UpdateLeadData
-  ) {
+  ): Promise<Lead> {
+    
     const { data: beforeUpdateLead } = await supabase
       .from("leads")
       .select("notes")
@@ -106,9 +116,12 @@ const response = await fetch("/api/leads", {
 })
 
 if (!response.ok) {
-  throw new Error("Lead update failed")
-}
+    throw new Error("Lead update failed")
+  }
 
+  const updatedLead = (await response.json()) as Lead
+
+  return updatedLead
   }
 
 

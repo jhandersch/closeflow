@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
 import type {
@@ -20,12 +20,45 @@ type Props = {
     id:string,
     oldStatus:LeadStatus,
     data:UpdateLeadData
-  )=>Promise<void>
+  )=>Promise<Lead>
 
   isDe:boolean
 
-  onSaved: () => Promise<void>
+  onSaved: (updatedLead: Lead) => Promise<void>
 
+}
+
+function getStatusNextAction(status: LeadStatus) {
+  const daysByStatus: Partial<Record<LeadStatus, number>> = {
+    contacted: 3,
+    proposal: 5,
+  }
+
+  const actionByStatus: Record<LeadStatus, string> = {
+    new: "No action planned",
+    contacted: "Follow up with lead",
+    proposal: "Follow up on proposal",
+    won: "No action planned",
+    lost: "No action planned",
+  }
+
+  const days = daysByStatus[status]
+  const action = actionByStatus[status]
+
+  if (!days) {
+    return {
+      action,
+      actionDate: null,
+    }
+  }
+
+  const actionDate = new Date()
+  actionDate.setDate(actionDate.getDate() + days)
+
+  return {
+    action,
+    actionDate: actionDate.toISOString(),
+  }
 }
 
 
@@ -116,6 +149,39 @@ useState(
 const [saving,setSaving]=
 useState(false)
 
+const handleStatusChange = (nextStatus: LeadStatus) => {
+  setStatus(nextStatus)
+
+  const statusNextAction = getStatusNextAction(nextStatus)
+
+  setNextAction(statusNextAction.action)
+  setNextActionDate(
+    statusNextAction.actionDate
+      ? statusNextAction.actionDate.slice(0, 10)
+      : ""
+  )
+}
+
+useEffect(() => {
+  setName(lead.name)
+  setCompany(lead.company)
+  setStatus(lead.status)
+  setValue(String(lead.value ?? 0))
+  setEmail(lead.email ?? "")
+  setPhone(lead.phone ?? "")
+  setWebsite(lead.website ?? "")
+  setAddress(lead.address ?? "")
+  setNextAction(lead.next_action ?? "")
+  setNextActionDate(
+    lead.next_action_date
+      ? lead.next_action_date.slice(0, 10)
+      : ""
+  )
+  setNotes(lead.notes ?? "")
+  setSource(lead.source ?? "other")
+  setTags((lead.tags ?? []).join(", "))
+}, [lead])
+
 
 
 const handleSave=async()=>{
@@ -159,51 +225,56 @@ setSaving(true)
 
 try{
 
+const statusNextAction =
+  lead.status !== status
+    ? getStatusNextAction(status)
+    : null
 
-await saveLead(
 
-lead.id,
-
-lead.status,
-
-{
-
-name,
-
-company,
-
-status,
-
-value:dealValue,
-
-email,
-
-phone,
-
-website,
-
-address,
-
-next_action: nextAction || undefined,
-
-next_action_date:
-  nextActionDate || undefined,
-
-notes,
-
-source,
-
-tags:
-tags
-.split(",")
-.map(t=>t.trim())
-.filter(Boolean)
-
-}
-
+const updatedLead = await saveLead(
+  lead.id,
+  lead.status,
+  {
+    name,
+    company,
+    status,
+    value: dealValue,
+    email,
+    phone,
+    website,
+    address,
+    next_action:
+      (statusNextAction?.action ?? nextAction) || undefined,
+    next_action_date:
+      (statusNextAction?.actionDate ?? nextActionDate) || undefined,
+    notes,
+    source,
+    tags: tags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+  }
 )
 
-await onSaved()
+const displayedLead = statusNextAction
+  ? {
+      ...updatedLead,
+      status,
+      next_action: statusNextAction.action,
+      next_action_date: statusNextAction.actionDate,
+    }
+  : updatedLead
+
+if (statusNextAction) {
+  setNextAction(statusNextAction.action)
+  setNextActionDate(
+    statusNextAction.actionDate
+      ? statusNextAction.actionDate.slice(0, 10)
+      : ""
+  )
+}
+
+await onSaved(displayedLead)
 
 
 
@@ -320,7 +391,7 @@ isDe
 value={status}
 onChange={
 e=>
-setStatus(
+handleStatusChange(
 e.target.value as LeadStatus
 )
 }

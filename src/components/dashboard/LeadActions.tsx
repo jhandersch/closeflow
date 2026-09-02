@@ -8,6 +8,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider"
 import { useLeadActions } from "@/hooks/useLeadActions"
 
 import type {
+  Lead,
   LeadStatus,
 } from "@/types"
 
@@ -18,8 +19,7 @@ type LeadActionsProps = {
   email?: string | null
   onLeadDeleted?: () => void
   onStatusChanged?: (
-    leadId: string,
-    newStatus: LeadStatus
+    updatedLead: Lead
   ) => void
 }
 
@@ -80,9 +80,7 @@ export default function LeadActions({
   const {
     changeLeadStatus,
     deleteLead,
-  } = useLeadActions(async (newStatus) => {
-    onStatusChanged?.(leadId, newStatus)
-  })
+  } = useLeadActions()
 
   const current =
     statuses.find(
@@ -97,11 +95,15 @@ export default function LeadActions({
     if (newStatus === currentStatus) return
 
     try {
-      await changeLeadStatus(
+      const updatedLead = await changeLeadStatus(
         leadId,
         currentStatus as LeadStatus,
         newStatus
       )
+
+      if (updatedLead) {
+        onStatusChanged?.(updatedLead)
+      }
 
       toast.success(
         isDe

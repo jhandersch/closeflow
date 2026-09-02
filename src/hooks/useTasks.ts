@@ -438,5 +438,6 @@ export function useTasks(leadId: string) {
     editTask,
     toggleTask,
     deleteTask,
+    refresh: loadTasks,
   }
 }

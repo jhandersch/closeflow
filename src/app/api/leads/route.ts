@@ -632,7 +632,27 @@ if (!statusChanged && changedFields.length > 0) {
   }
 }
 
-return NextResponse.json(data)
+const {
+  data: currentLead,
+  error: currentLeadError,
+} = await supabase
+  .from("leads")
+  .select("*")
+  .eq("id", id)
+  .eq("workspace_id", workspace.id)
+  .is("deleted_at", null)
+  .single()
+
+if (currentLeadError || !currentLead) {
+  console.error(
+    "LOAD UPDATED LEAD ERROR:",
+    currentLeadError
+  )
+
+  return NextResponse.json(data)
+}
+
+return NextResponse.json(currentLead)
 
 
 

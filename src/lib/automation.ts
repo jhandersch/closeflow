@@ -172,7 +172,7 @@ async function updateNextAction(
   supabase: SupabaseClient,
   leadId: string,
   action: string,
-  actionDate: string
+  actionDate: string | null
 ) {
   const {
     error,
@@ -210,6 +210,18 @@ export async function runLeadAutomation(
     }
   )
 
+  if (
+    previousStatus !== lead.status &&
+    (lead.status === "new" || lead.status === "lost")
+  ) {
+    await updateNextAction(
+      supabase,
+      lead.id,
+      "No action planned",
+      null
+    )
+  }
+
 
   /*
     CONTACTED
@@ -229,6 +241,16 @@ export async function runLeadAutomation(
       due.toISOString()
 
 
+    await updateNextAction(
+      supabase,
+      lead.id,
+
+      "Follow up with lead",
+
+      dueDate
+    )
+
+
     await createAutomationTask(
       supabase,
       userId,
@@ -240,16 +262,6 @@ export async function runLeadAutomation(
       `Follow up: ${lead.name}`,
 
       "medium",
-
-      dueDate
-    )
-
-
-    await updateNextAction(
-      supabase,
-      lead.id,
-
-      "Follow up with lead",
 
       dueDate
     )
@@ -274,6 +286,16 @@ export async function runLeadAutomation(
       due.toISOString()
 
 
+    await updateNextAction(
+      supabase,
+      lead.id,
+
+      "Follow up on proposal",
+
+      dueDate
+    )
+
+
     await createAutomationTask(
       supabase,
       userId,
@@ -288,173 +310,7 @@ export async function runLeadAutomation(
 
       dueDate
     )
-
-
-    await updateNextAction(
-      supabase,
-      lead.id,
-
-      "Follow up on proposal",
-
-      dueDate
-    )
   }
 
 
-  /*
-    WON
-  */
-
-  if (
-    previousStatus !== "won" &&
-    lead.status === "won"
-  ) {
-    console.log(
-      "WON AUTOMATION",
-      {
-        previousStatus,
-        currentStatus: lead.status,
-      }
-    )
-
-
-    /*
-      Welcome customer
-    */
-
-    const welcomeDue =
-      new Date()
-
-    welcomeDue.setDate(
-      welcomeDue.getDate() + 1
-    )
-
-
-    await createAutomationTask(
-      supabase,
-      userId,
-      workspaceId,
-      lead,
-
-      "won_welcome_customer",
-
-      `Welcome customer: ${lead.name}`,
-
-      "high",
-
-      welcomeDue.toISOString()
-    )
-
-
-    /*
-      Onboarding meeting
-    */
-
-    const onboardingDue =
-      new Date()
-
-    onboardingDue.setDate(
-      onboardingDue.getDate() + 3
-    )
-
-
-    await createAutomationTask(
-      supabase,
-      userId,
-      workspaceId,
-      lead,
-
-      "won_onboarding_meeting",
-
-      `Schedule onboarding meeting: ${lead.name}`,
-
-      "high",
-
-      onboardingDue.toISOString()
-    )
-
-
-    /*
-      First check-in
-    */
-
-    const checkInDue =
-      new Date()
-
-    checkInDue.setDate(
-      checkInDue.getDate() + 14
-    )
-
-
-    await createAutomationTask(
-      supabase,
-      userId,
-      workspaceId,
-      lead,
-
-      "won_first_checkin",
-
-      `First customer check-in: ${lead.name}`,
-
-      "medium",
-
-      checkInDue.toISOString()
-    )
-
-
-    await updateNextAction(
-      supabase,
-      lead.id,
-
-      "Start customer onboarding",
-
-      onboardingDue.toISOString()
-    )
-  }
-
-
-  /*
-    LOST
-  */
-
-  if (
-    previousStatus !== "lost" &&
-    lead.status === "lost"
-  ) {
-    const due =
-      new Date()
-
-    due.setDate(
-      due.getDate() + 30
-    )
-
-    const dueDate =
-      due.toISOString()
-
-
-    await createAutomationTask(
-      supabase,
-      userId,
-      workspaceId,
-      lead,
-
-      "lost_reactivation",
-
-      `Reactivation follow up: ${lead.name}`,
-
-      "low",
-
-      dueDate
-    )
-
-
-    await updateNextAction(
-      supabase,
-      lead.id,
-
-      "Reactivate lead",
-
-      dueDate
-    )
-  }
 }

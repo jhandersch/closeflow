@@ -9,10 +9,12 @@ import { supabase } from "@/lib/supabase/client"
 
 
 type CustomerFilter = "all" | "active" | "lost" | "vip"
+type CustomerTypeFilter = "all" | "companies" | "private"
 
 type CustomerSummary = {
   id: string
   company: string
+  isPrivate?: boolean
   contacts: string[]
   totalRevenue: number
   deals: number
@@ -60,6 +62,8 @@ export default function CustomersPage() {
   })
 
   const [filter, setFilter] = useState<CustomerFilter>("all")
+  const [customerType, setCustomerType] =
+    useState<CustomerTypeFilter>("all")
   const [query, setQuery] = useState("")
   const [importingCsv, setImportingCsv] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
@@ -84,14 +88,20 @@ export default function CustomersPage() {
 }, [])
 
   const customers = useMemo(() => {
-    const byCompany = new Map<string, CustomerSummary>()
+    const byCustomer = new Map<string, CustomerSummary>()
 
     for (const lead of leads) {
-      const key = (lead.company || "").trim().toLowerCase()
+      if (lead.status !== "won" && lead.status !== "lost") {
+        continue
+      }
 
-      if (!key) continue
+      const company = (lead.company || "").trim()
+      const isPrivate = !company
+      const key = isPrivate
+        ? `private:${lead.id}`
+        : company.toLowerCase()
 
-      const existing = byCompany.get(key)
+      const existing = byCustomer.get(key)
 
       const lastActivity =
         lead.last_activity_at ||
@@ -100,9 +110,10 @@ export default function CustomersPage() {
         null
 
       if (!existing) {
-        byCompany.set(key, {
+        byCustomer.set(key, {
           id: key,
-          company: lead.company,
+          company: isPrivate ? lead.name : company,
+          isPrivate,
           contacts: lead.name ? [lead.name] : [],
           totalRevenue:
             lead.status === "won"
@@ -146,7 +157,7 @@ export default function CustomersPage() {
       }
     }
 
-    return Array.from(byCompany.values()).sort(
+    return Array.from(byCustomer.values()).sort(
       (a, b) => b.totalRevenue - a.totalRevenue
     )
   }, [leads])
@@ -157,6 +168,20 @@ export default function CustomersPage() {
     return customers
       .filter((customer) => {
         if (deletedCustomers.has(customer.id)) {
+          return false
+        }
+
+        if (
+          customerType === "companies" &&
+          customer.isPrivate
+        ) {
+          return false
+        }
+
+        if (
+          customerType === "private" &&
+          !customer.isPrivate
+        ) {
           return false
         }
 
@@ -181,7 +206,13 @@ export default function CustomersPage() {
         return true
       })
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
-  }, [customers, filter, query, deletedCustomers])
+  }, [
+    customers,
+    customerType,
+    filter,
+    query,
+    deletedCustomers,
+  ])
 
 
   const getAuthHeaders = async (includeJson = false) => {
@@ -220,7 +251,9 @@ export default function CustomersPage() {
 
       const customerLeads = leads.filter(
         (lead) =>
-          (lead.company || "").trim().toLowerCase() === customer.id
+          customer.isPrivate
+            ? customer.id === `private:${lead.id}`
+            : (lead.company || "").trim().toLowerCase() === customer.id
       )
 
       await Promise.all(
@@ -507,7 +540,7 @@ const downloadImportIssuesReport = () => {
           </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto_auto]">
           <input
             value={query}
             onChange={(event) =>
@@ -521,9 +554,12 @@ const downloadImportIssuesReport = () => {
           />
 
           <button
-            onClick={() => setFilter("all")}
+            onClick={() => {
+              setFilter("all")
+              setCustomerType("all")
+            }}
             className={`rounded-xl border px-4 py-2 text-sm ${
-              filter === "all"
+              filter === "all" && customerType === "all"
                 ? "border-foreground bg-foreground text-background"
                 : "border-border-subtle text-foreground/80"
             }`}
@@ -532,7 +568,11 @@ const downloadImportIssuesReport = () => {
           </button>
 
           <button
-            onClick={() => setFilter("active")}
+            onClick={() =>
+              setFilter((current) =>
+                current === "active" ? "all" : "active"
+              )
+            }
             className={`rounded-xl border px-4 py-2 text-sm ${
               filter === "active"
                 ? "border-foreground bg-foreground text-background"
@@ -546,7 +586,11 @@ const downloadImportIssuesReport = () => {
           </button>
 
           <button
-            onClick={() => setFilter("lost")}
+            onClick={() =>
+              setFilter((current) =>
+                current === "lost" ? "all" : "lost"
+              )
+            }
             className={`rounded-xl border px-4 py-2 text-sm ${
               filter === "lost"
                 ? "border-foreground bg-foreground text-background"
@@ -560,7 +604,11 @@ const downloadImportIssuesReport = () => {
           </button>
 
           <button
-            onClick={() => setFilter("vip")}
+            onClick={() =>
+              setFilter((current) =>
+                current === "vip" ? "all" : "vip"
+              )
+            }
             className={`rounded-xl border px-4 py-2 text-sm ${
               filter === "vip"
                 ? "border-foreground bg-foreground text-background"
@@ -568,6 +616,47 @@ const downloadImportIssuesReport = () => {
             }`}
           >
             VIP
+          </button>
+
+          <button
+            onClick={() =>
+              setCustomerType((current) =>
+                current === "companies" ? "all" : "companies"
+              )
+            }
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              customerType === "companies"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border-subtle text-foreground/80"
+            }`}
+          >
+            Companies
+          </button>
+
+          <button
+            onClick={() =>
+              setCustomerType((current) =>
+                current === "private" ? "all" : "private"
+              )
+            }
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              customerType === "private"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border-subtle text-foreground/80"
+            }`}
+          >
+            Private Customers
+          </button>
+
+          <button
+            onClick={() => {
+              setFilter("all")
+              setCustomerType("all")
+              setQuery("")
+            }}
+            className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
+          >
+            Reset filters
           </button>
         </div>
 
@@ -727,8 +816,24 @@ const downloadImportIssuesReport = () => {
             </div>
           )
         ) : (
-          <div className="space-y-3">
-            {filteredCustomers.map((customer) => (
+          <div className="space-y-6">
+            {(["Companies", "Private Customers"] as const).map((section) => {
+              const sectionCustomers = filteredCustomers.filter(
+                (customer) =>
+                  section === "Private Customers"
+                    ? customer.isPrivate
+                    : !customer.isPrivate
+              )
+
+              if (!sectionCustomers.length) return null
+
+              return (
+                <section key={section} className="space-y-3">
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {section}
+                  </h2>
+
+                  {sectionCustomers.map((customer) => (
               <div
                 key={customer.id}
                 className="rounded-2xl border border-border-subtle bg-surface-1 p-5 transition hover:border-cyan-400/30"
@@ -848,7 +953,10 @@ const downloadImportIssuesReport = () => {
                   </button>
                 </div>
               </div>
-            ))}
+                  ))}
+                </section>
+              )
+            })}
           </div>
         )}
       </div>

@@ -14,7 +14,7 @@ type Props = {
     id: string,
     oldStatus: LeadStatus,
     data: UpdateLeadData
-  ) => Promise<void>
+  ) => Promise<Lead>
   isDe: boolean
 }
 

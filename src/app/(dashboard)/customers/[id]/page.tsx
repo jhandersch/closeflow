@@ -37,6 +37,8 @@ export default function CustomerDetailPage() {
       ? decodeURIComponent(params.id)
       : ""
 
+  const isPrivateCustomer = id.startsWith("private:")
+
   const {
     leads,
     loading,
@@ -93,9 +95,11 @@ export default function CustomerDetailPage() {
   const customer = useMemo(() => {
     const companyLeads = leads.filter(
       (lead) =>
-        (lead.company || "")
-          .trim()
-          .toLowerCase() === id
+        isPrivateCustomer
+          ? lead.id === id.slice("private:".length)
+          : (lead.company || "")
+              .trim()
+              .toLowerCase() === id
     )
 
     if (!companyLeads.length) {
@@ -268,7 +272,7 @@ export default function CustomerDetailPage() {
     }
 
     setEditCompany(
-      customer.company
+      isPrivateCustomer ? "" : customer.company
     )
 
     setEditWebsite(
@@ -390,7 +394,7 @@ export default function CustomerDetailPage() {
     const company =
       editCompany.trim()
 
-    if (!company) {
+    if (!isPrivateCustomer && !company) {
       setEditError(
         isDe
           ? "Firmenname ist erforderlich."
@@ -399,8 +403,9 @@ export default function CustomerDetailPage() {
       return
     }
 
-    const nextCustomerId =
-      company.toLowerCase()
+    const nextCustomerId = isPrivateCustomer
+      ? id
+      : company.toLowerCase()
 
     setSaving(true)
     setEditError(null)
@@ -436,7 +441,9 @@ export default function CustomerDetailPage() {
               body: JSON.stringify({
                 id: lead.id,
 
-                company,
+                company: isPrivateCustomer
+                  ? null
+                  : company,
 
                 website:
                   editWebsite.trim() ||
@@ -475,7 +482,9 @@ export default function CustomerDetailPage() {
        * so the UI does not need a page refresh.
        */
       setEditedCustomer({
-        company,
+        company: isPrivateCustomer
+          ? customer.company
+          : company,
 
         website:
           editWebsite.trim(),

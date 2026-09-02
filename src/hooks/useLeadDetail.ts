@@ -93,6 +93,7 @@ export function useLeadDetail(id: string) {
 
   return {
     lead,
+    setLead,
     activities,
     loading,
     refresh: load,

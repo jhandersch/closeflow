@@ -84,6 +84,7 @@ language==="de"
 
 const {
  lead,
+ setLead,
  activities,
  loading,
  refresh
@@ -96,7 +97,7 @@ const {
  saveLead,
  deleteLead
 
-}=useLeadActions(refresh)
+}=useLeadActions()
 
 
 
@@ -106,6 +107,7 @@ const {
   toggleTask: toggleLeadTask,
   editTask: editLeadTask,
   deleteTask: deleteLeadTask,
+  refresh: refreshTasks,
 } = useTasks(id)
 
 const [localTaskActivities, setLocalTaskActivities] =
@@ -464,7 +466,10 @@ saveLead={saveLead}
 
 isDe={isDe}
 
-onSaved={refresh}
+onSaved={async (updatedLead) => {
+  setLead(updatedLead)
+  await refreshTasks()
+}}
 
 />
 
