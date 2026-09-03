@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SearchInput from "@/components/search/SearchInput";
 import SearchResults from "@/components/search/SearchResults";
-import { supabase } from "@/lib/supabase/client";
 type ResultItem = {
     id: string;
     title: string;
@@ -88,6 +87,7 @@ export default function Search() {
     const [query, setQuery] = useState("");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [leads, setLeads] = useState<ResultItem[]>([]);
+    const [customers, setCustomers] = useState<ResultItem[]>([]);
     const [tasks, setTasks] = useState<ResultItem[]>([]);
     const [pages, setPages] = useState<ResultItem[]>([]);
     /*
@@ -120,54 +120,27 @@ export default function Search() {
             const value = query.trim();
             if (value.length < 2) {
                 setLeads([]);
+                setCustomers([]);
                 setTasks([]);
                 setPages([]);
                 return;
             }
             try {
-                /*
-                  Leads
-                */
-                const leadResponse = await fetch(`/api/leads/search?q=${encodeURIComponent(value)}`, {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(value)}`, {
                     credentials: "include",
                 });
-                if (leadResponse.ok) {
-                    const leadData = await leadResponse.json();
-                    setLeads(Array.isArray(leadData)
-                        ?
-                            leadData.map((lead: any) => ({
-                                id: lead.id,
-                                title: lead.name ||
-                                    "Unbekannter Lead",
-                                subtitle: lead.company ||
-                                    lead.email ||
-                                    "",
-                                href: `/leads/${lead.id}`
-                            }))
-                        :
-                            []);
+                if (response.ok) {
+                    const data = await response.json() as {
+                        leads?: ResultItem[];
+                        customers?: ResultItem[];
+                        tasks?: ResultItem[];
+                        pages?: ResultItem[];
+                    };
+                    setLeads(data.leads ?? []);
+                    setCustomers(data.customers ?? []);
+                    setTasks(data.tasks ?? []);
+                    setPages(data.pages ?? []);
                 }
-                /*
-                  Tasks
-                */
-                const { data: taskData } = await supabase
-                    .from("tasks")
-                    .select("id,title,lead_id")
-                    .ilike("title", `%${value}%`)
-                    .limit(10);
-                setTasks((taskData || [])
-                    .map((task: any) => ({
-                    id: task.id,
-                    title: task.title,
-                    subtitle: "Task",
-                    href: `/leads/${task.lead_id}`
-                })));
-                /*
-                  Seiten
-                */
-                setPages(pageLinks.filter(page => page.title
-                    .toLowerCase()
-                    .includes(value.toLowerCase())));
                 setSelectedIndex(0);
             }
             catch (error) {
@@ -182,6 +155,7 @@ export default function Search() {
     ]);
     const allResults = [
         ...leads,
+        ...customers,
         ...tasks,
         ...pages,
     ];
@@ -237,7 +211,7 @@ export default function Search() {
         <div className="mt-5">
 
 
-          <SearchResults leads={leads} tasks={tasks} pages={pages} selectedIndex={selectedIndex} onSelect={setSelectedIndex} onClose={() => setOpen(false)}/>
+          <SearchResults leads={leads} customers={customers} tasks={tasks} pages={pages} selectedIndex={selectedIndex} onSelect={setSelectedIndex} onClose={() => setOpen(false)}/>
 
 
         </div>

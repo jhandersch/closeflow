@@ -9,13 +9,14 @@ type ResultItem = {
 };
 type SearchResultsProps = {
     leads: ResultItem[];
+  customers: ResultItem[];
     tasks: ResultItem[];
     pages: ResultItem[];
     selectedIndex: number;
     onSelect: (index: number) => void;
     onClose: () => void;
 };
-export default function SearchResults({ leads, tasks, pages, selectedIndex, onSelect, onClose, }: SearchResultsProps) {
+export default function SearchResults({ leads, customers, tasks, pages, selectedIndex, onSelect, onClose, }: SearchResultsProps) {
     let currentIndex = -1;
     const renderGroup = (title: string, items: ResultItem[], icon: any) => {
         if (items.length === 0) {
@@ -60,16 +61,20 @@ export default function SearchResults({ leads, tasks, pages, selectedIndex, onSe
         pr-1
       ">
 
-      {renderGroup("Leads", leads, Users)}
+      {renderGroup("Active Leads", leads, Users)}
+
+
+      {renderGroup("Customers", customers, Users)}
 
 
       {renderGroup("Tasks", tasks, ListTodo)}
 
 
-      {renderGroup("Seiten", pages, FileText)}
+      {renderGroup("Pages", pages, FileText)}
 
 
       {leads.length === 0 &&
+            customers.length === 0 &&
             tasks.length === 0 &&
             pages.length === 0
             ?
