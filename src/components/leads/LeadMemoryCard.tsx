@@ -1,33 +1,24 @@
-﻿type LeadMemory = {
-  summary: string
-  risk: string
-  nextAction: string
-  confidence: number
-}
-
+type LeadMemory = {
+    summary: string;
+    risk: string;
+    nextAction: string;
+    confidence: number;
+};
 type Props = {
-  memory: LeadMemory | null
-  loading: boolean
-}
-
-export default function LeadMemoryCard({
-  memory,
-  loading,
-}: Props) {
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 animate-pulse">
-        <div className="h-5 w-40 rounded bg-white/10" />
-        <div className="mt-4 h-4 w-full rounded bg-white/10" />
-        <div className="mt-2 h-4 w-5/6 rounded bg-white/10" />
-      </div>
-    )
-  }
-
-  if (!memory) return null
-
-  return (
-    <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
+    memory: LeadMemory | null;
+    loading: boolean;
+};
+export default function LeadMemoryCard({ memory, loading, }: Props) {
+    if (loading) {
+        return (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 animate-pulse">
+        <div className="h-5 w-40 rounded bg-white/10"/>
+        <div className="mt-4 h-4 w-full rounded bg-white/10"/>
+        <div className="mt-2 h-4 w-5/6 rounded bg-white/10"/>
+      </div>);
+    }
+    if (!memory)
+        return null;
+    return (<div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
 
       <div className="flex items-center gap-3">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">AI</span>
@@ -81,6 +72,5 @@ export default function LeadMemoryCard({
 
       </div>
 
-    </div>
-  )
+    </div>);
 }

@@ -1,18 +1,13 @@
-﻿type AIRiskCardProps = {
-  risk: {
-    level: string
-    title: string
-    message: string
-    icon: string
-  }
-}
-
-export default function AIRiskCard({
-  risk,
-}: AIRiskCardProps) {
-
-  return (
-    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+type AIRiskCardProps = {
+    risk: {
+        level: string;
+        title: string;
+        message: string;
+        icon: string;
+    };
+};
+export default function AIRiskCard({ risk, }: AIRiskCardProps) {
+    return (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
 
       <div className="flex items-start gap-4">
 
@@ -54,8 +49,7 @@ export default function AIRiskCard({
         </div>
 
 
-        <div
-          className={`
+        <div className={`
             ml-auto
             rounded-full
             px-4
@@ -63,21 +57,17 @@ export default function AIRiskCard({
             text-sm
             font-semibold
 
-            ${
-              risk.level === "high"
-                ? "bg-red-500/20 text-red-400"
-                : risk.level === "medium"
+            ${risk.level === "high"
+            ? "bg-red-500/20 text-red-400"
+            : risk.level === "medium"
                 ? "bg-yellow-500/20 text-yellow-400"
-                : "bg-green-500/20 text-green-400"
-            }
-          `}
-        >
+                : "bg-green-500/20 text-green-400"}
+          `}>
           {risk.level.toUpperCase()}
         </div>
 
 
       </div>
 
-    </div>
-  )
+    </div>);
 }

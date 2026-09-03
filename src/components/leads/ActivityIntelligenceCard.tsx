@@ -1,27 +1,17 @@
-﻿"use client"
-
+"use client";
 type Props = {
-  insight: {
-    health: string
-    risk: string
-    summary: string
-    recommendation: string
-    confidence: number
-  } | null
-
-  loading: boolean
-}
-
-
-export default function ActivityIntelligenceCard({
-  insight,
-  loading,
-}: Props) {
-
-
-  if (loading) {
-    return (
-      <div className="
+    insight: {
+        health: string;
+        risk: string;
+        summary: string;
+        recommendation: string;
+        confidence: number;
+    } | null;
+    loading: boolean;
+};
+export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
+    if (loading) {
+        return (<div className="
         rounded-2xl
         border
         border-border-subtle
@@ -29,21 +19,14 @@ export default function ActivityIntelligenceCard({
         p-6
         animate-pulse
       ">
-        <div className="h-5 w-48 rounded bg-white/10" />
-        <div className="mt-4 h-20 rounded bg-white/10" />
-      </div>
-    )
-  }
-
-
-  if (!insight) {
-    return null
-  }
-
-
-  return (
-
-    <div className="
+        <div className="h-5 w-48 rounded bg-white/10"/>
+        <div className="mt-4 h-20 rounded bg-white/10"/>
+      </div>);
+    }
+    if (!insight) {
+        return null;
+    }
+    return (<div className="
       rounded-2xl
       border
       border-blue-500/20
@@ -221,8 +204,5 @@ export default function ActivityIntelligenceCard({
       </div>
 
 
-    </div>
-
-  )
-
+    </div>);
 }

@@ -1,28 +1,15 @@
-"use client"
-
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-import { useAppPreferences } from "@/components/AppPreferencesProvider"
-
+"use client";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type ActivityTrendChartProps = {
-  data: Array<{
-    label: string
-    value: number
-  }>
-}
-
+    data: Array<{
+        label: string;
+        value: number;
+    }>;
+};
 export default function ActivityTrendChart({ data }: ActivityTrendChartProps) {
-  const { t } = useAppPreferences()
-
-  return (
-    <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+    const { t } = useAppPreferences();
+    return (<section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-foreground/65">{t("dashboard.activityVolume", "Activity volume")}</p>
@@ -37,33 +24,21 @@ export default function ActivityTrendChart({ data }: ActivityTrendChartProps) {
       <div className="mt-6 h-72">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <CartesianGrid stroke="currentColor" opacity={0.08} vertical={false} />
+            <CartesianGrid stroke="currentColor" opacity={0.08} vertical={false}/>
 
-            <XAxis dataKey="label" stroke="currentColor" opacity={0.5} tickLine={false} />
+            <XAxis dataKey="label" stroke="currentColor" opacity={0.5} tickLine={false}/>
 
-            <YAxis stroke="currentColor" opacity={0.5} tickLine={false} allowDecimals={false} />
+            <YAxis stroke="currentColor" opacity={0.5} tickLine={false} allowDecimals={false}/>
 
-            <Tooltip
-              contentStyle={{
-                background: "var(--surface-1)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "12px",
-              }}
-              formatter={(value) => [String(value), t("dashboard.activities", "Activities")]}
-            />
+            <Tooltip contentStyle={{
+            background: "var(--surface-1)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "12px",
+        }} formatter={(value) => [String(value), t("dashboard.activities", "Activities")]}/>
 
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="#a78bfa"
-              strokeWidth={3}
-              dot={{ r: 3, fill: "#a78bfa" }}
-              activeDot={{ r: 5 }}
-              animationDuration={1200}
-            />
+            <Line type="monotone" dataKey="value" stroke="#a78bfa" strokeWidth={3} dot={{ r: 3, fill: "#a78bfa" }} activeDot={{ r: 5 }} animationDuration={1200}/>
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </section>
-  )
+    </section>);
 }

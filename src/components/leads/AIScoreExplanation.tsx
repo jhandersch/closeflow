@@ -1,19 +1,12 @@
-﻿type ScoreReason = {
-  icon: string
-  text: string
-}
-
+type ScoreReason = {
+    icon: string;
+    text: string;
+};
 type AIScoreExplanationProps = {
-  reasons: ScoreReason[]
-}
-
-
-export default function AIScoreExplanation({
-  reasons,
-}: AIScoreExplanationProps) {
-
-  return (
-    <div className="
+    reasons: ScoreReason[];
+};
+export default function AIScoreExplanation({ reasons, }: AIScoreExplanationProps) {
+    return (<div className="
       rounded-2xl
       border
       border-border-subtle
@@ -46,11 +39,7 @@ export default function AIScoreExplanation({
         space-y-3
       ">
 
-        {reasons.map((reason) => (
-
-          <div
-            key={reason.text}
-            className="
+        {reasons.map((reason) => (<div key={reason.text} className="
               flex
               items-center
               gap-3
@@ -59,8 +48,7 @@ export default function AIScoreExplanation({
               border-border-subtle
               bg-surface-2/70
               p-3
-            "
-          >
+            ">
 
             <span className="text-xl">
               {reason.icon}
@@ -72,13 +60,10 @@ export default function AIScoreExplanation({
             </p>
 
 
-          </div>
-
-        ))}
+          </div>))}
 
       </div>
 
 
-    </div>
-  )
+    </div>);
 }

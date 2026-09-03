@@ -1,42 +1,28 @@
-﻿import { useAppPreferences } from "@/components/AppPreferencesProvider"
-
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type EngagementCardProps = {
-  contactedCount: number
-  proposalCount: number
-  forecastDelta: number
-}
-
-
-export default function EngagementCard({
-  contactedCount,
-  proposalCount,
-  forecastDelta,
-}: EngagementCardProps) {
-  const { language } = useAppPreferences()
-  const isDe = language === "de"
-  const locale = isDe ? "de-DE" : "en-US"
-
-
-  return (
-
-    <section
-      className="
+    contactedCount: number;
+    proposalCount: number;
+    forecastDelta: number;
+};
+export default function EngagementCard({ contactedCount, proposalCount, forecastDelta, }: EngagementCardProps) {
+    const { language } = useAppPreferences();
+    const locale = "en-US";
+    return (<section className="
       rounded-2xl
       border
       border-border-subtle
       bg-surface-1
       p-6
-      "
-    >
+      ">
 
 
       <div>
 
         <p className="text-sm text-foreground/65">
-          {isDe ? "Sales-Engagement" : "Sales Engagement"}
+          {"Sales Engagement"}
         </p>
 
-          {isDe ? "Kundenmomentum" : "Customer momentum"}
+          {"Customer momentum"}
         <h2 className="
           text-lg
           font-semibold
@@ -54,15 +40,13 @@ export default function EngagementCard({
 
 
 
-        <div
-          className="
+        <div className="
           rounded-xl
           border
           border-orange-500/20
           bg-orange-500/10
           p-4
-          "
-        >
+          ">
 
           <div className="flex items-center gap-3">
 
@@ -82,7 +66,7 @@ export default function EngagementCard({
             <div>
 
               <p className="text-sm text-orange-300">
-                {isDe ? "Follow-up erforderlich" : "Follow-up required"}
+                {"Follow-up required"}
               </p>
 
 
@@ -106,9 +90,7 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            {isDe
-              ? "Leads wurden kontaktiert, warten aber auf die nächste Sales-Aktion."
-              : "Leads contacted but waiting for the next sales action."}
+            {"Leads contacted but waiting for the next sales action."}
           </p>
 
 
@@ -118,15 +100,13 @@ export default function EngagementCard({
 
 
 
-        <div
-          className="
+        <div className="
           rounded-xl
           border
           border-cyan-500/20
           bg-cyan-500/10
           p-4
-          "
-        >
+          ">
 
           <div className="flex items-center gap-3">
 
@@ -147,7 +127,7 @@ export default function EngagementCard({
             <div>
 
               <p className="text-sm text-cyan-300">
-                {isDe ? "Angebots-Chancen" : "Proposal opportunities"}
+                {"Proposal opportunities"}
               </p>
 
 
@@ -172,7 +152,7 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            {isDe ? "Deals, die aktuell am nächsten am Abschluss sind." : "Deals currently closest to conversion."}
+            {"Deals currently closest to conversion."}
           </p>
 
 
@@ -182,21 +162,18 @@ export default function EngagementCard({
 
 
 
-        <div
-          className="
+        <div className="
           rounded-xl
           border
           border-emerald-500/20
           bg-emerald-500/10
           p-4
-          "
-        >
+          ">
 
           <div className="flex items-center gap-3">
 
 
-            <span
-              className="
+            <span className="
               flex
               h-9
               w-9
@@ -204,8 +181,7 @@ export default function EngagementCard({
               justify-center
               rounded-full
               bg-emerald-500/20
-              "
-            >
+              ">
               📈
             </span>
 
@@ -215,7 +191,7 @@ export default function EngagementCard({
 
 
               <p className="text-sm text-emerald-300">
-                {isDe ? "Umsatzpotenzial" : "Revenue upside"}
+                {"Revenue upside"}
               </p>
 
 
@@ -242,9 +218,7 @@ export default function EngagementCard({
             text-sm
             text-foreground/70
           ">
-            {isDe
-              ? "Zusaetzlicher prognostizierter Umsatz im Vergleich zu bereits abgeschlossenen Deals."
-              : "Additional forecasted revenue compared to closed deals."}
+            {"Additional forecasted revenue compared to closed deals."}
           </p>
 
 
@@ -255,7 +229,5 @@ export default function EngagementCard({
       </div>
 
 
-    </section>
-
-  )
+    </section>);
 }

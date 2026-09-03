@@ -1,18 +1,14 @@
-﻿type AICoach = {
-  title: string
-  message: string
-  reasons: string[]
-  action: string
-  confidence: number
-}
-
-export default function AICoachCard({
-  aiCoach,
-}: {
-  aiCoach: AICoach
+type AICoach = {
+    title: string;
+    message: string;
+    reasons: string[];
+    action: string;
+    confidence: number;
+};
+export default function AICoachCard({ aiCoach, }: {
+    aiCoach: AICoach;
 }) {
-  return (
-    <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
+    return (<div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
 
       <div className="flex items-start gap-4">
 
@@ -36,14 +32,9 @@ export default function AICoachCard({
 
 
           <div className="mt-4 space-y-2">
-            {aiCoach.reasons.map((reason) => (
-              <div
-                key={reason}
-                className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-2 text-sm text-foreground/80"
-              >
+            {aiCoach.reasons.map((reason) => (<div key={reason} className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-2 text-sm text-foreground/80">
                 {reason}
-              </div>
-            ))}
+              </div>))}
           </div>
 
 
@@ -70,6 +61,5 @@ export default function AICoachCard({
 
       </div>
 
-    </div>
-  )
+    </div>);
 }

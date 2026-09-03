@@ -1,165 +1,79 @@
-"use client"
-
-import {
-  LayoutDashboard,
-  Users,
-  ListTodo,
-  Settings2,
-  Calendar,
-  FileText,
-} from "lucide-react"
-
-import SearchResult from "./SearchResult"
-
-
+"use client";
+import { LayoutDashboard, Users, ListTodo, Settings2, Calendar, FileText, } from "lucide-react";
+import SearchResult from "./SearchResult";
 type ResultItem = {
-  id: string
-  title: string
-  subtitle?: string
-  href: string
-}
-
-
+    id: string;
+    title: string;
+    subtitle?: string;
+    href: string;
+};
 type SearchResultsProps = {
-  leads: ResultItem[]
-  tasks: ResultItem[]
-  pages: ResultItem[]
-  selectedIndex: number
-  onSelect: (index:number) => void
-  onClose: () => void
-}
+    leads: ResultItem[];
+    tasks: ResultItem[];
+    pages: ResultItem[];
+    selectedIndex: number;
+    onSelect: (index: number) => void;
+    onClose: () => void;
+};
+export default function SearchResults({ leads, tasks, pages, selectedIndex, onSelect, onClose, }: SearchResultsProps) {
+    let currentIndex = -1;
+    const renderGroup = (title: string, items: ResultItem[], icon: any) => {
+        if (items.length === 0) {
+            return null;
+        }
+        return (<div className="space-y-2">
 
-
-export default function SearchResults({
-  leads,
-  tasks,
-  pages,
-  selectedIndex,
-  onSelect,
-  onClose,
-}: SearchResultsProps) {
-
-
-  let currentIndex = -1
-
-
-  const renderGroup = (
-    title:string,
-    items:ResultItem[],
-    icon:any
-  ) => {
-
-    if(items.length === 0){
-      return null
-    }
-
-
-    return (
-      <div className="space-y-2">
-
-        <p
-          className="
+        <p className="
             px-2
             text-[11px]
             uppercase
             tracking-[0.25em]
             text-foreground/40
-          "
-        >
+          ">
           {title}
         </p>
 
 
         <div className="space-y-1">
 
-          {items.map((item)=>{
+          {items.map((item) => {
+                currentIndex++;
+                const active = currentIndex === selectedIndex;
+                const index = currentIndex;
+                return (<div key={item.id} onMouseEnter={() => onSelect(index)}>
 
-            currentIndex++
+                <SearchResult title={item.title} subtitle={item.subtitle} href={item.href} icon={icon} active={active} onClick={() => {
+                        onClose();
+                    }}/>
 
-            const active =
-              currentIndex === selectedIndex
-
-
-            const index =
-              currentIndex
-
-
-            return (
-              <div
-                key={item.id}
-                onMouseEnter={() =>
-                  onSelect(index)
-                }
-              >
-
-                <SearchResult
-
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  href={item.href}
-                  icon={icon}
-
-                  active={active}
-
-                  onClick={()=>{
-                    onClose()
-                  }}
-
-                />
-
-              </div>
-            )
-
-          })}
+              </div>);
+            })}
 
         </div>
 
-      </div>
-    )
-  }
-
-
-
-  return (
-
-    <div
-      className="
+      </div>);
+    };
+    return (<div className="
         space-y-5
         max-h-[420px]
         overflow-y-auto
         pr-1
-      "
-    >
+      ">
 
-      {renderGroup(
-        "Leads",
-        leads,
-        Users
-      )}
+      {renderGroup("Leads", leads, Users)}
 
 
-      {renderGroup(
-        "Aufgaben",
-        tasks,
-        ListTodo
-      )}
+      {renderGroup("Tasks", tasks, ListTodo)}
 
 
-      {renderGroup(
-        "Seiten",
-        pages,
-        FileText
-      )}
+      {renderGroup("Seiten", pages, FileText)}
 
 
-      {
-        leads.length === 0 &&
-        tasks.length === 0 &&
-        pages.length === 0
-        ?
-        (
-          <div
-            className="
+      {leads.length === 0 &&
+            tasks.length === 0 &&
+            pages.length === 0
+            ?
+                (<div className="
               rounded-xl
               border
               border-border-subtle
@@ -169,16 +83,11 @@ export default function SearchResults({
               text-center
               text-sm
               text-foreground/50
-            "
-          >
-            Keine Ergebnisse gefunden
-          </div>
-        )
-        :
-        null
-      }
+            ">
+            No results found
+          </div>)
+            :
+                null}
 
-    </div>
-
-  )
+    </div>);
 }

@@ -1,401 +1,180 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import toast from "react-hot-toast"
-
-import type {
-  Lead,
-  LeadSource,
-  LeadStatus,
-  UpdateLeadData
-} from "@/types"
-
-
-
+"use client";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import type { Lead, LeadSource, LeadStatus, UpdateLeadData } from "@/types";
 type Props = {
-
-  lead: Lead
-
-  saveLead:(
-    id:string,
-    oldStatus:LeadStatus,
-    data:UpdateLeadData
-  )=>Promise<Lead>
-
-  isDe:boolean
-
-  onSaved: (updatedLead: Lead) => Promise<void>
-
-}
-
+    lead: Lead;
+    saveLead: (id: string, oldStatus: LeadStatus, data: UpdateLeadData) => Promise<Lead>;
+    onSaved: (updatedLead: Lead) => Promise<void>;
+};
 function getStatusNextAction(status: LeadStatus) {
-  const daysByStatus: Partial<Record<LeadStatus, number>> = {
-    contacted: 3,
-    proposal: 5,
-  }
-
-  const actionByStatus: Record<LeadStatus, string> = {
-    new: "No action planned",
-    contacted: "Follow up with lead",
-    proposal: "Follow up on proposal",
-    won: "No action planned",
-    lost: "No action planned",
-  }
-
-  const days = daysByStatus[status]
-  const action = actionByStatus[status]
-
-  if (!days) {
+    const daysByStatus: Partial<Record<LeadStatus, number>> = {
+        contacted: 3,
+        proposal: 5,
+    };
+    const actionByStatus: Record<LeadStatus, string> = {
+        new: "No action planned",
+        contacted: "Follow up with lead",
+        proposal: "Follow up on proposal",
+        won: "No action planned",
+        lost: "No action planned",
+    };
+    const days = daysByStatus[status];
+    const action = actionByStatus[status];
+    if (!days) {
+        return {
+            action,
+            actionDate: null,
+        };
+    }
+    const actionDate = new Date();
+    actionDate.setDate(actionDate.getDate() + days);
     return {
-      action,
-      actionDate: null,
-    }
-  }
-
-  const actionDate = new Date()
-  actionDate.setDate(actionDate.getDate() + days)
-
-  return {
-    action,
-    actionDate: actionDate.toISOString(),
-  }
+        action,
+        actionDate: actionDate.toISOString(),
+    };
 }
-
-
-
-export default function LeadDetailsForm({
-  lead,
-  saveLead,
-  isDe,
-  onSaved,
-}:Props){
-
-
-
-const [name,setName]=
-useState(lead.name)
-
-
-const [company,setCompany]=
-useState(lead.company)
-
-
-const [status,setStatus]=
-useState<LeadStatus>(
- lead.status
-)
-
-
-const [value,setValue]=
-useState(
- String(lead.value ?? 0)
-)
-
-
-const [email,setEmail]=
-useState(
- lead.email ?? ""
-)
-
-
-const [phone,setPhone]=
-useState(
- lead.phone ?? ""
-)
-
-
-const [website,setWebsite]=
-useState(
- lead.website ?? ""
-)
-
-
-const [address,setAddress]=
-useState(
- lead.address ?? ""
-)
-
-const [nextAction,setNextAction]=
-useState(
-  lead.next_action ?? ""
-)
-
-const [nextActionDate,setNextActionDate]=
-useState(
-  lead.next_action_date
-    ? lead.next_action_date.slice(0, 10)
-    : ""
-)
-
-
-const [notes,setNotes]=
-useState(
- lead.notes ?? ""
-)
-
-
-const [source,setSource]=
-useState<LeadSource>(
- lead.source ?? "other"
-)
-
-
-const [tags,setTags]=
-useState(
- (lead.tags ?? []).join(", ")
-)
-
-
-const [saving,setSaving]=
-useState(false)
-
-const handleStatusChange = (nextStatus: LeadStatus) => {
-  setStatus(nextStatus)
-
-  const statusNextAction = getStatusNextAction(nextStatus)
-
-  setNextAction(statusNextAction.action)
-  setNextActionDate(
-    statusNextAction.actionDate
-      ? statusNextAction.actionDate.slice(0, 10)
-      : ""
-  )
-}
-
-useEffect(() => {
-  setName(lead.name)
-  setCompany(lead.company)
-  setStatus(lead.status)
-  setValue(String(lead.value ?? 0))
-  setEmail(lead.email ?? "")
-  setPhone(lead.phone ?? "")
-  setWebsite(lead.website ?? "")
-  setAddress(lead.address ?? "")
-  setNextAction(lead.next_action ?? "")
-  setNextActionDate(
-    lead.next_action_date
-      ? lead.next_action_date.slice(0, 10)
-      : ""
-  )
-  setNotes(lead.notes ?? "")
-  setSource(lead.source ?? "other")
-  setTags((lead.tags ?? []).join(", "))
-}, [lead])
-
-
-
-const handleSave=async()=>{
-
-
-const dealValue=
-Number(value)
-
-
-
-if(!name.trim()){
-
-toast.error(
-isDe
-?"Name erforderlich"
-:"Name required"
-)
-
-return
-
-}
-
-
-
-if(Number.isNaN(dealValue)){
-
-toast.error(
-isDe
-?"Ungültiger Wert"
-:"Invalid value"
-)
-
-return
-
-}
-
-
-
-setSaving(true)
-
-
-try{
-
-const statusNextAction =
-  lead.status !== status
-    ? getStatusNextAction(status)
-    : null
-
-
-const updatedLead = await saveLead(
-  lead.id,
-  lead.status,
-  {
-    name,
-    company,
-    status,
-    value: dealValue,
-    email,
-    phone,
-    website,
-    address,
-    next_action:
-      (statusNextAction?.action ?? nextAction) || undefined,
-    next_action_date:
-      (statusNextAction?.actionDate ?? nextActionDate) || undefined,
-    notes,
-    source,
-    tags: tags
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean),
-  }
-)
-
-const displayedLead = statusNextAction
-  ? {
-      ...updatedLead,
-      status,
-      next_action: statusNextAction.action,
-      next_action_date: statusNextAction.actionDate,
-    }
-  : updatedLead
-
-if (statusNextAction) {
-  setNextAction(statusNextAction.action)
-  setNextActionDate(
-    statusNextAction.actionDate
-      ? statusNextAction.actionDate.slice(0, 10)
-      : ""
-  )
-}
-
-await onSaved(displayedLead)
-
-
-
-toast.success(
-isDe
-?"Lead gespeichert"
-:"Lead saved"
-)
-
-
-}
-
-catch(error){
-
-console.error(error)
-
-toast.error(
-isDe
-?"Speichern fehlgeschlagen"
-:"Save failed"
-)
-
-
-}
-
-finally{
-
-setSaving(false)
-
-}
-
-
-
-}
-
-
-
-
-return (
-
-<div
-id="lead-details"
-className="
+export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
+    const [name, setName] = useState(lead.name);
+    const [company, setCompany] = useState(lead.company);
+    const [status, setStatus] = useState<LeadStatus>(lead.status);
+    const [value, setValue] = useState(String(lead.value ?? 0));
+    const [email, setEmail] = useState(lead.email ?? "");
+    const [phone, setPhone] = useState(lead.phone ?? "");
+    const [website, setWebsite] = useState(lead.website ?? "");
+    const [address, setAddress] = useState(lead.address ?? "");
+    const [nextAction, setNextAction] = useState(lead.next_action ?? "");
+    const [nextActionDate, setNextActionDate] = useState(lead.next_action_date
+        ? lead.next_action_date.slice(0, 10)
+        : "");
+    const [notes, setNotes] = useState(lead.notes ?? "");
+    const [source, setSource] = useState<LeadSource>(lead.source ?? "other");
+    const [tags, setTags] = useState((lead.tags ?? []).join(", "));
+    const [saving, setSaving] = useState(false);
+    const handleStatusChange = (nextStatus: LeadStatus) => {
+        setStatus(nextStatus);
+        const statusNextAction = getStatusNextAction(nextStatus);
+        setNextAction(statusNextAction.action);
+        setNextActionDate(statusNextAction.actionDate
+            ? statusNextAction.actionDate.slice(0, 10)
+            : "");
+    };
+    useEffect(() => {
+        setName(lead.name);
+        setCompany(lead.company);
+        setStatus(lead.status);
+        setValue(String(lead.value ?? 0));
+        setEmail(lead.email ?? "");
+        setPhone(lead.phone ?? "");
+        setWebsite(lead.website ?? "");
+        setAddress(lead.address ?? "");
+        setNextAction(lead.next_action ?? "");
+        setNextActionDate(lead.next_action_date
+            ? lead.next_action_date.slice(0, 10)
+            : "");
+        setNotes(lead.notes ?? "");
+        setSource(lead.source ?? "other");
+        setTags((lead.tags ?? []).join(", "));
+    }, [lead]);
+    const handleSave = async () => {
+        const dealValue = Number(value);
+        if (!name.trim()) {
+            toast.error("Name required");
+            return;
+        }
+        if (Number.isNaN(dealValue)) {
+            toast.error("Invalid value");
+            return;
+        }
+        setSaving(true);
+        try {
+            const statusNextAction = lead.status !== status
+                ? getStatusNextAction(status)
+                : null;
+            const updatedLead = await saveLead(lead.id, lead.status, {
+                name,
+                company,
+                status,
+                value: dealValue,
+                email,
+                phone,
+                website,
+                address,
+                next_action: (statusNextAction?.action ?? nextAction) || undefined,
+                next_action_date: (statusNextAction?.actionDate ?? nextActionDate) || undefined,
+                notes,
+                source,
+                tags: tags
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean),
+            });
+            const displayedLead = statusNextAction
+                ? {
+                    ...updatedLead,
+                    status,
+                    next_action: statusNextAction.action,
+                    next_action_date: statusNextAction.actionDate,
+                }
+                : updatedLead;
+            if (statusNextAction) {
+                setNextAction(statusNextAction.action);
+                setNextActionDate(statusNextAction.actionDate
+                    ? statusNextAction.actionDate.slice(0, 10)
+                    : "");
+            }
+            await onSaved(displayedLead);
+            toast.success("Lead saved");
+        }
+        catch (error) {
+            console.error(error);
+            toast.error("Save failed");
+        }
+        finally {
+            setSaving(false);
+        }
+    };
+    return (<div id="lead-details" className="
 space-y-5
 rounded-xl
 border
 border-border-subtle
 bg-surface-1
 p-6
-"
->
+">
 
 
-<h2 className="text-xl font-semibold">
-{
-isDe
-?"Lead-Details"
-:
-"Lead Details"
-}
-</h2>
+    <h2 className="text-xl font-semibold">
+        {"Lead Details"}
+    </h2>
 
 
 
-<div
-className="
+    <div className="
 grid
 gap-5
 md:grid-cols-2
-"
->
+">
 
 
-<Input
-label={isDe?"Name":"Name"}
-value={name}
-setValue={setName}
-/>
+    <Input label={"Name"} value={name} setValue={setName}/>
 
 
-<Input
-label={isDe?"Firma":"Company"}
-value={company}
-setValue={setCompany}
-/>
+    <Input label={"Company"} value={company} setValue={setCompany}/>
 
 
-<Input
-label={
-isDe
-?"Deal-Wert"
-:
-"Deal Value"
-}
-value={value}
-setValue={setValue}
-/>
+    <Input label={"Deal Value"} value={value} setValue={setValue}/>
 
 
 
-<div>
+    <div>
 
-<label className="mb-2 block text-sm text-foreground/65">
-{
-isDe
-?"Status"
-:
-"Status"
-}
-</label>
+    <label className="mb-2 block text-sm text-foreground/65">
+        {"Status"}
+    </label>
 
 
-<select
-value={status}
-onChange={
-e=>
-handleStatusChange(
-e.target.value as LeadStatus
-)
-}
-className="
+    <select value={status} onChange={e => handleStatusChange(e.target.value as LeadStatus)} className="
 w-full
 rounded-xl
 border
@@ -403,100 +182,60 @@ border-border-subtle
 bg-surface-2
 px-4
 py-3
-"
->
+">
 
-<option value="new">
+    <option value="new">
 New
-</option>
+    </option>
 
-<option value="contacted">
+    <option value="contacted">
 Contacted
-</option>
+    </option>
 
-<option value="proposal">
+    <option value="proposal">
 Proposal
-</option>
+    </option>
 
-<option value="won">
+    <option value="won">
 Won
-</option>
+    </option>
 
-<option value="lost">
+    <option value="lost">
 Lost
-</option>
+    </option>
 
-</select>
+    </select>
 
-</div>
-
-
-
-<Input
-label="Email"
-value={email}
-setValue={setEmail}
-/>
-
-
-<Input
-label="Phone"
-value={phone}
-setValue={setPhone}
-/>
-
-
-<Input
-label="Website"
-value={website}
-setValue={setWebsite}
-/>
+    </div>
 
 
 
-<div className="md:col-span-2">
+    <Input label="Email" value={email} setValue={setEmail}/>
 
-<Input
-label={
-isDe
-?"Adresse"
-:
-"Address"
-}
-value={address}
-setValue={setAddress}
-/>
 
-</div>
+    <Input label="Phone" value={phone} setValue={setPhone}/>
 
-<div className="grid gap-5 md:grid-cols-2">
 
-  <Input
-    label={
-      isDe
-        ? "Nächste Aktion"
-        : "Next Action"
-    }
-    value={nextAction}
-    setValue={setNextAction}
-  />
+    <Input label="Website" value={website} setValue={setWebsite}/>
+
+
+
+    <div className="md:col-span-2">
+
+    <Input label={"Address"} value={address} setValue={setAddress}/>
+
+    </div>
+
+    <div className="grid gap-5 md:grid-cols-2">
+
+  <Input label={"Next Action"} value={nextAction} setValue={setNextAction}/>
 
   <div>
     <label className="mb-2 block text-sm text-foreground/65">
-      {
-        isDe
-          ? "Fällig am"
-          : "Due Date"
-      }
+      {"Due Date"}
     </label>
 
-    <input
-      type="date"
-      value={nextActionDate}
-      onChange={(e) =>
-        setNextActionDate(e.target.value)
-      }
-      className="
+    <input type="date" value={nextActionDate} onChange={(e) => setNextActionDate(e.target.value)} className="
         w-full
         rounded-xl
         border
@@ -505,51 +244,33 @@ setValue={setAddress}
         px-4
         py-3
         outline-none
-      "
-    />
+      "/>
   </div>
 
-</div>
+    </div>
 
 
 
-<div className="md:col-span-2">
+    <div className="md:col-span-2">
 
-<Input
-label="Tags"
-value={tags}
-setValue={setTags}
-/>
+    <Input label="Tags" value={tags} setValue={setTags}/>
 
-</div>
+    </div>
 
 
 
-</div>
+    </div>
 
 
 
-<div>
+    <div>
 
-<label className="mb-2 block text-sm text-foreground/65">
-{
-isDe
-?"Notizen"
-:
-"Notes"
-}
-</label>
+    <label className="mb-2 block text-sm text-foreground/65">
+        {"Notes"}
+    </label>
 
 
-<textarea
-
-value={notes}
-
-onChange={
-e=>setNotes(e.target.value)
-}
-
-className="
+    <textarea value={notes} onChange={e => setNotes(e.target.value)} className="
 h-40
 w-full
 rounded-xl
@@ -558,92 +279,56 @@ border-border-subtle
 bg-surface-2
 px-4
 py-3
-"
+"/>
 
-/>
-
-</div>
+    </div>
 
 
 
 
-<button
-
-onClick={handleSave}
-
-disabled={saving}
-
-className="
+    <button onClick={handleSave} disabled={saving} className="
 rounded-xl
 bg-foreground
 px-6
 py-3
 font-semibold
 text-background
-"
+">
 
->
+        {saving
+            ?
+                ("Saving...")
+            :
+                ("Save Changes")}
 
-{
-saving
-?
-(isDe?"Speichern...":"Saving...")
-:
-(isDe?"Änderungen speichern":"Save Changes")
+    </button>
+
+
+
+    </div>);
 }
-
-</button>
-
-
-
-</div>
-
-)
-
-}
+function Input({ label, value, setValue }: {
+    label: string;
+    value: string;
+    setValue: (v: string) => void;
+}) {
+    return (<div>
 
 
-
-
-
-function Input({
-label,
-value,
-setValue
-}:{
-label:string
-value:string
-setValue:(v:string)=>void
-}){
-
-
-return (
-
-<div>
-
-
-<label className="
+    <label className="
 mb-2
 block
 text-sm
 text-foreground/65
 ">
 
-{label}
+    {label}
 
-</label>
+    </label>
 
 
 
-<input
-
-value={value}
-
-onChange={
-e=>setValue(e.target.value)
-}
-
-className="
+    <input value={value} onChange={e => setValue(e.target.value)} className="
 w-full
 rounded-xl
 border
@@ -652,13 +337,8 @@ bg-surface-2
 px-4
 py-3
 outline-none
-"
-
-/>
+"/>
 
 
-</div>
-
-)
-
+    </div>);
 }

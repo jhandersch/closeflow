@@ -195,7 +195,7 @@ PASS: [x]
 
 ### Activity Timeline
 
-* [x] German labels work
+* [x] English labels work
 * [x] order is correct
 * [x] timestamps are correct
 * [x] no duplicate entries
@@ -500,7 +500,7 @@ Additional verification:
 
 ---
 
-## B4) Search and Filters
+## B4) Search and Filtersa
 
 * [ ] global search
 * [ ] lead search and filters
@@ -655,8 +655,7 @@ NOT YET TESTED
 
 ## B15) Localization
 
-* [ ] German translations
-* [ ] English translations
+* [ ] English labels
 * [ ] no critical mixed-language screens
 * [ ] date/time formatting
 * [ ] currency formatting

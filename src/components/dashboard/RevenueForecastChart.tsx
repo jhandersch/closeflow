@@ -1,85 +1,47 @@
-﻿"use client"
-
-import {
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Area,
-  AreaChart,
-} from "recharts"
-
-import { useAppPreferences } from "@/components/AppPreferencesProvider"
-
-
+"use client";
+import { CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, } from "recharts";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type RevenueForecastChartProps = {
-  data: Array<{
-    month: string
-    value: number
-  }>
-}
-
-
-
-export default function RevenueForecastChart({
-  data,
-}: RevenueForecastChartProps) {
-
-
-  const { t, language } = useAppPreferences()
-  const locale = language === "de" ? "de-DE" : "en-US"
-
-
-
-  return (
-
-    <section
-      className="
+    data: Array<{
+        month: string;
+        value: number;
+    }>;
+};
+export default function RevenueForecastChart({ data, }: RevenueForecastChartProps) {
+    const { t, language } = useAppPreferences();
+    const locale = "en-US";
+    return (<section className="
       rounded-2xl
       border
       border-border-subtle
       bg-surface-1
       p-6
-      "
-    >
+      ">
 
 
-      <div
-        className="
+      <div className="
         flex
         items-center
         justify-between
-        "
-      >
+        ">
 
 
         <div>
 
-          <p
-            className="
+          <p className="
             text-sm
             text-foreground/65
-            "
-          >
-            {t(
-              "dashboard.revenueIntelligence",
-              "Revenue intelligence"
-            )}
+            ">
+            {t("dashboard.revenueIntelligence", "Revenue intelligence")}
           </p>
 
 
-          <h2
-            className="
+          <h2 className="
             text-lg
             font-semibold
             text-foreground
-            "
-          >
-            {t(
-              "dashboard.forecastMomentum",
-              "Forecast momentum"
-            )}
+            ">
+            {t("dashboard.forecastMomentum", "Forecast momentum")}
           </h2>
 
 
@@ -89,8 +51,7 @@ export default function RevenueForecastChart({
 
 
 
-        <div
-          className="
+        <div className="
           rounded-full
           border
           border-emerald-500/20
@@ -99,12 +60,8 @@ export default function RevenueForecastChart({
           py-1
           text-sm
           text-emerald-300
-          "
-        >
-          {t(
-            "dashboard.aiPredicted",
-            "AI predicted"
-          )}
+          ">
+          {t("dashboard.aiPredicted", "AI predicted")}
         </div>
 
 
@@ -114,18 +71,13 @@ export default function RevenueForecastChart({
 
 
 
-      <div
-        className="
+      <div className="
         mt-6
         h-72
-        "
-      >
+        ">
 
 
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-        >
+        <ResponsiveContainer width="100%" height="100%">
 
 
           <AreaChart data={data}>
@@ -133,25 +85,11 @@ export default function RevenueForecastChart({
 
             <defs>
 
-              <linearGradient
-                id="revenueGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
+              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
 
-                <stop
-                  offset="0%"
-                  stopColor="#22d3ee"
-                  stopOpacity={0.35}
-                />
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.35}/>
 
-                <stop
-                  offset="100%"
-                  stopColor="#22d3ee"
-                  stopOpacity={0}
-                />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity={0}/>
 
               </linearGradient>
 
@@ -162,57 +100,33 @@ export default function RevenueForecastChart({
 
 
 
-            <CartesianGrid
-              stroke="currentColor"
-              opacity={0.08}
-              vertical={false}
-            />
+            <CartesianGrid stroke="currentColor" opacity={0.08} vertical={false}/>
 
 
 
 
 
-            <XAxis
-              dataKey="month"
-              stroke="currentColor"
-              opacity={0.5}
-              tickLine={false}
-            />
+            <XAxis dataKey="month" stroke="currentColor" opacity={0.5} tickLine={false}/>
 
 
 
 
 
-            <YAxis
-              stroke="currentColor"
-              opacity={0.5}
-              tickLine={false}
-              tickFormatter={(value)=>`€${value / 1000}k`}
-            />
+            <YAxis stroke="currentColor" opacity={0.5} tickLine={false} tickFormatter={(value) => `€${value / 1000}k`}/>
 
 
 
 
 
 
-            <Tooltip
-
-              contentStyle={{
-                background:"var(--surface-1)",
-                border:"1px solid var(--border-subtle)",
-                borderRadius:"12px",
-              }}
-
-
-              formatter={(value)=>[
-                `€${Number(value ?? 0).toLocaleString(locale)}`,
-                t(
-                  "dashboard.forecastRevenue",
-                  "Forecast Revenue"
-                )
-              ]}
-
-            />
+            <Tooltip contentStyle={{
+            background: "var(--surface-1)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "12px",
+        }} formatter={(value) => [
+            `€${Number(value ?? 0).toLocaleString(locale)}`,
+            t("dashboard.forecastRevenue", "Forecast Revenue")
+        ]}/>
 
 
 
@@ -220,21 +134,7 @@ export default function RevenueForecastChart({
 
 
 
-            <Area
-
-              type="monotone"
-
-              dataKey="value"
-
-              stroke="#22d3ee"
-
-              strokeWidth={3}
-
-              fill="url(#revenueGradient)"
-
-              animationDuration={1200}
-
-            />
+            <Area type="monotone" dataKey="value" stroke="#22d3ee" strokeWidth={3} fill="url(#revenueGradient)" animationDuration={1200}/>
 
 
           </AreaChart>
@@ -246,7 +146,5 @@ export default function RevenueForecastChart({
       </div>
 
 
-    </section>
-
-  )
+    </section>);
 }

@@ -1,29 +1,20 @@
-import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
-
+import { Resend } from "resend";
+const resend = new Resend(process.env.RESEND_API_KEY);
 type SendInviteEmailParams = {
-  to: string
-  inviteUrl: string
-  workspaceName?: string
-}
-
-export async function sendWorkspaceInviteEmail({
-  to,
-  inviteUrl,
-  workspaceName = "CloseFlow",
-}: SendInviteEmailParams) {
-  const apiKey = process.env.RESEND_API_KEY
-
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY is missing")
-  }
-
-  const { data, error } = await resend.emails.send({
-    from: "CloseFlow <onboarding@resend.dev>",
-    to,
-    subject: `You're invited to join ${workspaceName}`,
-    html: `
+    to: string;
+    inviteUrl: string;
+    workspaceName?: string;
+};
+export async function sendWorkspaceInviteEmail({ to, inviteUrl, workspaceName = "CloseFlow", }: SendInviteEmailParams) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        throw new Error("RESEND_API_KEY is missing");
+    }
+    const { data, error } = await resend.emails.send({
+        from: "CloseFlow <onboarding@resend.dev>",
+        to,
+        subject: `You're invited to join ${workspaceName}`,
+        html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <h2>You're invited to join ${workspaceName}</h2>
 
@@ -60,12 +51,10 @@ export async function sendWorkspaceInviteEmail({
         </p>
       </div>
     `,
-  })
-
-if (error) {
-  console.error("RESEND ERROR FULL:", JSON.stringify(error, null, 2))
-  throw new Error(error.message)
-}
-
-  return data
+    });
+    if (error) {
+        console.error("RESEND ERROR FULL:", JSON.stringify(error, null, 2));
+        throw new Error(error.message);
+    }
+    return data;
 }

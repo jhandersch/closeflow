@@ -1,51 +1,15 @@
-import { NextResponse } from "next/server"
-import OpenAI from "openai"
-
-
-
-
-
-
-export async function POST(
-  req: Request
-) {
-
-
-  let locale:
-    | "de"
-    | "en" = "de"
-
-
-
-  try {
-
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-
-
-    const {
-      pipelineValue,
-      weightedRevenue,
-      revenueAtRisk,
-      pipelineCoverage,
-      leads,
-      language,
-    } = await req.json()
-
-
-
-    locale =
-      language === "en"
-        ? "en"
-        : "de"
-
-
-
-
-
-
-    const prompt = `
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+export async function POST(req: Request) {
+    let locale: "en" = "en";
+    try {
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+        const { pipelineValue, weightedRevenue, revenueAtRisk, pipelineCoverage, leads, language, } = await req.json();
+        locale =
+            "en";
+        const prompt = `
 
 Analyze this CRM revenue forecast.
 
@@ -70,11 +34,7 @@ ${pipelineCoverage}%
 
 Opportunity data:
 
-${JSON.stringify(
-  leads,
-  null,
-  2
-)}
+${JSON.stringify(leads, null, 2)}
 
 
 
@@ -119,50 +79,21 @@ Return ONLY valid JSON:
 }
 
 
-All text must be written in ${
-  locale === "de"
-  ? "German"
-  : "English"
-}.
+All text must be written in ${"English"}.
 
 Keep answers concise.
 
-`
-
-
-
-
-
-
-
-    const completion =
-      await openai.chat.completions.create({
-
-        model:
-          "gpt-4.1-mini",
-
-
-        temperature:
-          0.25,
-
-
-        response_format:{
-          type:"json_object",
-        },
-
-
-        messages:[
-
-
-          {
-
-
-            role:"system",
-
-
-            content:
-
-`
+`;
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4.1-mini",
+            temperature: 0.25,
+            response_format: {
+                type: "json_object",
+            },
+            messages: [
+                {
+                    role: "system",
+                    content: `
 You are an expert B2B revenue forecasting analyst inside a CRM.
 
 Your goal is to help sales teams understand future revenue and improve decisions.
@@ -170,114 +101,31 @@ Your goal is to help sales teams understand future revenue and improve decisions
 Always return valid JSON only.
 
 `
-
-          },
-
-
-          {
-
-
-            role:"user",
-
-
-            content:
-              prompt
-
-          }
-
-
-        ]
-
-      })
-
-
-
-
-
-
-
-    const content =
-      completion
-      .choices[0]
-      .message
-      .content
-
-
-
-
-
-
-
-    if (!content) {
-
-      throw new Error(
-        "No AI response"
-      )
-
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        });
+        const content = completion
+            .choices[0]
+            .message
+            .content;
+        if (!content) {
+            throw new Error("No AI response");
+        }
+        return NextResponse.json(JSON.parse(content));
     }
-
-
-
-
-
-
-
-    return NextResponse.json(
-      JSON.parse(content)
-    )
-
-
-
-
-
-
-  } catch(error) {
-
-
-    console.error(
-      "FORECAST AI ERROR:",
-      error
-    )
-
-
-
-
-    return NextResponse.json(
-
-      {
-
-        summary:
-          locale === "de"
-          ? "Forecast-Analyse fehlgeschlagen."
-          : "Forecast analysis failed.",
-
-
-
-        positiveFactors:
-          [],
-
-
-
-        risks:
-          [],
-
-
-
-        recommendation:
-          locale === "de"
-          ? "Pipeline manuell prüfen."
-          : "Review pipeline manually.",
-
-      },
-
-
-      {
-        status: 200
-      }
-
-    )
-
-
-  }
-
+    catch (error) {
+        console.error("FORECAST AI ERROR:", error);
+        return NextResponse.json({
+            summary: "Forecast analysis failed.",
+            positiveFactors: [],
+            risks: [],
+            recommendation: "Review pipeline manually.",
+        }, {
+            status: 200
+        });
+    }
 }

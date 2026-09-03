@@ -1,113 +1,92 @@
-import type { Lead } from "@/types"
-
-
-type Props={
- lead:Lead
- isDe:boolean
-}
-
-
-export default function LeadOverview({
- lead,
- isDe
-}:Props){
-
-
-return (
-
-<div
-className="
+import type { Lead } from "@/types";
+type Props = {
+    lead: Lead;
+};
+export default function LeadOverview({ lead }: Props) {
+    return (<div className="
 grid
 gap-6
 xl:grid-cols-2
-"
->
+">
 
 
-<section
-className="
+    <section className="
 rounded-xl
 border
 border-border-subtle
 bg-surface-1
 p-5
-"
->
+">
 
-<h2 className="text-lg font-semibold">
-{isDe?"Kontakt":"Contact"}
-</h2>
+    <h2 className="text-lg font-semibold">
+    {"Contact"}
+    </h2>
 
 
-<div className="mt-3 space-y-2 text-sm text-foreground/80">
+    <div className="mt-3 space-y-2 text-sm text-foreground/80">
 
-<p>
+    <p>
 Name:
-{" "}
-{lead.name}
-</p>
+    {" "}
+    {lead.name}
+    </p>
 
-<p>
+    <p>
 Email:
-{" "}
-{lead.email || "—"}
-</p>
+    {" "}
+    {lead.email || "—"}
+    </p>
 
 
-<p>
+    <p>
 Phone:
-{" "}
-{lead.phone || "—"}
-</p>
+    {" "}
+    {lead.phone || "—"}
+    </p>
 
 
-</div>
+    </div>
 
 
-</section>
+    </section>
 
 
 
-<section
-className="
+    <section className="
 rounded-xl
 border
 border-border-subtle
 bg-surface-1
 p-5
-"
->
+">
 
 
-<h2 className="text-lg font-semibold">
-{isDe?"Deal":"Deal"}
-</h2>
+    <h2 className="text-lg font-semibold">
+    {"Deal"}
+    </h2>
 
 
-<div className="mt-3 space-y-2 text-sm">
+    <div className="mt-3 space-y-2 text-sm">
 
-<p>
+    <p>
 Value:
-{" "}
-EUR {(lead.value??0).toLocaleString()}
-</p>
+    {" "}
+EUR {(lead.value ?? 0).toLocaleString()}
+    </p>
 
 
-<p>
+    <p>
 Status:
-{" "}
-{lead.status}
-</p>
+    {" "}
+    {lead.status}
+    </p>
 
 
-</div>
+    </div>
 
 
-</section>
+    </section>
 
 
-</div>
-
-)
-
+    </div>);
 }

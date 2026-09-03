@@ -1,87 +1,52 @@
-export type LeadStatus =
-  | "new"
-  | "contacted"
-  | "proposal"
-  | "won"
-  | "lost"
-
-
-
-
-export type LeadSource =
-  | "website"
-  | "recommendation"
-  | "phone"
-  | "advertising"
-  | "other"
-
-export type LeadSortBy =
-  | "created_at"
-  | "value"
-  | "priority"
-  | "health"
-  | "probability"
-
-
-
+export type LeadStatus = "new" | "contacted" | "proposal" | "won" | "lost";
+export type LeadSource = "website" | "recommendation" | "phone" | "advertising" | "other";
+export type LeadSortBy = "created_at" | "value" | "priority" | "health" | "probability";
 export type Lead = {
-  id: string
-  workspace_id?: string | null
-  user_id?: string | null
-
-  name: string
-  company: string
-  status: LeadStatus
-  value: number
-
-  created_at: string
-  updated_at?: string | null
-  deleted_at?: string | null
-  is_vip?: boolean
-
-  stage_changed_at?: string | null
-
-  notes?: string | null
-
-  source?: LeadSource | null
-  industry?: string | null
-  employees?: number | null
-  country?: string | null
-
-  tags?: string[] | null
-
-  email?: string | null
-  phone?: string | null
-  address?: string | null
-  website?: string | null
-
-  assigned_to?: string | null
-  owner_id?: string | null
-
-  next_action?: string | null
-  last_activity_at?: string | null
-  last_contact_at?: string | null
-  next_action_date?: string | null
-  expected_close_at?: string | null
-
-  lost_reason?: string | null
-
-  probability?: number | null
-}
-
+    id: string;
+    workspace_id?: string | null;
+    user_id?: string | null;
+    name: string;
+    company: string;
+    status: LeadStatus;
+    value: number;
+    created_at: string;
+    updated_at?: string | null;
+    deleted_at?: string | null;
+    is_vip?: boolean;
+    stage_changed_at?: string | null;
+    notes?: string | null;
+    source?: LeadSource | null;
+    industry?: string | null;
+    employees?: number | null;
+    country?: string | null;
+    tags?: string[] | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    website?: string | null;
+    assigned_to?: string | null;
+    owner_id?: string | null;
+    next_action?: string | null;
+    last_activity_at?: string | null;
+    last_contact_at?: string | null;
+    next_action_date?: string | null;
+    expected_close_at?: string | null;
+    lost_reason?: string | null;
+    probability?: number | null;
+};
 export type UpdateLeadData = {
-  name?: string
-  company?: string
-  status?: LeadStatus
-  value?: number
-  notes?: string
-  source?: LeadSource
-  tags?: string[]
-  email?: string
-  phone?: string
-  address?: string
-  website?: string
-  next_action?: string
-  next_action_date?: string
-  is_vip?: boolean
-}
+    name?: string;
+    company?: string;
+    status?: LeadStatus;
+    value?: number;
+    notes?: string;
+    source?: LeadSource;
+    tags?: string[];
+    email?: string;
+    phone?: string;
+    address?: string;
+    website?: string;
+    next_action?: string;
+    next_action_date?: string;
+    is_vip?: boolean;
+};

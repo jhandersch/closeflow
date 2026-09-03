@@ -1,896 +1,649 @@
-﻿"use client"
-
-import { useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import AuthGuard from "@/components/AuthGuard"
-import { useAppPreferences } from "@/components/AppPreferencesProvider"
-import LeadFilters from "@/components/dashboard/LeadFilters"
-import { supabase } from "@/lib/supabase/client"
-import { getHealthScore, getPriorityScore, getStaleDays } from "@/lib/scoring"
-import { useLeadsData } from "@/hooks/useLeadsData"
-import LeadPipeline from "@/components/dashboard/LeadPipeline"
-import HealthRing from "@/components/dashboard/HealthRing"
-import PriorityBadge from "@/components/dashboard/PriorityBadge"
-import LeadActions from "@/components/dashboard/LeadActions"
-import { leadDisplayName, leadCompany } from "@/lib/utils"
-import { calculateSalesScore } from "@/lib/salesScore"
-import { loadDemoData } from "@/lib/demoData"
-import type { LeadSource, LeadStatus, LeadSortBy } from "@/types"
-import { Plus, Star } from "lucide-react"
-import * as XLSX from "xlsx"
-
+"use client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import AuthGuard from "@/components/AuthGuard";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import LeadFilters from "@/components/dashboard/LeadFilters";
+import { supabase } from "@/lib/supabase/client";
+import { getHealthScore, getPriorityScore, getStaleDays } from "@/lib/scoring";
+import { useLeadsData } from "@/hooks/useLeadsData";
+import LeadPipeline from "@/components/dashboard/LeadPipeline";
+import HealthRing from "@/components/dashboard/HealthRing";
+import PriorityBadge from "@/components/dashboard/PriorityBadge";
+import LeadActions from "@/components/dashboard/LeadActions";
+import { leadDisplayName, leadCompany } from "@/lib/utils";
+import { calculateSalesScore } from "@/lib/salesScore";
+import { loadDemoData } from "@/lib/demoData";
+import type { LeadSource, LeadStatus, LeadSortBy } from "@/types";
+import { Plus, Star } from "lucide-react";
+import * as XLSX from "xlsx";
 type ImportIssue = {
-  row: number
-  reason: string
-  name?: string
-  company?: string
-  status?: string
-  value?: string
-  email?: string
-  phone?: string
-  website?: string
-  address?: string
-  source?: string
-  tags?: string
-  notes?: string
-}
-
-const LEAD_FAVORITES_STORAGE_KEY = "closeflow_lead_favorites"
-
+    row: number;
+    reason: string;
+    name?: string;
+    company?: string;
+    status?: string;
+    value?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    address?: string;
+    source?: string;
+    tags?: string;
+    notes?: string;
+};
+const LEAD_FAVORITES_STORAGE_KEY = "closeflow_lead_favorites";
 const escapeCsv = (value: unknown) => {
-  const text = String(value ?? "")
-  if (text.includes(",") || text.includes("\n") || text.includes('"')) {
-    return `"${text.replaceAll('"', '""')}"`
-  }
-  return text
-}
-
-
+    const text = String(value ?? "");
+    if (text.includes(",") || text.includes("\n") || text.includes('"')) {
+        return `"${text.replaceAll('"', '""')}"`;
+    }
+    return text;
+};
 export default function LeadsPage() {
-  const { leads, setLeads, loading, error, refresh } = useLeadsData({ activityLimit: 0 })
-  const { language } = useAppPreferences()
-  const isDe = language === "de"
-  const locale = isDe ? "de-DE" : "en-US"
-  const router = useRouter()
-  const [search, setSearch] = useState("")
-  const [status, setStatus] = useState("all")
-  const [priority, setPriority] = useState("all")
-  const [sourceFilter, setSourceFilter] = useState("all")
-  const [dateRange, setDateRange] = useState("all")
-  const [ownerFilter, setOwnerFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<LeadSortBy>("priority")
-  const [showForm, setShowForm] = useState(false)
-  const [name, setName] = useState("")
-  const [company, setCompany] = useState("")
-  const [value, setValue] = useState("")
-  const [notes, setNotes] = useState("")
-  const [leadStatus, setLeadStatus] = useState<LeadStatus>("new")
-  const [leadSource, setLeadSource] = useState<LeadSource>("website")
-  const [tagsInput, setTagsInput] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
-  const [website, setWebsite] = useState("")
-  const [nextAction, setNextAction] = useState("")
-  const [nextActionDate, setNextActionDate] = useState("")
-  const [formError, setFormError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [view, setView] = useState<"list" | "pipeline">("list")
-  const [favorites, setFavorites] = useState<string[]>([])
-  const [demoLoading, setDemoLoading] = useState(false)
-  const [demoMessage, setDemoMessage] = useState<string | null>(null)
-  const [importMessage, setImportMessage] = useState<string | null>(null)
-  const [importingCsv, setImportingCsv] = useState(false)
-  const [importIssues, setImportIssues] = useState<ImportIssue[]>([])
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    if (!importMessage) return
-
-    const timer = window.setTimeout(() => {
-      setImportMessage(null)
-    }, 10000)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [importMessage])
- 
-
-  useEffect(() => {
-    const storedFavorites = window.localStorage.getItem(LEAD_FAVORITES_STORAGE_KEY)
-
-    if (!storedFavorites) {
-      return
-    }
-
-    try {
-      const parsed = JSON.parse(storedFavorites) as unknown
-      if (Array.isArray(parsed)) {
-        setFavorites(parsed.filter((value): value is string => typeof value === "string"))
-      }
-    } catch {
-      window.localStorage.removeItem(LEAD_FAVORITES_STORAGE_KEY)
-    }
-  }, [])
-
-  const toggleFavorite = (id: string) => {
-    setFavorites((current) => {
-      const nextFavorites = current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-
-      window.localStorage.setItem(LEAD_FAVORITES_STORAGE_KEY, JSON.stringify(nextFavorites))
-
-      return nextFavorites
-    })
-  }
-
-  useEffect(() => {
-    const loadCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      setCurrentUserId(user?.id || null)
-    }
-
-    void loadCurrentUser()
-  }, [])
-
-
-const filteredLeads = useMemo(() => {
-  const query = search.trim().toLowerCase()
-  const now = new Date()
-
-const startOfToday = new Date(now)
-startOfToday.setHours(0, 0, 0, 0)
-
-const sevenDaysAgo = new Date(startOfToday)
-sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
-
-const thirtyDaysAgo = new Date(startOfToday)
-thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
-
-  return [...leads]
-    .filter((lead) => {
-      if (lead.status === "won" || lead.status === "lost") {
-        return false
-      }
-
-      const leadOwnerId =
-        lead.owner_id ||
-        lead.assigned_to ||
-        lead.user_id ||
-        null
-
-      const searchableText = `
+    const { leads, setLeads, loading, error, refresh } = useLeadsData({ activityLimit: 0 });
+    const { language } = useAppPreferences();
+    const locale = "en-US";
+    const router = useRouter();
+    const [search, setSearch] = useState("");
+    const [status, setStatus] = useState("all");
+    const [priority, setPriority] = useState("all");
+    const [sourceFilter, setSourceFilter] = useState("all");
+    const [dateRange, setDateRange] = useState("all");
+    const [ownerFilter, setOwnerFilter] = useState("all");
+    const [sortBy, setSortBy] = useState<LeadSortBy>("priority");
+    const [showForm, setShowForm] = useState(false);
+    const [name, setName] = useState("");
+    const [company, setCompany] = useState("");
+    const [value, setValue] = useState("");
+    const [notes, setNotes] = useState("");
+    const [leadStatus, setLeadStatus] = useState<LeadStatus>("new");
+    const [leadSource, setLeadSource] = useState<LeadSource>("website");
+    const [tagsInput, setTagsInput] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [address, setAddress] = useState("");
+    const [website, setWebsite] = useState("");
+    const [nextAction, setNextAction] = useState("");
+    const [nextActionDate, setNextActionDate] = useState("");
+    const [formError, setFormError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [view, setView] = useState<"list" | "pipeline">("list");
+    const [favorites, setFavorites] = useState<string[]>([]);
+    const [demoLoading, setDemoLoading] = useState(false);
+    const [demoMessage, setDemoMessage] = useState<string | null>(null);
+    const [importMessage, setImportMessage] = useState<string | null>(null);
+    const [importingCsv, setImportingCsv] = useState(false);
+    const [importIssues, setImportIssues] = useState<ImportIssue[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    useEffect(() => {
+        if (!importMessage)
+            return;
+        const timer = window.setTimeout(() => {
+            setImportMessage(null);
+        }, 10000);
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [importMessage]);
+    useEffect(() => {
+        const storedFavorites = window.localStorage.getItem(LEAD_FAVORITES_STORAGE_KEY);
+        if (!storedFavorites) {
+            return;
+        }
+        try {
+            const parsed = JSON.parse(storedFavorites) as unknown;
+            if (Array.isArray(parsed)) {
+                setFavorites(parsed.filter((value): value is string => typeof value === "string"));
+            }
+        }
+        catch {
+            window.localStorage.removeItem(LEAD_FAVORITES_STORAGE_KEY);
+        }
+    }, []);
+    const toggleFavorite = (id: string) => {
+        setFavorites((current) => {
+            const nextFavorites = current.includes(id)
+                ? current.filter((item) => item !== id)
+                : [...current, id];
+            window.localStorage.setItem(LEAD_FAVORITES_STORAGE_KEY, JSON.stringify(nextFavorites));
+            return nextFavorites;
+        });
+    };
+    useEffect(() => {
+        const loadCurrentUser = async () => {
+            const { data: { user }, } = await supabase.auth.getUser();
+            setCurrentUserId(user?.id || null);
+        };
+        void loadCurrentUser();
+    }, []);
+    const filteredLeads = useMemo(() => {
+        const query = search.trim().toLowerCase();
+        const now = new Date();
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+        const sevenDaysAgo = new Date(startOfToday);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        const thirtyDaysAgo = new Date(startOfToday);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        return [...leads]
+            .filter((lead) => {
+            if (lead.status === "won" || lead.status === "lost") {
+                return false;
+            }
+            const leadOwnerId = lead.owner_id ||
+                lead.assigned_to ||
+                lead.user_id ||
+                null;
+            const searchableText = `
         ${leadDisplayName(lead)}
         ${leadCompany(lead)}
         ${lead.email || ""}
         ${lead.phone || ""}
-      `.toLowerCase()
-
-      const createdAt = new Date(lead.created_at)
-
-      // Suche
-      const matchesQuery =
-        !query || searchableText.includes(query)
-
-      // Status
-      const matchesStatus =
-        status === "all" || lead.status === status
-
-      // Priorität
-      const salesScore = calculateSalesScore(
-  lead,
-  getStaleDays(lead)
-)
-
-const score = salesScore.priority
-
-const priorityLabel =
-  score >= 75
-    ? "hot"
-    : score >= 45
-    ? "warm"
-    : "cold"
-
-      const matchesPriority =
-        priority === "all" ||
-        priorityLabel === priority
-
-      // Quelle
-      const matchesSource =
-        sourceFilter === "all" ||
-        (lead.source || "other") === sourceFilter
-
-      // Besitzer
-      const matchesOwner =
-        ownerFilter === "all" ||
-        (
-          ownerFilter === "mine" &&
-          !!currentUserId &&
-          leadOwnerId === currentUserId
-        ) ||
-        (
-          ownerFilter === "unassigned" &&
-          !leadOwnerId
-        )
-
-      // Zeitraum
-      const matchesDateRange =
-        dateRange === "all" ||
-        (dateRange === "today" && createdAt >= startOfToday) ||
-        (dateRange === "last7" && createdAt >= sevenDaysAgo) ||
-        (dateRange === "last30" && createdAt >= thirtyDaysAgo) ||
-        (dateRange === "older30" && createdAt < thirtyDaysAgo)
-
-      return (
-        matchesQuery &&
-        matchesStatus &&
-        matchesPriority &&
-        matchesSource &&
-        matchesOwner &&
-        matchesDateRange
-      )
-    })
-    .sort((a, b) => {
-      // Favoriten immer zuerst
-      const aPinned = favorites.includes(a.id)
-      const bPinned = favorites.includes(b.id)
-
-      if (aPinned !== bPinned) {
-        return aPinned ? -1 : 1
-      }
-
-      // Sortierung
-      if (sortBy === "value") {
-        return (b.value || 0) - (a.value || 0)
-      }
-
-      if (sortBy === "created_at") {
-        return (
-          new Date(b.created_at).getTime() -
-          new Date(a.created_at).getTime()
-        )
-      }
-
-      if (sortBy === "health") {
-        return getHealthScore(b) - getHealthScore(a)
-      }
-
-      if (sortBy === "probability") {
-        const aStaleDays = getStaleDays(a)
-        const bStaleDays = getStaleDays(b)
-
-        const aProbability = calculateSalesScore(a, aStaleDays).probability
-        const bProbability = calculateSalesScore(b, bStaleDays).probability
-
-        return bProbability - aProbability
-      }
-
-      return getPriorityScore(b) - getPriorityScore(a)
-    })
-}, [
-  currentUserId,
-  dateRange,
-  favorites,
-  leads,
-  ownerFilter,
-  priority,
-  search,
-  sortBy,
-  sourceFilter,
-  status,
-])
-
-  const getAuthHeaders = async (includeJson = false) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    const headers: Record<string, string> = {}
-
-    if (includeJson) {
-      headers["Content-Type"] = "application/json"
-    }
-
-    if (session?.access_token) {
-      headers.Authorization = `Bearer ${session.access_token}`
-    }
-
-    return headers
-  }
-
-  const downloadExport = async (format: "csv" | "xlsx") => {
-    const response = await fetch(`/api/leads/export?format=${format}`, {
-      headers: await getAuthHeaders(),
-      credentials: "include",
-    })
-    if (!response.ok) {
-      let message = isDe ? `${format.toUpperCase()}-Export fehlgeschlagen.` : `${format.toUpperCase()} export failed.`
-      try {
-        const data = (await response.json()) as { error?: string }
-        if (data.error) message = data.error
-      } catch {
-        const text = await response.text()
-        if (text) message = text
-      }
-      setDemoMessage(message)
-      return
-    }
-
-    const buffer = await response.arrayBuffer()
-    const blob = new Blob([buffer], {
-      type:
-        format === "xlsx"
-          ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          : "text/csv;charset=utf-8;",
-    })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `closeflow-leads-${new Date().toISOString().slice(0, 10)}.${format}`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const importFile = async (file: File) => {
-    setImportingCsv(true)
-    setImportMessage(null)
-    setDemoMessage(null)
-    setImportIssues([])
-
-    try {
-      const lowerName = file.name.toLowerCase()
-      const csvText = lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")
-        ? (() => {
-            const parseWorkbook = async () => {
-              const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
-              const firstSheet = workbook.SheetNames[0]
-              if (!firstSheet) {
-                throw new Error(isDe ? "Import fehlgeschlagen: Arbeitsmappe enthaelt keine Tabellenblaetter." : "Import failed: workbook has no sheets.")
-              }
-              return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet])
+      `.toLowerCase();
+            const createdAt = new Date(lead.created_at);
+            // Search
+            const matchesQuery = !query || searchableText.includes(query);
+            // Status
+            const matchesStatus = status === "all" || lead.status === status;
+            // Priority
+            const salesScore = calculateSalesScore(lead, getStaleDays(lead));
+            const score = salesScore.priority;
+            const priorityLabel = score >= 75
+                ? "hot"
+                : score >= 45
+                    ? "warm"
+                    : "cold";
+            const matchesPriority = priority === "all" ||
+                priorityLabel === priority;
+            // Source
+            const matchesSource = sourceFilter === "all" ||
+                (lead.source || "other") === sourceFilter;
+            // Besitzer
+            const matchesOwner = ownerFilter === "all" ||
+                (ownerFilter === "mine" &&
+                    !!currentUserId &&
+                    leadOwnerId === currentUserId) ||
+                (ownerFilter === "unassigned" &&
+                    !leadOwnerId);
+            // Zeitraum
+            const matchesDateRange = dateRange === "all" ||
+                (dateRange === "today" && createdAt >= startOfToday) ||
+                (dateRange === "last7" && createdAt >= sevenDaysAgo) ||
+                (dateRange === "last30" && createdAt >= thirtyDaysAgo) ||
+                (dateRange === "older30" && createdAt < thirtyDaysAgo);
+            return (matchesQuery &&
+                matchesStatus &&
+                matchesPriority &&
+                matchesSource &&
+                matchesOwner &&
+                matchesDateRange);
+        })
+            .sort((a, b) => {
+            // Favoriten immer zuerst
+            const aPinned = favorites.includes(a.id);
+            const bPinned = favorites.includes(b.id);
+            if (aPinned !== bPinned) {
+                return aPinned ? -1 : 1;
             }
-            return parseWorkbook()
-          })()
-        : file.text()
-
-      const resolvedCsvText = await csvText
-      const response = await fetch("/api/leads/import", {
-        method: "POST",
-        headers: await getAuthHeaders(true),
-        credentials: "include",
-        body: JSON.stringify({ csv: resolvedCsvText }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        setDemoMessage(text || (isDe ? "CSV-Import fehlgeschlagen." : "CSV import failed."))
-        return
-      }
-
-      const data = (await response.json()) as { inserted?: number; skipped?: number; issues?: ImportIssue[] }
-      const issues = Array.isArray(data.issues) ? data.issues : []
-      setImportIssues(issues)
-      setImportMessage(
-        isDe
-          ? `Import abgeschlossen. ${data.inserted || 0} Leads hinzugefügt, ${data.skipped || 0} übersprungen${issues.length ? `. ${issues.length} Problem(e) im Bericht verfügbar.` : "."}`
-          : `Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`
-      )
-      
-      await refresh()
-    } catch (error) {
-      setDemoMessage(error instanceof Error ? error.message : (isDe ? "Import fehlgeschlagen." : "Import failed."))
-    } finally {
-      setImportingCsv(false)
-    }
-  }
-
-  const downloadImportIssuesReport = () => {
-    if (!importIssues.length) return
-
-    const headers = [
-  "row",
-  "reason",
-  "name",
-  "company",
-  "status",
-  "value",
-  "email",
-  "phone",
-  "website",
-  "address",
-  "source",
-  "tags",
-  "notes",
-]
-    const rows = importIssues.map((issue) => [
-      issue.row,
-      issue.reason,
-      issue.name || "",
-      issue.company || "",
-      issue.status || "",
-      issue.value || "",
-      issue.email || "",
-      issue.phone || "",
-      issue.website || "",
-      issue.address || "",
-      issue.source || "",
-      issue.tags || "",
-      issue.notes || "",
-    ])
-
-    const csv = [
-      headers.join(";"),
-      ...rows.map((row) => row.map(escapeCsv).join(";")),
-    ].join("\r\n")
-
-    const blob = new Blob(
-      ["\uFEFF" + csv],
-      { type: "text/csv;charset=utf-8;" }
-    )
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `closeflow-leads-import-issues-${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const createLead = async () => {
-    setFormError(null)
-    setSubmitting(true)
-
-    if (!name.trim()) {
-  setFormError(isDe ? "Lead-Name ist erforderlich" : "Lead name is required")
-  setSubmitting(false)
-  return
-}
-
-const dealValue = Number(value)
-const parsedTags = tagsInput
-  .split(",")
-  .map((tag) => tag.trim())
-  .filter(Boolean)
-
-if (isNaN(dealValue) || dealValue < 0) {
-  setFormError(isDe ? "Deal-Wert muss eine gültige Zahl sein" : "Deal value must be a valid number")
-  setSubmitting(false)
-  return
-}
-
-const normalizedName = name.trim().toLowerCase()
-const normalizedCompany = company.trim().toLowerCase()
-
-const duplicateLead = leads.find((lead) => {
-  const sameName = (lead.name || "").trim().toLowerCase() === normalizedName
-  const sameCompany = (lead.company || "").trim().toLowerCase() === normalizedCompany
-  return sameName && sameCompany
-})
-
-if (duplicateLead) {
-  setFormError(isDe ? "Doppelter Lead erkannt: Name und Firma existieren bereits." : "Duplicate lead detected: same name and company already exist.")
-  setSubmitting(false)
-  return
-}
-
-const baseInsertPayload = {
-  name: name.trim(),
-  company: company.trim(),
-  status: leadStatus,
-  value: dealValue,
-  notes: notes.trim() || "",
-  stage_changed_at: new Date().toISOString(),
-  last_activity_at: new Date().toISOString(),
-}
-
-const extendedInsertPayload = {
-  ...baseInsertPayload,
-  source: leadSource,
-  tags: parsedTags,
-  email: email.trim() || null,
-  phone: phone.trim() || null,
-  address: address.trim() || null,
-  website: website.trim() || null,
-  next_action: nextAction.trim() || null,
-  next_action_date: nextActionDate
-    ? new Date(nextActionDate).toISOString()
-    : null,
-}
-
-const response = await fetch("/api/leads", {
-  method: "POST",
-  headers: await getAuthHeaders(true),
-  credentials: "include",
-  body: JSON.stringify(extendedInsertPayload),
-})
-
-if (!response.ok) {
-  let message = isDe ? "Lead konnte nicht erstellt werden." : "Failed to create lead."
-  try {
-    const payload = (await response.json()) as { error?: string }
-    if (payload.error) {
-      message = payload.error
-    }
-  } catch {
-    const text = await response.text()
-    if (text) {
-      message = text
-    }
-  }
-
-  setFormError(message)
-  setSubmitting(false)
-  return
-}
-
-    setName("")
-    setCompany("")
-    setValue("")
-    setNotes("")
-    setLeadSource("website")
-    setTagsInput("")
-    setEmail("")
-    setPhone("")
-    setAddress("")
-    setWebsite("")
-    setNextAction("")
-    setNextActionDate("")
-    setLeadStatus("new")
-    setShowForm(false)
-    setSubmitting(false)
-    await refresh()
-  }
-
-  return (
-    <AuthGuard>
+            // Sortierung
+            if (sortBy === "value") {
+                return (b.value || 0) - (a.value || 0);
+            }
+            if (sortBy === "created_at") {
+                return (new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime());
+            }
+            if (sortBy === "health") {
+                return getHealthScore(b) - getHealthScore(a);
+            }
+            if (sortBy === "probability") {
+                const aStaleDays = getStaleDays(a);
+                const bStaleDays = getStaleDays(b);
+                const aProbability = calculateSalesScore(a, aStaleDays).probability;
+                const bProbability = calculateSalesScore(b, bStaleDays).probability;
+                return bProbability - aProbability;
+            }
+            return getPriorityScore(b) - getPriorityScore(a);
+        });
+    }, [
+        currentUserId,
+        dateRange,
+        favorites,
+        leads,
+        ownerFilter,
+        priority,
+        search,
+        sortBy,
+        sourceFilter,
+        status,
+    ]);
+    const getAuthHeaders = async (includeJson = false) => {
+        const { data: { session }, } = await supabase.auth.getSession();
+        const headers: Record<string, string> = {};
+        if (includeJson) {
+            headers["Content-Type"] = "application/json";
+        }
+        if (session?.access_token) {
+            headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        return headers;
+    };
+    const downloadExport = async (format: "csv" | "xlsx") => {
+        const response = await fetch(`/api/leads/export?format=${format}`, {
+            headers: await getAuthHeaders(),
+            credentials: "include",
+        });
+        if (!response.ok) {
+            let message = `${format.toUpperCase()} export failed.`;
+            try {
+                const data = (await response.json()) as {
+                    error?: string;
+                };
+                if (data.error)
+                    message = data.error;
+            }
+            catch {
+                const text = await response.text();
+                if (text)
+                    message = text;
+            }
+            setDemoMessage(message);
+            return;
+        }
+        const buffer = await response.arrayBuffer();
+        const blob = new Blob([buffer], {
+            type: format === "xlsx"
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `closeflow-leads-${new Date().toISOString().slice(0, 10)}.${format}`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+    const importFile = async (file: File) => {
+        setImportingCsv(true);
+        setImportMessage(null);
+        setDemoMessage(null);
+        setImportIssues([]);
+        try {
+            const lowerName = file.name.toLowerCase();
+            const csvText = lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")
+                ? (() => {
+                    const parseWorkbook = async () => {
+                        const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+                        const firstSheet = workbook.SheetNames[0];
+                        if (!firstSheet) {
+                            throw new Error("Import failed: workbook has no sheets.");
+                        }
+                        return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet]);
+                    };
+                    return parseWorkbook();
+                })()
+                : file.text();
+            const resolvedCsvText = await csvText;
+            const response = await fetch("/api/leads/import", {
+                method: "POST",
+                headers: await getAuthHeaders(true),
+                credentials: "include",
+                body: JSON.stringify({ csv: resolvedCsvText }),
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                setDemoMessage(text || ("CSV import failed."));
+                return;
+            }
+            const data = (await response.json()) as {
+                inserted?: number;
+                skipped?: number;
+                issues?: ImportIssue[];
+            };
+            const issues = Array.isArray(data.issues) ? data.issues : [];
+            setImportIssues(issues);
+            setImportMessage(`Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`);
+            await refresh();
+        }
+        catch (error) {
+            setDemoMessage(error instanceof Error ? error.message : ("Import failed."));
+        }
+        finally {
+            setImportingCsv(false);
+        }
+    };
+    const downloadImportIssuesReport = () => {
+        if (!importIssues.length)
+            return;
+        const headers = [
+            "row",
+            "reason",
+            "name",
+            "company",
+            "status",
+            "value",
+            "email",
+            "phone",
+            "website",
+            "address",
+            "source",
+            "tags",
+            "notes",
+        ];
+        const rows = importIssues.map((issue) => [
+            issue.row,
+            issue.reason,
+            issue.name || "",
+            issue.company || "",
+            issue.status || "",
+            issue.value || "",
+            issue.email || "",
+            issue.phone || "",
+            issue.website || "",
+            issue.address || "",
+            issue.source || "",
+            issue.tags || "",
+            issue.notes || "",
+        ]);
+        const csv = [
+            headers.join(";"),
+            ...rows.map((row) => row.map(escapeCsv).join(";")),
+        ].join("\r\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `closeflow-leads-import-issues-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+    const createLead = async () => {
+        setFormError(null);
+        setSubmitting(true);
+        if (!name.trim()) {
+            setFormError("Lead name is required");
+            setSubmitting(false);
+            return;
+        }
+        const dealValue = Number(value);
+        const parsedTags = tagsInput
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean);
+        if (isNaN(dealValue) || dealValue < 0) {
+            setFormError("Deal value must be a valid number");
+            setSubmitting(false);
+            return;
+        }
+        const normalizedName = name.trim().toLowerCase();
+        const normalizedCompany = company.trim().toLowerCase();
+        const duplicateLead = leads.find((lead) => {
+            const sameName = (lead.name || "").trim().toLowerCase() === normalizedName;
+            const sameCompany = (lead.company || "").trim().toLowerCase() === normalizedCompany;
+            return sameName && sameCompany;
+        });
+        if (duplicateLead) {
+            setFormError("Duplicate lead detected: same name and company already exist.");
+            setSubmitting(false);
+            return;
+        }
+        const baseInsertPayload = {
+            name: name.trim(),
+            company: company.trim(),
+            status: leadStatus,
+            value: dealValue,
+            notes: notes.trim() || "",
+            stage_changed_at: new Date().toISOString(),
+            last_activity_at: new Date().toISOString(),
+        };
+        const extendedInsertPayload = {
+            ...baseInsertPayload,
+            source: leadSource,
+            tags: parsedTags,
+            email: email.trim() || null,
+            phone: phone.trim() || null,
+            address: address.trim() || null,
+            website: website.trim() || null,
+            next_action: nextAction.trim() || null,
+            next_action_date: nextActionDate
+                ? new Date(nextActionDate).toISOString()
+                : null,
+        };
+        const response = await fetch("/api/leads", {
+            method: "POST",
+            headers: await getAuthHeaders(true),
+            credentials: "include",
+            body: JSON.stringify(extendedInsertPayload),
+        });
+        if (!response.ok) {
+            let message = "Failed to create lead.";
+            try {
+                const payload = (await response.json()) as {
+                    error?: string;
+                };
+                if (payload.error) {
+                    message = payload.error;
+                }
+            }
+            catch {
+                const text = await response.text();
+                if (text) {
+                    message = text;
+                }
+            }
+            setFormError(message);
+            setSubmitting(false);
+            return;
+        }
+        setName("");
+        setCompany("");
+        setValue("");
+        setNotes("");
+        setLeadSource("website");
+        setTagsInput("");
+        setEmail("");
+        setPhone("");
+        setAddress("");
+        setWebsite("");
+        setNextAction("");
+        setNextActionDate("");
+        setLeadStatus("new");
+        setShowForm(false);
+        setSubmitting(false);
+        await refresh();
+    };
+    return (<AuthGuard>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">{isDe ? "Pipeline" : "Pipeline"}</p>
-            <h1 className="text-3xl font-bold text-foreground">{isDe ? "Leads" : "Leads"}</h1>
-            <p className="mt-2 text-sm text-foreground/65">{isDe ? "Suche, filtere, sortiere und arbeite die richtigen Opportunities nach." : "Search, filter, sort, and follow up on the right opportunities."}</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">{"Pipeline"}</p>
+            <h1 className="text-3xl font-bold text-foreground">{"Leads"}</h1>
+            <p className="mt-2 text-sm text-foreground/65">{"Search, filter, sort, and follow up on the right opportunities."}</p>
           </div>
 
           <div className="flex gap-3">
 
             <div className="flex rounded-xl border border-border-subtle bg-surface-1 p-1">
 
-              <button
-                onClick={() => setView("list")}
-                className={`px-4 py-2 rounded-lg text-sm ${
-                  view === "list"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/65"
-                }`}
-              >
-                {isDe ? "Liste" : "List"}
+              <button onClick={() => setView("list")} className={`px-4 py-2 rounded-lg text-sm ${view === "list"
+            ? "bg-foreground text-background"
+            : "text-foreground/65"}`}>
+                {"List"}
               </button>
 
-              <button
-                onClick={() => setView("pipeline")}
-                className={`px-4 py-2 rounded-lg text-sm ${
-                  view === "pipeline"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/65"
-                }`}
-              >
+              <button onClick={() => setView("pipeline")} className={`px-4 py-2 rounded-lg text-sm ${view === "pipeline"
+            ? "bg-foreground text-background"
+            : "text-foreground/65"}`}>
                 Pipeline
               </button>
 
             </div>
 
 
-            <button
-              onClick={() => setShowForm(true)}
-              className="rounded-xl bg-foreground px-4 py-2 font-medium text-background"
-            >
-              {isDe ? "+ Lead hinzufügen" : "+ Add Lead"}
+            <button onClick={() => setShowForm(true)} className="rounded-xl bg-foreground px-4 py-2 font-medium text-background">
+              {"+ Add Lead"}
             </button>
 
-            <button
-              onClick={() => void downloadExport("csv")}
-              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
-            >
-              {isDe ? "CSV exportieren" : "Export CSV"}
+            <button onClick={() => void downloadExport("csv")} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85">
+              {"Export CSV"}
             </button>
 
-            <button
-              onClick={() => void downloadExport("xlsx")}
-              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85"
-            >
-              {isDe ? "Excel exportieren" : "Export Excel"}
+            <button onClick={() => void downloadExport("xlsx")} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85">
+              {"Export Excel"}
             </button>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importingCsv}
-              className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60"
-            >
-              {importingCsv ? (isDe ? "Importiere..." : "Importing...") : (isDe ? "Datei importieren" : "Import File")}
+            <button onClick={() => fileInputRef.current?.click()} disabled={importingCsv} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60">
+              {importingCsv ? ("Importing...") : ("Import File")}
             </button>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                if (file) {
-                  void importFile(file)
-                }
-                event.currentTarget.value = ""
-              }}
-            />
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" className="hidden" onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+                void importFile(file);
+            }
+            event.currentTarget.value = "";
+        }}/>
 
-            {importIssues.length ? (
-              <button
-                onClick={downloadImportIssuesReport}
-                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 font-medium text-amber-200"
-              >
-                {isDe ? "Importprobleme herunterladen" : "Download Import Issues"}
-              </button>
-            ) : null}
+            {importIssues.length ? (<button onClick={downloadImportIssuesReport} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 font-medium text-amber-200">
+                {"Download Import Issues"}
+              </button>) : null}
 
           </div>
           
         </div>
 
-        {error ? (
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-            {isDe ? "Leads konnten nicht geladen werden." : "We couldn’t load your leads."} {error}
-          </div>
-        ) : null}
+        {error ? (<div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
+            {"We couldn’t load your leads."} {error}
+          </div>) : null}
 
-        <LeadFilters
-          search={search}
-          status={status}
-          priority={priority}
-          source={sourceFilter}
-          dateRange={dateRange}
-          owner={ownerFilter}
-          sortBy={sortBy}
-          onSearchChange={setSearch}
-          onStatusChange={setStatus}
-          onPriorityChange={setPriority}
-          onSourceChange={setSourceFilter}
-          onDateRangeChange={setDateRange}
-          onOwnerChange={setOwnerFilter}
-          onSortChange={setSortBy}
-        />
+        <LeadFilters search={search} status={status} priority={priority} source={sourceFilter} dateRange={dateRange} owner={ownerFilter} sortBy={sortBy} onSearchChange={setSearch} onStatusChange={setStatus} onPriorityChange={setPriority} onSourceChange={setSourceFilter} onDateRangeChange={setDateRange} onOwnerChange={setOwnerFilter} onSortChange={setSortBy}/>
 
         <div className="grid gap-4 md:grid-cols-4">
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{isDe ? "Leads gesamt" : "Total Leads"}</p>
+            <p className="text-sm text-foreground/65">{"Total Leads"}</p>
             <p className="mt-2 text-3xl font-bold text-foreground">
               {filteredLeads.length}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{isDe ? "Pipeline-Wert" : "Pipeline Value"}</p>
+            <p className="text-sm text-foreground/65">{"Pipeline Value"}</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">
               €
               {filteredLeads
-                .reduce((sum, lead) => sum + (lead.value || 0), 0)
-                .toLocaleString(locale)}
+            .reduce((sum, lead) => sum + (lead.value || 0), 0)
+            .toLocaleString(locale)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{isDe ? "Durchschnittliche Gesundheit" : "Average Health"}</p>
+            <p className="text-sm text-foreground/65">{"Average Health"}</p>
             <p className="mt-2 text-3xl font-bold text-cyan-400">
-              {Math.round(
-                filteredLeads.reduce(
-                  (sum, lead) => sum + getHealthScore(lead),
-                  0
-                ) / Math.max(filteredLeads.length, 1)
-              )}
+              {Math.round(filteredLeads.reduce((sum, lead) => sum + getHealthScore(lead), 0) / Math.max(filteredLeads.length, 1))}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{isDe ? "Forecast-Umsatz" : "Forecast Revenue"}</p>
+            <p className="text-sm text-foreground/65">{"Forecast Revenue"}</p>
 
             <p className="mt-2 text-3xl font-bold text-purple-400">
               €
               {filteredLeads
-                .reduce((sum, lead) => {
-                  const salesScore = calculateSalesScore(
-                    lead,
-                    getStaleDays(lead)
-                  )
-
-                  const priority = salesScore.priority
-                  const health = salesScore.health
-
-                  const probability = Math.min(
-                    95,
-                    Math.round(
-                      priority * 0.35 +
-                      health * 0.35 +
-                      (
-                        lead.status === "won"
-                          ? 100
-                          : lead.status === "proposal"
-                          ? 25
-                          : lead.status === "contacted"
-                          ? 10
-                          : 0
-                      )
-                    )
-                  )
-
-                  return sum + (lead.value * probability) / 100
-                }, 0)
-                .toLocaleString(locale, {
-                  maximumFractionDigits: 0,
-                })}
+            .reduce((sum, lead) => {
+            const salesScore = calculateSalesScore(lead, getStaleDays(lead));
+            const priority = salesScore.priority;
+            const health = salesScore.health;
+            const probability = Math.min(95, Math.round(priority * 0.35 +
+                health * 0.35 +
+                (lead.status === "won"
+                    ? 100
+                    : lead.status === "proposal"
+                        ? 25
+                        : lead.status === "contacted"
+                            ? 10
+                            : 0)));
+            return sum + (lead.value * probability) / 100;
+        }, 0)
+            .toLocaleString(locale, {
+            maximumFractionDigits: 0,
+        })}
             </p>
           </div>
 
         </div>
 
-        {importMessage ? (
-  <div className="w-full rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        {importMessage ? (<div className="w-full rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
     {importMessage}
-  </div>
-) : null}
+  </div>) : null}
 
-        {showForm ? (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
+        {showForm ? (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
             {formError ? <p className="mb-3 text-sm text-rose-300">{formError}</p> : null}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Name"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={company}
-                onChange={(event) => setCompany(event.target.value)}
-                placeholder={isDe ? "Firma" : "Company"}
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder={"Company"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                placeholder={isDe ? "Wert" : "Value"}
-                type="number"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={value} onChange={(event) => setValue(event.target.value)} placeholder={"Value"} type="number" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <select
-                value={leadStatus}
-                onChange={(event) => setLeadStatus(event.target.value as LeadStatus)}
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              >
-                <option value="new">{isDe ? "Neu" : "New"}</option>
-                <option value="contacted">{isDe ? "Kontaktiert" : "Contacted"}</option>
-                <option value="proposal">{isDe ? "Angebot" : "Proposal"}</option>
-                <option value="won">{isDe ? "Gewonnen" : "Won"}</option>
-                <option value="lost">{isDe ? "Verloren" : "Lost"}</option>
+              <select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value as LeadStatus)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none">
+                <option value="new">{"New"}</option>
+                <option value="contacted">{"Contacted"}</option>
+                <option value="proposal">{"Proposal"}</option>
+                <option value="won">{"Won"}</option>
+                <option value="lost">{"Lost"}</option>
               </select>
 
-              <select
-                value={leadSource}
-                onChange={(event) => setLeadSource(event.target.value as LeadSource)}
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              >
-                <option value="website">{isDe ? "Website" : "Website"}</option>
-                <option value="recommendation">{isDe ? "Empfehlung" : "Recommendation"}</option>
-                <option value="phone">{isDe ? "Telefon" : "Phone"}</option>
-                <option value="advertising">{isDe ? "Werbung" : "Advertising"}</option>
-                <option value="other">{isDe ? "Sonstiges" : "Other"}</option>
+              <select value={leadSource} onChange={(event) => setLeadSource(event.target.value as LeadSource)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none">
+                <option value="website">{"Website"}</option>
+                <option value="recommendation">{"Recommendation"}</option>
+                <option value="phone">{"Phone"}</option>
+                <option value="advertising">{"Advertising"}</option>
+                <option value="other">{"Other"}</option>
               </select>
 
-              <input
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email"
-                type="email"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" type="email" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="Phone"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={website}
-                onChange={(event) => setWebsite(event.target.value)}
-                placeholder="Website"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="Website" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={tagsInput}
-                onChange={(event) => setTagsInput(event.target.value)}
-                placeholder={isDe ? "Tags (durch Komma getrennt)" : "Tags (comma separated)"}
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={"Tags (comma separated)"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-                placeholder={isDe ? "Adresse" : "Address"}
-                className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder={"Address"} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={nextAction}
-                onChange={(event) => setNextAction(event.target.value)}
-                placeholder={
-                  isDe
-                    ? "Nächste Aktion"
-                    : "Next action"
-                }
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
+              <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder={"Next action"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input
-                value={nextActionDate}
-                onChange={(event) => setNextActionDate(event.target.value)}
-                type="datetime-local"
-                className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-              />
-              <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder={isDe ? "Notizen zu diesem Lead..." : "Notes about this lead..."}
-              className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"
-            />
+              <input value={nextActionDate} onChange={(event) => setNextActionDate(event.target.value)} type="datetime-local" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={"Notes about this lead..."} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                onClick={() => void createLead()}
-                disabled={submitting}
-                className="rounded-xl bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60"
-              >
-                {submitting ? (isDe ? "Erstelle..." : "Creating...") : (isDe ? "Lead erstellen" : "Create lead")}
+              <button onClick={() => void createLead()} disabled={submitting} className="rounded-xl bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60">
+                {submitting ? ("Creating...") : ("Create lead")}
               </button>
 
-              <button
-                onClick={() => {
-                  setShowForm(false)
-                  setFormError(null)
-                }}
-                className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80"
-              >
-                {isDe ? "Abbrechen" : "Abbrechen"}
+              <button onClick={() => {
+                setShowForm(false);
+                setFormError(null);
+            }} className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80">
+                {"Cancel"}
               </button>
             </div>
-          </div>
-        ) : null}
+          </div>) : null}
 
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="
+        {loading ? (<div className="space-y-3">
+            {[1, 2, 3].map((item) => (<div key={item} className="
                   rounded-2xl
                   border
                   border-border-subtle
                   bg-surface-1
                   p-5
                   animate-pulse
-                "
-              >
+                ">
                 <div className="flex gap-4">
                   <div className="
                     h-14
@@ -922,12 +675,8 @@ if (!response.ok) {
                     "/>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : filteredLeads.length === 0 ? (
-          leads.length === 0 ? (
-            <div className="
+              </div>))}
+          </div>) : filteredLeads.length === 0 ? (leads.length === 0 ? (<div className="
               rounded-2xl
               border
               border-border-subtle
@@ -938,7 +687,7 @@ if (!response.ok) {
               text-center
             ">
               <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
-                <Plus size={18} aria-hidden="true" />
+                <Plus size={18} aria-hidden="true"/>
               </div>
 
               <h3 className="
@@ -947,7 +696,7 @@ if (!response.ok) {
                 font-semibold
                 text-foreground
               ">
-                {isDe ? "Keine Leads gefunden" : "No leads found"}
+                {"No leads found"}
               </h3>
 
               <p className="
@@ -955,69 +704,47 @@ if (!response.ok) {
                 text-sm
                 text-foreground/65
               ">
-                {isDe
-                  ? "Erstelle deine erste Opportunity und starte den Aufbau deiner Pipeline."
-                  : "Create your first opportunity and start building your pipeline."}
+                {"Create your first opportunity and start building your pipeline."}
               </p>
 
               <div className="mt-5 flex flex-wrap justify-center gap-3">
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="rounded-xl bg-foreground px-5 py-2 font-medium text-background"
-                >
-                  {isDe ? "Ersten Lead erstellen" : "Create First Lead"}
+                <button onClick={() => setShowForm(true)} className="rounded-xl bg-foreground px-5 py-2 font-medium text-background">
+                  {"Create First Lead"}
                 </button>
 
-                <button
-                  onClick={async () => {
-                    setDemoLoading(true)
-                    setDemoMessage(null)
-
-                    try {
-                      const result = await loadDemoData({ reload: true })
-
-                      const warning = result.warnings?.length
-                        ? ` ${isDe ? "Warnungen" : "Warnings"}: ${result.warnings.join(" ")}`
-                        : ""
-
-                      setDemoMessage(
-                        `${result.message} ${isDe ? "Leads" : "Leads"}: ${result.inserted_leads}, ${isDe ? "Aktivitäten" : "Activities"}: ${result.inserted_activities}, ${isDe ? "Aufgaben" : "Tasks"}: ${result.inserted_tasks}.${warning}`
-                      )
-
-                      await refresh()
-                    } catch (error) {
-                      setDemoMessage(
-                        error instanceof Error
-                          ? error.message
-                          : isDe
-                          ? "Demo-Daten konnten nicht geladen werden"
-                          : "Could not load demo data"
-                      )
-                    } finally {
-                      setDemoLoading(false)
-                    }
-                  }}
-                  disabled={demoLoading}
-                  className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60"
-                >
+                <button onClick={async () => {
+                setDemoLoading(true);
+                setDemoMessage(null);
+                try {
+                    const result = await loadDemoData({ reload: true });
+                    const warning = result.warnings?.length
+                        ? ` ${"Warnings"}: ${result.warnings.join(" ")}`
+                        : "";
+                    setDemoMessage(`${result.message} ${"Leads"}: ${result.inserted_leads}, ${"Activities"}: ${result.inserted_activities}, ${"Tasks"}: ${result.inserted_tasks}.${warning}`);
+                    await refresh();
+                }
+                catch (error) {
+                    setDemoMessage(error instanceof Error
+                        ? error.message
+                        :
+                            "Could not load demo data");
+                }
+                finally {
+                    setDemoLoading(false);
+                }
+            }} disabled={demoLoading} className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60">
                   {demoLoading
-                    ? isDe
-                      ? "Lade Demo-Daten..."
-                      : "Loading demo data..."
-                    : isDe
-                    ? "Demo-Daten laden"
-                    : "Load Demo Data"}
+                ?
+                    "Loading demo data..."
+                :
+                    "Load Demo Data"}
                 </button>
               </div>
 
-              {demoMessage ? (
-                <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              {demoMessage ? (<div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
                   {demoMessage}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="
+                </div>) : null}
+            </div>) : (<div className="
               rounded-2xl
               border
               border-border-subtle
@@ -1037,7 +764,7 @@ if (!response.ok) {
                 font-semibold
                 text-foreground
               ">
-                {isDe ? "Keine Leads gefunden" : "No leads found"}
+                {"No leads found"}
               </h3>
 
               <p className="
@@ -1045,21 +772,17 @@ if (!response.ok) {
                 text-sm
                 text-foreground/65
               ">
-                {isDe
-                  ? "Für deine aktuelle Suche oder Filter gibt es keine passenden Leads."
-                  : "No leads match your current search or filters."}
+                {"No leads match your current search or filters."}
               </p>
 
-              <button
-                onClick={() => {
-                  setSearch("")
-                  setStatus("all")
-                  setPriority("all")
-                  setSourceFilter("all")
-                  setDateRange("all")
-                  setOwnerFilter("all")
-                }}
-                className="
+              <button onClick={() => {
+                setSearch("");
+                setStatus("all");
+                setPriority("all");
+                setSourceFilter("all");
+                setDateRange("all");
+                setOwnerFilter("all");
+            }} className="
                   mt-5
                   rounded-xl
                   border
@@ -1071,34 +794,17 @@ if (!response.ok) {
                   text-foreground/80
                   transition
                   hover:bg-foreground/5
-                "
-              >
-                {isDe ? "Filter zurücksetzen" : "Clear filters"}
+                ">
+                {"Clear filters"}
               </button>
-            </div>
-          )
-        ) : (
-          view === "list" ? (
-
-          <div className="space-y-3">
+            </div>)) : (view === "list" ? (<div className="space-y-3">
             {filteredLeads.map((lead) => {
-              
-              const staleDays = getStaleDays(lead)
-
-              const salesScore = calculateSalesScore(
-                lead,
-                staleDays
-              )
-
-              const priority = salesScore.priority
-              const health = salesScore.health
-              const probability = salesScore.probability
-
-              return (
-                <div
-                  key={lead.id}
-                  onClick={() => router.push(`/leads/${lead.id}`)}
-                  className="
+                const staleDays = getStaleDays(lead);
+                const salesScore = calculateSalesScore(lead, staleDays);
+                const priority = salesScore.priority;
+                const health = salesScore.health;
+                const probability = salesScore.probability;
+                return (<div key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="
                     group
                     cursor-pointer
                     rounded-2xl
@@ -1114,8 +820,7 @@ if (!response.ok) {
                     hover:border-cyan-500/20
                     hover:shadow-xl
                     hover:shadow-cyan-500/5
-                  "
-                >
+                  ">
                   {/* HEADER */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3">
@@ -1138,11 +843,11 @@ if (!response.ok) {
                         shadow-cyan-500/10
                       ">
                         {leadDisplayName(lead)
-                          .split(" ")
-                          .map((part) => part[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
                       </div>
 
                       {/* Name + Company */}
@@ -1157,23 +862,15 @@ if (!response.ok) {
                             {leadDisplayName(lead)}
                           </p>
 
-                          <button
-                            onClick={(event) => {
-                              event.preventDefault()
-                              event.stopPropagation()
-                              toggleFavorite(lead.id)
-                            }}
-                            aria-label={
-                              favorites.includes(lead.id)
-                                ? (isDe ? "Fixierung entfernen" : "Remove pin")
-                                : (isDe ? "Lead fixieren" : "Pin lead")
-                            }
-                            title={
-                              favorites.includes(lead.id)
-                                ? (isDe ? "Fixiert" : "Pinned")
-                                : (isDe ? "Fixieren" : "Pin")
-                            }
-                            className="
+                          <button onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        toggleFavorite(lead.id);
+                    }} aria-label={favorites.includes(lead.id)
+                        ? ("Remove pin")
+                        : ("Pin lead")} title={favorites.includes(lead.id)
+                        ? ("Pinned")
+                        : ("Pin")} className="
                               shrink-0
                               rounded-lg
                               p-1
@@ -1181,16 +878,10 @@ if (!response.ok) {
                               transition
                               hover:bg-foreground/5
                               hover:text-amber-300
-                            "
-                          >
-                            <Star
-                              size={17}
-                              className={
-                                favorites.includes(lead.id)
-                                  ? "fill-amber-300 text-amber-300"
-                                  : "text-foreground/35"
-                              }
-                            />
+                            ">
+                            <Star size={17} className={favorites.includes(lead.id)
+                        ? "fill-amber-300 text-amber-300"
+                        : "text-foreground/35"}/>
                           </button>
                         </div>
 
@@ -1204,7 +895,7 @@ if (!response.ok) {
                     <div className="flex shrink-0 items-center gap-3">
                       <div className="text-right">
                         <p className="text-xs text-foreground/45">
-                          {isDe ? "Deal-Wert" : "Deal value"}
+                          {"Deal value"}
                         </p>
 
                         <p className="mt-0.5 text-base font-bold text-foreground">
@@ -1212,26 +903,22 @@ if (!response.ok) {
                         </p>
                       </div>
 
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                          lead.status === "new"
-                            ? "bg-blue-500/15 text-blue-300"
-                            : lead.status === "contacted"
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${lead.status === "new"
+                        ? "bg-blue-500/15 text-blue-300"
+                        : lead.status === "contacted"
                             ? "bg-yellow-500/15 text-yellow-300"
                             : lead.status === "proposal"
-                            ? "bg-orange-500/15 text-orange-300"
-                            : lead.status === "won"
-                            ? "bg-green-500/15 text-green-300"
-                            : "bg-red-500/15 text-red-300"
-                        }`}
-                      >
+                                ? "bg-orange-500/15 text-orange-300"
+                                : lead.status === "won"
+                                    ? "bg-green-500/15 text-green-300"
+                                    : "bg-red-500/15 text-red-300"}`}>
                         {lead.status}
                       </span>
                     </div>
                   </div>
 
                   {/* DIVIDER */}
-                  <div className="my-5 h-px bg-border-subtle/70" />
+                  <div className="my-5 h-px bg-border-subtle/70"/>
 
                   {/* SALES METRICS */}
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1243,7 +930,7 @@ if (!response.ok) {
                       </p>
 
                       <div className="mt-2">
-                        <PriorityBadge score={priority} />
+                        <PriorityBadge score={priority}/>
                       </div>
                     </div>
 
@@ -1254,14 +941,14 @@ if (!response.ok) {
                       </p>
 
                       <div className="mt-1">
-                        <HealthRing value={health} />
+                        <HealthRing value={health}/>
                       </div>
                     </div>
 
                     {/* PROBABILITY */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        {isDe ? "Abschlusschance" : "Close chance"}
+                        {"Close chance"}
                       </p>
 
                       <div className="mt-2 flex items-end gap-2">
@@ -1280,17 +967,17 @@ if (!response.ok) {
                       p-3
                     ">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-purple-300/70">
-                        {isDe ? "KI-Signal" : "AI signal"}
+                        {"AI signal"}
                       </p>
 
                       <p className="mt-2 text-sm font-semibold text-foreground">
                         {staleDays > 14
-                          ? (isDe ? "Braucht Aufmerksamkeit" : "Needs attention")
-                          : probability > 80
-                          ? (isDe ? "Starkes Abschluss-Signal" : "Strong closing signal")
-                          : probability > 60
-                          ? (isDe ? "Positives Momentum" : "Positive momentum")
-                          : (isDe ? "Weitere Pflege nötig" : "Nurturing required")}
+                        ? ("Needs attention")
+                        : probability > 80
+                            ? ("Strong closing signal")
+                            : probability > 60
+                                ? ("Positive momentum")
+                                : ("Nurturing required")}
                       </p>
                     </div>
                   </div>
@@ -1312,31 +999,23 @@ if (!response.ok) {
                   ">
                     <div className="min-w-0">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        {isDe ? "Nächste Aktion" : "Next action"}
+                        {"Next action"}
                       </p>
 
                       <p className="mt-1 truncate text-sm font-medium text-foreground">
                         {lead.next_action ||
-                          (isDe ? "Keine Aktion geplant" : "No action planned")}
+                        ("No action planned")}
                       </p>
                     </div>
 
-                    {lead.next_action_date ? (
-                      <div
-                        className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${
-                          new Date(lead.next_action_date) < new Date()
+                    {lead.next_action_date ? (<div className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${new Date(lead.next_action_date) < new Date()
                             ? "bg-red-500/10 text-red-400"
-                            : "bg-emerald-500/10 text-emerald-400"
-                        }`}
-                      >
-                        {isDe ? "Fällig" : "Due"}{" "}
+                            : "bg-emerald-500/10 text-emerald-400"}`}>
+                        {"Due"}{" "}
                         {new Date(lead.next_action_date).toLocaleDateString(locale)}
-                      </div>
-                    ) : (
-                      <span className="shrink-0 text-xs text-foreground/35">
-                        {isDe ? "Kein Termin" : "No date"}
-                      </span>
-                    )}
+                      </div>) : (<span className="shrink-0 text-xs text-foreground/35">
+                        {"No date"}
+                      </span>)}
                   </div>
 
                   {/* FOOTER */}
@@ -1352,79 +1031,46 @@ if (!response.ok) {
                     {/* LAST ACTIVITY */}
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-foreground/45">
-                        {isDe ? "Letzte Aktivität" : "Last activity"}
+                        {"Last activity"}
                       </span>
 
-                      <span
-                        className={
-                          staleDays > 14
-                            ? "font-semibold text-red-400"
-                            : staleDays > 7
+                      <span className={staleDays > 14
+                        ? "font-semibold text-red-400"
+                        : staleDays > 7
                             ? "font-semibold text-yellow-400"
-                            : "font-semibold text-emerald-400"
-                        }
-                      >
+                            : "font-semibold text-emerald-400"}>
                         {staleDays === 0
-                          ? (isDe ? "Heute" : "Today")
-                          : isDe
-                          ? `vor ${staleDays} Tagen`
-                          : `${staleDays} days ago`}
+                        ? ("Today")
+                        :
+                            `${staleDays} days ago`}
                       </span>
                     </div>
 
                     {/* ACTIONS */}
-                    <div
-                      onClick={(event) => {
-                        event.stopPropagation()
-                      }}
-                      className="shrink-0"
-                    >
-                      <LeadActions
-                        leadId={lead.id}
-                        currentStatus={lead.status}
-                        phone={lead.phone}
-                        email={lead.email}
-                        onLeadDeleted={() => {
-                          if (leads.length === 1) {
-                            setImportIssues([])
-                          }
-
-                          void refresh()
-                        }}
-                        onStatusChanged={(updatedLead) => {
-                          setLeads((current) => {
-                            if (
-                              updatedLead.status === "won" ||
-                              updatedLead.status === "lost"
-                            ) {
-                              return current.filter(
-                                (lead) => lead.id !== updatedLead.id
-                              )
+                    <div onClick={(event) => {
+                        event.stopPropagation();
+                    }} className="shrink-0">
+                      <LeadActions leadId={lead.id} currentStatus={lead.status} phone={lead.phone} email={lead.email} onLeadDeleted={() => {
+                        if (leads.length === 1) {
+                            setImportIssues([]);
+                        }
+                        void refresh();
+                    }} onStatusChanged={(updatedLead) => {
+                        setLeads((current) => {
+                            if (updatedLead.status === "won" ||
+                                updatedLead.status === "lost") {
+                                return current.filter((lead) => lead.id !== updatedLead.id);
                             }
-
-                            return current.map((lead) =>
-                              lead.id === updatedLead.id
+                            return current.map((lead) => lead.id === updatedLead.id
                                 ? updatedLead
-                                : lead
-                            )
-                          })
-                        }}
-                      />
+                                : lead);
+                        });
+                    }}/>
                     </div>
                   </div>
-                </div>
-              )
+                </div>);
             })}
-                    </div>
-
-  ) : (
-
-    <LeadPipeline leads={filteredLeads}/>
-
-  )
-
-        )}
+                    </div>) : (<LeadPipeline leads={filteredLeads}/>))}
       </div>
-    </AuthGuard>
-  )
+    </AuthGuard>);
 }

@@ -1,40 +1,22 @@
-﻿type HealthOverviewCardProps = {
-  healthyCount: number
-  watchlistCount: number
-  atRiskCount: number
-}
-
-export default function HealthOverviewCard({
-  healthyCount,
-  watchlistCount,
-  atRiskCount,
-}: HealthOverviewCardProps) {
-
-
-  const total =
-    healthyCount +
-    watchlistCount +
-    atRiskCount
-
-
-  const healthPercentage =
-    total > 0
-      ? Math.round((healthyCount / total) * 100)
-      : 0
-
-
-
-  return (
-
-    <section
-      className="
+type HealthOverviewCardProps = {
+    healthyCount: number;
+    watchlistCount: number;
+    atRiskCount: number;
+};
+export default function HealthOverviewCard({ healthyCount, watchlistCount, atRiskCount, }: HealthOverviewCardProps) {
+    const total = healthyCount +
+        watchlistCount +
+        atRiskCount;
+    const healthPercentage = total > 0
+        ? Math.round((healthyCount / total) * 100)
+        : 0;
+    return (<section className="
       rounded-2xl
       border
       border-border-subtle
       bg-surface-1
       p-6
-      "
-    >
+      ">
 
 
       <div className="flex items-center justify-between">
@@ -59,8 +41,7 @@ export default function HealthOverviewCard({
 
 
 
-        <div
-          className="
+        <div className="
           rounded-full
           border
           border-cyan-500/20
@@ -70,8 +51,7 @@ export default function HealthOverviewCard({
           text-sm
           font-semibold
           text-cyan-300
-          "
-        >
+          ">
 
           {healthPercentage}% of active deals healthy
 
@@ -94,18 +74,15 @@ export default function HealthOverviewCard({
         ">
 
 
-          <div
-            className="
+          <div className="
             h-full
             rounded-full
             bg-gradient-to-r
             from-emerald-400
             to-cyan-400
-            "
-            style={{
-              width:`${healthPercentage}%`
-            }}
-          />
+            " style={{
+            width: `${healthPercentage}%`
+        }}/>
 
 
         </div>
@@ -195,7 +172,5 @@ export default function HealthOverviewCard({
       </div>
 
 
-    </section>
-
-  )
+    </section>);
 }

@@ -1,28 +1,25 @@
-"use client"
-
-import { useState } from "react"
-import AuthGuard from "@/components/AuthGuard"
-import { loadDemoData } from "@/lib/demoData"
-
+"use client";
+import { useState } from "react";
+import AuthGuard from "@/components/AuthGuard";
+import { loadDemoData } from "@/lib/demoData";
 export default function DemoPage() {
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-
-  const startDemo = async (reload = false) => {
-    setLoading(true)
-    try {
-      const result = await loadDemoData({ reload })
-      const warning = result.warnings?.length ? ` Warnings: ${result.warnings.join(" ")}` : ""
-      setMessage(`${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.${warning}`)
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to start demo")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <AuthGuard>
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+    const startDemo = async (reload = false) => {
+        setLoading(true);
+        try {
+            const result = await loadDemoData({ reload });
+            const warning = result.warnings?.length ? ` Warnings: ${result.warnings.join(" ")}` : "";
+            setMessage(`${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.${warning}`);
+        }
+        catch (error) {
+            setMessage(error instanceof Error ? error.message : "Failed to start demo");
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    return (<AuthGuard>
       <div className="mx-auto max-w-3xl space-y-6 text-center">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">Demo</p>
@@ -32,7 +29,7 @@ export default function DemoPage() {
 
         <div className="flex flex-wrap justify-center gap-3">
           <button onClick={() => void startDemo(false)} disabled={loading} className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black disabled:opacity-60">
-            {loading ? "Lädt..." : "Demo-Daten laden"}
+            {loading ? "Loading..." : "Load demo data"}
           </button>
           <button onClick={() => void startDemo(true)} disabled={loading} className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-3 font-semibold text-foreground disabled:opacity-60">
             {loading ? "Reloading..." : "Reload demo data"}
@@ -41,6 +38,5 @@ export default function DemoPage() {
 
         {message ? <p className="text-sm text-foreground/70">{message}</p> : null}
       </div>
-    </AuthGuard>
-  )
+    </AuthGuard>);
 }

@@ -1,7 +1,5 @@
-export default function DashboardRouteLayout({
-  children,
-}: {
-  children: React.ReactNode
+export default function DashboardRouteLayout({ children, }: {
+    children: React.ReactNode;
 }) {
-  return <>{children}</>
+    return <>{children}</>;
 }
