@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useLeadsData } from "@/hooks/useLeadsData";
+import { notify } from "@/lib/notifications"
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase/client";
 type CustomerFilter = "all" | "active" | "lost" | "vip";
@@ -171,55 +172,88 @@ export default function CustomersPage() {
         return headers;
     };
     const deleteCustomer = async (customer: CustomerSummary) => {
-        if (deletingCustomer)
-            return;
-        const confirmed = window.confirm(`Are you sure you want to delete "${customer.company}"?`);
-        if (!confirmed)
-            return;
-        setDeletingCustomer(customer.id);
-        try {
-            const headers = await getAuthHeaders();
-            const customerLeads = leads.filter((lead) => customer.isPrivate
+    if (deletingCustomer) {
+        return
+    }
+
+    const confirmed = window.confirm(
+        `Are you sure you want to delete "${customer.company}"?`
+    )
+
+    if (!confirmed) {
+        return
+    }
+
+    setDeletingCustomer(customer.id)
+
+    try {
+        const headers = await getAuthHeaders()
+
+        const customerLeads = leads.filter((lead) =>
+            customer.isPrivate
                 ? customer.id === `private:${lead.id}`
-                : (lead.company || "").trim().toLowerCase() === customer.id);
-            await Promise.all(customerLeads.map(async (lead) => {
-                const response = await fetch(`/api/leads?id=${encodeURIComponent(lead.id)}`, {
-                    method: "DELETE",
-                    headers,
-                });
+                : (lead.company || "").trim().toLowerCase() === customer.id
+        )
+
+        await Promise.all(
+            customerLeads.map(async (lead) => {
+                const response = await fetch(
+                    `/api/leads?id=${encodeURIComponent(lead.id)}`,
+                    {
+                        method: "DELETE",
+                        headers,
+                    }
+                )
+
                 if (!response.ok) {
-                    const data = await response.json().catch(() => null);
-                    throw new Error(data?.error ||
-                        ("Customer could not be deleted."));
+                    const data = await response.json().catch(() => null)
+
+                    throw new Error(
+                        data?.error || "Customer could not be deleted."
+                    )
                 }
-            }));
-            // Sofort aus der UI entfernen – kein globaler Loading-State
-            setDeletedCustomers((current) => {
-                const next = new Set(current);
-                next.add(customer.id);
-                return next;
-            });
-        }
-        catch (error) {
-            window.alert(error instanceof Error
+            })
+        )
+
+        // Sofort aus der UI entfernen – kein globaler Loading-State
+        setDeletedCustomers((current) => {
+            const next = new Set(current)
+            next.add(customer.id)
+            return next
+        })
+
+        notify.success("Customer deleted", {
+            id: "customer-deleted",
+        })
+    } catch (error) {
+        notify.error(
+            error instanceof Error
                 ? error.message
-                :
-                    "Delete failed.");
-        }
-        finally {
-            setDeletingCustomer(null);
-        }
-    };
+                : "Delete failed.",
+            {
+                id: "customer-delete-error",
+            }
+        )
+    } finally {
+        setDeletingCustomer(null)
+    }
+}
     const downloadExport = async (format: "csv" | "xlsx") => {
         const response = await fetch(`/api/customers/export?format=${format}`, {
             headers: await getAuthHeaders(),
         });
         if (!response.ok) {
-            setImportMessage(null);
-            setImportError(t("customers.exportFailed", "Export failed.") +
-                ` (${format.toUpperCase()})`);
-            return;
-        }
+            setImportMessage(null)
+
+            notify.error(
+                `${t("customers.exportFailed", "Export failed.")} (${format.toUpperCase()})`,
+                {
+                id: `customer-export-error-${format}`,
+                }
+            )
+
+            return
+            }
         const buffer = await response.arrayBuffer();
         const blob = new Blob([buffer], {
             type: format === "xlsx"
@@ -234,6 +268,12 @@ export default function CustomersPage() {
             .slice(0, 10)}.${format}`;
         link.click();
         URL.revokeObjectURL(url);
+        notify.success(
+            `${format.toUpperCase()} export ready`,
+            {
+                id: `customer-export-success-${format}`,
+            }
+            )
     };
     const importCsv = async (file: File) => {
         setImportingCsv(true);
@@ -264,11 +304,18 @@ export default function CustomersPage() {
                 }),
             });
             if (!response.ok) {
-                const text = await response.text();
-                setImportError(text ||
-                    t("customers.importFailed", "Import failed."));
-                return;
-            }
+                const message =
+                    (await response.text()) ||
+                    t("customers.importFailed", "Import failed.")
+
+                setImportError(message)
+
+                notify.error(message, {
+                    id: "customer-import-error",
+                })
+
+                return
+                }
             const data = (await response.json()) as {
                 inserted?: number;
                 skipped?: number;
@@ -300,10 +347,17 @@ export default function CustomersPage() {
             await refresh();
         }
         catch (importError) {
-            setImportError(importError instanceof Error
+            const message =
+                importError instanceof Error
                 ? importError.message
-                : t("customers.importFailed", "Import failed."));
-        }
+                : t("customers.importFailed", "Import failed.")
+
+            setImportError(message)
+
+            notify.error(message, {
+                id: "customer-import-error",
+            })
+            }
         finally {
             setImportingCsv(false);
         }

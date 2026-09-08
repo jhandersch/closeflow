@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { notify } from "@/lib/notifications"
 import type { Lead, LeadSource, LeadStatus, UpdateLeadData } from "@/types";
 type Props = {
     lead: Lead;
@@ -79,11 +79,11 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const handleSave = async () => {
         const dealValue = Number(value);
         if (!name.trim()) {
-            toast.error("Name required");
+            notify.error("Name required");
             return;
         }
         if (Number.isNaN(dealValue)) {
-            toast.error("Invalid value");
+            notify.error("Invalid value");
             return;
         }
         setSaving(true);
@@ -124,11 +124,13 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
                     : "");
             }
             await onSaved(displayedLead);
-            toast.success("Lead saved");
+            notify.success("Lead saved", {
+                id: "lead-saved",
+                })
         }
         catch (error) {
             console.error(error);
-            toast.error("Save failed");
+            notify.error("Save failed");
         }
         finally {
             setSaving(false);

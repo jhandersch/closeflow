@@ -26,6 +26,7 @@ import { useForecastAI } from "@/hooks/useForecastAI";
 import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI";
 import { loadDemoData } from "@/lib/demoData";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { notify } from "@/lib/notifications";
 export default function DashboardPage() {
     const { language, t } = useAppPreferences();
     const { leads, activities, loading, error, refresh, } = useLeadsData({
@@ -46,7 +47,6 @@ export default function DashboardPage() {
         highValueDeals: metrics.highValueDeals.length,
     }, metrics.insight, language);
     const [demoLoading, setDemoLoading] = useState(false);
-    const [demoMessage, setDemoMessage] = useState<string | null>(null);
     const activitiesThisWeek = useMemo(() => {
         const fromMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
         return activities.filter((item) => new Date(item.created_at).getTime() >= fromMs).length;
@@ -151,23 +151,46 @@ export default function DashboardPage() {
                 text-cyan-300
               ">
                 CF
-              </span>} title={t("dashboard.workspaceReadyTitle", "Your workspace is ready")} description={t("dashboard.workspaceReadyDescription", "Add your first lead or load demo data to unlock forecasting, AI insights and pipeline analytics.")} actions={<button disabled={demoLoading} onClick={async () => {
-                    setDemoLoading(true);
-                    try {
-                        const result = await loadDemoData({ reload: true });
-                        const warning = result.warnings?.length ? ` ${t("dashboard.warnings", "Warnings")}: ${result.warnings.join(" ")}` : "";
-                        setDemoMessage(`${result.message} ${t("dashboard.leads", "Leads")}: ${result.inserted_leads}, ${t("dashboard.activities", "Activities")}: ${result.inserted_activities}, ${t("dashboard.tasks", "Tasks")}: ${result.inserted_tasks}.${warning}`);
-                        await refresh();
-                    }
-                    catch (error) {
-                        setDemoMessage(error instanceof Error
-                            ? error.message
-                            : t("dashboard.failed", "Failed"));
-                    }
-                    finally {
-                        setDemoLoading(false);
-                    }
-                }} className="
+              </span>} title={t("dashboard.workspaceReadyTitle", "Your workspace is ready")} description={t("dashboard.workspaceReadyDescription", "Add your first lead or load demo data to unlock forecasting, AI insights and pipeline analytics.")} actions={<button disabled={demoLoading}
+                    onClick={async () => {
+                      setDemoLoading(true)
+
+                      try {
+                          const result = await loadDemoData({
+                              reload: true,
+                          })
+
+                          notify.info(
+                              `${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.`,
+                              {
+                                  id: "dashboard-demo-data-loaded",
+                              }
+                          )
+
+                          if (result.warnings?.length) {
+                              notify.warning(
+                                  `Warnings: ${result.warnings.join(" ")}`,
+                                  {
+                                      id: "dashboard-demo-load-warning",
+                                  }
+                              )
+                          }
+
+                          await refresh()
+                      } catch (error) {
+                          notify.error(
+                              error instanceof Error
+                                  ? error.message
+                                  : "Could not load demo data",
+                              {
+                                  id: "dashboard-demo-load-error",
+                              }
+                          )
+                      } finally {
+                          setDemoLoading(false)
+                      }
+                  }}
+ className="
                 rounded-xl
                 bg-foreground
                 px-4
@@ -182,23 +205,7 @@ export default function DashboardPage() {
 
 
               </button>}/>
-
-
-          {demoMessage &&
-                <div className="
-              rounded-xl
-              border
-              border-emerald-500/20
-              bg-emerald-500/10
-              p-3
-              text-sm
-              text-emerald-300
-            ">
-              {demoMessage}
-            </div>}
-
-
-        </div>
+      </div>
 
 
       </AuthGuard>);

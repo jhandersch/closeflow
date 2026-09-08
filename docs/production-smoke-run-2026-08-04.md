@@ -500,32 +500,30 @@ Additional verification:
 
 ---
 
-## B4) Search and Filtersa
+## B4) Search and Filters
 
-* [ ] global search
-* [ ] lead search and filters
-* [ ] customer search and filters
-* [ ] sorting
-* [ ] pagination where available
+* [x] global search
+* [x] lead search and filters
+* [x] customer search and filters
+* [x] sorting
+* [x] pagination where available
 
 Status:
-
-NOT YET TESTED
+TESTED / PASS
 
 ---
 
 ## B5) Notifications
 
-* [ ] success notification
-* [ ] error notification
-* [ ] warning notification
-* [ ] info notification
-* [ ] auto dismiss
-* [ ] duplicate prevention
+* [x] success notification
+* [x] error notification
+* [x] warning notification
+* [x] info notification
+* [x] auto dismiss
+* [x] duplicate prevention
 
 Status:
-
-NOT YET TESTED
+TESTED / PASS
 
 ---
 
@@ -918,6 +916,19 @@ Status:
 NOT YET TESTED
 
 ---
+
+## B31) Notifications outside of CF
+
+* [ ] notification center
+* [ ] unread notification badge
+* [ ] persistent notifications
+* [ ] mark as read
+* [ ] notification timestamps
+* [ ] task/activity notifications
+* [ ] notification navigation
+
+Status:
+NOT YET TESTED
 
 # Final Release Decision
 

@@ -13,9 +13,10 @@ import PriorityBadge from "@/components/dashboard/PriorityBadge";
 import LeadActions from "@/components/dashboard/LeadActions";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
 import { calculateSalesScore } from "@/lib/salesScore";
-import { loadDemoData } from "@/lib/demoData";
 import type { LeadSource, LeadStatus, LeadSortBy } from "@/types";
 import { Plus, Star } from "lucide-react";
+import { loadDemoData } from "@/lib/demoData";
+import { notify } from "@/lib/notifications";
 import * as XLSX from "xlsx";
 type ImportIssue = {
     row: number;
@@ -720,7 +721,20 @@ export default function LeadsPage() {
                     const warning = result.warnings?.length
                         ? ` ${"Warnings"}: ${result.warnings.join(" ")}`
                         : "";
-                    setDemoMessage(`${result.message} ${"Leads"}: ${result.inserted_leads}, ${"Activities"}: ${result.inserted_activities}, ${"Tasks"}: ${result.inserted_tasks}.${warning}`);
+                    notify.info(
+                      `${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.`,
+                      {
+                        id: "demo-data-loaded",
+                      }
+                                        );
+                    if (result.warnings?.length) {
+                      notify.warning(
+                        `Warnings: ${result.warnings.join(" ")}`,
+                        {
+                          id: "demo-load-warning",
+                        }
+                      )
+                    }
                     await refresh();
                 }
                 catch (error) {
