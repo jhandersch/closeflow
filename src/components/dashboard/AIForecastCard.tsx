@@ -61,8 +61,8 @@ export default function AIForecastCard({ analysis, loading, }: Props) {
       border
       border-cyan-500/20
       bg-gradient-to-br
-      from-[#111]
-      to-[#18181b]
+      from-surface-1
+      to-surface-2
       p-6
       ">
 

@@ -43,7 +43,7 @@ export default function LeadPipeline({ leads }: {
 
             {leads
                 .filter(lead => lead.status === stage.id)
-                .map(lead => (<Link key={lead.id} href={`/leads/${lead.id}`} className="block rounded-xl bg-surface-2/80 p-3 hover:bg-white/5">
+                .map(lead => (<Link key={lead.id} href={`/leads/${lead.id}`} className="block rounded-xl border border-border-subtle/70 bg-surface-2/80 p-3 transition hover:bg-foreground/5">
 
             <p className="font-medium">
             {leadDisplayName(lead)}

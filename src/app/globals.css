@@ -58,12 +58,44 @@ body::before {
   pointer-events: none;
   z-index: -1;
   background:
-    radial-gradient(1200px 600px at 8% -10%, rgba(56, 189, 248, 0.12), transparent 60%),
-    radial-gradient(1000px 560px at 95% -20%, rgba(59, 130, 246, 0.1), transparent 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0));
+    radial-gradient(
+      1200px 600px at 8% -10%,
+      rgba(56, 189, 248, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 560px at 95% -20%,
+      rgba(59, 130, 246, 0.1),
+      transparent 62%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.015),
+      rgba(255, 255, 255, 0)
+    );
+}
+
+html[data-theme="light"] body::before {
+  background:
+    radial-gradient(
+      1200px 600px at 8% -10%,
+      rgba(3, 105, 161, 0.07),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 560px at 95% -20%,
+      rgba(37, 99, 235, 0.05),
+      transparent 62%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.01),
+      rgba(15, 23, 42, 0)
+    );
 }
 
 /* Compatibility layer for legacy dark utility classes while pages migrate to tokens. */
+
 html[data-theme="light"] .text-white {
   color: var(--foreground) !important;
 }
@@ -72,17 +104,21 @@ html[data-theme="light"] .text-zinc-400,
 html[data-theme="light"] .text-zinc-300,
 html[data-theme="light"] .text-zinc-200,
 html[data-theme="light"] .text-zinc-100 {
-  color: color-mix(in oklab, var(--foreground) 72%, white) !important;
+  color: #334155 !important;
 }
 
 html[data-theme="light"] .text-zinc-500,
 html[data-theme="light"] .text-zinc-600 {
-  color: color-mix(in oklab, var(--foreground) 55%, white) !important;
+  color: #475569 !important;
 }
-
 /* Improve cyan text contrast on light backgrounds. */
+
 html[data-theme="light"] .text-cyan-200 {
   color: #075985 !important;
+}
+
+html[data-theme="light"] .text-cyan-100 {
+  color: #0e7490 !important;
 }
 
 html[data-theme="light"] .text-cyan-300 {
@@ -92,6 +128,85 @@ html[data-theme="light"] .text-cyan-300 {
 html[data-theme="light"] .text-cyan-400,
 html[data-theme="light"] .text-cyan-500 {
   color: #0c4a6e !important;
+}
+
+html[data-theme="light"] .text-blue-300,
+html[data-theme="light"] .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+
+html[data-theme="light"] .text-yellow-300,
+html[data-theme="light"] .text-yellow-400 {
+  color: #a16207 !important;
+}
+
+html[data-theme="light"] .text-amber-200,
+html[data-theme="light"] .text-amber-300,
+html[data-theme="light"] .text-amber-400 {
+  color: #a16207 !important;
+}
+
+html[data-theme="light"] .text-orange-300,
+html[data-theme="light"] .text-orange-400 {
+  color: #c2410c !important;
+}
+
+html[data-theme="light"] .text-green-300,
+html[data-theme="light"] .text-green-400 {
+  color: #15803d !important;
+}
+
+html[data-theme="light"] .text-emerald-200,
+html[data-theme="light"] .text-emerald-300,
+html[data-theme="light"] .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] .text-red-300,
+html[data-theme="light"] .text-red-400 {
+  color: #b91c1c !important;
+}
+
+html[data-theme="light"] .text-rose-200,
+html[data-theme="light"] .text-rose-300,
+html[data-theme="light"] .text-rose-400 {
+  color: #be123c !important;
+}
+
+html[data-theme="light"] .text-purple-300,
+html[data-theme="light"] .text-purple-400 {
+  color: #7e22ce !important;
+}
+
+/* Opacity variants are separate Tailwind utilities and need their own mapping. */
+html[data-theme="light"] [class*="text-cyan-200/"],
+html[data-theme="light"] [class*="text-cyan-300/"],
+html[data-theme="light"] [class*="text-amber-100/"],
+html[data-theme="light"] [class*="text-amber-200/"],
+html[data-theme="light"] [class*="text-amber-300/"],
+html[data-theme="light"] [class*="text-emerald-200/"],
+html[data-theme="light"] [class*="text-emerald-300/"],
+html[data-theme="light"] [class*="text-rose-200/"],
+html[data-theme="light"] [class*="text-rose-300/"],
+html[data-theme="light"] [class*="text-purple-300/"],
+html[data-theme="light"] [class*="text-yellow-300/"] {
+  color: color-mix(in oklab, var(--foreground) 72%, transparent) !important;
+}
+
+html[data-theme="light"] .text-foreground\/35 {
+  color: color-mix(in oklab, var(--foreground) 48%, white) !important;
+}
+
+html[data-theme="light"] .text-foreground\/40 {
+  color: color-mix(in oklab, var(--foreground) 56%, white) !important;
+}
+
+html[data-theme="light"] .text-foreground\/45 {
+  color: color-mix(in oklab, var(--foreground) 64%, white) !important;
+}
+
+html[data-theme="light"] .text-foreground\/55 {
+  color: color-mix(in oklab, var(--foreground) 72%, white) !important;
 }
 
 html[data-theme="light"] .bg-cyan-500\/5 {
@@ -120,6 +235,55 @@ html[data-theme="light"] .border-cyan-500\/50 {
 
 html[data-theme="light"] .border-cyan-400\/30 {
   border-color: rgba(8, 145, 178, 0.42) !important;
+}
+
+html[data-theme="light"] .bg-white\/5 {
+  background-color: color-mix(in oklab, var(--foreground) 6%, transparent) !important;
+}
+
+html[data-theme="light"] .bg-white\/10 {
+  background-color: color-mix(in oklab, var(--foreground) 10%, transparent) !important;
+}
+
+html[data-theme="light"] .bg-white\/20 {
+  background-color: color-mix(in oklab, var(--foreground) 14%, transparent) !important;
+}
+
+/* Dark overlay utilities need to remain overlays in light mode. */
+html[data-theme="light"] .bg-black\/20 {
+  background-color: rgba(15, 23, 42, 0.2) !important;
+}
+
+html[data-theme="light"] .bg-black\/25 {
+  background-color: rgba(15, 23, 42, 0.25) !important;
+}
+
+html[data-theme="light"] .bg-black\/30 {
+  background-color: rgba(15, 23, 42, 0.3) !important;
+}
+
+html[data-theme="light"] .bg-black\/40 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+html[data-theme="light"] .bg-black\/50 {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+html[data-theme="light"] .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+html[data-theme="light"] .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+html[data-theme="light"] .bg-slate-900 {
+  background-color: var(--surface-1) !important;
+}
+
+html[data-theme="light"] .bg-zinc-800 {
+  background-color: var(--surface-2) !important;
 }
 
 html[data-theme="light"] .bg-black,
@@ -154,11 +318,29 @@ html[data-theme="light"] .border-white\/5 {
   color: #f8fbff;
 }
 
+html[data-theme="light"] ::selection {
+  background: rgba(3, 105, 161, 0.22);
+  color: #0f172a;
+}
+
 .cf-card {
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.005));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.015),
+    rgba(255, 255, 255, 0.005)
+  );
   border-radius: 1rem;
-  box-shadow: 0 10px 35px rgba(2, 6, 23, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 10px 35px rgba(2, 6, 23, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="light"] .cf-card {
+  background: var(--surface-1);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .cf-card-soft {
@@ -167,11 +349,16 @@ html[data-theme="light"] .border-white\/5 {
   border-radius: 0.9rem;
 }
 
+html[data-theme="light"] .cf-card-soft {
+  background: var(--surface-1);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
 .cf-label {
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgb(148 163 184 / 0.9);
+  color: color-mix(in oklab, var(--foreground) 58%, white);
 }
 
 .cf-title {
@@ -192,6 +379,7 @@ html[data-theme="light"] .border-white\/5 {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

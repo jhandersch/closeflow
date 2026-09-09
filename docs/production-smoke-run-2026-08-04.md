@@ -525,21 +525,20 @@ TESTED / PASS
 Status:
 TESTED / PASS
 
+Notes: Notifications bei Tasks hinzufügen
+
 ---
 
 ## B6) Settings
 
-* [ ] profile updates
+* [x] profile updates
 * [ ] language switch
-* [ ] theme switch
-* [ ] workspace settings
-* [ ] subscription visibility
+* [x] theme switch
+* [x] workspace settings
+* [x] subscription visibility
 
 Status:
-
-NOT YET TESTED
-
----
+PASS (language switch deferred)
 
 ## B7) Admin
 

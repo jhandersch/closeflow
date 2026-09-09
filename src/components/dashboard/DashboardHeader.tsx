@@ -55,8 +55,8 @@ export default function DashboardHeader({ forecast, userName, totalLeads, pipeli
       border
       border-border-subtle
       bg-gradient-to-br
-      from-[#111]
-      via-[#111]
+      from-surface-1
+      via-surface-1
       to-cyan-500/10
       p-6
       ">

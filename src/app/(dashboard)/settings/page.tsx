@@ -146,13 +146,10 @@ export default function SettingsPage() {
             setCompanyName(metadata.company_name || "");
             setIndustry(metadata.industry || "");
             setTeamSize(metadata.team_size || "");
-            const savedTheme = window.localStorage.getItem("closeflow_theme") as ThemeOption | null;
             const nextLanguage: AppLanguage = "en";
-            const nextTheme = (metadata.theme as ThemeOption) || savedTheme || "dark";
+
             setLanguage(nextLanguage);
-            setTheme(nextTheme);
             setAppLanguage(nextLanguage);
-            setAppTheme(nextTheme);
             setNotifications({
                 browser: metadata.notifications?.browser ?? true,
                 email: metadata.notifications?.email ?? true,
@@ -191,24 +188,43 @@ export default function SettingsPage() {
         target.scrollIntoView({ behavior: "smooth", block: "start" });
         target.focus({ preventScroll: true });
     }, []);
+    useEffect(() => {
+        setTheme(appTheme);
+    }, [appTheme]);
+
     const saveProfile = async () => {
+        const trimmedName = name.trim();
+        const trimmedUsername = username.trim().toLowerCase();
+
+        if (!trimmedName) {
+            toast.error("Name is required");
+            return;
+        }
+
+        if (!trimmedUsername) {
+            toast.error("Username is required");
+            return;
+        }
+
         setSavingProfile(true);
+
         const { error } = await supabase.auth.updateUser({
             data: {
-                name: name.trim(),
-                username: username.trim().toLowerCase(),
+                name: trimmedName,
+                username: trimmedUsername,
                 avatar_url: avatarUrl.trim(),
                 company_name: companyName.trim(),
                 industry: industry.trim(),
                 team_size: teamSize.trim(),
             },
         });
+
         if (error) {
-            toast.error(error.message || ("Could not save profile"));
-        }
-        else {
+            toast.error(error.message || "Could not save profile");
+        } else {
             toast.success("Profile and company settings updated");
         }
+
         setSavingProfile(false);
     };
     const savePreferences = async () => {
@@ -420,7 +436,7 @@ export default function SettingsPage() {
             toast.error(error instanceof Error
                 ? error.message
                 :
-                    "Could not verify MFA.");
+                "Could not verify MFA.");
         }
         finally {
             setMfaBusy(false);
@@ -527,296 +543,296 @@ export default function SettingsPage() {
         return <div className="text-foreground">{t("common.loading", "Loading...")}</div>;
     }
     return (<div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t("settings.title", "Settings")}</h1>
-        <p className="mt-2 text-foreground/65">{t("settings.subtitle", "Manage your CloseFlow workspace, preferences, and security.")}</p>
-        <div className="mt-4">
-          <Link href="/settings/profile" className="inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-            {"Open profile settings"}
-          </Link>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.profileTitle", "Profile and Company")}</h2>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="text-sm text-foreground/70">
-            {t("settings.name", "Name")}
-            <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.username", "Username")}
-            <input value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70 md:col-span-2">
-            {t("settings.profileImage", "Profile image URL")}
-            <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.companyName", "Company name")}
-            <input value={companyName} onChange={(event) => setCompanyName(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.industry", "Industry")}
-            <input value={industry} onChange={(event) => setIndustry(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.teamSize", "Team size")}
-            <input value={teamSize} onChange={(event) => setTeamSize(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.email", "Email")}
-            <div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground/80">{email}</div>
-          </label>
-        </div>
-
-        {avatarUrl ? (<div className="mt-4 flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
-            <img src={avatarUrl} alt={"Profile preview"} className="h-10 w-10 rounded-full object-cover" onError={(event) => {
-                ;
-                (event.currentTarget as HTMLImageElement).style.display = "none";
-            }}/>
-            <span className="text-xs text-foreground/65">{t("settings.preview", "Preview")}</span>
-          </div>) : null}
-
-        <button onClick={saveProfile} disabled={savingProfile} className="mt-5 rounded-xl bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-50">
-          {savingProfile ? t("settings.profileSaving", "Saving...") : t("settings.profileSave", "Save profile and company")}
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.preferencesTitle", "Preferences")}</h2>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="text-sm text-foreground/70">
-            {t("settings.theme", "Theme")}
-            <select value={theme} onChange={(event) => {
-            const value = event.target.value as ThemeOption;
-            setTheme(value);
-            setAppTheme(value);
-        }} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400">
-              <option value="dark">{t("settings.dark", "Dark mode")}</option>
-              <option value="light">{t("settings.light", "Light mode")}</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.browserNotifications", "Browser notifications")}
-            <input type="checkbox" checked={notifications.browser} onChange={(event) => setNotifications((current) => ({ ...current, browser: event.target.checked }))}/>
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.emailNotifications", "Email notifications")}
-            <input type="checkbox" checked={notifications.email} onChange={(event) => setNotifications((current) => ({ ...current, email: event.target.checked }))}/>
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.taskReminders", "Task reminders")}
-            <input type="checkbox" checked={notifications.taskReminders} onChange={(event) => setNotifications((current) => ({ ...current, taskReminders: event.target.checked }))}/>
-          </label>
-        </div>
-
-        <button onClick={savePreferences} disabled={savingPreferences} className="mt-5 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60">
-          {savingPreferences ? t("settings.preferencesSaving", "Saving...") : t("settings.preferencesSave", "Save preferences")}
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.apiTitle", "API Keys")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t("settings.apiSubtitle", "Keys are stored locally in this browser for development use. Use a secure backend vault in production.")}</p>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="text-sm text-foreground/70">
-            {t("settings.openaiKey", "OpenAI API key")}
-            <input type="password" value={openAiKey} onChange={(event) => setOpenAiKey(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            {t("settings.webhookSecret", "Webhook secret")}
-            <input type="password" value={webhookKey} onChange={(event) => setWebhookKey(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-        </div>
-
-        <button onClick={() => void saveApiKeys()} className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20">
-          {t("settings.apiSave", "Save API keys")}
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.subscriptionTitle", "Subscription")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t("settings.subscriptionSubtitle", "Current plan and growth path for your workspace.")}</p>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <button onClick={() => setSubscriptionPlan("free")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "free" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.free", "Free")}</button>
-          <button onClick={() => setSubscriptionPlan("pro")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "pro" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.pro", "Pro")}</button>
-          <button onClick={() => setSubscriptionPlan("enterprise")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "enterprise" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.enterprise", "Enterprise")}</button>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.integrationsTitle", "Integrations")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t("settings.integrationsSubtitle", "Connect your communication and calendar stack.")}</p>
-
-        <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.google", "Google")}
-            <input type="checkbox" checked={integrations.google} onChange={(event) => setIntegrations((current) => ({ ...current, google: event.target.checked }))}/>
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.gmail", "Gmail")}
-            <input type="checkbox" checked={integrations.gmail} onChange={(event) => setIntegrations((current) => ({ ...current, gmail: event.target.checked }))}/>
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.calendar", "Calendar")}
-            <input type="checkbox" checked={integrations.calendar} onChange={(event) => setIntegrations((current) => ({ ...current, calendar: event.target.checked }))}/>
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {t("settings.slack", "Slack")}
-            <input type="checkbox" checked={integrations.slack} onChange={(event) => setIntegrations((current) => ({ ...current, slack: event.target.checked }))}/>
-          </label>
-        </div>
-      </div>
-
-      <div id="security" tabIndex={-1} className="scroll-mt-24 rounded-2xl border border-border-subtle bg-surface-1 p-6 outline-none">
-        <h2 className="text-xl font-semibold text-foreground">{t("settings.securityTitle", "Security")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t("settings.securitySubtitle", "Password, active sessions, and 2FA readiness.")}</p>
-
-        <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/60 p-4 text-sm text-foreground/75">
-          <p>{"Current device session"}: {sessionExpiresAt ? `${"active until"} ${new Date(sessionExpiresAt).toLocaleString(locale)}` : ("not available")}</p>
-          <p className="mt-1">2FA {"support"}: {mfaAvailable ? ("available in Supabase") : ("not available in this environment")}</p>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle bg-surface-2/70">
-          <table className="w-full text-left text-sm text-foreground/80">
-            <thead className="border-b border-border-subtle text-xs uppercase tracking-[0.14em] text-foreground/55">
-              <tr>
-                <th className="px-4 py-3">{"Device"}</th>
-                <th className="px-4 py-3">{"Session"}</th>
-                <th className="px-4 py-3">{"Expires"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="px-4 py-3">{currentDeviceName}</td>
-                <td className="px-4 py-3">{"Current"}</td>
-                <td className="px-4 py-3">{sessionExpiresAt ? new Date(sessionExpiresAt).toLocaleString(locale) : ("Unknown")}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <p className="text-sm font-semibold text-foreground">{"Authenticator app (TOTP)"}</p>
-          <p className="mt-1 text-xs text-foreground/60">
-            {"Status"}: {mfaStatus === "enabled" ? ("Enabled") : mfaStatus === "pending" ? ("Pending verification") : ("Disabled")}
-          </p>
-
-          {qrImageSrc && mfaStatus === "pending" ? (<div className="mt-3 rounded-xl border border-border-subtle bg-white p-3">
-              <img src={qrImageSrc} alt="MFA QR code" className="mx-auto h-44 w-44 object-contain"/>
-            </div>) : null}
-
-          {mfaStatus === "pending" ? (<div className="mt-3 flex flex-col gap-2 md:flex-row">
-              <input value={mfaVerifyCode} onChange={(event) => setMfaVerifyCode(event.target.value)} placeholder={"Enter 6-digit code"} className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-              <button onClick={() => void verifyMfaEnrollment()} disabled={mfaBusy} className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-60">
-                {"Verify 2FA"}
-              </button>
-            </div>) : null}
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button onClick={() => void startMfaEnrollment()} disabled={mfaBusy || !mfaAvailable || mfaStatus === "enabled"} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50">
-              {mfaStatus === "pending" ? ("Restart setup") : ("Enable 2FA")}
-            </button>
-            <button onClick={() => void disableMfa()} disabled={mfaBusy || mfaStatus === "disabled"} className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-50">
-              {"Disable 2FA"}
-            </button>
-
-            <button onClick={() => void elevateMfaSession()} disabled={mfaBusy || mfaStatus !== "enabled"} className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50">
-              {"Verify 2FA for this session"}
-            </button>
-          </div>
-        </div>
-
-        
-
-        <div className="mt-4">
-          <label className="text-sm text-foreground/70">
-            {t("settings.activeSessions", "Active sessions")}
-            <input type="number" min={1} value={sessionCount} onChange={(event) => setSessionCount(Math.max(1, Number(event.target.value) || 1))} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          </label>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder={t("settings.newPassword", "New password")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-          <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder={t("settings.confirmPassword", "Confirm new password")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-        </div>
-
-        <button onClick={changePassword} disabled={changingPassword} className="mt-4 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60">
-          {changingPassword ? t("settings.updatingPassword", "Updating...") : t("settings.changePassword", "Change password")}
-        </button>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button onClick={() => void sendMagicLink()} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
-            {"Send magic sign-in link"}
-          </button>
-          <button onClick={() => void logoutCurrentSession()} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5">
-            {"Sign out this device"}
-          </button>
-          <button onClick={() => void logoutAllSessions()} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300">
-            {"Sign out all devices"}
-          </button>
-        </div>
-
-        <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{"Recovery codes"}</p>
-              <p className="text-xs text-foreground/60">{"Remaining unused codes"}: {recoveryRemaining}</p>
+        <div>
+            <h1 className="text-3xl font-bold text-foreground">{t("settings.title", "Settings")}</h1>
+            <p className="mt-2 text-foreground/65">{t("settings.subtitle", "Manage your CloseFlow workspace, preferences, and security.")}</p>
+            <div className="mt-4">
+                <Link href="/settings/profile" className="inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
+                    {"Open profile settings"}
+                </Link>
             </div>
-            <button onClick={() => void regenerateRecoveryCodes()} disabled={recoveryBusy} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50">
-              {"Generate new codes"}
-            </button>
-          </div>
+        </div>
 
-          {recoveryCodes.length > 0 ? (<div className="mt-3 grid gap-2 rounded-lg border border-border-subtle bg-surface-1 p-3 text-xs text-foreground/80 md:grid-cols-2">
-              {recoveryCodes.map((code) => (<p key={code} className="rounded border border-border-subtle bg-surface-2 px-2 py-1 font-mono">
-                  {code}
-                </p>))}
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.profileTitle", "Profile and Company")}</h2>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-foreground/70">
+                    {t("settings.name", "Name")}
+                    <input required value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.username", "Username")}
+                    <input required value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70 md:col-span-2">
+                    {t("settings.profileImage", "Profile image URL")}
+                    <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.companyName", "Company name")}
+                    <input value={companyName} onChange={(event) => setCompanyName(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.industry", "Industry")}
+                    <input value={industry} onChange={(event) => setIndustry(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.teamSize", "Team size")}
+                    <input value={teamSize} onChange={(event) => setTeamSize(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.email", "Email")}
+                    <div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground/80">{email}</div>
+                </label>
+            </div>
+
+            {avatarUrl ? (<div className="mt-4 flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
+                <img src={avatarUrl} alt={"Profile preview"} className="h-10 w-10 rounded-full object-cover" onError={(event) => {
+                    ;
+                    (event.currentTarget as HTMLImageElement).style.display = "none";
+                }} />
+                <span className="text-xs text-foreground/65">{t("settings.preview", "Preview")}</span>
             </div>) : null}
 
-          <div className="mt-3 flex flex-col gap-2 md:flex-row">
-            <input value={recoveryCodeInput} onChange={(event) => setRecoveryCodeInput(event.target.value)} placeholder={"Use recovery code"} className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"/>
-            <button onClick={() => void consumeRecoveryCode()} disabled={recoveryBusy} className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-50">
-              {"Verify code"}
+            <button onClick={saveProfile} disabled={savingProfile} className="mt-5 rounded-xl bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-50">
+                {savingProfile ? t("settings.profileSaving", "Saving...") : t("settings.profileSave", "Save profile and company")}
             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
-        <h2 className="text-xl font-semibold text-red-300">{t("settings.accountTitle", "Account")}</h2>
-        <p className="mt-2 text-sm text-foreground/65">{t("settings.accountSubtitle", "Sign out from this workspace.")}</p>
-
-        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
-          <p className="text-sm text-red-200/90">
-            {"Account deletion is permanent. Type DELETE to remove all associated CRM data."}
-          </p>
-
-          <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} placeholder="DELETE" className="mt-3 w-full rounded-xl border border-red-500/20 bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-red-400"/>
-
-          <button onClick={() => void deleteAccount()} disabled={deletingAccount} className="mt-3 rounded-xl border border-red-500/40 bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-200 disabled:opacity-60">
-            {deletingAccount
-            ? ("Deleting account...")
-            : ("Permanently delete account")}
-          </button>
         </div>
 
-        <button onClick={logout} className="mt-4 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white">{t("settings.logout", "Abmelden")}</button>
-      </div>
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.preferencesTitle", "Preferences")}</h2>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-foreground/70">
+                    {t("settings.theme", "Theme")}
+                    <select value={theme} onChange={(event) => {
+                        const value = event.target.value as ThemeOption;
+                        setTheme(value);
+                        setAppTheme(value);
+                    }} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400">
+                        <option value="dark">{t("settings.dark", "Dark mode")}</option>
+                        <option value="light">{t("settings.light", "Light mode")}</option>
+                    </select>
+                </label>
+            </div>
+
+            <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.browserNotifications", "Browser notifications")}
+                    <input type="checkbox" checked={notifications.browser} onChange={(event) => setNotifications((current) => ({ ...current, browser: event.target.checked }))} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.emailNotifications", "Email notifications")}
+                    <input type="checkbox" checked={notifications.email} onChange={(event) => setNotifications((current) => ({ ...current, email: event.target.checked }))} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.taskReminders", "Task reminders")}
+                    <input type="checkbox" checked={notifications.taskReminders} onChange={(event) => setNotifications((current) => ({ ...current, taskReminders: event.target.checked }))} />
+                </label>
+            </div>
+
+            <button onClick={savePreferences} disabled={savingPreferences} className="mt-5 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60">
+                {savingPreferences ? t("settings.preferencesSaving", "Saving...") : t("settings.preferencesSave", "Save preferences")}
+            </button>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.apiTitle", "API Keys")}</h2>
+            <p className="mt-2 text-sm text-foreground/65">{t("settings.apiSubtitle", "Keys are stored locally in this browser for development use. Use a secure backend vault in production.")}</p>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-foreground/70">
+                    {t("settings.openaiKey", "OpenAI API key")}
+                    <input type="password" value={openAiKey} onChange={(event) => setOpenAiKey(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+
+                <label className="text-sm text-foreground/70">
+                    {t("settings.webhookSecret", "Webhook secret")}
+                    <input type="password" value={webhookKey} onChange={(event) => setWebhookKey(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+            </div>
+
+            <button onClick={() => void saveApiKeys()} className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20">
+                {t("settings.apiSave", "Save API keys")}
+            </button>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.subscriptionTitle", "Subscription")}</h2>
+            <p className="mt-2 text-sm text-foreground/65">{t("settings.subscriptionSubtitle", "Current plan and growth path for your workspace.")}</p>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <button onClick={() => setSubscriptionPlan("free")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "free" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.free", "Free")}</button>
+                <button onClick={() => setSubscriptionPlan("pro")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "pro" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.pro", "Pro")}</button>
+                <button onClick={() => setSubscriptionPlan("enterprise")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "enterprise" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.enterprise", "Enterprise")}</button>
+            </div>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.integrationsTitle", "Integrations")}</h2>
+            <p className="mt-2 text-sm text-foreground/65">{t("settings.integrationsSubtitle", "Connect your communication and calendar stack.")}</p>
+
+            <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.google", "Google")}
+                    <input type="checkbox" checked={integrations.google} onChange={(event) => setIntegrations((current) => ({ ...current, google: event.target.checked }))} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.gmail", "Gmail")}
+                    <input type="checkbox" checked={integrations.gmail} onChange={(event) => setIntegrations((current) => ({ ...current, gmail: event.target.checked }))} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.calendar", "Calendar")}
+                    <input type="checkbox" checked={integrations.calendar} onChange={(event) => setIntegrations((current) => ({ ...current, calendar: event.target.checked }))} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+                    {t("settings.slack", "Slack")}
+                    <input type="checkbox" checked={integrations.slack} onChange={(event) => setIntegrations((current) => ({ ...current, slack: event.target.checked }))} />
+                </label>
+            </div>
+        </div>
+
+        <div id="security" tabIndex={-1} className="scroll-mt-24 rounded-2xl border border-border-subtle bg-surface-1 p-6 outline-none">
+            <h2 className="text-xl font-semibold text-foreground">{t("settings.securityTitle", "Security")}</h2>
+            <p className="mt-2 text-sm text-foreground/65">{t("settings.securitySubtitle", "Password, active sessions, and 2FA readiness.")}</p>
+
+            <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/60 p-4 text-sm text-foreground/75">
+                <p>{"Current device session"}: {sessionExpiresAt ? `${"active until"} ${new Date(sessionExpiresAt).toLocaleString(locale)}` : ("not available")}</p>
+                <p className="mt-1">2FA {"support"}: {mfaAvailable ? ("available in Supabase") : ("not available in this environment")}</p>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle bg-surface-2/70">
+                <table className="w-full text-left text-sm text-foreground/80">
+                    <thead className="border-b border-border-subtle text-xs uppercase tracking-[0.14em] text-foreground/55">
+                        <tr>
+                            <th className="px-4 py-3">{"Device"}</th>
+                            <th className="px-4 py-3">{"Session"}</th>
+                            <th className="px-4 py-3">{"Expires"}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td className="px-4 py-3">{currentDeviceName}</td>
+                            <td className="px-4 py-3">{"Current"}</td>
+                            <td className="px-4 py-3">{sessionExpiresAt ? new Date(sessionExpiresAt).toLocaleString(locale) : ("Unknown")}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
+                <p className="text-sm font-semibold text-foreground">{"Authenticator app (TOTP)"}</p>
+                <p className="mt-1 text-xs text-foreground/60">
+                    {"Status"}: {mfaStatus === "enabled" ? ("Enabled") : mfaStatus === "pending" ? ("Pending verification") : ("Disabled")}
+                </p>
+
+                {qrImageSrc && mfaStatus === "pending" ? (<div className="mt-3 rounded-xl border border-border-subtle bg-white p-3">
+                    <img src={qrImageSrc} alt="MFA QR code" className="mx-auto h-44 w-44 object-contain" />
+                </div>) : null}
+
+                {mfaStatus === "pending" ? (<div className="mt-3 flex flex-col gap-2 md:flex-row">
+                    <input value={mfaVerifyCode} onChange={(event) => setMfaVerifyCode(event.target.value)} placeholder={"Enter 6-digit code"} className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                    <button onClick={() => void verifyMfaEnrollment()} disabled={mfaBusy} className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-60">
+                        {"Verify 2FA"}
+                    </button>
+                </div>) : null}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={() => void startMfaEnrollment()} disabled={mfaBusy || !mfaAvailable || mfaStatus === "enabled"} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50">
+                        {mfaStatus === "pending" ? ("Restart setup") : ("Enable 2FA")}
+                    </button>
+                    <button onClick={() => void disableMfa()} disabled={mfaBusy || mfaStatus === "disabled"} className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-50">
+                        {"Disable 2FA"}
+                    </button>
+
+                    <button onClick={() => void elevateMfaSession()} disabled={mfaBusy || mfaStatus !== "enabled"} className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50">
+                        {"Verify 2FA for this session"}
+                    </button>
+                </div>
+            </div>
+
+
+
+            <div className="mt-4">
+                <label className="text-sm text-foreground/70">
+                    {t("settings.activeSessions", "Active sessions")}
+                    <input type="number" min={1} value={sessionCount} onChange={(event) => setSessionCount(Math.max(1, Number(event.target.value) || 1))} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                </label>
+            </div>
+
+            <div className="mt-4 space-y-3">
+                <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder={t("settings.newPassword", "New password")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder={t("settings.confirmPassword", "Confirm new password")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+            </div>
+
+            <button onClick={changePassword} disabled={changingPassword} className="mt-4 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60">
+                {changingPassword ? t("settings.updatingPassword", "Updating...") : t("settings.changePassword", "Change password")}
+            </button>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+                <button onClick={() => void sendMagicLink()} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300">
+                    {"Send magic sign-in link"}
+                </button>
+                <button onClick={() => void logoutCurrentSession()} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5">
+                    {"Sign out this device"}
+                </button>
+                <button onClick={() => void logoutAllSessions()} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300">
+                    {"Sign out all devices"}
+                </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p className="text-sm font-semibold text-foreground">{"Recovery codes"}</p>
+                        <p className="text-xs text-foreground/60">{"Remaining unused codes"}: {recoveryRemaining}</p>
+                    </div>
+                    <button onClick={() => void regenerateRecoveryCodes()} disabled={recoveryBusy} className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50">
+                        {"Generate new codes"}
+                    </button>
+                </div>
+
+                {recoveryCodes.length > 0 ? (<div className="mt-3 grid gap-2 rounded-lg border border-border-subtle bg-surface-1 p-3 text-xs text-foreground/80 md:grid-cols-2">
+                    {recoveryCodes.map((code) => (<p key={code} className="rounded border border-border-subtle bg-surface-2 px-2 py-1 font-mono">
+                        {code}
+                    </p>))}
+                </div>) : null}
+
+                <div className="mt-3 flex flex-col gap-2 md:flex-row">
+                    <input value={recoveryCodeInput} onChange={(event) => setRecoveryCodeInput(event.target.value)} placeholder={"Use recovery code"} className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400" />
+                    <button onClick={() => void consumeRecoveryCode()} disabled={recoveryBusy} className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-50">
+                        {"Verify code"}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
+            <h2 className="text-xl font-semibold text-red-300">{t("settings.accountTitle", "Account")}</h2>
+            <p className="mt-2 text-sm text-foreground/65">{t("settings.accountSubtitle", "Sign out from this workspace.")}</p>
+
+            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+                <p className="text-sm text-red-200/90">
+                    {"Account deletion is permanent. Type DELETE to remove all associated CRM data."}
+                </p>
+
+                <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} placeholder="DELETE" className="mt-3 w-full rounded-xl border border-red-500/20 bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-red-400" />
+
+                <button onClick={() => void deleteAccount()} disabled={deletingAccount} className="mt-3 rounded-xl border border-red-500/40 bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-200 disabled:opacity-60">
+                    {deletingAccount
+                        ? ("Deleting account...")
+                        : ("Permanently delete account")}
+                </button>
+            </div>
+
+            <button onClick={logout} className="mt-4 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white">{t("settings.logout", "Abmelden")}</button>
+        </div>
     </div>);
 }

@@ -22,7 +22,7 @@ export default function HealthRing({ value }: HealthRingProps) {
             transformOrigin: "50% 50%",
         }}/>
 
-        <text x="30" y="34" textAnchor="middle" className="fill-white text-sm font-bold">
+        <text x="30" y="34" textAnchor="middle" className="fill-foreground text-sm font-bold">
           {value}
         </text>
       </svg>
