@@ -542,16 +542,14 @@ PASS (language switch deferred)
 
 ## B7) Admin
 
-* [ ] admin dashboard
-* [ ] user management
-* [ ] role restrictions
-* [ ] unauthorized users blocked
+* [x] admin dashboard
+* [x] user management
+* [x] role restrictions
+* [x] unauthorized users blocked
+* [x] persistent 2FA enforcement
 
 Status:
-
-NOT YET TESTED
-
----
+PASS
 
 ## B8) Billing
 
