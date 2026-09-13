@@ -133,7 +133,7 @@ export async function POST(request: Request) {
                             plan,
                             status,
                             current_period_end:
-                                currentPeriodEnd,
+                                null,
                             updated_at:
                                 new Date().toISOString(),
                         },
