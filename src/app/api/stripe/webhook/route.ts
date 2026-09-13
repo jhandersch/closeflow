@@ -126,16 +126,13 @@ export async function POST(request: Request) {
                     .upsert(
                         {
                             workspace_id: workspaceId,
-                            stripe_customer_id:
-                                stripeCustomerId,
+                            stripe_customer_id: stripeCustomerId,
                             stripe_subscription_id:
                                 stripeSubscriptionId,
                             plan,
-                            status,
-                            current_period_end:
-                                null,
-                            updated_at:
-                                new Date().toISOString(),
+                            status: "active",
+                            current_period_end: null,
+                            updated_at: new Date().toISOString(),
                         },
                         {
                             onConflict: "workspace_id",
