@@ -8,6 +8,8 @@ import MemberTable from "@/components/team/MemberTable";
 import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+
+import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import type { Workspace, WorkspaceInvite, WorkspaceMember, WorkspaceRole, } from "@/types";
 type WorkspaceBundle = {
     workspace: Workspace;
@@ -20,6 +22,19 @@ export default function TeamPage() {
     const [acceptingInvite, setAcceptingInvite] = useState(false);
     const [workspaces, setWorkspaces] = useState<WorkspaceBundle[]>([]);
     const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+    const workspaceIds = useMemo(
+    () =>
+        workspaces.map(
+            (bundle) => bundle.workspace.id,
+        ),
+    [workspaces],
+);
+
+const {
+    activeWorkspaceId,
+    selectWorkspace,
+} =
+    useActiveWorkspace(workspaceIds);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [workspaceName, setWorkspaceName] = useState("");
@@ -70,27 +85,51 @@ export default function TeamPage() {
             const data = (await response.json()) as WorkspaceBundle[];
             setWorkspaces(data);
             setSelectedWorkspaceId((current) => {
-                /*
-                 * 1. The invite workspace has highest priority.
-                 */
-                if (preferredWorkspaceId &&
-                    data.some((bundle) => bundle.workspace.id ===
-                        preferredWorkspaceId)) {
-                    return preferredWorkspaceId;
-                }
-                /*
-                 * 2. Keep the currently selected workspace
-                 * if it is still available.
-                 */
-                if (current &&
-                    data.some((bundle) => bundle.workspace.id === current)) {
-                    return current;
-                }
-                /*
-                 * 3. Fall back to the first workspace.
-                 */
-                return data[0]?.workspace.id || null;
-            });
+    if (
+        preferredWorkspaceId &&
+        data.some(
+            (bundle) =>
+                bundle.workspace.id ===
+                preferredWorkspaceId,
+        )
+    ) {
+        selectWorkspace(
+            preferredWorkspaceId,
+        );
+
+        return preferredWorkspaceId;
+    }
+
+    if (
+        activeWorkspaceId &&
+        data.some(
+            (bundle) =>
+                bundle.workspace.id ===
+                activeWorkspaceId,
+        )
+    ) {
+        return activeWorkspaceId;
+    }
+
+    if (
+        current &&
+        data.some(
+            (bundle) =>
+                bundle.workspace.id === current,
+        )
+    ) {
+        return current;
+    }
+
+    const fallback =
+        data[0]?.workspace.id || null;
+
+    if (fallback) {
+        selectWorkspace(fallback);
+    }
+
+    return fallback;
+});
         }
         catch (error) {
             console.error("LOAD WORKSPACES ERROR:", error);
@@ -207,10 +246,21 @@ export default function TeamPage() {
         };
         void loadSecurityState();
     }, []);
-    const selectedWorkspace = useMemo(() => workspaces.find((bundle) => bundle.workspace.id ===
-        selectedWorkspaceId) ||
+    const effectiveWorkspaceId =
+    activeWorkspaceId ||
+    selectedWorkspaceId;
+
+const selectedWorkspace = useMemo(
+    () =>
+        workspaces.find(
+            (bundle) =>
+                bundle.workspace.id ===
+                effectiveWorkspaceId,
+        ) ||
         workspaces[0] ||
-        null, [selectedWorkspaceId, workspaces]);
+        null,
+    [effectiveWorkspaceId, workspaces],
+);
     /*
     * Create workspace
      */
@@ -392,8 +442,18 @@ export default function TeamPage() {
             {"Loading workspace..."}
           </div>) : (<>
             <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-              <WorkspaceSwitcher workspaces={workspaces.map((bundle) => bundle.workspace)} selectedWorkspaceId={selectedWorkspace?.workspace
-                .id || null} onSelect={(workspaceId) => setSelectedWorkspaceId(workspaceId)}/>
+              <WorkspaceSwitcher
+    workspaces={workspaces.map(
+        (bundle) => bundle.workspace,
+    )}
+    selectedWorkspaceId={
+        selectedWorkspace?.workspace.id || null
+    }
+    onSelect={(workspaceId) => {
+        selectWorkspace(workspaceId);
+        setSelectedWorkspaceId(workspaceId);
+    }}
+/>
 
               <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
                 <p className="text-sm text-foreground/65">

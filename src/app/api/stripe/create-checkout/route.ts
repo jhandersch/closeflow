@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getRouteUser, loadWorkspaceForUser, requireAal2 } from "@/lib/supabase/route";
+import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 export async function POST(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -13,6 +14,16 @@ export async function POST(request: Request) {
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
+    }
+    /*
+     * Only the workspace owner may manage billing/checkout.
+     */
+    const workspaceRole = await getWorkspaceUserRole(supabase, workspace.id, user.id);
+    if (!workspaceRole.ok) {
+        return NextResponse.json({ error: workspaceRole.message }, { status: workspaceRole.status });
+    }
+    if (workspaceRole.role !== "owner") {
+        return NextResponse.json({ error: "Only the workspace owner can manage billing." }, { status: 403 });
     }
     let selectedPlan: "pro" | "business" = "pro";
     try {

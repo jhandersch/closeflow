@@ -144,47 +144,87 @@ export type WorkspacePayload = {
     invites: WorkspaceInvite[];
     profile: UserProfile | null;
 };
-export async function loadWorkspaceForUser(supabase: Awaited<ReturnType<typeof createRouteSupabase>>, userId: string) {
-    const { data: memberships, error: membershipError } = await supabase
-        .from("workspace_members")
-        .select("workspace_id, role, created_at")
-        .eq("user_id", userId)
-        .order("created_at", {
-        ascending: true
-    });
+export async function loadWorkspaceForUser(
+    supabase: Awaited<
+        ReturnType<typeof createRouteSupabase>
+    >,
+    userId: string,
+    preferredWorkspaceId?: string | null,
+) {
+    const { data: memberships, error: membershipError } =
+        await supabase
+            .from("workspace_members")
+            .select(
+                "workspace_id, role, created_at",
+            )
+            .eq("user_id", userId)
+            .order("created_at", {
+                ascending: true,
+            });
+
     if (membershipError) {
-        console.error("WORKSPACE MEMBER ERROR:", membershipError);
+        console.error(
+            "WORKSPACE MEMBER ERROR:",
+            membershipError,
+        );
+
         return {
             error: membershipError,
-            workspace: null
+            workspace: null,
         };
     }
-    // TODO:
-    // Load the active workspace later.
-    // aktuell erster Workspace des Users
-    const membership = memberships?.[0];
-    if (!membership?.workspace_id) {
-        console.error("NO WORKSPACE FOUND FOR:", userId);
+
+    if (!memberships || memberships.length === 0) {
+        console.error(
+            "NO WORKSPACE FOUND FOR:",
+            userId,
+        );
+
         return {
             error: null,
-            workspace: null
+            workspace: null,
         };
     }
-    const { data: workspace, error: workspaceError } = await supabase
-        .from("workspaces")
-        .select("id,name,owner_id,plan,created_at")
-        .eq("id", membership.workspace_id)
-        .single();
+
+    const preferredMembership =
+        preferredWorkspaceId
+            ? memberships.find(
+                  (membership) =>
+                      membership.workspace_id ===
+                      preferredWorkspaceId,
+              )
+            : null;
+
+    const membership =
+        preferredMembership || memberships[0];
+
+    const { data: workspace, error: workspaceError } =
+        await supabase
+            .from("workspaces")
+            .select(
+                "id,name,owner_id,plan,created_at",
+            )
+            .eq(
+                "id",
+                membership.workspace_id,
+            )
+            .single();
+
     if (workspaceError) {
-        console.error("WORKSPACE ERROR:", workspaceError);
+        console.error(
+            "WORKSPACE ERROR:",
+            workspaceError,
+        );
+
         return {
             error: workspaceError,
-            workspace: null
+            workspace: null,
         };
     }
+
     return {
         error: null,
-        workspace: workspace as Workspace
+        workspace: workspace as Workspace,
     };
 }
 export async function getWorkspacePayload(supabase: Awaited<ReturnType<typeof createRouteSupabase>>, workspaceId: string): Promise<WorkspacePayload> {
