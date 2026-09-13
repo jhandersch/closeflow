@@ -1,9 +1,10 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
+
 type BillingState = {
     workspace_id: string | null;
     plan: string;
@@ -11,89 +12,392 @@ type BillingState = {
     current_period_end: string | null;
     stripe_subscription_id: string | null;
 };
+
+type Plan = "free" | "pro" | "business";
+
+const plans: Array<{
+    id: Plan;
+    name: string;
+    price: string;
+    description: string;
+    features: string[];
+}> = [
+    {
+        id: "free",
+        name: "Free",
+        price: "€0",
+        description: "Get started with the core CloseFlow CRM.",
+        features: [
+            "50 leads",
+            "10 AI analyses",
+            "Basic forecasting",
+        ],
+    },
+    {
+        id: "pro",
+        name: "Pro",
+        price: "€49",
+        description: "For growing sales teams.",
+        features: [
+            "Expanded lead capacity",
+            "Advanced AI insights",
+            "Advanced forecasting",
+        ],
+    },
+    {
+        id: "business",
+        name: "Business",
+        price: "€149",
+        description: "For teams that need the full CloseFlow experience.",
+        features: [
+            "Full CRM capabilities",
+            "Maximum AI capabilities",
+            "Advanced forecasting and analytics",
+        ],
+    },
+];
+
 export default function BillingPage() {
-    const { language } = useAppPreferences();
-    const locale = "en-US";
-    const [loading, setLoading] = useState(false);
     const [billing, setBilling] = useState<BillingState | null>(null);
     const [billingLoading, setBillingLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<Plan | "portal" | null>(null);
+
     const loadBilling = async () => {
         setBillingLoading(true);
-        const response = await fetch("/api/billing");
-        if (!response.ok) {
+
+        try {
+            const response = await fetch("/api/billing", {
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                setBilling(null);
+                return;
+            }
+
+            const data = (await response.json()) as BillingState;
+            setBilling(data);
+        } catch {
             setBilling(null);
+        } finally {
             setBillingLoading(false);
-            return;
         }
-        setBilling((await response.json()) as BillingState);
-        setBillingLoading(false);
     };
+
     useEffect(() => {
         void loadBilling();
     }, []);
-    const startUpgrade = async () => {
-        setLoading(true);
-        const response = await fetch("/api/stripe/create-checkout", {
-            method: "POST",
-        });
-        if (!response.ok) {
-            let message = "Could not start checkout";
-            try {
-                const data = (await response.json()) as {
-                    error?: string;
-                };
-                message = data.error || message;
-            }
-            catch {
-                const text = await response.text();
-                message = text || message;
-            }
-            if (message.toLowerCase().includes("two-factor authentication required")) {
-                toast.error("2FA required before plan upgrades. Open Settings -> Security.");
-            }
-            else {
-                toast.error(message);
-            }
-            setLoading(false);
-            return;
-        }
-        const data = (await response.json()) as {
-            checkoutUrl?: string | null;
-            message?: string;
-        };
-        if (!data.checkoutUrl) {
-            toast.error(data.message || ("Stripe checkout is not configured"));
-            setLoading(false);
-            return;
-        }
-        window.location.href = data.checkoutUrl;
-    };
-    return (<AuthGuard>
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{"Billing"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Current Plan"}</h1>
-        </div>
 
-        <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-          <p className="text-sm text-foreground/60">{"Plan"}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">{billingLoading ? ("Loading...") : (billing?.plan || "free").toUpperCase()}</p>
-          <p className="mt-1 text-sm text-foreground/65">{"Status"}: {billingLoading ? "..." : (billing?.status || ("inactive"))}</p>
-          <p className="mt-3 text-sm text-foreground/65">
-            {billing?.current_period_end
-            ? (`Current period ends on ${new Date(billing.current_period_end).toLocaleDateString(locale)}.`)
-            : ("50 Leads, 10 AI analyses, basic forecasting.")}
-          </p>
-          <button onClick={() => void startUpgrade()} disabled={loading} className="mt-6 rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60">
-            {loading ? ("Starting checkout...") : ("Upgrade")}
-          </button>
-          <button onClick={() => void loadBilling()} className="ml-2 mt-6 rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5">
-            {"Refresh status"}
-          </button>
-          <p className="mt-3 text-xs text-foreground/50">
-            {"Sensitive billing actions may require 2FA."} <Link href="/settings#security" className="text-cyan-300">{"Open Security"}</Link>
-          </p>
-        </section>
-      </div>
-    </AuthGuard>);
+    const startCheckout = async (plan: "pro" | "business") => {
+        setActionLoading(plan);
+
+        try {
+            const response = await fetch("/api/stripe/create-checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ plan }),
+            });
+
+            const data = (await response.json()) as {
+                checkoutUrl?: string | null;
+                message?: string;
+                error?: string;
+            };
+
+            if (!response.ok) {
+                const message = data.error || data.message || "Could not start checkout";
+
+                if (
+                    message
+                        .toLowerCase()
+                        .includes("two-factor authentication required")
+                ) {
+                    toast.error(
+                        "2FA required before plan upgrades. Open Settings → Security.",
+                    );
+                } else {
+                    toast.error(message);
+                }
+
+                return;
+            }
+
+            if (!data.checkoutUrl) {
+                toast.error(
+                    data.message || "Stripe checkout is not configured.",
+                );
+                return;
+            }
+
+            window.location.href = data.checkoutUrl;
+        } catch {
+            toast.error("Could not start checkout.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const openPortal = async () => {
+        setActionLoading("portal");
+
+        try {
+            const response = await fetch("/api/stripe/create-portal", {
+                method: "POST",
+            });
+
+            const data = (await response.json()) as {
+                portalUrl?: string | null;
+                error?: string;
+            };
+
+            if (!response.ok) {
+                const message =
+                    data.error || "Could not open billing portal.";
+
+                if (
+                    message
+                        .toLowerCase()
+                        .includes("two-factor authentication required")
+                ) {
+                    toast.error(
+                        "2FA required before billing changes. Open Settings → Security.",
+                    );
+                } else {
+                    toast.error(message);
+                }
+
+                return;
+            }
+
+            if (!data.portalUrl) {
+                toast.error("Stripe billing portal is not configured.");
+                return;
+            }
+
+            window.location.href = data.portalUrl;
+        } catch {
+            toast.error("Could not open billing portal.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const currentPlan = (billing?.plan || "free").toLowerCase() as Plan;
+
+    return (
+        <AuthGuard>
+            <div className="mx-auto max-w-5xl space-y-8">
+                <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+                        Billing
+                    </p>
+
+                    <h1 className="mt-2 text-3xl font-bold text-foreground">
+                        Plans & Subscription
+                    </h1>
+
+                    <p className="mt-2 max-w-2xl text-sm text-foreground/60">
+                        Choose the plan that fits your workspace. Subscription
+                        changes are handled securely through Stripe.
+                    </p>
+                </div>
+
+                <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-sm text-foreground/60">
+                                Current plan
+                            </p>
+
+                            <p className="mt-1 text-2xl font-semibold text-foreground">
+                                {billingLoading
+                                    ? "Loading..."
+                                    : currentPlan.toUpperCase()}
+                            </p>
+
+                            <p className="mt-1 text-sm text-foreground/60">
+                                Status:{" "}
+                                {billingLoading
+                                    ? "..."
+                                    : billing?.status || "inactive"}
+                            </p>
+
+                            {billing?.current_period_end && (
+                                <p className="mt-1 text-sm text-foreground/60">
+                                    Current period ends on{" "}
+                                    {new Date(
+                                        billing.current_period_end,
+                                    ).toLocaleDateString("en-US")}
+                                    .
+                                </p>
+                            )}
+                        </div>
+
+                        {currentPlan !== "free" && (
+                            <button
+                                type="button"
+                                onClick={() => void openPortal()}
+                                disabled={actionLoading !== null}
+                                className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+                            >
+                                {actionLoading === "portal"
+                                    ? "Opening..."
+                                    : "Manage subscription"}
+                            </button>
+                        )}
+                    </div>
+                </section>
+
+                <section className="grid gap-6 md:grid-cols-3">
+                    {plans.map((plan) => {
+                        const isCurrent = currentPlan === plan.id;
+                        const isFree = plan.id === "free";
+
+                        return (
+                            <article
+                                key={plan.id}
+                                className={`rounded-2xl border bg-surface-1 p-6 ${
+                                    isCurrent
+                                        ? "border-cyan-400/60"
+                                        : "border-border-subtle"
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-xl font-semibold text-foreground">
+                                            {plan.name}
+                                        </h2>
+
+                                        <p className="mt-2 text-3xl font-bold text-foreground">
+                                            {plan.price}
+                                            {!isFree && (
+                                                <span className="text-sm font-normal text-foreground/50">
+                                                    {" "}
+                                                    / month
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    {isCurrent && (
+                                        <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+                                            Current
+                                        </span>
+                                    )}
+                                </div>
+
+                                <p className="mt-4 text-sm text-foreground/60">
+                                    {plan.description}
+                                </p>
+
+                                <ul className="mt-6 space-y-3 text-sm text-foreground/75">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex gap-2">
+                                            <span className="text-cyan-300">
+                                                ✓
+                                            </span>
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="mt-8">
+                                    {isCurrent ? (
+                                        <button
+                                            type="button"
+                                            disabled
+                                            className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground/50"
+                                        >
+                                            Current plan
+                                        </button>
+                                    ) : isFree ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => void openPortal()}
+                                            disabled={
+                                                currentPlan === "free" ||
+                                                actionLoading !== null
+                                            }
+                                            className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
+                                        >
+                                            Manage subscription
+                                        </button>
+                                    ) : currentPlan === "free" ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                    if (plan.id === "pro" || plan.id === "business") {
+                                                        void startCheckout(plan.id);
+                                                    }
+                                                }}
+                                            disabled={actionLoading !== null}
+                                            className="w-full rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                                        >
+                                            {actionLoading === plan.id
+                                                ? "Starting checkout..."
+                                                : `Upgrade to ${plan.name}`}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => void openPortal()}
+                                            disabled={actionLoading !== null}
+                                            className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+                                        >
+                                            Manage in Stripe
+                                        </button>
+                                    )}
+                                </div>
+                            </article>
+                        );
+                    })}
+                </section>
+
+                <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+                    <h2 className="text-lg font-semibold text-foreground">
+                        Billing management
+                    </h2>
+
+                    <p className="mt-2 text-sm text-foreground/60">
+                        Manage payment methods, invoices, billing information,
+                        plan changes, and cancellation securely through Stripe.
+                    </p>
+
+                    {currentPlan !== "free" && (
+                        <button
+                            type="button"
+                            onClick={() => void openPortal()}
+                            disabled={actionLoading !== null}
+                            className="mt-5 rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                        >
+                            {actionLoading === "portal"
+                                ? "Opening..."
+                                : "Open Stripe Billing Portal"}
+                        </button>
+                    )}
+
+                    <p className="mt-4 text-xs text-foreground/50">
+                        Sensitive billing actions may require 2FA.{" "}
+                        <Link
+                            href="/settings#security"
+                            className="text-cyan-300 hover:underline"
+                        >
+                            Open Security
+                        </Link>
+                    </p>
+                </section>
+
+                <button
+                    type="button"
+                    onClick={() => void loadBilling()}
+                    disabled={billingLoading}
+                    className="text-sm text-foreground/50 hover:text-foreground/80 disabled:opacity-50"
+                >
+                    Refresh billing status
+                </button>
+            </div>
+        </AuthGuard>
+    );
 }

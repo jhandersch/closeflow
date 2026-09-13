@@ -121,20 +121,6 @@ export async function POST(request: Request) {
                     : null;
 
             if (workspaceId) {
-                let status = "active";
-                let currentPeriodEnd: string | null = null;
-
-                if (stripeSubscriptionId) {
-                    const subscription =
-                        await stripe.subscriptions.retrieve(
-                            stripeSubscriptionId,
-                        );
-
-                    status = subscription.status;
-                    currentPeriodEnd =
-                        getPeriodEnd(subscription);
-                }
-
                 const { error } = await supabase
                     .from("subscriptions")
                     .upsert(
