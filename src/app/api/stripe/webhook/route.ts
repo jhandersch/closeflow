@@ -19,11 +19,8 @@ const resolvePlanFromPrice = (
 const getPeriodEnd = (
     subscription: Stripe.Subscription,
 ): string | null => {
-    const periodEnd = Number(
-        (subscription as unknown as {
-            current_period_end?: number;
-        }).current_period_end || 0,
-    );
+    const periodEnd =
+        subscription.items.data[0]?.current_period_end ?? null;
 
     return periodEnd
         ? new Date(periodEnd * 1000).toISOString()
