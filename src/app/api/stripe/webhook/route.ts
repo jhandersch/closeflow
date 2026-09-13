@@ -174,17 +174,26 @@ export async function POST(request: Request) {
                 );
             }
 
+            const cancelAt =
+                Number(
+                    (subscription as unknown as {
+                        cancel_at?: number | null;
+                    }).cancel_at || 0,
+                ) || null;
+
+            const status =
+                event.type === "customer.subscription.deleted" ||
+                cancelAt !== null
+                    ? "canceled"
+                    : subscription.status;
+
             const updatePayload = {
-                stripe_customer_id:
-                    stripeCustomerId,
-                stripe_subscription_id:
-                    stripeSubscriptionId,
+                stripe_customer_id: stripeCustomerId,
+                stripe_subscription_id: stripeSubscriptionId,
                 plan,
-                status: subscription.status,
-                current_period_end:
-                    getPeriodEnd(subscription),
-                updated_at:
-                    new Date().toISOString(),
+                status,
+                current_period_end: getPeriodEnd(subscription),
+                updated_at: new Date().toISOString(),
             };
 
             const { data, error } = await supabase
