@@ -72,15 +72,29 @@ export default function TasksPage() {
      * =========================
      */
     const getWorkspaceId = async (userId: string) => {
-        const { data: membership } = await supabase
-            .from("workspace_members")
-            .select("workspace_id")
-            .eq("user_id", userId)
-            .limit(1)
-            .maybeSingle();
-        return (membership?.workspace_id ||
-            null);
-    };
+    const activeWorkspaceId =
+        window.localStorage.getItem(
+            "closeflow_active_workspace",
+        );
+
+    let query = supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", userId);
+
+    if (activeWorkspaceId) {
+        query = query.eq(
+            "workspace_id",
+            activeWorkspaceId,
+        );
+    }
+
+    const { data: membership } = await query
+        .limit(1)
+        .maybeSingle();
+
+    return membership?.workspace_id || null;
+};
     /*
      * =========================
      * LOAD DATA

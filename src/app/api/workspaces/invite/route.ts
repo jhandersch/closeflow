@@ -1,99 +1,179 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, requireAal2, } from "@/lib/supabase/route";
+import {
+    getRouteUser,
+    requireAal2,
+} from "@/lib/supabase/route";
 import { enforceTeamSeatLimit } from "@/lib/usageLimits";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
-import { getWorkspaceUserRole, } from "@/lib/supabase/workspaceAuth";
+import {
+    getWorkspaceUserRole,
+} from "@/lib/supabase/workspaceAuth";
+
 const rolePattern = /^(owner|admin|member|viewer)$/i;
+
 export async function POST(request: Request) {
-    const { supabase, user, error, } = await getRouteUser(request);
+    const {
+        supabase,
+        user,
+        error,
+    } = await getRouteUser(request);
+
     if (error || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401 },
+        );
     }
+
     const body = await request.json();
-    const workspaceId = typeof body.workspace_id === "string"
-        ? body.workspace_id.trim()
-        : "";
-    const email = typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : "";
-    const role = typeof body.role === "string" &&
+
+    const workspaceId =
+        typeof body.workspace_id === "string"
+            ? body.workspace_id.trim()
+            : "";
+
+    const email =
+        typeof body.email === "string"
+            ? body.email.trim().toLowerCase()
+            : "";
+
+    const role =
+        typeof body.role === "string" &&
         rolePattern.test(body.role)
-        ? body.role.toLowerCase()
-        : "member";
+            ? body.role.toLowerCase()
+            : "member";
+
     if (!workspaceId || !email) {
-        return NextResponse.json({
-            error: "workspace_id and email are required",
-        }, { status: 400 });
+        return NextResponse.json(
+            {
+                error:
+                    "workspace_id and email are required",
+            },
+            { status: 400 },
+        );
     }
+
     /*
      * Sensible Workspace-Aktion:
      * AAL2 erforderlich.
      */
-    const authz = await requireAal2(request, supabase);
+    const authz = await requireAal2(
+        request,
+        supabase,
+    );
+
     if (!authz.ok) {
-        return NextResponse.json({ error: authz.message }, { status: authz.status });
+        return NextResponse.json(
+            { error: authz.message },
+            { status: authz.status },
+        );
     }
+
     /*
-    * Check whether the signed-in user
-    * is a member of this workspace.
-     * und welche Rolle er besitzt.
+     * Check whether the signed-in user
+     * is a member of this workspace
+     * and which role they have.
      */
-    const workspaceRole = await getWorkspaceUserRole(supabase, workspaceId, user.id);
+    const workspaceRole =
+        await getWorkspaceUserRole(
+            supabase,
+            workspaceId,
+            user.id,
+        );
+
     if (!workspaceRole.ok) {
-        return NextResponse.json({ error: workspaceRole.message }, { status: workspaceRole.status });
+        return NextResponse.json(
+            { error: workspaceRole.message },
+            { status: workspaceRole.status },
+        );
     }
+
     /*
-    * Only owners and admins may
-     * Workspace-Mitglieder einladen.
+     * Only owners and admins may
+     * invite workspace members.
      */
-    if (workspaceRole.role !== "owner" &&
-        workspaceRole.role !== "admin") {
-        return NextResponse.json({
-            error: "Only workspace owners and admins can invite members.",
-        }, { status: 403 });
+    if (
+        workspaceRole.role !== "owner" &&
+        workspaceRole.role !== "admin"
+    ) {
+        return NextResponse.json(
+            {
+                error:
+                    "Only workspace owners and admins can invite members.",
+            },
+            { status: 403 },
+        );
     }
+
     /*
-    * Check the team seat limit.
+     * Check the team seat limit.
      */
-    const seatLimit = await enforceTeamSeatLimit(supabase, user.id, workspaceId);
+    const seatLimit =
+        await enforceTeamSeatLimit(
+            supabase,
+            user.id,
+            workspaceId,
+        );
+
     if (!seatLimit.ok) {
-        return NextResponse.json({
-            error: seatLimit.message,
-        }, {
-            status: seatLimit.status,
-        });
+        return NextResponse.json(
+            {
+                error: seatLimit.message,
+            },
+            {
+                status: seatLimit.status,
+            },
+        );
     }
+
     /*
-    * Create invitation.
+     * Create invitation.
      */
     const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() +
-        7 *
-            24 *
-            60 *
-            60 *
-            1000).toISOString();
-    const { error: inviteError, } = await supabase
+
+    const expiresAt = new Date(
+        Date.now() +
+            7 *
+                24 *
+                60 *
+                60 *
+                1000,
+    ).toISOString();
+
+    const {
+        error: inviteError,
+    } = await supabase
         .from("workspace_invites")
         .insert({
-        workspace_id: workspaceId,
-        email,
-        role,
-        token,
-        expires_at: expiresAt,
-    });
+            workspace_id: workspaceId,
+            email,
+            role,
+            token,
+            expires_at: expiresAt,
+        });
+
     if (inviteError) {
-        console.error("CREATE WORKSPACE INVITE ERROR:", inviteError);
-        return NextResponse.json({
-            error: inviteError.message,
-        }, { status: 500 });
+        console.error(
+            "CREATE WORKSPACE INVITE ERROR:",
+            inviteError,
+        );
+
+        return NextResponse.json(
+            {
+                error: inviteError.message,
+            },
+            { status: 500 },
+        );
     }
+
     /*
-     * Einladung-Link erzeugen.
+     * Generate invitation link.
      */
-    const inviteUrl = `${new URL(request.url).origin}/team?invite=${encodeURIComponent(token)}`;
+    const inviteUrl =
+        `${new URL(request.url).origin}/team?invite=${encodeURIComponent(token)}`;
+
     /*
-    * Send invitation by email.
+     * Send invitation by email.
      */
     try {
         await sendWorkspaceInviteEmail({
@@ -101,15 +181,45 @@ export async function POST(request: Request) {
             inviteUrl,
             workspaceName: "CloseFlow",
         });
+    } catch (emailError) {
+        console.error(
+            "INVITE EMAIL ERROR:",
+            emailError,
+        );
+
+        /*
+         * The invitation was already inserted.
+         * Remove it again if email delivery fails,
+         * so a retry does not hit the unique
+         * workspace/email constraint.
+         */
+        const {
+            error: cleanupError,
+        } = await supabase
+            .from("workspace_invites")
+            .delete()
+            .eq("workspace_id", workspaceId)
+            .eq("email", email)
+            .eq("token", token);
+
+        if (cleanupError) {
+            console.error(
+                "INVITE CLEANUP ERROR:",
+                cleanupError,
+            );
+        }
+
+        return NextResponse.json(
+            {
+                error:
+                    "The invitation could not be sent.",
+            },
+            {
+                status: 500,
+            },
+        );
     }
-    catch (emailError) {
-        console.error("INVITE EMAIL ERROR:", emailError);
-        return NextResponse.json({
-            error: "Invitation was created, but the email could not be sent.",
-        }, {
-            status: 500,
-        });
-    }
+
     return NextResponse.json({
         ok: true,
         inviteUrl,

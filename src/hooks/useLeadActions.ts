@@ -15,15 +15,6 @@ type UpdateLeadData = {
     website?: string;
 };
 export function useLeadActions(onSuccess?: (newStatus: LeadStatus) => Promise<void>) {
-    const getWorkspaceId = async (userId: string) => {
-        const { data: membership } = await supabase
-            .from("workspace_members")
-            .select("workspace_id")
-            .eq("user_id", userId)
-            .limit(1)
-            .maybeSingle();
-        return membership?.workspace_id || null;
-    };
     async function changeLeadStatus(leadId: string, oldStatus: LeadStatus, newStatus: LeadStatus): Promise<Lead | null> {
         if (oldStatus === newStatus)
             return null;

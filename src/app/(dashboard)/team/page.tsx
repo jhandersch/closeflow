@@ -8,7 +8,6 @@ import MemberTable from "@/components/team/MemberTable";
 import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
-
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import type { Workspace, WorkspaceInvite, WorkspaceMember, WorkspaceRole, } from "@/types";
 type WorkspaceBundle = {

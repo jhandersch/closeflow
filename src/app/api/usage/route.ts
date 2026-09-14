@@ -7,7 +7,17 @@ export async function GET(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const context = await getWorkspaceUsageContext(supabase, user.id);
+    const preferredWorkspaceId =
+        request.headers.get(
+            "x-closeflow-workspace-id",
+        );
+
+    const context =
+        await getWorkspaceUsageContext(
+            supabase,
+            user.id,
+            preferredWorkspaceId,
+        );
     if (!context) {
         return NextResponse.json({
             workspace_id: null,

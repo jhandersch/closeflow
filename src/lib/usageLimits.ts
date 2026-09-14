@@ -81,37 +81,70 @@ const readUsage = async (supabase: SupabaseClient, workspaceId: string, month: s
         month,
     };
 };
-export async function getWorkspaceUsageContext(supabase: SupabaseClient, userId: string): Promise<WorkspaceUsageContext | null> {
-    const { workspace, error } = await loadWorkspaceForUser(supabase, userId);
+export async function getWorkspaceUsageContext(
+    supabase: SupabaseClient,
+    userId: string,
+    preferredWorkspaceId?: string | null,
+): Promise<WorkspaceUsageContext | null> {
+    const { workspace, error } =
+        await loadWorkspaceForUser(
+            supabase,
+            userId,
+            preferredWorkspaceId,
+        );
+
     if (error || !workspace) {
         return null;
     }
+
     const month = monthKey();
-    const [{ data: subscription }, usage, membersCountRes, invitesCountRes] = await Promise.all([
+
+    const [
+        { data: subscription },
+        usage,
+        membersCountRes,
+        invitesCountRes,
+    ] = await Promise.all([
         supabase
             .from("subscriptions")
             .select("plan")
             .eq("workspace_id", workspace.id)
             .maybeSingle(),
-        readUsage(supabase, workspace.id, month),
+        readUsage(
+            supabase,
+            workspace.id,
+            month,
+        ),
         supabase
             .from("workspace_members")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+                count: "exact",
+                head: true,
+            })
             .eq("workspace_id", workspace.id),
         supabase
             .from("workspace_invites")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+                count: "exact",
+                head: true,
+            })
             .eq("workspace_id", workspace.id)
             .is("accepted_at", null),
     ]);
-    const plan = normalizePlan(subscription?.plan);
+
+    const plan = normalizePlan(
+        subscription?.plan,
+    );
+
     return {
         workspaceId: workspace.id,
         plan,
         limits: PLAN_LIMITS[plan],
         usage,
-        memberCount: membersCountRes.count || 0,
-        pendingInvites: invitesCountRes.count || 0,
+        memberCount:
+            membersCountRes.count || 0,
+        pendingInvites:
+            invitesCountRes.count || 0,
     };
 }
 const incrementUsage = async (supabase: SupabaseClient, workspaceId: string, month: string, field: "ai_requests" | "exports_count") => {
@@ -137,57 +170,125 @@ const incrementUsage = async (supabase: SupabaseClient, workspaceId: string, mon
     }
     await supabase.from("usage").upsert(payload, { onConflict: "workspace_id,month" });
 };
-export async function enforceAndTrackUsageLimit(supabase: SupabaseClient, userId: string, bucket: "ai" | "export"): Promise<{
-    ok: true;
-    context: WorkspaceUsageContext | null;
-} | {
-    ok: false;
-    status: number;
-    message: string;
-}> {
-    const context = await getWorkspaceUsageContext(supabase, userId);
+export async function enforceAndTrackUsageLimit(
+    supabase: SupabaseClient,
+    userId: string,
+    bucket: "ai" | "export",
+    preferredWorkspaceId?: string | null,
+): Promise<
+    | {
+          ok: true;
+          context: WorkspaceUsageContext | null;
+      }
+    | {
+          ok: false;
+          status: number;
+          message: string;
+      }
+> {
+    const context =
+        await getWorkspaceUsageContext(
+            supabase,
+            userId,
+            preferredWorkspaceId,
+        );
+
     if (!context) {
-        return { ok: true, context: null };
+        return {
+            ok: true,
+            context: null,
+        };
     }
+
     if (bucket === "ai") {
-        const limit = context.limits.aiRequestsMonthly;
-        if (limit !== null && context.usage.aiRequests >= limit) {
+        const limit =
+            context.limits.aiRequestsMonthly;
+
+        if (
+            limit !== null &&
+            context.usage.aiRequests >= limit
+        ) {
             return {
                 ok: false,
                 status: 429,
                 message: `AI request limit reached for ${context.plan.toUpperCase()} plan (${limit}/${limit}).`,
             };
         }
-        await incrementUsage(supabase, context.workspaceId, context.usage.month, "ai_requests");
-        return { ok: true, context };
+
+        await incrementUsage(
+            supabase,
+            context.workspaceId,
+            context.usage.month,
+            "ai_requests",
+        );
+
+        return {
+            ok: true,
+            context,
+        };
     }
-    const exportLimit = context.limits.exportsMonthly;
-    if (exportLimit !== null && context.usage.exports >= exportLimit) {
+
+    const exportLimit =
+        context.limits.exportsMonthly;
+
+    if (
+        exportLimit !== null &&
+        context.usage.exports >= exportLimit
+    ) {
         return {
             ok: false,
             status: 429,
             message: `Export limit reached for ${context.plan.toUpperCase()} plan (${exportLimit}/${exportLimit}).`,
         };
     }
-    await incrementUsage(supabase, context.workspaceId, context.usage.month, "exports_count");
-    return { ok: true, context };
+
+    await incrementUsage(
+        supabase,
+        context.workspaceId,
+        context.usage.month,
+        "exports_count",
+    );
+
+    return {
+        ok: true,
+        context,
+    };
 }
-export async function enforceTeamSeatLimit(supabase: SupabaseClient, userId: string, workspaceId: string): Promise<{
-    ok: true;
-} | {
-    ok: false;
-    status: number;
-    message: string;
-}> {
-    const context = await getWorkspaceUsageContext(supabase, userId);
-    if (!context || context.workspaceId !== workspaceId) {
+export async function enforceTeamSeatLimit(
+    supabase: SupabaseClient,
+    userId: string,
+    workspaceId: string,
+): Promise<
+    | { ok: true }
+    | {
+          ok: false;
+          status: number;
+          message: string;
+      }
+> {
+    const context =
+        await getWorkspaceUsageContext(
+            supabase,
+            userId,
+            workspaceId,
+        );
+
+    if (!context) {
         return { ok: true };
     }
-    const seatLimit = context.limits.teamSeats;
+
+    const seatLimit =
+        context.limits.teamSeats;
+
     if (seatLimit === null) {
         return { ok: true };
     }
-    const projectedSeats = context.memberCount + context.pendingInvites + 1;
+
+    const projectedSeats =
+        context.memberCount +
+        context.pendingInvites +
+        1;
+
     if (projectedSeats > seatLimit) {
         return {
             ok: false,
@@ -195,5 +296,6 @@ export async function enforceTeamSeatLimit(supabase: SupabaseClient, userId: str
             message: `Team seat limit reached for ${context.plan.toUpperCase()} plan (${context.memberCount + context.pendingInvites}/${seatLimit}).`,
         };
     }
+
     return { ok: true };
 }

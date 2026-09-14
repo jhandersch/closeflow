@@ -158,79 +158,120 @@ const response = await fetch(
     loadBilling,
 ]);
 
-    const startCheckout = async (plan: "pro" | "business") => {
-        if (!canManageBilling) {
-            toast.error("Only the workspace owner can manage billing.");
-            return;
-        }
-
-        setActionLoading(plan);
-
-        try {
-            const response = await fetch("/api/stripe/create-checkout", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ plan }),
-            });
-
-            const data = (await response.json()) as {
-                checkoutUrl?: string | null;
-                message?: string;
-                error?: string;
-            };
-
-            if (!response.ok) {
-                const message =
-                    data.error ||
-                    data.message ||
-                    "Could not start checkout";
-
-                if (
-                    message
-                        .toLowerCase()
-                        .includes("two-factor authentication required")
-                ) {
-                    toast.error(
-                        "2FA required before plan upgrades. Open Settings → Security.",
-                    );
-                } else {
-                    toast.error(message);
-                }
-
-                return;
-            }
-
-            if (!data.checkoutUrl) {
+    const startCheckout = async (
+            plan: "pro" | "business",
+        ) => {
+            if (!canManageBilling) {
                 toast.error(
-                    data.message ||
-                        "Stripe checkout is not configured.",
+                    "Only the workspace owner can manage billing.",
                 );
                 return;
             }
 
-            window.location.href = data.checkoutUrl;
-        } catch {
-            toast.error("Could not start checkout.");
-        } finally {
-            setActionLoading(null);
-        }
-    };
+            setActionLoading(plan);
+
+            try {
+                const activeWorkspaceId =
+                    window.localStorage.getItem(
+                        "closeflow_active_workspace",
+                    );
+
+                const headers: HeadersInit = {
+                    "Content-Type": "application/json",
+                };
+
+                if (activeWorkspaceId) {
+                    headers[
+                        "x-closeflow-workspace-id"
+                    ] = activeWorkspaceId;
+                }
+
+                const response = await fetch(
+                    "/api/stripe/create-checkout",
+                    {
+                        method: "POST",
+                        headers,
+                        body: JSON.stringify({ plan }),
+                    },
+                );
+
+                const data = (await response.json()) as {
+                    checkoutUrl?: string | null;
+                    message?: string;
+                    error?: string;
+                };
+
+                if (!response.ok) {
+                    const message =
+                        data.error ||
+                        data.message ||
+                        "Could not start checkout";
+
+                    if (
+                        message
+                            .toLowerCase()
+                            .includes(
+                                "two-factor authentication required",
+                            )
+                    ) {
+                        toast.error(
+                            "2FA required before plan upgrades. Open Settings → Security.",
+                        );
+                    } else {
+                        toast.error(message);
+                    }
+
+                    return;
+                }
+
+                if (!data.checkoutUrl) {
+                    toast.error(
+                        data.message ||
+                            "Stripe checkout is not configured.",
+                    );
+                    return;
+                }
+
+                window.location.href =
+                    data.checkoutUrl;
+            } catch {
+                toast.error(
+                    "Could not start checkout.",
+                );
+            } finally {
+                setActionLoading(null);
+            }
+        };
 
     const openPortal = async () => {
         if (!canManageBilling) {
-            toast.error("Only the workspace owner can manage billing.");
+            toast.error(
+                "Only the workspace owner can manage billing.",
+            );
             return;
         }
 
         setActionLoading("portal");
 
         try {
+            const activeWorkspaceId =
+                window.localStorage.getItem(
+                    "closeflow_active_workspace",
+                );
+
+            const headers: HeadersInit = {};
+
+            if (activeWorkspaceId) {
+                headers[
+                    "x-closeflow-workspace-id"
+                ] = activeWorkspaceId;
+            }
+
             const response = await fetch(
                 "/api/stripe/create-portal",
                 {
                     method: "POST",
+                    headers,
                 },
             );
 
@@ -247,7 +288,9 @@ const response = await fetch(
                 if (
                     message
                         .toLowerCase()
-                        .includes("two-factor authentication required")
+                        .includes(
+                            "two-factor authentication required",
+                        )
                 ) {
                     toast.error(
                         "2FA required before billing changes. Open Settings → Security.",
@@ -266,7 +309,8 @@ const response = await fetch(
                 return;
             }
 
-            window.location.href = data.portalUrl;
+            window.location.href =
+                data.portalUrl;
         } catch {
             toast.error(
                 "Could not open billing portal.",
