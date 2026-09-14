@@ -243,6 +243,88 @@ const response = await fetch(
             }
         };
 
+        const changePlan = async (
+            plan: "pro" | "business",
+        ) => {
+            if (!canManageBilling) {
+                toast.error(
+                    "Only the workspace owner can manage billing.",
+                );
+                return;
+            }
+
+            setActionLoading(plan);
+
+            try {
+                const activeWorkspaceId =
+                    window.localStorage.getItem(
+                        "closeflow_active_workspace",
+                    );
+
+                const headers: HeadersInit = {
+                    "Content-Type": "application/json",
+                };
+
+                if (activeWorkspaceId) {
+                    headers[
+                        "x-closeflow-workspace-id"
+                    ] = activeWorkspaceId;
+                }
+
+                const response = await fetch(
+                    "/api/stripe/change-plan",
+                    {
+                        method: "POST",
+                        headers,
+                        body: JSON.stringify({ plan }),
+                    },
+                );
+
+                const data = (await response.json()) as {
+                    success?: boolean;
+                    error?: string;
+                };
+
+                if (!response.ok) {
+                    const message =
+                        data.error ||
+                        "Could not change subscription plan.";
+
+                    if (
+                        message
+                            .toLowerCase()
+                            .includes(
+                                "two-factor authentication required",
+                            )
+                    ) {
+                        toast.error(
+                            "2FA required before plan changes. Open Settings → Security.",
+                        );
+                    } else {
+                        toast.error(message);
+                    }
+
+                    return;
+                }
+
+                toast.success(
+                    `Plan changed to ${
+                        plan === "pro"
+                            ? "Pro"
+                            : "Business"
+                    }.`,
+                );
+
+                await loadBilling();
+            } catch {
+                toast.error(
+                    "Could not change subscription plan.",
+                );
+            } finally {
+                setActionLoading(null);
+            }
+        };
+
     const openPortal = async () => {
         if (!canManageBilling) {
             toast.error(
@@ -551,16 +633,22 @@ const response = await fetch(
                                                 ) : (
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            void openPortal()
-                                                        }
+                                                        onClick={() => {
+                                                            if (
+                                                                plan.id === "pro" ||
+                                                                plan.id === "business"
+                                                            ) {
+                                                                void changePlan(plan.id);
+                                                            }
+                                                        }}
                                                         disabled={
-                                                            actionLoading !==
-                                                            null
+                                                            actionLoading !== null
                                                         }
                                                         className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                                     >
-                                                        Manage in Stripe
+                                                        {actionLoading === plan.id
+                                                            ? "Changing plan..."
+                                                            : `Switch to ${plan.name}`}
                                                     </button>
                                                 )}
                                             </div>
