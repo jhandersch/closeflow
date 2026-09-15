@@ -13,42 +13,49 @@ export async function GET(request: Request) {
         );
     }
 
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select(
-            "id, full_name, avatar_url, company_name, timezone, language, created_at",
-        )
-        .eq("id", user.id)
-        .maybeSingle();
+    const { data: profile, error: profileError } =
+        await supabase
+            .from("profiles")
+            .select(
+                "id, full_name, username, company_name, avatar_url, role, language, created_at, updated_at",
+            )
+            .eq("id", user.id)
+            .maybeSingle();
+
+    if (profileError) {
+        return NextResponse.json(
+            { error: profileError.message },
+            { status: 500 },
+        );
+    }
 
     const metadata = user.user_metadata || {};
 
     return NextResponse.json({
         id: user.id,
-        email: user.email,
-        name:
-            profile?.full_name ||
-            metadata.name ||
-            metadata.full_name ||
+        email: user.email || "",
+        name: profile?.full_name || "",
+        username:
+            profile?.username ||
+            metadata.username ||
             "",
-        username: metadata.username || "",
         company:
-            profile?.company_name ||
-            metadata.company_name ||
-            "",
+            profile?.company_name || "",
         avatar:
-            profile?.avatar_url ||
-            metadata.avatar_url ||
-            "",
+            profile?.avatar_url || "",
+        role: profile?.role || "",
         phone: metadata.phone || "",
         timezone:
-            profile?.timezone ||
             metadata.timezone ||
-            "",
+            "Europe/Berlin",
         language:
             profile?.language ||
             metadata.language ||
             "en",
+        created_at:
+            profile?.created_at || null,
+        updated_at:
+            profile?.updated_at || null,
     });
 }
 
@@ -72,6 +79,11 @@ export async function PATCH(request: Request) {
               ? body.name.trim()
               : "";
 
+    const username =
+        typeof body.username === "string"
+            ? body.username.trim()
+            : "";
+
     const avatar =
         typeof body.avatar_url === "string"
             ? body.avatar_url.trim()
@@ -94,7 +106,7 @@ export async function PATCH(request: Request) {
     const timezone =
         typeof body.timezone === "string"
             ? body.timezone.trim()
-            : "";
+            : "Europe/Berlin";
 
     const language =
         typeof body.language === "string"
@@ -107,9 +119,9 @@ export async function PATCH(request: Request) {
             .upsert({
                 id: user.id,
                 full_name: fullName,
+                username,
                 avatar_url: avatar,
                 company_name: company,
-                timezone,
                 language,
             });
 
@@ -125,6 +137,7 @@ export async function PATCH(request: Request) {
             data: {
                 name: fullName,
                 full_name: fullName,
+                username,
                 avatar_url: avatar,
                 company_name: company,
                 phone,
@@ -144,6 +157,7 @@ export async function PATCH(request: Request) {
         ok: true,
         profile: {
             full_name: fullName,
+            username,
             company_name: company,
             avatar_url: avatar,
             phone,

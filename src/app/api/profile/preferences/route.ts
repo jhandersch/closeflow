@@ -23,28 +23,12 @@ export async function PATCH(request: Request) {
     const timezone =
         typeof body.timezone === "string"
             ? body.timezone.trim()
-            : "";
+            : "Europe/Berlin";
 
     const language =
         typeof body.language === "string"
             ? body.language.trim()
             : "en";
-
-    const { error: profileError } =
-        await supabase
-            .from("profiles")
-            .upsert({
-                id: user.id,
-                timezone,
-                language,
-            });
-
-    if (profileError) {
-        return NextResponse.json(
-            { error: profileError.message },
-            { status: 400 },
-        );
-    }
 
     const { error: authError } =
         await supabase.auth.updateUser({
@@ -58,6 +42,19 @@ export async function PATCH(request: Request) {
     if (authError) {
         return NextResponse.json(
             { error: authError.message },
+            { status: 400 },
+        );
+    }
+
+    const { error: profileError } =
+        await supabase
+            .from("profiles")
+            .update({ language })
+            .eq("id", user.id);
+
+    if (profileError) {
+        return NextResponse.json(
+            { error: profileError.message },
             { status: 400 },
         );
     }
