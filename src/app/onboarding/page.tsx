@@ -424,14 +424,14 @@ export default function OnboardingPage() {
                   <h2 className="text-2xl font-semibold">
                     {quickStartMode ===
                 "demo"
-                ? "Demo aktivieren"
+                ? "Enable Demo"
                 : "Create first lead"}
                   </h2>
 
                   <p className="mt-2 text-sm leading-7 text-foreground/65">
                     {quickStartMode ===
                 "demo"
-                ? "Beim Abschluss werden Demo-Daten geladen."
+                ? "Upon completion, demo data is loaded."
                 : "Erstelle direkt deinen ersten Lead."}
                   </p>
                 </div>
@@ -495,7 +495,8 @@ export default function OnboardingPage() {
                     </div>
 
                   </>) : (<div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-7">
-                    Beim Abschluss werden realistische Demo-Leads, Activities und Tasks geladen.
+                    Upon completion, realistic demo leads, activities, and tasks are loaded.
+
                   </div>)}
 
               </div>)}

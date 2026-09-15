@@ -244,7 +244,7 @@ const response = await fetch(
         };
 
         const changePlan = async (
-            plan: "pro" | "business",
+            plan: "free" | "pro" | "business",
         ) => {
             if (!canManageBilling) {
                 toast.error(
@@ -311,7 +311,9 @@ const response = await fetch(
                     `Plan changed to ${
                         plan === "pro"
                             ? "Pro"
-                            : "Business"
+                            : plan === "business"
+                            ? "Business"
+                            : "Free"
                     }.`,
                 );
 
@@ -598,18 +600,16 @@ const response = await fetch(
                                                 ) : isFree ? (
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            void openPortal()
-                                                        }
+                                                        onClick={() => void changePlan("free")}
                                                         disabled={
-                                                            currentPlan ===
-                                                                "free" ||
-                                                            actionLoading !==
-                                                                null
+                                                            currentPlan === "free" ||
+                                                            actionLoading !== null
                                                         }
                                                         className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
                                                     >
-                                                        Manage subscription
+                                                        {actionLoading === "free"
+                                                            ? "Scheduling downgrade..."
+                                                            : "Switch to Free"}
                                                     </button>
                                                 ) : currentPlan === "free" ? (
                                                     <button
@@ -673,7 +673,7 @@ const response = await fetch(
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            void openPortal()
+                                            void changePlan("free")
                                         }
                                         disabled={
                                             actionLoading !== null

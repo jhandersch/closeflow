@@ -7,7 +7,7 @@ import {
 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 
-type Plan = "pro" | "business";
+type Plan = "pro" | "business" | "free";
 
 export async function POST(request: Request) {
     const {
@@ -41,7 +41,11 @@ export async function POST(request: Request) {
 
     const plan = body?.plan;
 
-    if (plan !== "pro" && plan !== "business") {
+    if (
+        plan !== "pro" &&
+        plan !== "business" &&
+        plan !== "free"
+    ) {
         return NextResponse.json(
             { error: "Invalid plan." },
             { status: 400 },
@@ -108,21 +112,6 @@ export async function POST(request: Request) {
             {
                 error:
                     "Stripe is not configured.",
-            },
-            { status: 500 },
-        );
-    }
-
-    const priceId =
-        plan === "pro"
-            ? process.env.STRIPE_PRO_PRICE_ID
-            : process.env.STRIPE_BUSINESS_PRICE_ID;
-
-    if (!priceId) {
-        return NextResponse.json(
-            {
-                error:
-                    `Stripe price for ${plan} is not configured.`,
             },
             { status: 500 },
         );
@@ -201,6 +190,47 @@ export async function POST(request: Request) {
             );
         }
 
+        // Free has no Stripe price.
+        // Schedule cancellation at the end of the
+        // current paid billing period.
+        if (plan === "free") {
+            const updatedSubscription =
+                await stripe.subscriptions.update(
+                    stripeSubscription.id,
+                    {
+                        cancel_at_period_end: true,
+                    },
+                );
+
+            return NextResponse.json({
+                success: true,
+                plan: "free",
+                subscriptionId:
+                    updatedSubscription.id,
+                status:
+                    updatedSubscription.status,
+                cancelAt:
+                    updatedSubscription.cancel_at,
+            });
+        }
+
+        const priceId =
+            plan === "pro"
+                ? process.env
+                      .STRIPE_PRO_PRICE_ID
+                : process.env
+                      .STRIPE_BUSINESS_PRICE_ID;
+
+        if (!priceId) {
+            return NextResponse.json(
+                {
+                    error:
+                        `Stripe price for ${plan} is not configured.`,
+                },
+                { status: 500 },
+            );
+        }
+
         const subscriptionItem =
             stripeSubscription.items.data[0];
 
@@ -227,6 +257,7 @@ export async function POST(request: Request) {
                     ],
                     proration_behavior:
                         "create_prorations",
+                    cancel_at_period_end: false,
                 },
             );
 
