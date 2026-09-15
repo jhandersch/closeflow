@@ -308,13 +308,13 @@ const response = await fetch(
                 }
 
                 toast.success(
-                    `Plan changed to ${
-                        plan === "pro"
-                            ? "Pro"
-                            : plan === "business"
-                            ? "Business"
-                            : "Free"
-                    }.`,
+                    plan === "free"
+                        ? "Downgrade to Free scheduled for the end of the current billing period."
+                        : `Plan changed to ${
+                            plan === "pro"
+                                ? "Pro"
+                                : "Business"
+                        }.`,
                 );
 
                 await loadBilling();
@@ -673,7 +673,7 @@ const response = await fetch(
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            void changePlan("free")
+                                            void openPortal()
                                         }
                                         disabled={
                                             actionLoading !== null
