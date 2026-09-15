@@ -242,7 +242,6 @@ export default function ProfileSettingsPage() {
                             }
                             type="tel"
                             autoComplete="tel"
-                            placeholder="+49 ..."
                             className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
                         />
                     </label>

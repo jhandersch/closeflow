@@ -30,10 +30,11 @@ const plans: Array<{
         name: "Free",
         price: "€0",
         description: "Get started with the core CloseFlow CRM.",
+        // Free
         features: [
-            "50 leads",
-            "10 AI analyses",
-            "Basic forecasting",
+            "Up to 50 leads",
+            "10 AI analyses per month",
+            "Basic pipeline forecasting",
         ],
     },
     {
@@ -41,8 +42,9 @@ const plans: Array<{
         name: "Pro",
         price: "€49",
         description: "For growing sales teams.",
+        // Pro
         features: [
-            "Expanded lead capacity",
+            "Unlimited leads",
             "Advanced AI insights",
             "Advanced forecasting",
         ],
@@ -52,10 +54,11 @@ const plans: Array<{
         name: "Business",
         price: "€149",
         description: "For teams that need the full CloseFlow experience.",
+        // Business
         features: [
-            "Full CRM capabilities",
+            "Unlimited leads & customers",
             "Maximum AI capabilities",
-            "Advanced forecasting and analytics",
+            "Advanced analytics & forecasting",
         ],
     },
 ];
@@ -476,7 +479,8 @@ const response = await fetch(
                     ) : (
                         <>
                             <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                    
                                     <div>
                                         <p className="text-sm text-foreground/60">
                                             Current plan
@@ -534,7 +538,7 @@ const response = await fetch(
                                     return (
                                         <article
                                             key={plan.id}
-                                            className={`rounded-2xl border bg-surface-1 p-6 ${
+                                            className={`rounded-2xl border bg-surface-1 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/5 ${
                                                 isCurrent
                                                     ? "border-cyan-400/60"
                                                     : "border-border-subtle"
@@ -565,7 +569,7 @@ const response = await fetch(
                                                 )}
                                             </div>
 
-                                            <p className="mt-4 text-sm text-foreground/60">
+                                            <p className="mt-4 min-h-10 text-sm text-foreground/60">
                                                 {plan.description}
                                             </p>
 
@@ -593,7 +597,7 @@ const response = await fetch(
                                                     <button
                                                         type="button"
                                                         disabled
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground/50"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground/50"
                                                     >
                                                         Current plan
                                                     </button>
@@ -605,7 +609,7 @@ const response = await fetch(
                                                             currentPlan === "free" ||
                                                             actionLoading !== null
                                                         }
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
                                                     >
                                                         {actionLoading === "free"
                                                             ? "Scheduling downgrade..."
@@ -623,7 +627,7 @@ const response = await fetch(
                                                             actionLoading !==
                                                             null
                                                         }
-                                                        className="w-full rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-white px-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
                                                     >
                                                         {actionLoading ===
                                                         plan.id
@@ -644,7 +648,7 @@ const response = await fetch(
                                                         disabled={
                                                             actionLoading !== null
                                                         }
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                                     >
                                                         {actionLoading === plan.id
                                                             ? "Changing plan..."

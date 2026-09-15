@@ -12,7 +12,6 @@ type NotificationSettings = {
     email: boolean;
     taskReminders: boolean;
 };
-type SubscriptionPlan = "free" | "pro" | "enterprise";
 type Integrations = {
     google: boolean;
     gmail: boolean;
@@ -45,7 +44,6 @@ export default function SettingsPage() {
         email: true,
         taskReminders: true,
     });
-    const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan>("free");
     const [integrations, setIntegrations] = useState<Integrations>({
         google: false,
         gmail: false,
@@ -155,7 +153,6 @@ export default function SettingsPage() {
                 email: metadata.notifications?.email ?? true,
                 taskReminders: metadata.notifications?.taskReminders ?? true,
             });
-            setSubscriptionPlan((metadata.subscription_plan as SubscriptionPlan) || "free");
             setIntegrations({
                 google: metadata.integrations?.google ?? false,
                 gmail: metadata.integrations?.gmail ?? false,
@@ -237,7 +234,6 @@ export default function SettingsPage() {
                 language,
                 theme,
                 notifications,
-                subscription_plan: subscriptionPlan,
                 integrations,
                 session_count: sessionCount,
             },
@@ -662,17 +658,6 @@ export default function SettingsPage() {
             <button onClick={() => void saveApiKeys()} className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20">
                 {t("settings.apiSave", "Save API keys")}
             </button>
-        </div>
-
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t("settings.subscriptionTitle", "Subscription")}</h2>
-            <p className="mt-2 text-sm text-foreground/65">{t("settings.subscriptionSubtitle", "Current plan and growth path for your workspace.")}</p>
-
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <button onClick={() => setSubscriptionPlan("free")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "free" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.free", "Free")}</button>
-                <button onClick={() => setSubscriptionPlan("pro")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "pro" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.pro", "Pro")}</button>
-                <button onClick={() => setSubscriptionPlan("enterprise")} className={`rounded-xl border px-4 py-3 text-sm ${subscriptionPlan === "enterprise" ? "border-foreground bg-foreground text-background" : "border-border-subtle text-foreground/80"}`}>{t("settings.enterprise", "Enterprise")}</button>
-            </div>
         </div>
 
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">

@@ -227,51 +227,95 @@ export async function loadWorkspaceForUser(
         workspace: workspace as Workspace,
     };
 }
-export async function getWorkspacePayload(supabase: Awaited<ReturnType<typeof createRouteSupabase>>, workspaceId: string): Promise<WorkspacePayload> {
-    const [{ data: workspace, error: workspaceError }, { data: members, error: membersError }, { data: invites, error: invitesError }] = await Promise.all([
+export async function getWorkspacePayload(
+    supabase: Awaited<ReturnType<typeof createRouteSupabase>>,
+    workspaceId: string,
+): Promise<WorkspacePayload> {
+    const [
+        { data: workspace, error: workspaceError },
+        { data: members, error: membersError },
+        { data: invites, error: invitesError },
+        { data: subscription, error: subscriptionError },
+    ] = await Promise.all([
         supabase
             .from("workspaces")
             .select("*")
             .eq("id", workspaceId)
             .single(),
+
         supabase
             .from("workspace_members")
             .select("*")
             .eq("workspace_id", workspaceId),
+
         supabase
             .from("workspace_invites")
             .select("*")
+            .eq("workspace_id", workspaceId),
+
+        supabase
+            .from("subscriptions")
+            .select("plan")
             .eq("workspace_id", workspaceId)
+            .maybeSingle(),
     ]);
-    if (workspaceError)
+
+    if (workspaceError) {
         throw workspaceError;
-    if (membersError)
+    }
+
+    if (membersError) {
         throw membersError;
-    if (invitesError)
+    }
+
+    if (invitesError) {
         throw invitesError;
-    const memberIds = (members || [])
-        .map(m => m.user_id);
+    }
+
+    if (subscriptionError) {
+        throw subscriptionError;
+    }
+
+    const memberIds = (members || []).map(
+        (member) => member.user_id,
+    );
+
     const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
-        .in("id", memberIds.length
-        ? memberIds
-        : [
-            "00000000-0000-0000-0000-000000000000"
-        ]);
-    const profileMap = new Map((profiles || [])
-        .map(p => [
-        p.id,
-        p as UserProfile
-    ]));
+        .in(
+            "id",
+            memberIds.length
+                ? memberIds
+                : ["00000000-0000-0000-0000-000000000000"],
+        );
+
+    const profileMap = new Map(
+        (profiles || []).map((profile) => [
+            profile.id,
+            profile as UserProfile,
+        ]),
+    );
+
+    const resolvedPlan =
+        typeof subscription?.plan === "string"
+            ? subscription.plan.toLowerCase()
+            : typeof workspace.plan === "string"
+                ? workspace.plan.toLowerCase()
+                : "free";
+
     return {
-        workspace: workspace as Workspace,
-        members: (members || []).map(member => ({
+        workspace: {
+            ...(workspace as Workspace),
+            plan: resolvedPlan,
+        },
+        members: (members || []).map((member) => ({
             ...member,
             role: member.role as WorkspaceRole,
-            profile: profileMap.get(member.user_id) || null
+            profile:
+                profileMap.get(member.user_id) || null,
         })),
         invites: invites || [],
-        profile: null
+        profile: null,
     };
 }

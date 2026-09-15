@@ -24,15 +24,15 @@ const plans: Array<{
     description: string;
     features: string[];
 }> = [
-    {
+        {
         id: "free",
         name: "Free",
         price: "€0",
         description: "Get started with the core CloseFlow CRM.",
         features: [
-            "50 leads",
-            "10 AI analyses",
-            "Basic forecasting",
+            "10 AI requests / month",
+            "5 exports / month",
+            "1 team seat",
         ],
     },
     {
@@ -41,9 +41,9 @@ const plans: Array<{
         price: "€49",
         description: "For growing sales teams.",
         features: [
-            "Expanded lead capacity",
-            "Advanced AI insights",
-            "Advanced forecasting",
+            "500 AI requests / month",
+            "200 exports / month",
+            "5 team seats",
         ],
     },
     {
@@ -52,9 +52,9 @@ const plans: Array<{
         price: "€149",
         description: "For teams that need the full CloseFlow experience.",
         features: [
-            "Full CRM capabilities",
-            "Maximum AI capabilities",
-            "Advanced forecasting and analytics",
+            "5,000 AI requests / month",
+            "2,000 exports / month",
+            "20 team seats",
         ],
     },
 ];
@@ -65,6 +65,8 @@ export default function BillingPage() {
     const [actionLoading, setActionLoading] = useState<
         Plan | "portal" | null
     >(null);
+
+    const [hoveredPlan, setHoveredPlan] = useState<Plan | null>(null);
 
     const {
         loading: permissionsLoading,
@@ -472,8 +474,8 @@ export default function BillingPage() {
                         </section>
                     ) : (
                         <>
-                            <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <section className="relative translate-y-[220px] rounded-2xl border border-border-subtle bg-surface-1 p-6">
+                                <div className="flex flex-col gap-4 pt-16 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-sm text-foreground/60">
                                             Current plan
@@ -532,11 +534,25 @@ export default function BillingPage() {
                                         
                                             <article
                                                 key={plan.id}
-                                                className={`group cursor-pointer rounded-2xl border bg-gradient-to-br from-surface-1 to-surface-2 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/5 ${
+                                                onMouseEnter={() => setHoveredPlan(plan.id)}
+                                                onMouseLeave={() => setHoveredPlan(null)}
+                                                className={`group cursor-pointer rounded-2xl border bg-gradient-to-br from-surface-1 to-surface-2 p-6 ${
                                                     isCurrent
                                                         ? "border-cyan-400/60"
                                                         : "border-border-subtle"
                                                 }`}
+                                                style={{
+                                                    transform:
+                                                        hoveredPlan === plan.id
+                                                            ? "translateY(-2px)"
+                                                            : "translateY(0)",
+                                                    boxShadow:
+                                                        hoveredPlan === plan.id
+                                                            ? "0 20px 40px rgba(34, 211, 238, 0.10)"
+                                                            : "none",
+                                                    transition:
+                                                        "transform 200ms ease, box-shadow 200ms ease",
+                                                }}
                                             >
 
                                             <div className="flex items-start justify-between gap-4">
@@ -564,7 +580,7 @@ export default function BillingPage() {
                                                 )}
                                             </div>
 
-                                            <p className="mt-4 text-sm text-foreground/60">
+                                            <p className="mt-4 min-h-10 text-sm text-foreground/60">
                                                 {plan.description}
                                             </p>
 
@@ -592,7 +608,7 @@ export default function BillingPage() {
                                                     <button
                                                         type="button"
                                                         disabled
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground/50"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground/50"
                                                     >
                                                         Current plan
                                                     </button>
@@ -608,7 +624,7 @@ export default function BillingPage() {
                                                             actionLoading !==
                                                                 null
                                                         }
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
                                                     >
                                                         Manage subscription
                                                     </button>
@@ -627,7 +643,7 @@ export default function BillingPage() {
                                                             actionLoading !==
                                                                 null
                                                         }
-                                                        className="w-full rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-white px-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
                                                     >
                                                         {actionLoading ===
                                                         plan.id
@@ -648,7 +664,7 @@ export default function BillingPage() {
                                                         disabled={
                                                             actionLoading !== null
                                                         }
-                                                        className="w-full rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                                     >
                                                         {actionLoading === plan.id
                                                             ? "Changing plan..."

@@ -190,6 +190,8 @@ export async function POST(request: Request) {
             );
         }
 
+        
+
         // Free has no Stripe price.
         // Schedule cancellation at the end of the
         // current paid billing period.
