@@ -529,14 +529,16 @@ export default function BillingPage() {
                                         plan.id === "free";
 
                                     return (
-                                        <article
-                                            key={plan.id}
-                                            className={`rounded-2xl border bg-surface-1 p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 hover:bg-white/5 ${
-                                                isCurrent
-                                                    ? "border-cyan-400/60"
-                                                    : "border-border-subtle"
-                                            }`}
-                                        >
+                                        
+                                            <article
+                                                key={plan.id}
+                                                className={`group cursor-pointer rounded-2xl border bg-gradient-to-br from-surface-1 to-surface-2 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/5 ${
+                                                    isCurrent
+                                                        ? "border-cyan-400/60"
+                                                        : "border-border-subtle"
+                                                }`}
+                                            >
+
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
                                                     <h2 className="text-xl font-semibold text-foreground">
