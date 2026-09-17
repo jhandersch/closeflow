@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-type Locale = "en";
 type InsightResponse = {
     headline: string;
     detail: string;
@@ -7,11 +6,8 @@ type InsightResponse = {
     confidence: "High" | "Medium" | "Low";
 };
 export async function POST(request: NextRequest) {
-    let locale: Locale = "en";
     try {
         const payload = await request.json();
-        locale =
-            "en";
         const apiKey = process.env.OPENAI_API_KEY;
         /*
          * =========================

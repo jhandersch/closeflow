@@ -4,8 +4,13 @@ import { notify } from "@/lib/notifications"
 import type { Lead, LeadSource, LeadStatus, UpdateLeadData } from "@/types";
 type Props = {
     lead: Lead;
-    saveLead: (id: string, oldStatus: LeadStatus, data: UpdateLeadData) => Promise<Lead>;
+    saveLead: (
+        id: string,
+        oldStatus: LeadStatus,
+        data: UpdateLeadData,
+    ) => Promise<Lead>;
     onSaved: (updatedLead: Lead) => Promise<void>;
+    timeZone: string;
 };
 function getStatusNextAction(status: LeadStatus) {
     const daysByStatus: Partial<Record<LeadStatus, number>> = {

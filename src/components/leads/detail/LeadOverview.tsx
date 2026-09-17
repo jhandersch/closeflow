@@ -71,7 +71,7 @@ p-5
     <p>
 Value:
     {" "}
-EUR {(lead.value ?? 0).toLocaleString()}
+EUR {(lead.value ?? 0).toLocaleString("en-US")}
     </p>
 
 

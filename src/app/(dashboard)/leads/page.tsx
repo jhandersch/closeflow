@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import LeadFilters from "@/components/dashboard/LeadFilters";
 import { supabase } from "@/lib/supabase/client";
 import { getHealthScore, getPriorityScore, getStaleDays } from "@/lib/scoring";
@@ -41,10 +40,142 @@ const escapeCsv = (value: unknown) => {
     }
     return text;
 };
+
+const DEFAULT_TIMEZONE = "Europe/Berlin";
+
+const getDateKey = (value: Date, timeZone: string) => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).formatToParts(value);
+
+    const values = Object.fromEntries(
+        parts
+            .filter((part) => part.type !== "literal")
+            .map((part) => [part.type, part.value]),
+    );
+
+    return `${values.year}-${values.month}-${values.day}`;
+};
+
+const addCalendarDays = (
+    dateKey: string,
+    days: number,
+) => {
+    const [year, month, day] = dateKey
+        .split("-")
+        .map(Number);
+
+    const date = new Date(
+        Date.UTC(year, month - 1, day),
+    );
+
+    date.setUTCDate(date.getUTCDate() + days);
+
+    return date.toISOString().slice(0, 10);
+};
+
+const getTimezoneOffsetMs = (
+    date: Date,
+    timeZone: string,
+) => {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(date);
+
+    const values = Object.fromEntries(
+        parts
+            .filter((part) => part.type !== "literal")
+            .map((part) => [part.type, part.value]),
+    );
+
+    const localAsUTC = Date.UTC(
+        Number(values.year),
+        Number(values.month) - 1,
+        Number(values.day),
+        Number(values.hour),
+        Number(values.minute),
+        Number(values.second),
+    );
+
+    return localAsUTC - date.getTime();
+};
+
+const zonedLocalToISOString = (
+    value: string,
+    timeZone: string,
+) => {
+    const match =
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+
+    if (!match) {
+        return null;
+    }
+
+    const [, year, month, day, hour, minute] = match;
+
+    const wallClockUTC = Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hour),
+        Number(minute),
+        0,
+    );
+
+    let timestamp = wallClockUTC;
+
+    for (let index = 0; index < 3; index += 1) {
+        const offset = getTimezoneOffsetMs(
+            new Date(timestamp),
+            timeZone,
+        );
+
+        const nextTimestamp = wallClockUTC - offset;
+
+        if (nextTimestamp === timestamp) {
+            break;
+        }
+
+        timestamp = nextTimestamp;
+    }
+
+    return new Date(timestamp).toISOString();
+};
+
+const formatDateTime = (
+    value: string,
+    timeZone: string,
+) => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone,
+    }).format(date);
+};
+
 export default function LeadsPage() {
-    const { leads, setLeads, loading, error, refresh } = useLeadsData({ activityLimit: 0 });
-    const { language } = useAppPreferences();
+    const { leads, setLeads, loading, error, refresh } =
+    useLeadsData({ activityLimit: 0 });
+
     const locale = "en-US";
+    const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
+    const todayKey = getDateKey(new Date(), timezone);
     const router = useRouter();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("all");
@@ -112,6 +243,29 @@ export default function LeadsPage() {
             return nextFavorites;
         });
     };
+
+    useEffect(() => {
+    const loadTimezone = async () => {
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+            return;
+        }
+
+        const savedTimezone =
+            typeof user.user_metadata?.timezone === "string" &&
+            user.user_metadata.timezone.trim()
+                ? user.user_metadata.timezone
+                : DEFAULT_TIMEZONE;
+
+        setTimezone(savedTimezone);
+    };
+
+    void loadTimezone();
+}, []);
+
     useEffect(() => {
         const loadCurrentUser = async () => {
             const { data: { user }, } = await supabase.auth.getUser();
@@ -121,13 +275,8 @@ export default function LeadsPage() {
     }, []);
     const filteredLeads = useMemo(() => {
         const query = search.trim().toLowerCase();
-        const now = new Date();
-        const startOfToday = new Date(now);
-        startOfToday.setHours(0, 0, 0, 0);
-        const sevenDaysAgo = new Date(startOfToday);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        const thirtyDaysAgo = new Date(startOfToday);
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        const sevenDaysAgoKey = addCalendarDays(todayKey, -6);
+        const thirtyDaysAgoKey = addCalendarDays(todayKey, -29);
         return [...leads]
             .filter((lead) => {
             if (lead.status === "won" || lead.status === "lost") {
@@ -144,6 +293,7 @@ export default function LeadsPage() {
         ${lead.phone || ""}
       `.toLowerCase();
             const createdAt = new Date(lead.created_at);
+            const createdAtKey = getDateKey(createdAt, timezone);
             // Search
             const matchesQuery = !query || searchableText.includes(query);
             // Status
@@ -169,11 +319,16 @@ export default function LeadsPage() {
                 (ownerFilter === "unassigned" &&
                     !leadOwnerId);
             // Zeitraum
-            const matchesDateRange = dateRange === "all" ||
-                (dateRange === "today" && createdAt >= startOfToday) ||
-                (dateRange === "last7" && createdAt >= sevenDaysAgo) ||
-                (dateRange === "last30" && createdAt >= thirtyDaysAgo) ||
-                (dateRange === "older30" && createdAt < thirtyDaysAgo);
+            const matchesDateRange =
+              dateRange === "all" ||
+              (dateRange === "today" &&
+                  createdAtKey === todayKey) ||
+              (dateRange === "last7" &&
+                  createdAtKey >= sevenDaysAgoKey) ||
+              (dateRange === "last30" &&
+                  createdAtKey >= thirtyDaysAgoKey) ||
+              (dateRange === "older30" &&
+                  createdAtKey < thirtyDaysAgoKey);
             return (matchesQuery &&
                 matchesStatus &&
                 matchesPriority &&
@@ -208,18 +363,20 @@ export default function LeadsPage() {
             }
             return getPriorityScore(b) - getPriorityScore(a);
         });
-    }, [
-        currentUserId,
-        dateRange,
-        favorites,
-        leads,
-        ownerFilter,
-        priority,
-        search,
-        sortBy,
-        sourceFilter,
-        status,
-    ]);
+      }, [
+      currentUserId,
+      dateRange,
+      favorites,
+      leads,
+      ownerFilter,
+      priority,
+      search,
+      sortBy,
+      sourceFilter,
+      status,
+      timezone,
+      todayKey,
+  ]);
     const getAuthHeaders = async (includeJson = false) => {
         const { data: { session }, } = await supabase.auth.getSession();
         const headers: Record<string, string> = {};
@@ -409,8 +566,8 @@ export default function LeadsPage() {
             website: website.trim() || null,
             next_action: nextAction.trim() || null,
             next_action_date: nextActionDate
-                ? new Date(nextActionDate).toISOString()
-                : null,
+            ? zonedLocalToISOString(nextActionDate, timezone)
+            : null,
         };
         const response = await fetch("/api/leads", {
             method: "POST",
@@ -1022,14 +1179,41 @@ export default function LeadsPage() {
                       </p>
                     </div>
 
-                    {lead.next_action_date ? (<div className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${new Date(lead.next_action_date) < new Date()
-                            ? "bg-red-500/10 text-red-400"
-                            : "bg-emerald-500/10 text-emerald-400"}`}>
-                        {"Due"}{" "}
-                        {new Date(lead.next_action_date).toLocaleDateString(locale)}
-                      </div>) : (<span className="shrink-0 text-xs text-foreground/35">
-                        {"No date"}
-                      </span>)}
+                    {lead.next_action_date ? (
+    (() => {
+        const nextActionDate = new Date(
+            lead.next_action_date,
+        );
+
+        const nextActionDateKey = getDateKey(
+            nextActionDate,
+            timezone,
+        );
+
+        const isOverdue =
+            nextActionDateKey < todayKey;
+
+        return (
+            <div
+                className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium ${
+                    isOverdue
+                        ? "bg-red-500/10 text-red-400"
+                        : "bg-emerald-500/10 text-emerald-400"
+                }`}
+            >
+                Due{" "}
+                {formatDateTime(
+                    lead.next_action_date,
+                    timezone,
+                )}
+            </div>
+        );
+    })()
+) : (
+    <span className="shrink-0 text-xs text-foreground/35">
+        No date
+    </span>
+)}
                   </div>
 
                   {/* FOOTER */}

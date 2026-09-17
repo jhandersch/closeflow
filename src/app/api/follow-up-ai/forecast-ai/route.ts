@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-export async function POST(req: Request) {
-    let locale: "en" = "en";
-    try {
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-        const { pipelineValue, weightedRevenue, revenueAtRisk, pipelineCoverage, leads, language, } = await req.json();
-        locale =
-            "en";
-        const prompt = `
 
+export async function POST(req: Request) {
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const {
+      pipelineValue,
+      weightedRevenue,
+      revenueAtRisk,
+      pipelineCoverage,
+      leads,
+    } = await req.json();
+
+    const prompt = `
 Analyze this CRM revenue forecast.
 
 Financial overview:
@@ -18,25 +23,18 @@ Financial overview:
 Pipeline value:
 €${pipelineValue}
 
-
 Expected weighted revenue:
 €${weightedRevenue}
-
 
 Revenue at risk:
 €${revenueAtRisk}
 
-
 Pipeline confidence:
 ${pipelineCoverage}%
-
-
 
 Opportunity data:
 
 ${JSON.stringify(leads, null, 2)}
-
-
 
 Analyze:
 
@@ -48,7 +46,6 @@ Analyze:
 - inactive opportunities
 - next best actions
 
-
 Important:
 
 Focus on actionable sales decisions.
@@ -58,74 +55,72 @@ Identify:
 - biggest revenue risks
 - recommended sales actions
 
-
 Return ONLY valid JSON:
-
 
 {
   "summary": "short forecast explanation",
-
   "positiveFactors": [
     "factor 1",
     "factor 2"
   ],
-
   "risks": [
     "risk 1",
     "risk 2"
   ],
-
   "recommendation": "specific next action"
 }
 
-
-All text must be written in ${"English"}.
+All text must be written in English.
 
 Keep answers concise.
-
 `;
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4.1-mini",
-            temperature: 0.25,
-            response_format: {
-                type: "json_object",
-            },
-            messages: [
-                {
-                    role: "system",
-                    content: `
+
+    const completion =
+      await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        temperature: 0.25,
+        response_format: {
+          type: "json_object",
+        },
+        messages: [
+          {
+            role: "system",
+            content: `
 You are an expert B2B revenue forecasting analyst inside a CRM.
 
 Your goal is to help sales teams understand future revenue and improve decisions.
 
-Always return valid JSON only.
+Always return valid JSON only and write all text values in English.
+`,
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
 
-`
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ]
-        });
-        const content = completion
-            .choices[0]
-            .message
-            .content;
-        if (!content) {
-            throw new Error("No AI response");
-        }
-        return NextResponse.json(JSON.parse(content));
+    const content =
+      completion.choices[0].message.content;
+
+    if (!content) {
+      throw new Error("No AI response");
     }
-    catch (error) {
-        console.error("FORECAST AI ERROR:", error);
-        return NextResponse.json({
-            summary: "Forecast analysis failed.",
-            positiveFactors: [],
-            risks: [],
-            recommendation: "Review pipeline manually.",
-        }, {
-            status: 200
-        });
-    }
+
+    return NextResponse.json(JSON.parse(content));
+  } catch (error) {
+    console.error("FORECAST AI ERROR:", error);
+
+    return NextResponse.json(
+      {
+        summary: "Forecast analysis failed.",
+        positiveFactors: [],
+        risks: [],
+        recommendation: "Review pipeline manually.",
+      },
+      {
+        status: 200,
+      },
+    );
+  }
 }

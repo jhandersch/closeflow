@@ -7,7 +7,6 @@ import RevenueChart from "@/components/dashboard/RevenueChart";
 import PipelineChart from "@/components/dashboard/PipelineChart";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useLeadsData } from "@/hooks/useLeadsData";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
 function MetricCard({ label, value, hint }: {
     label: string;
     value: string;
@@ -20,7 +19,6 @@ function MetricCard({ label, value, hint }: {
     </div>);
 }
 export default function AnalyticsPage() {
-    const { language } = useAppPreferences();
     const locale = "en-US";
     const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true });
     const metrics = useDashboardMetrics(leads);

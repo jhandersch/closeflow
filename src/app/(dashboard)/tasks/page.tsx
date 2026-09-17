@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
 import TaskBoard from "@/components/tasks/TaskBoard";
 import TaskCalendar from "@/components/tasks/TaskCalendar";
@@ -21,9 +20,27 @@ const normalizePriority = (value: unknown): TaskPriority => {
     }
     return "medium";
 };
+
+const getTodayKey = (timezone: string) => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(
+        parts
+            .filter((part) => part.type !== "literal")
+            .map((part) => [part.type, part.value]),
+    );
+
+    return `${values.year}-${values.month}-${values.day}`;
+};
+
 export default function TasksPage() {
-    const { language } = useAppPreferences();
     const locale = "en-US";
+    const [timezone, setTimezone] = useState("Europe/Berlin");
     const [tasks, setTasks] = useState<Task[]>([]);
     const [leads, setLeads] = useState<LeadOption[]>([]);
     const [filter, setFilter] = useState("all");
@@ -109,6 +126,15 @@ export default function TasksPage() {
                 setLoading(false);
                 return;
             }
+
+            const savedTimezone =
+                typeof user.user_metadata?.timezone === "string" &&
+                user.user_metadata.timezone.trim()
+                    ? user.user_metadata.timezone
+                    : "Europe/Berlin";
+
+            setTimezone(savedTimezone);
+
             const taskQuery = supabase
                 .from("tasks")
                 .select("*")
@@ -359,17 +385,20 @@ export default function TasksPage() {
             return tasks.filter((task) => task.completed);
         }
         if (filter === "overdue") {
-            const today = new Date()
-                .toISOString()
-                .slice(0, 10);
-            return tasks.filter((task) => !task.completed &&
-                task.due_date &&
-                task.due_date.slice(0, 10) < today);
+            const today = getTodayKey(timezone);
+
+            return tasks.filter(
+                (task) =>
+                    !task.completed &&
+                    Boolean(task.due_date) &&
+                    task.due_date!.slice(0, 10) < today,
+            );
         }
         return tasks;
     }, [
         filter,
         tasks,
+        timezone,
     ]);
     /*
      * =========================
@@ -570,10 +599,20 @@ export default function TasksPage() {
                 space-y-6
               ">
 
-              <TaskBoard tasks={filteredTasks} onToggleTask={toggleTask} onDeleteTask={deleteTask} onEditTask={editTask} locale={locale}/>
+              <TaskBoard
+                tasks={filteredTasks}
+                onToggleTask={toggleTask}
+                onDeleteTask={deleteTask}
+                onEditTask={editTask}
+                locale={locale}
+                timeZone={timezone}
+            />
 
 
-              <TaskCalendar tasks={filteredTasks.filter((task) => Boolean(task.due_date))}/>
+              <TaskCalendar
+                tasks={filteredTasks.filter((task) => Boolean(task.due_date))}
+                timeZone={timezone}
+            />
 
             </div>)}
 

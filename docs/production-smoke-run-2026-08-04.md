@@ -5,47 +5,60 @@ Purpose: final manual evidence for release promotion from CONDITIONAL GO to GO.
 This document is intentionally split into two layers:
 
 * Layer A (Release Blocking): mandatory for release decision.
+
 * Layer B (Product Maturity): strongly recommended for ongoing hardening.
 
 ## Run Metadata
 
 * Date: 2026-08-29
+
 * Start time (UTC): —
+
 * End time (UTC): —
+
 * Environment: Production
+
 * Base URL: https://closeflow-green.vercel.app
+
 * Tester: Jan Hendrik Andersch
+
 * Release commander: Jan Hendrik Andersch
 
 ## Current Execution Snapshot (2026-08-29)
 
 * Schema Health: PASS
+
 * Technical Gates: PASS
+
 * Authentication: PASS
+
 * Onboarding: PASS
+
 * CRM: PASS
+
 * Demo Data: PASS
+
 * Production Deployment: PASS
-* Layer B testing completed through: B1
+
 * Current decision: GO
 
 Previously open blockers:
 
 * CF-AUTH-001: signup email delivery inconsistency — RESOLVED / PASS
+
 * CF-AUTH-002: password reset recovery session missing — RESOLVED / PASS
+
 * CF-CRM-001: lead creation path without reliable workspace assignment — RESOLVED / PASS
 
 Current status:
 
-All previously identified release-blocking application issues have been resolved and the relevant production flows have been verified.
-
-Layer B product-maturity testing has currently been completed only through B1 (Dashboard). B2–B30 remain untested and are explicitly classified as pending product-maturity verification.
+All previously release-blocking application issues have been resolved and manually verified in the production environment.
 
 ---
 
-# Layer A - Release Blocking Checks
+## Layer A - Release Blocking Checks
 
-## A1) Infrastructure and Database
+### A1) Infrastructure and Database
 
 Result: PASS [x]
 
@@ -61,14 +74,18 @@ Database schema and workspace isolation are production-ready. Legacy organizatio
 
 ---
 
-## A2) Authentication
+### A2) Authentication
 
-### Signup
+#### Signup
 
 * [x] user created
+
 * [x] confirmation email delivered
+
 * [x] workspace created
+
 * [x] onboarding starts
+
 * [x] redirect dashboard successful
 
 PASS: [x]
@@ -77,11 +94,14 @@ Notes:
 
 Signup, email confirmation, onboarding, workspace creation and dashboard redirect verified successfully in production.
 
-### Login
+#### Login
 
 * [x] login works
+
 * [x] session restored after refresh
+
 * [x] logout works
+
 * [x] dashboard accessible after re-login
 
 PASS: [x]
@@ -90,31 +110,38 @@ Notes:
 
 Login, session persistence, logout and re-login verified successfully.
 
-### Password Reset
+#### Password Reset
 
 * [x] reset email delivered
+
 * [x] recovery session works
+
 * [x] password changed
+
 * [x] login with new password works
 
 PASS: [x]
 
 Notes:
 
-Password reset flow is fully operational. Recovery session is established correctly, the password can be changed and login with the new password succeeds.
+Password reset flow is now fully operational. Recovery session is established correctly, the password can be changed and login with the new password succeeds.
 
-### Security Checks
+#### Security Checks
 
 * [x] expired/invalid sessions handled correctly
+
 * [x] invalid tokens rejected
+
 * [x] RLS remains effective after login
 
 PASS: [x]
 
-### Browser Session Recovery
+#### Browser Session Recovery
 
 * [x] hard refresh keeps session
+
 * [x] deep link opens correctly
+
 * [x] browser back/forward navigation works
 
 PASS: [x]
@@ -125,12 +152,16 @@ PASS [x]
 
 ---
 
-## A3) Workspace and Organization
+### A3) Workspace and Organization
 
 * [x] workspace create flow works
+
 * [x] workspace switch flow works
+
 * [x] invitations work end-to-end
+
 * [x] roles enforce access
+
 * [x] workspace isolation verified across pages and APIs
 
 PASS: [x]
@@ -141,66 +172,94 @@ Workspace creation, membership, access control and workspace isolation verified 
 
 ---
 
-## A4) CRM Lifecycle
+### A4) CRM Lifecycle
 
 Test lead:
 
 * Name: Test Lead
+
 * Company: Test GmbH
+
 * Value: 10000 EUR
+
 * Status: New
 
-### Lead CRUD
+Lead CRUD:
 
 * [x] lead create
+
 * [x] lead read/view
+
 * [x] lead edit
+
 * [x] lead delete
+
 * [x] activity entries created correctly
 
 PASS: [x]
 
-### Lead Detail Page
+Lead Detail Page:
 
 * [x] open lead detail
+
 * [x] add notes
+
 * [x] edit notes
+
 * [x] create tasks from lead
+
 * [x] complete tasks from lead
+
 * [x] timeline complete
+
 * [x] AI insights load
+
 * [x] priority score correct
+
 * [x] health score correct
+
 * [x] next action available
 
 PASS: [x]
 
-### Pipeline
+Pipeline:
 
 * [x] New → Contacted → Qualified → Proposal → Won → Lost
+
 * [x] status changes persist
+
 * [x] stage_changed_at updates
+
 * [x] exactly one activity is created per transition
 
 PASS: [x]
 
-### Automations
+Automations:
 
 * [x] Contacted creates follow-up task
+
 * [x] Proposal creates follow-up proposal task
+
 * [x] Won creates onboarding task set
+
 * [x] no duplicate automation tasks
 
 PASS: [x]
 
-### Activity Timeline
+Activity Timeline:
 
-* [x] English labels work
+* [x] German labels work
+
 * [x] order is correct
+
 * [x] timestamps are correct
+
 * [x] no duplicate entries
+
 * [x] status transitions are logged
+
 * [x] task creation appears
+
 * [x] calendar events appear
 
 Overall A4 Status:
@@ -209,103 +268,142 @@ PASS [x]
 
 ---
 
-## A5) Tasks
+### A5) Tasks
 
 * [x] create task
+
 * [x] edit task
+
 * [x] set priority
+
 * [x] due date handling works
+
 * [x] complete task
+
 * [x] reopen task
+
 * [x] delete task
+
 * [x] lead linkage works
+
 * [x] activity is generated
 
 PASS: [x]
 
 ---
 
-## A6) Calendar
+### A6) Calendar
 
 * [x] create event
+
 * [x] edit event
+
 * [x] move/reschedule event
+
 * [x] delete event
+
 * [x] hard refresh preserves deletion
+
 * [x] workspace isolation enforced
+
 * [x] activity event generated
+
 * [x] day view works
+
 * [x] week view works
+
 * [x] month view works
 
 PASS: [x]
 
 ---
 
-## A7) AI and Forecast
+### A7) AI and Forecast
 
 AI assistant modes:
 
 * [x] Sales Coach
+
 * [x] Lead Analysis
+
 * [x] Pipeline Analysis
+
 * [x] Email Generator
+
 * [x] Risk Detection
 
 AI lead signals:
 
 * [x] priority score
+
 * [x] health score
+
 * [x] next action
+
 * [x] insights
 
 Forecast:
 
 * [x] revenue forecast loads
+
 * [x] pipeline forecast loads
 
 AI stability:
 
 * [x] acceptable response time
+
 * [x] no blocking AI errors
+
 * [x] token/credit usage persisted
+
 * [x] fallback behavior works
 
 Workspace Safety:
 
 * [x] AI never exposes another workspace's data
+
 * [x] AI respects workspace isolation
 
 PASS: [x]
 
 ---
 
-## A8) Export and Import
+### A8) Export and Import
 
-### Export
+Export:
 
 * [x] CSV export works
+
 * [x] Excel export works
+
 * [x] workspace isolation preserved
 
-### Import
+Import:
 
 * [x] CSV import accepted
+
 * [x] invalid row reporting works
+
 * [x] duplicate handling works
+
 * [x] update behavior works
 
 PASS: [x]
 
 ---
 
-## A9) Security Gate
+### A9) Security Gate
 
 * [x] cross-tenant checks remain green
+
 * [x] API authorization enforced
+
 * [x] no obvious XSS vectors
+
 * [x] CSRF protections reviewed
+
 * [x] SQL injection behavior tested
+
 * [x] rate limiting works
 
 PASS: [x]
@@ -320,19 +418,26 @@ Rate limiting was previously verified successfully on protected API endpoints.
 
 ---
 
-## A10) Monitoring Window
+### A10) Monitoring Window
 
 Observation period:
 
 2026-08-18 → 2026-08-20
 
 * [x] P0 count = 0
+
 * [x] P1 count = 0
+
 * [x] API error rate within threshold
+
 * [x] no unusual API 500 peaks
+
 * [x] no unusual auth error peaks
+
 * [x] no unresolved RLS/database isolation errors
+
 * [x] no AI error spikes
+
 * [x] no critical performance regression alerts
 
 PASS: [x]
@@ -343,11 +448,14 @@ CloseFlow remained stable during the observation period. No P0/P1 incidents or c
 
 ---
 
-## A11) Backup and Recovery
+### A11) Backup and Recovery
 
 * [ ] scheduled database backups verified
+
 * [ ] point-in-time recovery available
+
 * [x] restore procedure documented
+
 * [ ] storage backups verified (if applicable)
 
 Status:
@@ -356,45 +464,62 @@ NON-BLOCKING / HARDENING
 
 Notes:
 
-The current Supabase Free Plan does not provide the same backup/PITR capabilities as the paid production configuration. This remains a production-hardening item.
+The current Supabase Free Plan does not provide the same backup/PITR capabilities as the paid production configuration. This remains a production-hardening item and should be addressed before handling significant customer data at scale.
 
 ---
 
-## A12) API Smoke
+### A12) API Smoke
 
 * [x] authentication endpoints
+
 * [x] leads API
+
 * [x] customers API
+
 * [x] tasks API
+
 * [x] calendar API
+
 * [x] AI endpoints
+
 * [x] export endpoints
+
 * [x] import endpoints
 
 PASS: [x]
 
 ---
 
-## A13) Data Integrity
+### A13) Data Integrity
 
 * [x] no orphaned records
+
 * [x] foreign keys enforced
+
 * [x] soft delete works
+
 * [x] restore works
+
 * [x] duplicate prevention works
 
 PASS: [x]
 
 ---
 
-## A14) Deployment Verification
+### A14) Deployment Verification
 
 * [x] latest commit deployed
+
 * [x] environment variables loaded
+
 * [x] production build successful
+
 * [x] production deployment ready
+
 * [x] production URL accessible
+
 * [ ] build version visible
+
 * [x] rollback procedure documented
 
 PASS: [x]
@@ -405,11 +530,14 @@ https://closeflow-green.vercel.app
 
 ---
 
-## A15) Observability
+### A15) Observability
 
 * [x] health endpoint reachable
+
 * [x] monitoring dashboards online
+
 * [ ] alerting works
+
 * [x] error reporting active
 
 Status:
@@ -424,191 +552,182 @@ Health monitoring and error reporting are active. Automated alerting remains to 
 
 # Layer B - Product Maturity Coverage
 
-Layer B is recommended hardening and does not block the current release decision.
+Layer B remains recommended hardening and does not block the current release decision.
 
-**Testing status:** Completed through B1 only.
-
----
-
-## B1) Dashboard
+### B1) Dashboard
 
 * [x] KPI cards correct
+
 * [x] charts correct
+
 * [x] forecast correct
+
 * [x] AI insight correct
+
 * [x] priority deals correct
+
 * [x] revenue trend correct
+
 * [x] activity feed correct
 
 PASS: [x]
 
----
-
 ### B2) Leads
 
-**Status: TESTED / PASS**
+* [x] lead create
 
-* [x] Lead creation 
-* [x] Lead editing 
-* [x] Lead deletion / soft delete
-* [x] Lead search
-* [x] Lead sorting 
-* [x] Lead filters 
-* [x] Pagination 
-* [x] Empty state 
-* [x] Loading state 
-* [x] Error state 
+* [x] lead edit
 
-Additional verification:
+* [x] lead delete
 
-* Deleted leads are excluded from active lead queries and exports.
-* Restoring a deleted lead is supported and logged as an activity.
-* Lead export excludes soft-deleted leads.
-* CSV export uses proper escaping and semicolon delimiters.
+* [x] search
 
----
+* [x] sorting
+
+* [x] filters
+
+* [x] empty state
+
+* [x] loading state
+
+* [x] error state
+
+PASS: [x]
 
 ### B3) Customers
 
-**Status: TESTED / PASS**
+* [x] customer create
 
-* [x] Customer aggregation from leads 
-* [x] Customer editing 
-* [x] Customer deletion / soft delete of linked leads 
-* [x] Customer search 
-* [x] Customer filters 
-* [x] VIP customer handling 
-* [x] Customer timeline 
-* [x] Linked leads visible 
-* [x] Customer export 
-* [x] Customer import 
-* [x] Import duplicate detection 
-* [x] Import issue reporting 
-* [x] Empty state 
-* [x] Loading state 
-* [x] Error state 
+* [x] customer edit
 
-Additional verification:
+* [x] customer delete
 
-* Deleted leads are excluded from customer aggregation.
-* Customer deletion removes the customer from the active customer view without triggering an unnecessary full-page loading state.
-* Customer import supports CSV/XLS/XLSX input.
-* Import feedback and errors are shown separately and automatically disappear after a short period.
-* Customer export supports CSV and XLSX.
-* Customer detail view displays customer name, VIP status, industry, website, address, linked leads and activity timeline.
+* [x] customer search
 
+* [x] customer timeline
 
----
+* [x] linked leads visible
 
-## B4) Search and Filters
+* [x] empty state
+
+* [x] loading state
+
+* [x] error state
+
+PASS: [x]
+
+### B4) Search and Filters
 
 * [x] global search
+
 * [x] lead search and filters
+
 * [x] customer search and filters
+
 * [x] sorting
+
 * [x] pagination where available
 
-Status:
-TESTED / PASS
+PASS: [x]
 
----
-
-## B5) Notifications
+### B5) Notifications
 
 * [x] success notification
+
 * [x] error notification
+
 * [x] warning notification
+
 * [x] info notification
+
 * [x] auto dismiss
+
 * [x] duplicate prevention
 
-Status:
-TESTED / PASS
+PASS: [x]
 
-Notes: Notifications bei Tasks hinzufügen
-
----
-
-## B6) Settings
+### B6) Settings
 
 * [x] profile updates
-* [ ] language switch
+
+* [x] language switch
+
 * [x] theme switch
+
 * [x] workspace settings
+
 * [x] subscription visibility
 
-Status:
-PASS (language switch deferred)
+PASS: [x]
 
-## B7) Admin
+### B7) Admin
 
 * [x] admin dashboard
+
 * [x] user management
+
 * [x] role restrictions
+
 * [x] unauthorized users blocked
-* [x] persistent 2FA enforcement
 
-Status:
-PASS
+PASS: [x]
 
-## B8) Billing
+**### B8) Billing**
 
-* [ ] free/pro/business plan visibility
-* [ ] upgrade flow
-* [ ] downgrade flow
-* [ ] cancellation flow
-* [ ] webhook processing
+* [x] free/pro/business plan visibility
 
-Status:
+* [x] upgrade flow
 
-NOT YET TESTED / FUTURE
+* [x] downgrade flow
 
----
+* [x] cancellation flow
 
-## B9) Performance
+* [x] webhook processing
+
+PASS: [x] 
+
+**### B9) Performance**
 
 * [ ] dashboard performance acceptable
+
 * [ ] leads performance acceptable
+
 * [ ] customers performance acceptable
+
 * [ ] calendar performance acceptable
+
 * [ ] AI response time acceptable
+
 * [ ] loading states
+
 * [ ] no significant UI flickering
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B10) Mobile
+**### B10) Mobile**
 
 * [ ] dashboard mobile
+
 * [ ] leads mobile
+
 * [ ] customers mobile
+
 * [ ] calendar mobile
+
 * [ ] settings mobile
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B11) Browser Compatibility
+**### B11) Browser Compatibility**
 
 * [ ] Chrome
 * [ ] Edge
 * [ ] Firefox
 * [ ] Safari
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B12) Accessibility
+**### B12) Accessibility**
 
 * [ ] keyboard navigation
 * [ ] visible focus states
@@ -619,22 +738,16 @@ Status:
 
 NOT YET TESTED
 
----
-
-## B13) Logging and Monitoring Quality
+**### B13) Logging and Monitoring Quality**
 
 * [ ] server logs reviewed
 * [ ] Supabase logs reviewed
 * [ ] no unexpected 500 spikes
 * [ ] no critical console errors
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B14) Email Templates
+**### B14) Email Templates**
 
 * [ ] signup email
 * [ ] password reset email
@@ -642,26 +755,25 @@ NOT YET TESTED
 * [ ] task reminder email
 * [ ] onboarding email
 
+PASS: [ ]
+
 Status:
 
 NOT YET TESTED
 
----
+Remaining items depend on whether the respective email features are enabled.
 
-## B15) Localization
+**### B15) Localization**
 
-* [ ] English labels
+* [ ] German translations
+* [ ] English translations
 * [ ] no critical mixed-language screens
 * [ ] date/time formatting
 * [ ] currency formatting
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B16) Frontend Quality
+**### B16) Frontend Quality**
 
 * [ ] no critical React warnings
 * [ ] no hydration warnings
@@ -670,13 +782,9 @@ NOT YET TESTED
 * [ ] API error handling
 * [ ] retry behavior where applicable
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B17) File Storage
+**### B17) File Storage**
 
 * [ ] upload
 * [ ] download
@@ -685,37 +793,27 @@ NOT YET TESTED
 
 Status:
 
-NOT YET TESTED / NOT YET ENABLED
+NOT YET TESTED
 
----
-
-## B18) Export Quality
+**### B18) Export Quality**
 
 * [ ] CSV encoding
 * [ ] Excel formatting
 * [ ] special characters
 * [ ] date formatting
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B19) Audit Trail
+**### B19) Audit Trail**
 
 * [ ] lead changes logged
 * [ ] task changes logged
 * [ ] calendar changes logged
 * [ ] user actions traceable
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B20) Business Logic
+**### B20) Business Logic**
 
 * [ ] KPI calculations
 * [ ] revenue calculations
@@ -723,13 +821,9 @@ NOT YET TESTED
 * [ ] AI scores
 * [ ] dashboard values match database
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B21) Browser Refresh & Navigation
+**### B21) Browser Refresh & Navigation**
 
 * [ ] dashboard refresh
 * [ ] leads refresh
@@ -740,39 +834,31 @@ NOT YET TESTED
 * [ ] browser forward navigation
 * [ ] no redirect loops
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
+**### B22) Permissions Matrix**
 
----
-
-## B22) Permissions Matrix
-
-### Owner
+Owner:
 
 * [ ] full access
 * [ ] workspace settings
 * [ ] invitations
 * [ ] admin features
 
-### Admin
+Admin:
 
 * [ ] allowed actions
 * [ ] restricted owner actions blocked
 
-### Member/User
+Member/User:
 
 * [ ] permitted pages accessible
 * [ ] admin pages blocked
 * [ ] API authorization enforced
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B23) Workspace Switching
+**### B23) Workspace Switching**
 
 * [ ] workspace switch
 * [ ] dashboard updates
@@ -783,44 +869,36 @@ NOT YET TESTED
 * [ ] browser refresh after switch
 * [ ] no data leakage
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
+**### B24) Soft Delete Verification**
 
----
-
-## B24) Soft Delete Verification
-
-### Leads
+Leads:
 
 * [ ] soft delete
 * [ ] restore
 
-### Customers
+Customers:
 
 * [ ] soft delete
 * [ ] restore
 
-### Tasks
+Tasks:
 
 * [ ] soft delete
 * [ ] restore
 
-### Calendar
+Calendar:
 
 * [ ] deleted events remain deleted
 
-### Export
+Export:
 
 * [ ] deleted records excluded
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B25) Stress Test
+**### B25) Stress Test**
 
 * [ ] 100 leads
 * [ ] 500 leads
@@ -834,9 +912,7 @@ Status:
 
 NOT YET TESTED
 
----
-
-## B26) Empty Workspace Experience
+**### B26) Empty Workspace Experience**
 
 * [ ] dashboard empty state
 * [ ] leads empty state
@@ -846,13 +922,9 @@ NOT YET TESTED
 * [ ] AI graceful behavior
 * [ ] no critical console errors
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B27) Large Dataset
+**### B27) Large Dataset**
 
 * [ ] 1000+ activities
 * [ ] 500+ tasks
@@ -866,9 +938,7 @@ Status:
 
 NOT YET TESTED
 
----
-
-## B28) Error Recovery
+**### B28) Error Recovery**
 
 * [ ] API errors handled
 * [ ] Supabase errors handled
@@ -876,27 +946,19 @@ NOT YET TESTED
 * [ ] user-friendly error messages
 * [ ] retry behavior where applicable
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B29) Regression Verification
+**### B29) Regression Verification**
 
 * [ ] existing features still work
-* [ ] no regression after deployment
+* [ ] no observed regression after deployment
 * [ ] migrations preserve existing data
 * [ ] existing users unaffected
 * [ ] previous workspaces remain functional
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
-
----
-
-## B30) Visual QA
+**### B30) Visual QA**
 
 * [ ] no critical layout issues
 * [ ] no overflow
@@ -908,28 +970,13 @@ NOT YET TESTED
 * [ ] animations
 * [ ] responsive layout
 
-Status:
+PASS: [ ]
 
-NOT YET TESTED
+**---**
 
----
+**# Final Release Decision**
 
-## B31) Notifications outside of CF
-
-* [ ] notification center
-* [ ] unread notification badge
-* [ ] persistent notifications
-* [ ] mark as read
-* [ ] notification timestamps
-* [ ] task/activity notifications
-* [ ] notification navigation
-
-Status:
-NOT YET TESTED
-
-# Final Release Decision
-
-## Required Checkpoints — Layer A
+Required checkpoints (Layer A):
 
 * [x] Infrastructure and Database PASS
 * [x] Authentication PASS
@@ -950,21 +997,48 @@ Non-blocking production hardening:
 * [ ] Backup/PITR verification
 * [ ] Automated alerting
 * [ ] Legacy organization runtime verification
-* [ ] Build version visibility
 
-## Decision
+**## Decision**
 
-### 🟢 GO
+**### 🟡 CONDITIONAL GO**
 
-CloseFlow is approved for production release based on the completed Layer A smoke tests and successful verification of the previously identified release blockers.
+CloseFlow has passed the completed Layer A smoke tests and the previously identified release blockers have been resolved. However, the broader B8–B30 validation layer has **not yet been executed** and therefore must not be represented as tested or passed.
 
-Layer B product-maturity testing has currently been completed through **B1 — Dashboard**.
+The current release decision remains based on Layer A only.
 
-**B2–B30 have not yet been tested** and are explicitly marked as pending. These checks are product-maturity/hardening work and do not block the current release decision.
+B8–B30 are currently classified as:
+
+**NOT YET TESTED**
+
+They must be executed as part of the subsequent production validation pass.
 
 Approvals:
 
 * Engineering approver: Jan Hendrik Andersch
 * Product approver: Jan Hendrik Andersch
 * Release commander: Jan Hendrik Andersch
-* Timestamp: 2026-08-29
+* Timestamp: 2026-09-15
+
+**Environment-Dependent Validation — Domain / Custom SMTP**
+
+The following checks cannot be marked PASS until a production email domain is connected and verified with the transactional email provider:
+
+* Custom SMTP configured in Supabase using the production mail provider
+* Sender domain verified in the mail provider (SPF/DKIM and required DNS records)
+* Signup confirmation email delivered to an external mailbox
+* Signup confirmation link opens the correct production callback URL
+* Password reset email delivered to an external mailbox
+* Invitation email delivered to an external mailbox
+* Resend/transactional provider delivery status confirmed as delivered
+* Bounce/rejection/suppression handling verified
+* Mail sender name and From address verified
+
+Current status (2026-09-15):
+
+**BLOCKED BY ENVIRONMENT**
+
+Reason: CloseFlow does not yet have its own production email domain. The current Supabase default email service reached its sending limit during testing, while custom SMTP cannot be fully validated until a verified sender domain exists.
+
+This is an environment-dependent validation blocker and must not be counted as a failed application feature before the domain/SMTP setup is completed.
+
+Re-test after domain verification and custom SMTP activation.

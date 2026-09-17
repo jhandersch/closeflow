@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
+import { supabase } from "@/lib/supabase/client";
 
 type BillingState = {
     workspace_id: string | null;
@@ -17,6 +18,8 @@ type BillingState = {
 
 type Plan = "free" | "pro" | "business";
 
+const DEFAULT_TIMEZONE = "Europe/Berlin";
+
 const plans: Array<{
     id: Plan;
     name: string;
@@ -24,7 +27,7 @@ const plans: Array<{
     description: string;
     features: string[];
 }> = [
-        {
+    {
         id: "free",
         name: "Free",
         price: "€0",
@@ -50,7 +53,8 @@ const plans: Array<{
         id: "business",
         name: "Business",
         price: "€149",
-        description: "For teams that need the full CloseFlow experience.",
+        description:
+            "For teams that need the full CloseFlow experience.",
         features: [
             "5,000 AI requests / month",
             "2,000 exports / month",
@@ -59,14 +63,34 @@ const plans: Array<{
     },
 ];
 
-export default function BillingPage() {
-    const [billing, setBilling] = useState<BillingState | null>(null);
-    const [billingLoading, setBillingLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState<
-        Plan | "portal" | null
-    >(null);
+function formatDate(value: string, timeZone: string) {
+    const date = new Date(value);
 
-    const [hoveredPlan, setHoveredPlan] = useState<Plan | null>(null);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeZone,
+    }).format(date);
+}
+
+export default function BillingPage() {
+    const [billing, setBilling] =
+        useState<BillingState | null>(null);
+
+    const [billingLoading, setBillingLoading] =
+        useState(true);
+
+    const [actionLoading, setActionLoading] =
+        useState<Plan | "portal" | null>(null);
+
+    const [hoveredPlan, setHoveredPlan] =
+        useState<Plan | null>(null);
+
+    const [timezone, setTimezone] =
+        useState(DEFAULT_TIMEZONE);
 
     const {
         loading: permissionsLoading,
@@ -74,17 +98,47 @@ export default function BillingPage() {
         workspaceId,
     } = usePermissions();
 
-    const {
-        activeWorkspaceId,
-    } = useActiveWorkspace(
-        workspaceId ? [workspaceId] : [],
-    );
+    const { activeWorkspaceId } =
+        useActiveWorkspace(
+            workspaceId ? [workspaceId] : [],
+        );
 
     const canManageBilling =
         !permissionsLoading &&
         role === "owner" &&
         (!activeWorkspaceId ||
             activeWorkspaceId === workspaceId);
+
+    useEffect(() => {
+        const loadTimezone = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                return;
+            }
+
+            const savedTimezone =
+                typeof user.user_metadata?.timezone ===
+                    "string" &&
+                user.user_metadata.timezone.trim()
+                    ? user.user_metadata.timezone
+                    : DEFAULT_TIMEZONE;
+
+            try {
+                new Intl.DateTimeFormat("en-US", {
+                    timeZone: savedTimezone,
+                });
+
+                setTimezone(savedTimezone);
+            } catch {
+                setTimezone(DEFAULT_TIMEZONE);
+            }
+        };
+
+        void loadTimezone();
+    }, []);
 
     const loadBilling = useCallback(async () => {
         setBillingLoading(true);
@@ -116,7 +170,9 @@ export default function BillingPage() {
                 return;
             }
 
-            const data = (await response.json()) as BillingState;
+            const data =
+                (await response.json()) as BillingState;
+
             setBilling(data);
         } catch {
             setBilling(null);
@@ -196,11 +252,12 @@ export default function BillingPage() {
                 },
             );
 
-            const data = (await response.json()) as {
-                checkoutUrl?: string | null;
-                message?: string;
-                error?: string;
-            };
+            const data =
+                (await response.json()) as {
+                    checkoutUrl?: string | null;
+                    message?: string;
+                    error?: string;
+                };
 
             if (!response.ok) {
                 const message =
@@ -281,10 +338,11 @@ export default function BillingPage() {
                 },
             );
 
-            const data = (await response.json()) as {
-                success?: boolean;
-                error?: string;
-            };
+            const data =
+                (await response.json()) as {
+                    success?: boolean;
+                    error?: string;
+                };
 
             if (!response.ok) {
                 const message =
@@ -358,10 +416,11 @@ export default function BillingPage() {
                 },
             );
 
-            const data = (await response.json()) as {
-                portalUrl?: string | null;
-                error?: string;
-            };
+            const data =
+                (await response.json()) as {
+                    portalUrl?: string | null;
+                    error?: string;
+                };
 
             if (!response.ok) {
                 const message =
@@ -494,10 +553,9 @@ export default function BillingPage() {
                                         {billing?.current_period_end && (
                                             <p className="mt-1 text-sm text-foreground/60">
                                                 Current period ends on{" "}
-                                                {new Date(
+                                                {formatDate(
                                                     billing.current_period_end,
-                                                ).toLocaleDateString(
-                                                    "en-US",
+                                                    timezone,
                                                 )}
                                                 .
                                             </p>
@@ -515,7 +573,8 @@ export default function BillingPage() {
                                             }
                                             className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                         >
-                                            {actionLoading === "portal"
+                                            {actionLoading ===
+                                            "portal"
                                                 ? "Opening..."
                                                 : "Manage subscription"}
                                         </button>
@@ -531,30 +590,36 @@ export default function BillingPage() {
                                         plan.id === "free";
 
                                     return (
-                                        
-                                            <article
-                                                key={plan.id}
-                                                onMouseEnter={() => setHoveredPlan(plan.id)}
-                                                onMouseLeave={() => setHoveredPlan(null)}
-                                                className={`group cursor-pointer rounded-2xl border bg-gradient-to-br from-surface-1 to-surface-2 p-6 ${
-                                                    isCurrent
-                                                        ? "border-cyan-400/60"
-                                                        : "border-border-subtle"
-                                                }`}
-                                                style={{
-                                                    transform:
-                                                        hoveredPlan === plan.id
-                                                            ? "translateY(-2px)"
-                                                            : "translateY(0)",
-                                                    boxShadow:
-                                                        hoveredPlan === plan.id
-                                                            ? "0 20px 40px rgba(34, 211, 238, 0.10)"
-                                                            : "none",
-                                                    transition:
-                                                        "transform 200ms ease, box-shadow 200ms ease",
-                                                }}
-                                            >
-
+                                        <article
+                                            key={plan.id}
+                                            onMouseEnter={() =>
+                                                setHoveredPlan(
+                                                    plan.id,
+                                                )
+                                            }
+                                            onMouseLeave={() =>
+                                                setHoveredPlan(null)
+                                            }
+                                            className={`group cursor-pointer rounded-2xl border bg-gradient-to-br from-surface-1 to-surface-2 p-6 ${
+                                                isCurrent
+                                                    ? "border-cyan-400/60"
+                                                    : "border-border-subtle"
+                                            }`}
+                                            style={{
+                                                transform:
+                                                    hoveredPlan ===
+                                                    plan.id
+                                                        ? "translateY(-2px)"
+                                                        : "translateY(0)",
+                                                boxShadow:
+                                                    hoveredPlan ===
+                                                    plan.id
+                                                        ? "0 20px 40px rgba(34, 211, 238, 0.10)"
+                                                        : "none",
+                                                transition:
+                                                    "transform 200ms ease, box-shadow 200ms ease",
+                                            }}
+                                        >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
                                                     <h2 className="text-xl font-semibold text-foreground">
@@ -596,7 +661,9 @@ export default function BillingPage() {
                                                             </span>
 
                                                             <span>
-                                                                {feature}
+                                                                {
+                                                                    feature
+                                                                }
                                                             </span>
                                                         </li>
                                                     ),
@@ -628,20 +695,25 @@ export default function BillingPage() {
                                                     >
                                                         Manage subscription
                                                     </button>
-                                                ) : currentPlan === "free" ? (
+                                                ) : currentPlan ===
+                                                  "free" ? (
                                                     <button
                                                         type="button"
                                                         onClick={() => {
                                                             if (
-                                                                plan.id === "pro" ||
-                                                                plan.id === "business"
+                                                                plan.id ===
+                                                                    "pro" ||
+                                                                plan.id ===
+                                                                    "business"
                                                             ) {
-                                                                void startCheckout(plan.id);
+                                                                void startCheckout(
+                                                                    plan.id,
+                                                                );
                                                             }
                                                         }}
                                                         disabled={
                                                             actionLoading !==
-                                                                null
+                                                            null
                                                         }
                                                         className="flex h-10 w-full items-center justify-center rounded-xl bg-white px-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
                                                     >
@@ -655,18 +727,24 @@ export default function BillingPage() {
                                                         type="button"
                                                         onClick={() => {
                                                             if (
-                                                                plan.id === "pro" ||
-                                                                plan.id === "business"
+                                                                plan.id ===
+                                                                    "pro" ||
+                                                                plan.id ===
+                                                                    "business"
                                                             ) {
-                                                                void changePlan(plan.id);
+                                                                void changePlan(
+                                                                    plan.id,
+                                                                );
                                                             }
                                                         }}
                                                         disabled={
-                                                            actionLoading !== null
+                                                            actionLoading !==
+                                                            null
                                                         }
                                                         className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                                     >
-                                                        {actionLoading === plan.id
+                                                        {actionLoading ===
+                                                        plan.id
                                                             ? "Changing plan..."
                                                             : `Switch to ${plan.name}`}
                                                     </button>
@@ -700,7 +778,8 @@ export default function BillingPage() {
                                         }
                                         className="mt-5 rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
                                     >
-                                        {actionLoading === "portal"
+                                        {actionLoading ===
+                                        "portal"
                                             ? "Opening..."
                                             : "Open Stripe Billing Portal"}
                                     </button>

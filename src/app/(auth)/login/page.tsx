@@ -453,12 +453,26 @@ export default function LoginPage() {
                     email: email.trim(),
                     password,
                     options: {
+                        emailRedirectTo: getAuthRedirectPath(),
                         data: {
-                            name: fullName.trim(),
-                            username: username.trim().toLowerCase(),
+                        name: fullName.trim(),
+                        username: username.trim().toLowerCase(),
                         },
                     },
-                });
+                    })
+
+                    if (error) {
+                    throw error
+                    }
+
+                    setSuccess(
+                    t(
+                        "auth.accountCreated",
+                        "Account created. Confirm your email, then sign in."
+                    )
+                    )
+                    setFullName("")
+                    setUsername("")
 
                 if (error) {
                     throw error;

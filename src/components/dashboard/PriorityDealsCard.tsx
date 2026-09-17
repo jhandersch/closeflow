@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useRouter } from "next/navigation";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { usePriorityAI } from "@/hooks/usePriorityAI";
@@ -11,8 +11,8 @@ type PriorityDealsCardProps = {
 };
 export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
     const router = useRouter();
-    const { language, t, } = useAppPreferences();
-    const aiAnalysis = usePriorityAI(leads, language);
+    const { t } = useAppPreferences();
+    const aiAnalysis = usePriorityAI(leads, "en");
     const translateRisk = (risk: string) => {
         if (risk === "High")
             return t("dashboard.riskHigh", "High");

@@ -31,13 +31,29 @@ type AdminUser = {
     is_platform_admin: boolean;
 };
 
+const DEFAULT_TIMEZONE = "Europe/Berlin";
+
 export default function AdminPage() {
-    const [overview, setOverview] = useState<AdminOverview | null>(null);
-    const [users, setUsers] = useState<AdminUser[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [usersLoading, setUsersLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [usersError, setUsersError] = useState<string | null>(null);
+    const [overview, setOverview] =
+        useState<AdminOverview | null>(null);
+
+    const [users, setUsers] =
+        useState<AdminUser[]>([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [usersLoading, setUsersLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState<string | null>(null);
+
+    const [usersError, setUsersError] =
+        useState<string | null>(null);
+
+    const [timezone, setTimezone] =
+        useState(DEFAULT_TIMEZONE);
 
     useEffect(() => {
         const load = async () => {
@@ -47,16 +63,46 @@ export default function AdminPage() {
             setUsersError(null);
 
             const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (user) {
+                const savedTimezone =
+                    typeof user.user_metadata?.timezone ===
+                        "string" &&
+                    user.user_metadata.timezone.trim()
+                        ? user.user_metadata.timezone
+                        : DEFAULT_TIMEZONE;
+
+                try {
+                    new Intl.DateTimeFormat(
+                        "en-US",
+                        {
+                            timeZone: savedTimezone,
+                        },
+                    );
+
+                    setTimezone(savedTimezone);
+                } catch {
+                    setTimezone(DEFAULT_TIMEZONE);
+                }
+            }
+
+            const {
                 data: { session },
             } = await supabase.auth.getSession();
 
             const headers: Record<string, string> = {};
 
             if (session?.access_token) {
-                headers.Authorization = `Bearer ${session.access_token}`;
+                headers.Authorization =
+                    `Bearer ${session.access_token}`;
             }
 
-            const [overviewResponse, usersResponse] = await Promise.all([
+            const [
+                overviewResponse,
+                usersResponse,
+            ] = await Promise.all([
                 fetch("/api/admin/overview", {
                     headers,
                     credentials: "include",
@@ -68,47 +114,60 @@ export default function AdminPage() {
             ]);
 
             if (!overviewResponse.ok) {
-                let message = "Could not load admin overview";
+                let message =
+                    "Could not load admin overview";
 
                 try {
-                    const data = (await overviewResponse.json()) as {
-                        error?: string;
-                    };
+                    const data =
+                        (await overviewResponse.json()) as {
+                            error?: string;
+                        };
 
-                    message = data.error || message;
+                    message =
+                        data.error || message;
                 } catch {
-                    const text = await overviewResponse.text();
-                    message = text || message;
+                    const text =
+                        await overviewResponse.text();
+
+                    message =
+                        text || message;
                 }
 
                 setError(message);
             } else {
                 setOverview(
-                    (await overviewResponse.json()) as AdminOverview
+                    (await overviewResponse.json()) as AdminOverview,
                 );
             }
 
             setLoading(false);
 
             if (!usersResponse.ok) {
-                let message = "Could not load users";
+                let message =
+                    "Could not load users";
 
                 try {
-                    const data = (await usersResponse.json()) as {
-                        error?: string;
-                    };
+                    const data =
+                        (await usersResponse.json()) as {
+                            error?: string;
+                        };
 
-                    message = data.error || message;
+                    message =
+                        data.error || message;
                 } catch {
-                    const text = await usersResponse.text();
-                    message = text || message;
+                    const text =
+                        await usersResponse.text();
+
+                    message =
+                        text || message;
                 }
 
                 setUsersError(message);
             } else {
-                const data = (await usersResponse.json()) as {
-                    users: AdminUser[];
-                };
+                const data =
+                    (await usersResponse.json()) as {
+                        users: AdminUser[];
+                    };
 
                 setUsers(data.users || []);
             }
@@ -150,7 +209,7 @@ export default function AdminPage() {
                         {error
                             .toLowerCase()
                             .includes(
-                                "two-factor authentication required"
+                                "two-factor authentication required",
                             ) ? (
                             <p className="mt-2">
                                 Enable 2FA first in{" "}
@@ -170,17 +229,23 @@ export default function AdminPage() {
                     <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-8">
                         <Stat
                             label="Users"
-                            value={String(overview.users)}
+                            value={String(
+                                overview.users,
+                            )}
                         />
 
                         <Stat
                             label="Workspaces"
-                            value={String(overview.workspaces)}
+                            value={String(
+                                overview.workspaces,
+                            )}
                         />
 
                         <Stat
                             label="Leads"
-                            value={String(overview.leads)}
+                            value={String(
+                                overview.leads,
+                            )}
                         />
 
                         <Stat
@@ -190,12 +255,16 @@ export default function AdminPage() {
 
                         <Stat
                             label="AI Requests"
-                            value={String(overview.ai_requests)}
+                            value={String(
+                                overview.ai_requests,
+                            )}
                         />
 
                         <Stat
                             label="Errors (24h)"
-                            value={String(overview.errors_24h)}
+                            value={String(
+                                overview.errors_24h,
+                            )}
                         />
 
                         <Stat
@@ -205,7 +274,9 @@ export default function AdminPage() {
 
                         <Stat
                             label="AI Tokens (30d)"
-                            value={String(overview.ai_tokens_30d)}
+                            value={String(
+                                overview.ai_tokens_30d,
+                            )}
                         />
                     </div>
                 ) : null}
@@ -246,7 +317,8 @@ export default function AdminPage() {
                         </div>
                     ) : null}
 
-                    {!usersLoading && !usersError ? (
+                    {!usersLoading &&
+                    !usersError ? (
                         <div className="mt-6 overflow-x-auto">
                             <table className="w-full min-w-[850px] text-left text-sm">
                                 <thead>
@@ -254,18 +326,23 @@ export default function AdminPage() {
                                         <th className="px-3 py-3 font-medium">
                                             User
                                         </th>
+
                                         <th className="px-3 py-3 font-medium">
                                             Company
                                         </th>
+
                                         <th className="px-3 py-3 font-medium">
                                             Created
                                         </th>
+
                                         <th className="px-3 py-3 font-medium">
                                             Last Sign In
                                         </th>
+
                                         <th className="px-3 py-3 font-medium">
                                             Email
                                         </th>
+
                                         <th className="px-3 py-3 font-medium">
                                             Role
                                         </th>
@@ -297,17 +374,22 @@ export default function AdminPage() {
 
                                             <td className="px-3 py-4 text-foreground/65">
                                                 {user.user_metadata
-                                                    .company_name || "—"}
+                                                    .company_name ||
+                                                    "—"}
                                             </td>
 
                                             <td className="px-3 py-4 text-foreground/65">
-                                                {formatDate(user.created_at)}
+                                                {formatDate(
+                                                    user.created_at,
+                                                    timezone,
+                                                )}
                                             </td>
 
                                             <td className="px-3 py-4 text-foreground/65">
                                                 {user.last_sign_in_at
                                                     ? formatDate(
-                                                          user.last_sign_in_at
+                                                          user.last_sign_in_at,
+                                                          timezone,
                                                       )
                                                     : "Never"}
                                             </td>
@@ -373,7 +455,9 @@ function Stat({
 }) {
     return (
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-xs text-foreground/60">{label}</p>
+            <p className="text-xs text-foreground/60">
+                {label}
+            </p>
 
             <p className="mt-2 text-2xl font-semibold text-foreground">
                 {value}
@@ -387,7 +471,11 @@ function StatusBadge({
     type,
 }: {
     children: React.ReactNode;
-    type: "success" | "warning" | "admin" | "neutral";
+    type:
+        | "success"
+        | "warning"
+        | "admin"
+        | "neutral";
 }) {
     const classes = {
         success:
@@ -409,9 +497,19 @@ function StatusBadge({
     );
 }
 
-function formatDate(value: string) {
-    return new Intl.DateTimeFormat("en-GB", {
+function formatDate(
+    value: string,
+    timeZone: string,
+) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
-    }).format(new Date(value));
+        timeZone,
+    }).format(date);
 }

@@ -86,7 +86,6 @@ export default function OnboardingPage() {
     const [companyName, setCompanyName] = useState("");
     const [industry, setIndustry] = useState("");
     const [teamSize, setTeamSize] = useState("");
-
     const [selectedPlan, setSelectedPlan] =
         useState<Plan>("free");
 
@@ -99,13 +98,16 @@ export default function OnboardingPage() {
         () => [
             {
                 id: 1,
-                title: t("onboarding.stepWelcome", "Welcome"),
+                title: t(
+                    "onboarding.stepWelcome",
+                    "Welcome",
+                ),
             },
             {
                 id: 2,
                 title: t(
                     "onboarding.stepCompany",
-                    "Company & team",
+                    "Set up company",
                 ),
             },
             {
@@ -119,7 +121,7 @@ export default function OnboardingPage() {
                 id: 4,
                 title: t(
                     "onboarding.stepLead",
-                    "Quick start",
+                    "Create first lead",
                 ),
             },
             {
@@ -155,7 +157,9 @@ export default function OnboardingPage() {
             }
 
             if (user.user_metadata?.onboarding_completed) {
-                router.replace(nextPath || "/dashboard");
+                router.replace(
+                    nextPath || "/dashboard",
+                );
                 return;
             }
 
@@ -220,7 +224,8 @@ export default function OnboardingPage() {
 
             setSelectedPlan(
                 draft.selectedPlan === "pro" ||
-                    draft.selectedPlan === "business"
+                    draft.selectedPlan ===
+                        "business"
                     ? draft.selectedPlan
                     : "free",
             );
@@ -287,13 +292,7 @@ export default function OnboardingPage() {
             return;
         }
 
-        setSelectedPlan((current) => {
-            if (current !== "free") {
-                return current;
-            }
-
-            return recommendedPlan;
-        });
+        setSelectedPlan(recommendedPlan);
     }, [recommendedPlan, teamSize]);
 
     const progress = useMemo(
@@ -310,8 +309,8 @@ export default function OnboardingPage() {
                 Number(teamSize);
 
             return (
-                companyName.trim()
-                    .length >= 2 &&
+                companyName.trim().length >=
+                    2 &&
                 Number.isInteger(
                     parsedTeamSize,
                 ) &&
@@ -321,40 +320,10 @@ export default function OnboardingPage() {
         }
 
         if (step === 2) {
-            const parsedTeamSize =
-                Number(teamSize);
-
-            if (
-                !Number.isInteger(
-                    parsedTeamSize,
-                ) ||
-                parsedTeamSize < 1 ||
-                parsedTeamSize > 20
-            ) {
-                return false;
-            }
-
-            if (
-                parsedTeamSize === 1 &&
-                selectedPlan !== "free"
-            ) {
-                return false;
-            }
-
-            if (
-                parsedTeamSize >= 2 &&
-                parsedTeamSize <= 5 &&
-                selectedPlan === "free"
-            ) {
-                return false;
-            }
-
-            if (
-                parsedTeamSize >= 6 &&
-                selectedPlan !== "business"
-            ) {
-                return false;
-            }
+            return (
+                selectedPlan ===
+                recommendedPlan
+            );
         }
 
         if (
@@ -385,65 +354,11 @@ export default function OnboardingPage() {
         leadName,
         leadValue,
         quickStartMode,
+        recommendedPlan,
         selectedPlan,
         step,
         teamSize,
     ]);
-
-    const startCheckout = async (
-        plan: "pro" | "business",
-    ) => {
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session?.access_token) {
-            throw new Error(
-                "No active session found.",
-            );
-        }
-
-        const response = await fetch(
-            "/api/stripe/create-checkout",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                    Authorization: `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    plan,
-                }),
-            },
-        );
-
-        const result =
-            (await response
-                .json()
-                .catch(() => null)) as {
-                checkoutUrl?: string | null;
-                error?: string;
-                message?: string;
-            } | null;
-
-        if (!response.ok) {
-            throw new Error(
-                result?.error ||
-                    result?.message ||
-                    "Could not start checkout.",
-            );
-        }
-
-        if (!result?.checkoutUrl) {
-            throw new Error(
-                "Stripe checkout is not configured.",
-            );
-        }
-
-        window.location.href =
-            result.checkoutUrl;
-    };
 
     const handleFinish = async () => {
         setSaving(true);
@@ -513,15 +428,21 @@ export default function OnboardingPage() {
                 );
             }
 
-            if (
-                selectedPlan === "pro" ||
-                selectedPlan === "business"
-            ) {
-                await startCheckout(
-                    selectedPlan,
-                );
+            const {
+                error: metadataError,
+            } = await supabase.auth.updateUser({
+                data: {
+                    onboarding_completed:
+                        true,
+                    onboarding_completed_at:
+                        new Date().toISOString(),
+                    onboarding_plan:
+                        selectedPlan,
+                },
+            });
 
-                return;
+            if (metadataError) {
+                throw metadataError;
             }
 
             localStorage.removeItem(
@@ -623,6 +544,7 @@ export default function OnboardingPage() {
                                 const current =
                                     index ===
                                     step;
+
                                 const done =
                                     index <
                                     step;
@@ -679,12 +601,15 @@ export default function OnboardingPage() {
                                         <li>
                                             - Set up company and team context
                                         </li>
+
                                         <li>
                                             - Choose the right plan
                                         </li>
+
                                         <li>
                                             - Create your first lead or explore demo data
                                         </li>
+
                                         <li>
                                             - Understand the dashboard
                                         </li>
@@ -794,7 +719,7 @@ export default function OnboardingPage() {
                                     </h2>
 
                                     <p className="mt-2 text-sm leading-7 text-foreground/65">
-                                        We recommend a plan based on your team size. You can change your plan later in Billing.
+                                        We recommend a plan based on your team size. Your selection is saved as part of onboarding, but payment is not started yet.
                                     </p>
                                 </div>
 
@@ -827,30 +752,9 @@ export default function OnboardingPage() {
                                                 plan;
 
                                             const disabled =
-                                                plan ===
-                                                    "free"
-                                                    ? Number(
-                                                          teamSize,
-                                                      ) >
-                                                      1
-                                                    : plan ===
-                                                        "pro"
-                                                        ? Number(
-                                                              teamSize,
-                                                          ) >
-                                                          5 ||
-                                                          Number(
-                                                              teamSize,
-                                                          ) <
-                                                              2
-                                                        : Number(
-                                                              teamSize,
-                                                          ) >
-                                                          20 ||
-                                                          Number(
-                                                              teamSize,
-                                                          ) <
-                                                              6;
+                                                !teamSize ||
+                                                plan !==
+                                                    recommendedPlan;
 
                                             return (
                                                 <button
@@ -1101,12 +1005,15 @@ export default function OnboardingPage() {
                                                     <option value="new">
                                                         New
                                                     </option>
+
                                                     <option value="contacted">
                                                         Contacted
                                                     </option>
+
                                                     <option value="proposal">
                                                         Proposal
                                                     </option>
+
                                                     <option value="won">
                                                         Won
                                                     </option>
@@ -1206,7 +1113,10 @@ export default function OnboardingPage() {
                                             ),
                                     )
                                 }
-                                disabled={step === 0 || saving}
+                                disabled={
+                                    step === 0 ||
+                                    saving
+                                }
                                 className="rounded-2xl border border-border-subtle px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Back
@@ -1249,10 +1159,7 @@ export default function OnboardingPage() {
                                 >
                                     {saving
                                         ? "Finishing..."
-                                        : selectedPlan ===
-                                            "free"
-                                            ? "Finish onboarding"
-                                            : `Continue to ${planDetails[selectedPlan].name} checkout`}
+                                        : "Finish onboarding"}
                                 </button>
                             )}
                         </div>
@@ -1275,13 +1182,17 @@ export default function OnboardingPage() {
                             </h3>
 
                             <p className="mt-3 text-sm leading-7 text-foreground/65">
-                                {planDetails[
-                                    selectedPlan
-                                ].name}
+                                {
+                                    planDetails[
+                                        selectedPlan
+                                    ].name
+                                }
                                 {" · "}
-                                {planDetails[
-                                    selectedPlan
-                                ].seats}
+                                {
+                                    planDetails[
+                                        selectedPlan
+                                    ].seats
+                                }
                             </p>
 
                             <p className="mt-2 text-sm font-semibold text-foreground">

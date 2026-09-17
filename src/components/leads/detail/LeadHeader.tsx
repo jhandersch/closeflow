@@ -50,7 +50,7 @@ Deal:
     {" "}
 EUR
     {" "}
-    {(lead.value ?? 0).toLocaleString()}
+    {(lead.value ?? 0).toLocaleString("en-US")}
     </p>
 
 

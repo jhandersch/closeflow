@@ -38,6 +38,18 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
+    const timezone =
+    typeof user.user_metadata?.timezone === "string" &&
+    user.user_metadata.timezone.trim()
+        ? user.user_metadata.timezone
+        : "Europe/Berlin";
+
+    const exportDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date());
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
@@ -225,9 +237,7 @@ export async function GET(request: Request) {
             status: 200,
             headers: {
                 "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Content-Disposition": `attachment; filename=closeflow-customers-${new Date()
-                    .toISOString()
-                    .slice(0, 10)}.xlsx`,
+                "Content-Disposition": `attachment; filename=closeflow-customers-${exportDate}.xlsx`,
             },
         });
     }
@@ -249,9 +259,7 @@ export async function GET(request: Request) {
         status: 200,
         headers: {
             "Content-Type": "text/csv; charset=utf-8",
-            "Content-Disposition": `attachment; filename=closeflow-customers-${new Date()
-                .toISOString()
-                .slice(0, 10)}.csv`,
+            "Content-Disposition": `attachment; filename=closeflow-customers-${exportDate}.csv`,
         },
     });
 }

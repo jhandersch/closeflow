@@ -1,46 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-type Locale = "en";
+
 export async function POST(request: NextRequest) {
-    let locale: Locale = "en";
-    try {
-        const { leads, language, } = await request.json();
-        locale = "en";
-        const apiKey = process.env.OPENAI_API_KEY;
-        /*
-         * =========================
-         * FALLBACK
-         * =========================
-         */
-        if (!apiKey) {
-            return NextResponse.json({
-                headline: "Priority analysis ready",
-                explanation: "The most important deals are prioritized using value, pipeline stage, activity and close probability.",
-                nextAction: "Start with high-value deals in advanced stages.",
-                priorityReason: "High-value opportunities with strong closing potential should be handled first.",
-                riskLevel: "Medium",
-            });
-        }
-        /*
-         * =========================
-         * OPENAI REQUEST
-         * =========================
-         */
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                temperature: 0.25,
-                response_format: {
-                    type: "json_object",
-                },
-                messages: [
-                    {
-                        role: "system",
-                        content: `
+  try {
+    const { leads } = await request.json();
+
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    /*
+     * =========================
+     * FALLBACK
+     * =========================
+     */
+    if (!apiKey) {
+      return NextResponse.json({
+        headline: "Priority analysis ready",
+        explanation:
+          "The most important deals are prioritized using value, pipeline stage, activity and close probability.",
+        nextAction:
+          "Start with high-value deals in advanced stages.",
+        priorityReason:
+          "High-value opportunities with strong closing potential should be handled first.",
+        riskLevel: "Medium",
+      });
+    }
+
+    /*
+     * =========================
+     * OPENAI REQUEST
+     * =========================
+     */
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          temperature: 0.25,
+          response_format: {
+            type: "json_object",
+          },
+          messages: [
+            {
+              role: "system",
+              content: `
 You are an AI sales strategist inside a professional CRM.
 
 Your job:
@@ -87,7 +93,7 @@ Examples:
 
 Language:
 
-${"English"}
+English
 
 Return ONLY valid JSON:
 
@@ -101,78 +107,102 @@ Return ONLY valid JSON:
 
 Keep answers concise.
 `,
-                    },
-                    {
-                        role: "user",
-                        content: JSON.stringify(leads, null, 2),
-                    },
-                ],
-            }),
-        });
-        /*
-         * =========================
-         * OPENAI ERROR
-         * =========================
-         */
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.error?.message ||
-                `OpenAI request failed with status ${response.status}`);
-        }
-        /*
-         * =========================
-         * PARSE RESPONSE
-         * =========================
-         */
-        const result = await response.json();
-        const content = result?.choices?.[0]?.message?.content;
-        if (!content) {
-            throw new Error("No AI response");
-        }
-        const parsed = JSON.parse(content);
-        /*
-         * =========================
-         * VALIDATE RESPONSE
-         * =========================
-         */
-        const validRiskLevels = [
-            "Low",
-            "Medium",
-            "High",
-        ];
-        const riskLevel = validRiskLevels.includes(parsed?.riskLevel)
-            ? parsed.riskLevel
-            : "Medium";
-        return NextResponse.json({
-            headline: typeof parsed?.headline === "string"
-                ? parsed.headline
-                :
-                    "Deals need attention",
-            explanation: typeof parsed?.explanation === "string"
-                ? parsed.explanation
-                : "",
-            nextAction: typeof parsed?.nextAction === "string"
-                ? parsed.nextAction
-                : "",
-            priorityReason: typeof parsed?.priorityReason === "string"
-                ? parsed.priorityReason
-                : "",
-            riskLevel,
-        });
+            },
+            {
+              role: "user",
+              content: JSON.stringify(leads, null, 2),
+            },
+          ],
+        }),
+      },
+    );
+
+    /*
+     * =========================
+     * OPENAI ERROR
+     * =========================
+     */
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+
+      throw new Error(
+        errorData?.error?.message ||
+          `OpenAI request failed with status ${response.status}`,
+      );
     }
-    catch (error) {
-        console.error("PRIORITY AI ERROR:", error);
-        /*
-         * =========================
-         * SAFE FALLBACK
-         * =========================
-         */
-        return NextResponse.json({
-            headline: "Deals need attention",
-            explanation: "The pipeline should be reviewed using value, activity and closing probability.",
-            nextAction: "Review your highest-value opportunities.",
-            priorityReason: "High-potential opportunities should be handled first.",
-            riskLevel: "Medium",
-        });
+
+    /*
+     * =========================
+     * PARSE RESPONSE
+     * =========================
+     */
+    const result = await response.json();
+    const content =
+      result?.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error("No AI response");
     }
+
+    const parsed = JSON.parse(content);
+
+    /*
+     * =========================
+     * VALIDATE RESPONSE
+     * =========================
+     */
+    const validRiskLevels = [
+      "Low",
+      "Medium",
+      "High",
+    ];
+
+    const riskLevel = validRiskLevels.includes(
+      parsed?.riskLevel,
+    )
+      ? parsed.riskLevel
+      : "Medium";
+
+    return NextResponse.json({
+      headline:
+        typeof parsed?.headline === "string"
+          ? parsed.headline
+          : "Deals need attention",
+
+      explanation:
+        typeof parsed?.explanation === "string"
+          ? parsed.explanation
+          : "",
+
+      nextAction:
+        typeof parsed?.nextAction === "string"
+          ? parsed.nextAction
+          : "",
+
+      priorityReason:
+        typeof parsed?.priorityReason === "string"
+          ? parsed.priorityReason
+          : "",
+
+      riskLevel,
+    });
+  } catch (error) {
+    console.error("PRIORITY AI ERROR:", error);
+
+    /*
+     * =========================
+     * SAFE FALLBACK
+     * =========================
+     */
+    return NextResponse.json({
+      headline: "Deals need attention",
+      explanation:
+        "The pipeline should be reviewed using value, activity and closing probability.",
+      nextAction:
+        "Review your highest-value opportunities.",
+      priorityReason:
+        "High-potential opportunities should be handled first.",
+      riskLevel: "Medium",
+    });
+  }
 }

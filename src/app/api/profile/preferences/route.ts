@@ -3,68 +3,65 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 
 export async function PATCH(request: Request) {
-    const { supabase, user, error } =
-        await getRouteUser(request);
+  const { supabase, user, error } = await getRouteUser(request);
 
-    if (error || !user) {
-        return NextResponse.json(
-            { error: "Unauthorized" },
-            { status: 401 },
-        );
-    }
+  if (error || !user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
 
-    const body = await request.json();
+  const body = await request.json();
 
-    const phone =
-        typeof body.phone === "string"
-            ? body.phone.trim()
-            : "";
+  const phone =
+    typeof body.phone === "string"
+      ? body.phone.trim()
+      : "";
 
-    const timezone =
-        typeof body.timezone === "string"
-            ? body.timezone.trim()
-            : "Europe/Berlin";
+  const timezone =
+    typeof body.timezone === "string" &&
+    body.timezone.trim()
+      ? body.timezone.trim()
+      : "Europe/Berlin";
 
-    const language =
-        typeof body.language === "string"
-            ? body.language.trim()
-            : "en";
+  const language = "en";
 
-    const { error: authError } =
-        await supabase.auth.updateUser({
-            data: {
-                phone,
-                timezone,
-                language,
-            },
-        });
-
-    if (authError) {
-        return NextResponse.json(
-            { error: authError.message },
-            { status: 400 },
-        );
-    }
-
-    const { error: profileError } =
-        await supabase
-            .from("profiles")
-            .update({ language })
-            .eq("id", user.id);
-
-    if (profileError) {
-        return NextResponse.json(
-            { error: profileError.message },
-            { status: 400 },
-        );
-    }
-
-    return NextResponse.json({
-        ok: true,
-        preferences: {
-            phone,
-            timezone,
-            language,
-        },
+  const { error: authError } =
+    await supabase.auth.updateUser({
+      data: {
+        phone,
+        timezone,
+        language,
+      },
     });
+
+  if (authError) {
+    return NextResponse.json(
+      { error: authError.message },
+      { status: 400 },
+    );
+  }
+
+  const { error: profileError } =
+    await supabase
+      .from("profiles")
+      .update({ language })
+      .eq("id", user.id);
+
+  if (profileError) {
+    return NextResponse.json(
+      { error: profileError.message },
+      { status: 400 },
+    );
+  }
+
+  return NextResponse.json({
+    ok: true,
+    preferences: {
+      phone,
+      timezone,
+      language,
+    },
+  });
 }

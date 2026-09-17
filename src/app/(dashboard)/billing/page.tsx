@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
-
+import { supabase } from "@/lib/supabase/client";
 
 type BillingState = {
     workspace_id: string | null;
@@ -17,6 +17,8 @@ type BillingState = {
 };
 
 type Plan = "free" | "pro" | "business";
+
+const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 const plans: Array<{
     id: Plan;
@@ -30,7 +32,6 @@ const plans: Array<{
         name: "Free",
         price: "€0",
         description: "Get started with the core CloseFlow CRM.",
-        // Free
         features: [
             "Up to 50 leads",
             "10 AI analyses per month",
@@ -42,7 +43,6 @@ const plans: Array<{
         name: "Pro",
         price: "€49",
         description: "For growing sales teams.",
-        // Pro
         features: [
             "Unlimited leads",
             "Advanced AI insights",
@@ -53,8 +53,8 @@ const plans: Array<{
         id: "business",
         name: "Business",
         price: "€149",
-        description: "For teams that need the full CloseFlow experience.",
-        // Business
+        description:
+            "For teams that need the full CloseFlow experience.",
         features: [
             "Unlimited leads & customers",
             "Maximum AI capabilities",
@@ -63,62 +63,116 @@ const plans: Array<{
     },
 ];
 
+function formatDate(
+    value: string,
+    timeZone: string,
+) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeZone,
+    }).format(date);
+}
+
 export default function BillingPage() {
-    const [billing, setBilling] = useState<BillingState | null>(null);
-    const [billingLoading, setBillingLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState<
-        Plan | "portal" | null
-    >(null);
+    const [billing, setBilling] =
+        useState<BillingState | null>(null);
+
+    const [billingLoading, setBillingLoading] =
+        useState(true);
+
+    const [actionLoading, setActionLoading] =
+        useState<Plan | "portal" | null>(null);
+
+    const [timezone, setTimezone] =
+        useState(DEFAULT_TIMEZONE);
 
     const {
-    loading: permissionsLoading,
-    role,
-    workspaceId,
-} = usePermissions();
+        loading: permissionsLoading,
+        role,
+        workspaceId,
+    } = usePermissions();
 
-const {
-    activeWorkspaceId,
-} = useActiveWorkspace(
-    workspaceId ? [workspaceId] : [],
-);
+    const {
+        activeWorkspaceId,
+    } = useActiveWorkspace(
+        workspaceId ? [workspaceId] : [],
+    );
 
-const canManageBilling =
-    !permissionsLoading &&
-    role === "owner" &&
-    (!activeWorkspaceId ||
-        activeWorkspaceId === workspaceId);
+    const canManageBilling =
+        !permissionsLoading &&
+        role === "owner" &&
+        (!activeWorkspaceId ||
+            activeWorkspaceId === workspaceId);
+
+    useEffect(() => {
+        const loadTimezone = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                return;
+            }
+
+            const savedTimezone =
+                typeof user.user_metadata?.timezone ===
+                    "string" &&
+                user.user_metadata.timezone.trim()
+                    ? user.user_metadata.timezone
+                    : DEFAULT_TIMEZONE;
+
+            try {
+                new Intl.DateTimeFormat("en-US", {
+                    timeZone: savedTimezone,
+                });
+
+                setTimezone(savedTimezone);
+            } catch {
+                setTimezone(DEFAULT_TIMEZONE);
+            }
+        };
+
+        void loadTimezone();
+    }, []);
 
     const loadBilling = useCallback(async () => {
         setBillingLoading(true);
 
         try {
             const activeWorkspaceId =
-    window.localStorage.getItem(
-        "closeflow_active_workspace",
-    );
+                window.localStorage.getItem(
+                    "closeflow_active_workspace",
+                );
 
-const headers: HeadersInit = {};
+            const headers: HeadersInit = {};
 
-if (activeWorkspaceId) {
-    headers[
-        "x-closeflow-workspace-id"
-    ] = activeWorkspaceId;
-}
+            if (activeWorkspaceId) {
+                headers["x-closeflow-workspace-id"] =
+                    activeWorkspaceId;
+            }
 
-const response = await fetch(
-    "/api/billing",
-    {
-        cache: "no-store",
-        headers,
-    },
-);
+            const response = await fetch(
+                "/api/billing",
+                {
+                    cache: "no-store",
+                    headers,
+                },
+            );
 
             if (!response.ok) {
                 setBilling(null);
                 return;
             }
 
-            const data = (await response.json()) as BillingState;
+            const data =
+                (await response.json()) as BillingState;
+
             setBilling(data);
         } catch {
             setBilling(null);
@@ -128,207 +182,209 @@ const response = await fetch(
     }, []);
 
     useEffect(() => {
-    if (permissionsLoading) {
-        return;
-    }
+        if (permissionsLoading) {
+            return;
+        }
 
-    if (!canManageBilling) {
-        setBilling(null);
-        setBillingLoading(false);
-        return;
-    }
+        if (!canManageBilling) {
+            setBilling(null);
+            setBillingLoading(false);
+            return;
+        }
 
-    void loadBilling();
-
-    const handleWorkspaceChange = () => {
         void loadBilling();
-    };
 
-    window.addEventListener(
-        "closeflow-workspace-changed",
-        handleWorkspaceChange,
-    );
+        const handleWorkspaceChange = () => {
+            void loadBilling();
+        };
 
-    return () => {
-        window.removeEventListener(
+        window.addEventListener(
             "closeflow-workspace-changed",
             handleWorkspaceChange,
         );
-    };
-}, [
-    permissionsLoading,
-    canManageBilling,
-    loadBilling,
-]);
+
+        return () => {
+            window.removeEventListener(
+                "closeflow-workspace-changed",
+                handleWorkspaceChange,
+            );
+        };
+    }, [
+        permissionsLoading,
+        canManageBilling,
+        loadBilling,
+    ]);
 
     const startCheckout = async (
-            plan: "pro" | "business",
-        ) => {
-            if (!canManageBilling) {
-                toast.error(
-                    "Only the workspace owner can manage billing.",
+        plan: "pro" | "business",
+    ) => {
+        if (!canManageBilling) {
+            toast.error(
+                "Only the workspace owner can manage billing.",
+            );
+            return;
+        }
+
+        setActionLoading(plan);
+
+        try {
+            const activeWorkspaceId =
+                window.localStorage.getItem(
+                    "closeflow_active_workspace",
                 );
-                return;
+
+            const headers: HeadersInit = {
+                "Content-Type":
+                    "application/json",
+            };
+
+            if (activeWorkspaceId) {
+                headers["x-closeflow-workspace-id"] =
+                    activeWorkspaceId;
             }
 
-            setActionLoading(plan);
+            const response = await fetch(
+                "/api/stripe/create-checkout",
+                {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({ plan }),
+                },
+            );
 
-            try {
-                const activeWorkspaceId =
-                    window.localStorage.getItem(
-                        "closeflow_active_workspace",
-                    );
-
-                const headers: HeadersInit = {
-                    "Content-Type": "application/json",
-                };
-
-                if (activeWorkspaceId) {
-                    headers[
-                        "x-closeflow-workspace-id"
-                    ] = activeWorkspaceId;
-                }
-
-                const response = await fetch(
-                    "/api/stripe/create-checkout",
-                    {
-                        method: "POST",
-                        headers,
-                        body: JSON.stringify({ plan }),
-                    },
-                );
-
-                const data = (await response.json()) as {
+            const data =
+                (await response.json()) as {
                     checkoutUrl?: string | null;
                     message?: string;
                     error?: string;
                 };
 
-                if (!response.ok) {
-                    const message =
-                        data.error ||
-                        data.message ||
-                        "Could not start checkout";
+            if (!response.ok) {
+                const message =
+                    data.error ||
+                    data.message ||
+                    "Could not start checkout";
 
-                    if (
-                        message
-                            .toLowerCase()
-                            .includes(
-                                "two-factor authentication required",
-                            )
-                    ) {
-                        toast.error(
-                            "2FA required before plan upgrades. Open Settings → Security.",
-                        );
-                    } else {
-                        toast.error(message);
-                    }
-
-                    return;
-                }
-
-                if (!data.checkoutUrl) {
+                if (
+                    message
+                        .toLowerCase()
+                        .includes(
+                            "two-factor authentication required",
+                        )
+                ) {
                     toast.error(
-                        data.message ||
-                            "Stripe checkout is not configured.",
+                        "2FA required before plan upgrades. Open Settings → Security.",
                     );
-                    return;
+                } else {
+                    toast.error(message);
                 }
 
-                window.location.href =
-                    data.checkoutUrl;
-            } catch {
-                toast.error(
-                    "Could not start checkout.",
-                );
-            } finally {
-                setActionLoading(null);
+                return;
             }
-        };
 
-        const changePlan = async (
-            plan: "free" | "pro" | "business",
-        ) => {
-            if (!canManageBilling) {
+            if (!data.checkoutUrl) {
                 toast.error(
-                    "Only the workspace owner can manage billing.",
+                    data.message ||
+                        "Stripe checkout is not configured.",
                 );
                 return;
             }
 
-            setActionLoading(plan);
+            window.location.href =
+                data.checkoutUrl;
+        } catch {
+            toast.error(
+                "Could not start checkout.",
+            );
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
-            try {
-                const activeWorkspaceId =
-                    window.localStorage.getItem(
-                        "closeflow_active_workspace",
-                    );
+    const changePlan = async (
+        plan: Plan,
+    ) => {
+        if (!canManageBilling) {
+            toast.error(
+                "Only the workspace owner can manage billing.",
+            );
+            return;
+        }
 
-                const headers: HeadersInit = {
-                    "Content-Type": "application/json",
-                };
+        setActionLoading(plan);
 
-                if (activeWorkspaceId) {
-                    headers[
-                        "x-closeflow-workspace-id"
-                    ] = activeWorkspaceId;
-                }
-
-                const response = await fetch(
-                    "/api/stripe/change-plan",
-                    {
-                        method: "POST",
-                        headers,
-                        body: JSON.stringify({ plan }),
-                    },
+        try {
+            const activeWorkspaceId =
+                window.localStorage.getItem(
+                    "closeflow_active_workspace",
                 );
 
-                const data = (await response.json()) as {
+            const headers: HeadersInit = {
+                "Content-Type":
+                    "application/json",
+            };
+
+            if (activeWorkspaceId) {
+                headers["x-closeflow-workspace-id"] =
+                    activeWorkspaceId;
+            }
+
+            const response = await fetch(
+                "/api/stripe/change-plan",
+                {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({ plan }),
+                },
+            );
+
+            const data =
+                (await response.json()) as {
                     success?: boolean;
                     error?: string;
                 };
 
-                if (!response.ok) {
-                    const message =
-                        data.error ||
-                        "Could not change subscription plan.";
+            if (!response.ok) {
+                const message =
+                    data.error ||
+                    "Could not change subscription plan.";
 
-                    if (
-                        message
-                            .toLowerCase()
-                            .includes(
-                                "two-factor authentication required",
-                            )
-                    ) {
-                        toast.error(
-                            "2FA required before plan changes. Open Settings → Security.",
-                        );
-                    } else {
-                        toast.error(message);
-                    }
-
-                    return;
+                if (
+                    message
+                        .toLowerCase()
+                        .includes(
+                            "two-factor authentication required",
+                        )
+                ) {
+                    toast.error(
+                        "2FA required before plan changes. Open Settings → Security.",
+                    );
+                } else {
+                    toast.error(message);
                 }
 
-                toast.success(
-                    plan === "free"
-                        ? "Downgrade to Free scheduled for the end of the current billing period."
-                        : `Plan changed to ${
-                            plan === "pro"
-                                ? "Pro"
-                                : "Business"
-                        }.`,
-                );
-
-                await loadBilling();
-            } catch {
-                toast.error(
-                    "Could not change subscription plan.",
-                );
-            } finally {
-                setActionLoading(null);
+                return;
             }
-        };
+
+            toast.success(
+                plan === "free"
+                    ? "Downgrade to Free scheduled for the end of the current billing period."
+                    : `Plan changed to ${
+                          plan === "pro"
+                              ? "Pro"
+                              : "Business"
+                      }.`,
+            );
+
+            await loadBilling();
+        } catch {
+            toast.error(
+                "Could not change subscription plan.",
+            );
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     const openPortal = async () => {
         if (!canManageBilling) {
@@ -349,9 +405,8 @@ const response = await fetch(
             const headers: HeadersInit = {};
 
             if (activeWorkspaceId) {
-                headers[
-                    "x-closeflow-workspace-id"
-                ] = activeWorkspaceId;
+                headers["x-closeflow-workspace-id"] =
+                    activeWorkspaceId;
             }
 
             const response = await fetch(
@@ -362,10 +417,11 @@ const response = await fetch(
                 },
             );
 
-            const data = (await response.json()) as {
-                portalUrl?: string | null;
-                error?: string;
-            };
+            const data =
+                (await response.json()) as {
+                    portalUrl?: string | null;
+                    error?: string;
+                };
 
             if (!response.ok) {
                 const message =
@@ -479,8 +535,7 @@ const response = await fetch(
                     ) : (
                         <>
                             <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-                              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                    
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-sm text-foreground/60">
                                             Current plan
@@ -499,10 +554,9 @@ const response = await fetch(
                                         {billing?.current_period_end && (
                                             <p className="mt-1 text-sm text-foreground/60">
                                                 Current period ends on{" "}
-                                                {new Date(
+                                                {formatDate(
                                                     billing.current_period_end,
-                                                ).toLocaleDateString(
-                                                    "en-US",
+                                                    timezone,
                                                 )}
                                                 .
                                             </p>
@@ -516,11 +570,13 @@ const response = await fetch(
                                                 void openPortal()
                                             }
                                             disabled={
-                                                actionLoading !== null
+                                                actionLoading !==
+                                                null
                                             }
                                             className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                         >
-                                            {actionLoading === "portal"
+                                            {actionLoading ===
+                                            "portal"
                                                 ? "Opening..."
                                                 : "Manage subscription"}
                                         </button>
@@ -531,7 +587,9 @@ const response = await fetch(
                             <section className="grid gap-6 md:grid-cols-3">
                                 {plans.map((plan) => {
                                     const isCurrent =
-                                        currentPlan === plan.id;
+                                        currentPlan ===
+                                        plan.id;
+
                                     const isFree =
                                         plan.id === "free";
 
@@ -577,7 +635,9 @@ const response = await fetch(
                                                 {plan.features.map(
                                                     (feature) => (
                                                         <li
-                                                            key={feature}
+                                                            key={
+                                                                feature
+                                                            }
                                                             className="flex gap-2"
                                                         >
                                                             <span className="text-cyan-300">
@@ -585,7 +645,9 @@ const response = await fetch(
                                                             </span>
 
                                                             <span>
-                                                                {feature}
+                                                                {
+                                                                    feature
+                                                                }
                                                             </span>
                                                         </li>
                                                     ),
@@ -604,23 +666,38 @@ const response = await fetch(
                                                 ) : isFree ? (
                                                     <button
                                                         type="button"
-                                                        onClick={() => void changePlan("free")}
+                                                        onClick={() =>
+                                                            void changePlan(
+                                                                "free",
+                                                            )
+                                                        }
                                                         disabled={
-                                                            currentPlan === "free" ||
-                                                            actionLoading !== null
+                                                            currentPlan ===
+                                                                "free" ||
+                                                            actionLoading !==
+                                                                null
                                                         }
                                                         className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
                                                     >
-                                                        {actionLoading === "free"
+                                                        {actionLoading ===
+                                                        "free"
                                                             ? "Scheduling downgrade..."
                                                             : "Switch to Free"}
                                                     </button>
-                                                ) : currentPlan === "free" ? (
+                                                ) : currentPlan ===
+                                                  "free" ? (
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            if (plan.id === "pro" || plan.id === "business") {
-                                                                void startCheckout(plan.id);
+                                                            if (
+                                                                plan.id ===
+                                                                    "pro" ||
+                                                                plan.id ===
+                                                                    "business"
+                                                            ) {
+                                                                void startCheckout(
+                                                                    plan.id,
+                                                                );
                                                             }
                                                         }}
                                                         disabled={
@@ -639,18 +716,24 @@ const response = await fetch(
                                                         type="button"
                                                         onClick={() => {
                                                             if (
-                                                                plan.id === "pro" ||
-                                                                plan.id === "business"
+                                                                plan.id ===
+                                                                    "pro" ||
+                                                                plan.id ===
+                                                                    "business"
                                                             ) {
-                                                                void changePlan(plan.id);
+                                                                void changePlan(
+                                                                    plan.id,
+                                                                );
                                                             }
                                                         }}
                                                         disabled={
-                                                            actionLoading !== null
+                                                            actionLoading !==
+                                                            null
                                                         }
                                                         className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-60"
                                                     >
-                                                        {actionLoading === plan.id
+                                                        {actionLoading ===
+                                                        plan.id
                                                             ? "Changing plan..."
                                                             : `Switch to ${plan.name}`}
                                                     </button>
@@ -684,7 +767,8 @@ const response = await fetch(
                                         }
                                         className="mt-5 rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
                                     >
-                                        {actionLoading === "portal"
+                                        {actionLoading ===
+                                        "portal"
                                             ? "Opening..."
                                             : "Open Stripe Billing Portal"}
                                     </button>
@@ -707,7 +791,9 @@ const response = await fetch(
                                 onClick={() =>
                                     void loadBilling()
                                 }
-                                disabled={billingLoading}
+                                disabled={
+                                    billingLoading
+                                }
                                 className="text-sm text-foreground/50 hover:text-foreground/80 disabled:opacity-50"
                             >
                                 Refresh billing status

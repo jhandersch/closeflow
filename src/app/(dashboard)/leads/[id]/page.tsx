@@ -1,11 +1,10 @@
-"use client";
-import { useState } from "react";
+﻿"use client";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLeadDetail } from "@/hooks/useLeadDetail";
 import { useLeadActions } from "@/hooks/useLeadActions";
 import { useTasks } from "@/hooks/useTasks";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import type { Activity, TaskPriority, } from "@/types";
 import LeadHeader from "@/components/leads/detail/LeadHeader";
 import LeadTabs from "@/components/leads/detail/LeadTabs";
@@ -18,6 +17,7 @@ import ActivityTimeline from "@/components/leads/ActivityTimeline";
 import PipelineJourney from "@/components/leads/PipelineJourney";
 import DealMetrics from "@/components/leads/DealMetrics";
 import AILeadSummary from "@/components/leads/AILeadSummary";
+import { supabase } from "@/lib/supabase/client";
 import { calculateSalesScore } from "@/lib/salesScore";
 import { getStaleDays } from "@/lib/scoring";
 type Tab = "overview" | "activities" | "notes" | "tasks" | "meetings";
@@ -29,7 +29,29 @@ export default function LeadDetailPage() {
             params.id
         :
             "";
-    const { language } = useAppPreferences();
+    const locale = "en-US";
+    const [timezone, setTimezone] = useState("Europe/Berlin");
+    useEffect(() => {
+        const loadTimezone = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                return;
+            }
+
+            const savedTimezone =
+                typeof user.user_metadata?.timezone === "string" &&
+                user.user_metadata.timezone.trim()
+                    ? user.user_metadata.timezone
+                    : "Europe/Berlin";
+
+            setTimezone(savedTimezone);
+        };
+
+        void loadTimezone();
+    }, []);
     const { lead, setLead, activities, loading, refresh } = useLeadDetail(id);
     const { saveLead, deleteLead } = useLeadActions();
     const { tasks, addTask: addLeadTask, toggleTask: toggleLeadTask, editTask: editLeadTask, deleteTask: deleteLeadTask, refresh: refreshTasks, } = useTasks(id);
@@ -187,10 +209,15 @@ space-y-6
 
 
 
-                <LeadDetailsForm lead={lead} saveLead={saveLead} onSaved={async (updatedLead) => {
+                <LeadDetailsForm
+                    lead={lead}
+                    saveLead={saveLead}
+                    timeZone={timezone}
+                    onSaved={async (updatedLead) => {
                         setLead(updatedLead);
                         await refreshTasks();
-                    }}/>
+                    }}
+                />
 
 
                 </>}
@@ -201,14 +228,18 @@ space-y-6
 
         {activeTab === "activities"
             &&
-                <ActivityTimeline activities={timelineActivities}/>}
+                <ActivityTimeline 
+                activities={timelineActivities}
+                timeZone={timezone}
+                locale={locale}
+            />}
 
 
 
 
         {activeTab === "tasks"
             &&
-                <LeadTasks tasks={tasks} addTask={addTask} editTask={editTask} toggleTask={toggleTask} deleteTask={deleteTask}/>}
+                <LeadTasks tasks={tasks} timeZone={timezone} addTask={addTask} editTask={editTask} toggleTask={toggleTask} deleteTask={deleteTask}/>}
 
 
 
@@ -222,7 +253,9 @@ space-y-6
 
         {activeTab === "meetings"
             &&
-                <LeadMeetings leadId={lead.id}/>}
+                <LeadMeetings leadId={lead.id} 
+                                timeZone={timezone}/>}
+                
 
 
 
