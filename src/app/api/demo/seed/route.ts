@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
+import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 import type { Lead } from "@/types";
 type DemoLeadSeed = {
     name: string;
@@ -124,7 +125,6 @@ export async function POST(request: Request) {
         .select("id")
         .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
         .is("deleted_at", null)
-        .in("status", ["new", "contacted", "proposal"])
         .ilike("notes", `${DEMO_MARKER}%`);
     if (existingDemoLeadsResult.error) {
         return NextResponse.json({ error: existingDemoLeadsResult.error.message }, { status: 500 });
@@ -156,7 +156,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: deleteTasks.error.message }, { status: 500 });
         }
         if (deleteTasks.error && isMissingSchemaError(deleteTasks.error.message || "")) {
-            warnings.push("Tasks table not available in this environment, demo tasks were skipped.");
+            if (!warnings.includes("Tasks table not available in this environment, demo tasks were skipped.")) {
+                warnings.push("Tasks table not available in this environment, demo tasks were skipped.");
+            }
         }
         const deleteLeads = await supabase.from("leads").delete().in("id", leadIds);
         if (deleteLeads.error) {
@@ -167,6 +169,10 @@ export async function POST(request: Request) {
     let insertedActivities = 0;
     let insertedTasks = 0;
     for (const leadSeed of demoLeads) {
+        const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspaceId || "");
+        if (!leadCapacity.ok) {
+            return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });
+        }
         const leadInsert = await supabase
             .from("leads")
             .insert({
@@ -237,7 +243,9 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: taskInsert.error.message }, { status: 500 });
             }
             if (taskInsert.error && isMissingSchemaError(taskInsert.error.message || "")) {
+                if (!warnings.includes("Tasks table not available in this environment, demo tasks were skipped.")) {
                 warnings.push("Tasks table not available in this environment, demo tasks were skipped.");
+            }
             }
             else {
                 insertedTasks += taskRows.length;

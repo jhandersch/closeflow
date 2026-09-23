@@ -3,6 +3,7 @@ import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
 import type { Lead } from "@/types";
 import { rateLimit } from "@/lib/rateLimit";
+import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 export async function GET(req: Request) {
     try {
         const { supabase, user, error: authError } = await getRouteUser(req);
@@ -77,17 +78,16 @@ export async function POST(req: Request) {
         }
         const body = await req.json();
         const { workspace } = await loadWorkspaceForUser(supabase, user.id);
-        console.log("=== CREATE LEAD DEBUG ===");
-        console.log("User:", user.id);
-        console.log("Workspace:", workspace);
-        console.log("Workspace ID:", workspace?.id);
-        console.log("Body:", body);
         if (!workspace?.id) {
             return NextResponse.json({
                 error: "Workspace required"
             }, {
                 status: 403
             });
+        }
+        const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspace.id);
+        if (!leadCapacity.ok) {
+            return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });
         }
         const { data, error } = await supabase
             .from("leads")
@@ -468,3 +468,6 @@ export async function PATCH(req: Request) {
         }, { status: 500 });
     }
 }
+
+
+

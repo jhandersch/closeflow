@@ -1,4 +1,5 @@
 "use client";
+import { appConfirm } from "@/lib/dialogs";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -273,7 +274,7 @@ export default function CustomersPage() {
       return;
     }
 
-    const confirmed = window.confirm(
+    const confirmed = await appConfirm(
       `Are you sure you want to delete "${customer.company}"?`
     );
 

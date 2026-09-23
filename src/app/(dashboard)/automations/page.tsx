@@ -1,4 +1,5 @@
 "use client";
+import { appConfirm } from "@/lib/dialogs";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -383,7 +384,7 @@ export default function AutomationsPage() {
 
   const remove = async (id: string) => {
     if (
-      !window.confirm(
+      !await appConfirm(
         "Delete this automation?"
       )
     ) {

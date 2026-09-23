@@ -1,4 +1,5 @@
 "use client";
+import { appConfirm } from "@/lib/dialogs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -65,7 +66,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
         }
     }
     async function handleDelete() {
-        const confirmed = confirm("Delete this lead?");
+        const confirmed = await appConfirm("Delete this lead?");
         if (!confirmed)
             return;
         try {

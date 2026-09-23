@@ -1,50 +1,35 @@
-import toast from "react-hot-toast"
+import toast from "react-hot-toast";
 
 type NotificationOptions = {
-  id?: string
-  duration?: number
-}
+  id?: string;
+  duration?: number;
+};
 
 export const notify = {
-  success(
-    message: string,
-    options: NotificationOptions = {}
-  ) {
+  success(message: string, options: NotificationOptions = {}) {
     return toast.success(message, {
       id: options.id,
       duration: options.duration ?? 4000,
-    })
+    });
   },
-
-  error(
-    message: string,
-    options: NotificationOptions = {}
-  ) {
+  error(message: string, options: NotificationOptions = {}) {
     return toast.error(message, {
       id: options.id,
       duration: options.duration ?? 4000,
-    })
+    });
   },
-
-  warning(
-    message: string,
-    options: NotificationOptions = {}
-  ) {
+  warning(message: string, options: NotificationOptions = {}) {
     return toast(message, {
       id: options.id,
       duration: options.duration ?? 4000,
-      icon: "⚠",
-    })
+      icon: "\u26A0\uFE0F",
+    });
   },
-
-  info(
-    message: string,
-    options: NotificationOptions = {}
-  ) {
+  info(message: string, options: NotificationOptions = {}) {
     return toast(message, {
       id: options.id,
       duration: options.duration ?? 4000,
-      icon: "ℹ",
-    })
+      icon: "\u2139\uFE0F",
+    });
   },
-}
+};

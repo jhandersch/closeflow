@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+import { planDetails, type Plan } from "@/lib/planDetails";
+import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
 import { loadDemoData } from "@/lib/demoData";
 
 type QuickStartMode = "lead" | "demo";
-type Plan = "free" | "pro" | "business";
-
 const ONBOARDING_DRAFT_KEY = "closeflow-onboarding-draft-v1";
 
 const sanitizeNextPath = (nextPath: string | null) => {
@@ -39,35 +39,6 @@ const getRecommendedPlan = (teamSize: string): Plan => {
     return "business";
 };
 
-const planDetails: Record<
-    Plan,
-    {
-        name: string;
-        price: string;
-        seats: string;
-        description: string;
-    }
-> = {
-    free: {
-        name: "Free",
-        price: "€0/month",
-        seats: "1 team member",
-        description: "For individuals getting started with CloseFlow.",
-    },
-    pro: {
-        name: "Pro",
-        price: "€49/month",
-        seats: "Up to 5 team members",
-        description: "For growing sales teams that need more capacity.",
-    },
-    business: {
-        name: "Business",
-        price: "€149/month",
-        seats: "Up to 20 team members",
-        description: "For larger teams with maximum CRM capacity.",
-    },
-};
-
 export default function OnboardingPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -88,6 +59,9 @@ export default function OnboardingPage() {
     const [teamSize, setTeamSize] = useState("");
     const [selectedPlan, setSelectedPlan] =
         useState<Plan>("free");
+
+    const [detailsPlan, setDetailsPlan] =
+        useState<Plan | null>(null);
 
     const [leadName, setLeadName] = useState("");
     const [leadCompany, setLeadCompany] = useState("");
@@ -710,7 +684,6 @@ export default function OnboardingPage() {
                                 </label>
                             </div>
                         )}
-
                         {step === 2 && (
                             <div className="space-y-5">
                                 <div>
@@ -757,27 +730,12 @@ export default function OnboardingPage() {
                                                     recommendedPlan;
 
                                             return (
-                                                <button
-                                                    key={
-                                                        plan
-                                                    }
-                                                    type="button"
-                                                    disabled={
-                                                        disabled
-                                                    }
-                                                    onClick={() =>
-                                                        setSelectedPlan(
-                                                            plan,
-                                                        )
-                                                    }
-                                                    className={`rounded-2xl border p-5 text-left transition ${
+                                                <article
+                                                    key={plan}
+                                                    className={`rounded-2xl border p-5 transition ${
                                                         selected
                                                             ? "border-cyan-400/40 bg-cyan-500/10"
-                                                            : "border-border-subtle bg-surface-2/60 hover:bg-surface-2"
-                                                    } ${
-                                                        disabled
-                                                            ? "cursor-not-allowed opacity-35"
-                                                            : ""
+                                                            : "border-border-subtle bg-surface-2/60"
                                                     }`}
                                                 >
                                                     <div className="flex items-start justify-between gap-4">
@@ -809,11 +767,9 @@ export default function OnboardingPage() {
                                                         </div>
 
                                                         {selected && (
-                                                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-black">
+                                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-black">
                                                                 <Check
-                                                                    size={
-                                                                        16
-                                                                    }
+                                                                    size={16}
                                                                 />
                                                             </div>
                                                         )}
@@ -837,8 +793,37 @@ export default function OnboardingPage() {
                                                                 }
                                                             </p>
                                                         </div>
+
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                type="button"
+                                                                disabled={disabled}
+                                                                onClick={() =>
+                                                                    setSelectedPlan(
+                                                                        plan,
+                                                                    )
+                                                                }
+                                                                className="rounded-xl border border-border-subtle px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-35"
+                                                            >
+                                                                {selected
+                                                                    ? "Selected"
+                                                                    : "Select"}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setDetailsPlan(
+                                                                        plan,
+                                                                    )
+                                                                }
+                                                                className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/10"
+                                                            >
+                                                                View details
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </button>
+                                                </article>
                                             );
                                         },
                                     )}
@@ -1099,6 +1084,11 @@ export default function OnboardingPage() {
                                 {error}
                             </div>
                         )}
+
+                        <PlanDetailsModal
+                            plan={detailsPlan}
+                            onClose={() => setDetailsPlan(null)}
+                        />
 
                         <div className="mt-8 flex items-center justify-between gap-3">
                             <button

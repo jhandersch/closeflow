@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { AppPreferencesProvider } from "@/components/AppPreferencesProvider";
 import ToastProvider from "@/components/ToastProvider";
+import AppDialogProvider from "@/components/AppDialogProvider";
 import CookieNotice from "@/components/CookieNotice";
 import "./globals.css";
 
@@ -55,9 +56,11 @@ export default function RootLayout({
 
       <body className="min-h-full bg-background text-foreground">
         <AppPreferencesProvider>
-          <ToastProvider />
-          {children}
-          <CookieNotice />
+          <AppDialogProvider>
+            <ToastProvider />
+            {children}
+            <CookieNotice />
+          </AppDialogProvider>
         </AppPreferencesProvider>
       </body>
     </html>

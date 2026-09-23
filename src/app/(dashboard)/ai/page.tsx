@@ -13,6 +13,7 @@ type LeadLite = {
   status: string;
   value: number;
   notes?: string | null;
+  created_at: string;
 };
 
 type CopilotResponse = {
@@ -89,7 +90,8 @@ export default function AIAssistantPage() {
           error: leadsError,
         } = await supabase
           .from("leads")
-          .select("id, name, company, status, value, notes")
+          .select("id, name, company, status, value, notes, created_at")
+          .is("deleted_at", null)
           .eq("workspace_id", workspaceId)
           .order("created_at", { ascending: false })
           .limit(100);
@@ -98,7 +100,21 @@ export default function AIAssistantPage() {
           throw new Error(leadsError.message);
         }
 
-        const nextLeads = (data || []) as LeadLite[];
+        const rawLeads = (data || []) as LeadLite[];
+        const seenDemoLeads = new Set<string>();
+        const nextLeads = rawLeads.filter((lead) => {
+          if (!lead.notes?.startsWith("[DEMO_SEED_V1]")) {
+            return true;
+          }
+
+          const key = `${lead.name}::${lead.company}`;
+          if (seenDemoLeads.has(key)) {
+            return false;
+          }
+
+          seenDemoLeads.add(key);
+          return true;
+        });
 
         setLeads(nextLeads);
 

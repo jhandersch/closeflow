@@ -1,4 +1,5 @@
 "use client";
+import { appPrompt } from "@/lib/dialogs";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -682,9 +683,7 @@ export default function SettingsPage() {
       return;
     }
 
-    const code = window.prompt(
-      "Enter the 6-digit code from your authenticator app:"
-    );
+    const code = await appPrompt("Enter the 6-digit code from your authenticator app:", { title: "Verify authenticator code", confirmLabel: "Verify", inputMode: "numeric", autoComplete: "one-time-code", maxLength: 6 });
 
     if (!code?.trim()) {
       return;

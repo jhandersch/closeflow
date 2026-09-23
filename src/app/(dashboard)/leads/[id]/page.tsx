@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { appConfirm } from "@/lib/dialogs";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -150,7 +151,7 @@ text-center
     async function handleDelete() {
         if (!lead)
             return;
-        const ok = window.confirm("Delete lead?");
+        const ok = await appConfirm("Delete lead?");
         if (!ok)
             return;
         try {

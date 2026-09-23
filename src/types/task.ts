@@ -14,5 +14,6 @@ export type Task = {
     assigned_to?: string | null;
     due_date: string | null;
     completed_at?: string | null;
+    deleted_at?: string | null;
     created_at: string;
 };

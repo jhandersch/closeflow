@@ -1002,11 +1002,11 @@ Non-blocking production hardening:
 
 **### 🟡 CONDITIONAL GO**
 
-CloseFlow has passed the completed Layer A smoke tests and the previously identified release blockers have been resolved. However, the broader B8–B30 validation layer has **not yet been executed** and therefore must not be represented as tested or passed.
+CloseFlow has passed the completed Layer A smoke tests. The checklist records B1–B8, including Billing (B8), as PASS. The remaining B9–B30 product-maturity checks have **not yet been executed** and must not be represented as tested or passed.
 
 The current release decision remains based on Layer A only.
 
-B8–B30 are currently classified as:
+B9–B30 are currently classified as:
 
 **NOT YET TESTED**
 

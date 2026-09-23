@@ -7,6 +7,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { supabase } from "@/lib/supabase/client";
+import { planDetails } from "@/lib/planDetails";
 
 type BillingState = {
     workspace_id: string | null;
@@ -20,48 +21,7 @@ type Plan = "free" | "pro" | "business";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
-const plans: Array<{
-    id: Plan;
-    name: string;
-    price: string;
-    description: string;
-    features: string[];
-}> = [
-    {
-        id: "free",
-        name: "Free",
-        price: "€0",
-        description: "Get started with the core CloseFlow CRM.",
-        features: [
-            "10 AI requests / month",
-            "5 exports / month",
-            "1 team seat",
-        ],
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: "€49",
-        description: "For growing sales teams.",
-        features: [
-            "500 AI requests / month",
-            "200 exports / month",
-            "5 team seats",
-        ],
-    },
-    {
-        id: "business",
-        name: "Business",
-        price: "€149",
-        description:
-            "For teams that need the full CloseFlow experience.",
-        features: [
-            "5,000 AI requests / month",
-            "2,000 exports / month",
-            "20 team seats",
-        ],
-    },
-];
+const plans = [planDetails.free, planDetails.pro, planDetails.business];
 
 function formatDate(value: string, timeZone: string) {
     const date = new Date(value);
@@ -627,7 +587,7 @@ export default function BillingPage() {
                                                     </h2>
 
                                                     <p className="mt-2 text-3xl font-bold text-foreground">
-                                                        {plan.price}
+                                                        {plan.price.replace(/\/month$/, "")}
 
                                                         {!isFree && (
                                                             <span className="text-sm font-normal text-foreground/50">

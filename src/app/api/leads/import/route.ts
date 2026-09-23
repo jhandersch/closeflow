@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 type ImportIssue = {
     row: number;
     reason: string;
@@ -294,6 +295,12 @@ export async function POST(request: Request) {
         /**
          * New lead -> insert.
          */
+        const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspace.id);
+        if (!leadCapacity.ok) {
+            skipped += 1;
+            addIssue({ row: rowNumber, reason: leadCapacity.message, name, company });
+            continue;
+        }
         const insertPayload = {
             workspace_id: workspace.id,
             user_id: user.id,

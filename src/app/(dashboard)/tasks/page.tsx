@@ -137,11 +137,12 @@ export default function TasksPage() {
 
             const taskQuery = supabase
                 .from("tasks")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("created_at", {
-                ascending: false,
-            });
+                  .select("*")
+                  .eq("user_id", user.id)
+                  .is("deleted_at", null)
+                  .order("created_at", {
+                  ascending: false,
+              });
             const leadQuery = supabase
                 .from("leads")
                 .select("id,name,company")
@@ -354,15 +355,23 @@ export default function TasksPage() {
         }
         const previous = tasks;
         setTasks((current) => current.filter((task) => task.id !== taskId));
-        const { error, } = await supabase
-            .from("tasks")
-            .delete()
-            .eq("id", taskId);
-        if (error) {
-            setTasks(previous);
-            return;
-        }
-        await logTaskActivity({
+          const { data: deletedTask, error, } = await supabase
+              .from("tasks")
+              .update({
+                  deleted_at: new Date().toISOString(),
+              })
+              .eq("id", taskId)
+              .eq("user_id", userId)
+              .is("deleted_at", null)
+              .select("id")
+              .maybeSingle();
+
+          if (error || !deletedTask) {
+              setTasks(previous);
+              return;
+          }
+
+          await logTaskActivity({
             leadId: removedTask.lead_id,
             workspaceId: removedTask.workspace_id || null,
             userId,

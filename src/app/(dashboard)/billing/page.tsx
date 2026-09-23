@@ -7,6 +7,8 @@ import AuthGuard from "@/components/AuthGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { supabase } from "@/lib/supabase/client";
+import { planDetails } from "@/lib/planDetails";
+import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
 
 type BillingState = {
     workspace_id: string | null;
@@ -20,48 +22,7 @@ type Plan = "free" | "pro" | "business";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
-const plans: Array<{
-    id: Plan;
-    name: string;
-    price: string;
-    description: string;
-    features: string[];
-}> = [
-    {
-        id: "free",
-        name: "Free",
-        price: "€0",
-        description: "Get started with the core CloseFlow CRM.",
-        features: [
-            "Up to 50 leads",
-            "10 AI analyses per month",
-            "Basic pipeline forecasting",
-        ],
-    },
-    {
-        id: "pro",
-        name: "Pro",
-        price: "€49",
-        description: "For growing sales teams.",
-        features: [
-            "Unlimited leads",
-            "Advanced AI insights",
-            "Advanced forecasting",
-        ],
-    },
-    {
-        id: "business",
-        name: "Business",
-        price: "€149",
-        description:
-            "For teams that need the full CloseFlow experience.",
-        features: [
-            "Unlimited leads & customers",
-            "Maximum AI capabilities",
-            "Advanced analytics & forecasting",
-        ],
-    },
-];
+const plans = [planDetails.free, planDetails.pro, planDetails.business];
 
 function formatDate(
     value: string,
@@ -88,6 +49,9 @@ export default function BillingPage() {
 
     const [actionLoading, setActionLoading] =
         useState<Plan | "portal" | null>(null);
+
+    const [detailsPlan, setDetailsPlan] =
+        useState<Plan | null>(null);
 
     const [timezone, setTimezone] =
         useState(DEFAULT_TIMEZONE);
@@ -609,7 +573,7 @@ export default function BillingPage() {
                                                     </h2>
 
                                                     <p className="mt-2 text-3xl font-bold text-foreground">
-                                                        {plan.price}
+                                                        {plan.price.replace(/\/month$/, "")}
 
                                                         {!isFree && (
                                                             <span className="text-sm font-normal text-foreground/50">
@@ -653,6 +617,18 @@ export default function BillingPage() {
                                                     ),
                                                 )}
                                             </ul>
+
+                                              <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                      setDetailsPlan(
+                                                          plan.id,
+                                                      )
+                                                  }
+                                                  className="mt-5 flex h-10 w-full items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/10"
+                                              >
+                                                  View plan details
+                                              </button>
 
                                             <div className="mt-8">
                                                 {isCurrent ? (
@@ -802,6 +778,12 @@ export default function BillingPage() {
                     )}
                 </div>
             )}
+            <PlanDetailsModal
+                plan={detailsPlan}
+                onClose={() => setDetailsPlan(null)}
+            />
+
         </AuthGuard>
     );
 }
+

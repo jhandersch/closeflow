@@ -44,7 +44,7 @@ const plans: Array<{
   {
     key: "pro",
     name: "Pro",
-    price: "EUR 29",
+    price: "EUR 49",
     subtitle: "per workspace / month",
     cta: "Upgrade to Pro",
     checkout: true,
@@ -61,7 +61,7 @@ const plans: Array<{
   {
     key: "business",
     name: "Business",
-    price: "EUR 79",
+    price: "EUR 149",
     subtitle: "per workspace / month",
     cta: "Upgrade to Business",
     checkout: true,
@@ -71,7 +71,7 @@ const plans: Array<{
       "Everything in Pro",
       "Priority automation capacity",
       "Expanded usage limits",
-      "10+ team seats",
+      "20 team seats",
     ],
   },
 ];
@@ -278,7 +278,7 @@ export default function PricingPage() {
                   <td className="py-3 pr-4">Team seats</td>
                   <td className="py-3 pr-4">1</td>
                   <td className="py-3 pr-4">5</td>
-                  <td className="py-3">10+</td>
+                  <td className="py-3">20</td>
                 </tr>
 
                 <tr>

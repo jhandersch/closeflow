@@ -1,5 +1,7 @@
 "use client";
 
+import { appConfirm } from "@/lib/dialogs";
+
 import {
     useEffect,
     useMemo,
@@ -589,7 +591,7 @@ export default function CalendarPage() {
         id: string,
     ) => {
         const confirmed =
-            window.confirm(
+            await appConfirm(
                 "Delete meeting?",
             );
 

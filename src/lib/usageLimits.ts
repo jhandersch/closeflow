@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadWorkspaceForUser } from "@/lib/supabase/route";
-type PlanTier = "free" | "pro" | "business";
+import { planDetails, type Plan } from "@/lib/planDetails";
+type PlanTier = Plan;
 type Limits = {
     aiRequestsMonthly: number | null;
     exportsMonthly: number | null;
     teamSeats: number | null;
+    leadCapacity: number | null;
 };
 type UsageSnapshot = {
     aiRequests: number;
@@ -20,21 +22,9 @@ type WorkspaceUsageContext = {
     pendingInvites: number;
 };
 const PLAN_LIMITS: Record<PlanTier, Limits> = {
-    free: {
-        aiRequestsMonthly: 10,
-        exportsMonthly: 5,
-        teamSeats: 1,
-    },
-    pro: {
-        aiRequestsMonthly: 500,
-        exportsMonthly: 200,
-        teamSeats: 5,
-    },
-    business: {
-        aiRequestsMonthly: 5000,
-        exportsMonthly: 2000,
-        teamSeats: 20,
-    },
+    free: planDetails.free.limits,
+    pro: planDetails.pro.limits,
+    business: planDetails.business.limits,
 };
 const normalizePlan = (value: unknown): PlanTier => {
     const plan = typeof value === "string" ? value.toLowerCase() : "free";
@@ -298,4 +288,42 @@ export async function enforceTeamSeatLimit(
     }
 
     return { ok: true };
+}
+
+export async function enforceLeadCapacityLimit(
+    supabase: SupabaseClient,
+    userId: string,
+    workspaceId: string,
+) {
+    const context = await getWorkspaceUsageContext(supabase, userId, workspaceId);
+
+    if (!context || context.limits.leadCapacity === null) {
+        return { ok: true } as const;
+    }
+
+    const { count, error } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .is("deleted_at", null);
+
+    if (error) {
+        return {
+            ok: false,
+            status: 500,
+            message: "Could not verify lead capacity.",
+        } as const;
+    }
+
+    const currentCount = count ?? 0;
+
+    if (currentCount >= context.limits.leadCapacity) {
+        return {
+            ok: false,
+            status: 429,
+            message: `Lead limit reached for ${context.plan.toUpperCase()} plan (${currentCount}/${context.limits.leadCapacity}). Upgrade your plan to add more leads.`,
+        } as const;
+    }
+
+    return { ok: true } as const;
 }

@@ -7,27 +7,69 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useSidebar } from "@/components/SidebarContext";
 import { supabase } from "@/lib/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
-function useNotificationCount() {
+function useNotificationCount(pathname: string) {
     const [count, setCount] = useState(0);
+
     useEffect(() => {
         let cancelled = false;
+
         const load = async () => {
-            const { data: { user }, } = await supabase.auth.getUser();
-            if (!user)
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user || cancelled) {
                 return;
-            const response = await fetch("/api/notifications");
-            if (!response.ok || cancelled)
+            }
+
+            const response = await fetch("/api/notifications", {
+                cache: "no-store",
+            });
+
+            if (!response.ok || cancelled) {
                 return;
+            }
+
             const data = (await response.json()) as Array<{
                 level: string;
             }>;
+
             if (!cancelled) {
-                setCount(Array.isArray(data) ? data.filter((n) => n.level === "critical" || n.level === "warning").length : 0);
+                setCount(Array.isArray(data) ? data.length : 0);
             }
         };
+
+        const refreshOnFocus = () => {
+            void load();
+        };
+
+        const refreshOnVisibility = () => {
+            if (document.visibilityState === "visible") {
+                void load();
+            }
+        };
+
         void load();
-        return () => { cancelled = true; };
-    }, []);
+
+        window.addEventListener("focus", refreshOnFocus);
+        document.addEventListener(
+            "visibilitychange",
+            refreshOnVisibility
+        );
+
+        const interval = window.setInterval(() => {
+            void load();
+        }, 30000);
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener("focus", refreshOnFocus);
+            document.removeEventListener(
+                "visibilitychange",
+                refreshOnVisibility
+            );
+            window.clearInterval(interval);
+        };
+    }, [pathname]);
+
     return count;
 }
 export default function Sidebar() {
@@ -36,7 +78,7 @@ export default function Sidebar() {
     const router = useRouter();
     const { hydrated, t } = useAppPreferences();
     const { open, setOpen } = useSidebar();
-    const notificationCount = useNotificationCount();
+    const notificationCount = useNotificationCount(pathname);
     // Close sidebar on route change (mobile)
     useEffect(() => {
         setOpen(false);
