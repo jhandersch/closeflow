@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1424"/><stop offset="1" stop-color="#111d31"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity=".4"/></filter>
+  </defs>
+  <rect width="1200" height="720" rx="30" fill="url(#bg)"/>
+  <circle cx="1080" cy="100" r="180" fill="#0891b2" opacity=".08"/>
+  <text x="72" y="88" fill="#67e8f9" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">CLOSEFLOW · CUSTOMER IMPORT</text>
+  <text x="72" y="150" fill="#f8fafc" font-family="Arial, sans-serif" font-size="42" font-weight="700">Prepare your spreadsheet</text>
+  <text x="72" y="190" fill="#94a3b8" font-family="Arial, sans-serif" font-size="20">Use these column headers in the first row of your file.</text>
+  <rect x="72" y="230" width="1056" height="284" rx="18" fill="#111b2b" stroke="#26364b" filter="url(#shadow)"/>
+  <rect x="72" y="230" width="1056" height="58" rx="18" fill="#1a2940"/>
+  <path d="M72 270h1056v18H72z" fill="#1a2940"/>
+  <circle cx="100" cy="259" r="7" fill="#fb7185"/><circle cx="124" cy="259" r="7" fill="#fbbf24"/><circle cx="148" cy="259" r="7" fill="#34d399"/>
+  <text x="184" y="266" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="16">customers.xlsx · Sheet 1</text>
+  <rect x="88" y="304" width="1024" height="52" rx="8" fill="#123047"/>
+  <text x="116" y="337" fill="#67e8f9" font-family="Arial, sans-serif" font-size="20" font-weight="700">company *</text>
+  <text x="452" y="337" fill="#67e8f9" font-family="Arial, sans-serif" font-size="20" font-weight="700">contact</text>
+  <text x="802" y="337" fill="#67e8f9" font-family="Arial, sans-serif" font-size="20" font-weight="700">revenue</text>
+  <path d="M426 304v194M776 304v194" stroke="#26364b" stroke-width="2"/>
+  <path d="M88 356h1024M88 403h1024M88 450h1024M88 497h1024" stroke="#26364b" stroke-width="1"/>
+  <text x="116" y="387" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="19">Northstar Labs</text>
+  <text x="452" y="387" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="19">Maya Chen</text>
+  <text x="802" y="387" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="19">12500</text>
+  <text x="116" y="434" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="19">Brightside Co.</text>
+  <text x="452" y="434" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="19">Jordan Lee</text>
+  <text x="802" y="434" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="19">0</text>
+  <text x="116" y="481" fill="#64748b" font-family="Arial, sans-serif" font-size="18">Acme Studio</text>
+  <text x="452" y="481" fill="#64748b" font-family="Arial, sans-serif" font-size="18">(optional)</text>
+  <text x="802" y="481" fill="#64748b" font-family="Arial, sans-serif" font-size="18">(optional)</text>
+  <rect x="72" y="548" width="1056" height="112" rx="16" fill="#0c1828" stroke="#203148"/>
+  <rect x="72" y="548" width="5" height="112" rx="2" fill="url(#accent)"/>
+  <text x="100" y="584" fill="#f8fafc" font-family="Arial, sans-serif" font-size="18" font-weight="700">Required: company</text>
+  <text x="100" y="615" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="16">Optional: contact (auto-filled if blank) · revenue (numeric amount, defaults to 0)</text>
+  <text x="100" y="642" fill="#94a3b8" font-family="Arial, sans-serif" font-size="15">Accepted formats: .xlsx, .xls, .csv · Only the first worksheet is imported.</text>
+</svg>

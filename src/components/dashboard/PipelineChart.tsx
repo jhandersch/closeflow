@@ -100,23 +100,24 @@ export default function PipelineChart({ data, }: PipelineChartProps) {
           <BarChart data={translatedData} layout="vertical">
 
 
-            <CartesianGrid stroke="currentColor" opacity={0.08} horizontal={false}/>
+            <CartesianGrid stroke="#94a3b8" opacity={0.10} horizontal={false}/>
 
 
 
-            <XAxis type="number" stroke="currentColor" opacity={0.5} tickLine={false}/>
+            <XAxis type="number" stroke="#94a3b8" tick={{ fill: "#94a3b8", fontSize: 12 }} tickLine={false} axisLine={false}/>
 
 
 
-            <YAxis dataKey="name" type="category" stroke="currentColor" opacity={0.5} width={90} tickLine={false}/>
+            <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fill: "#cbd5e1", fontSize: 12 }} width={90} tickLine={false} axisLine={false}/>
 
 
 
 
-            <Tooltip contentStyle={{
+            <Tooltip cursor={{ fill: "rgba(34, 211, 238, 0.08)" }} contentStyle={{
             background: "var(--surface-1)",
             border: "1px solid var(--border-subtle)",
             borderRadius: "12px",
+            boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
         }} formatter={(value) => [
             `${value} ${t("dashboard.deals", "deals")}`,
             t("dashboard.deals", "Deals"),
@@ -131,7 +132,7 @@ export default function PipelineChart({ data, }: PipelineChartProps) {
             8,
             8,
             0
-        ]} animationDuration={1000}>
+        ]} maxBarSize={32} animationDuration={800} activeBar={{ stroke: "#e2e8f0", strokeWidth: 1, fillOpacity: 0.9 }}>
 
               {translatedData.map((entry, index) => (<Cell key={`${entry.name}-${index}`} fill={stageColors[data[index]?.name] ??
                 "#22d3ee"}/>))}

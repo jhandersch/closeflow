@@ -305,6 +305,7 @@ export async function enforceLeadCapacityLimit(
         .from("leads")
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", workspaceId)
+        .in("status", ["new", "contacted", "proposal"])
         .is("deleted_at", null);
 
     if (error) {

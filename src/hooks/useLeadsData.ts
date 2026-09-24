@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Activity, Lead } from "@/types";
 type UseLeadsDataOptions = {
-    activityLimit?: number;
+    activityLimit?: number | null;
+    activityFilter?: "today" | "week" | "month" | "all" | "8weeks";
     includeCompleted?: boolean;
 };
-export function useLeadsData({ activityLimit = 6, includeCompleted = false, }: UseLeadsDataOptions = {}) {
+export function useLeadsData({ activityLimit = 6, activityFilter = "month", includeCompleted = false, }: UseLeadsDataOptions = {}) {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
@@ -19,26 +20,32 @@ export function useLeadsData({ activityLimit = 6, includeCompleted = false, }: U
         }
         setError(null);
         try {
-            const [leadsResponse, activityResponse,] = await Promise.all([
+            const activityRequest = activityLimit !== 0
+                ? fetch(`/api/activity?filter=${activityFilter}`, {
+                    cache: "no-store",
+                }).catch((error) => {
+                    console.error("ACTIVITY DATA ERROR:", error);
+                    return null;
+                })
+                : Promise.resolve(null);
+            const [leadsResponse, activityResponse] = await Promise.all([
                 fetch(`/api/leads?${includeCompleted ? "includeCompleted=true&" : ""}t=${Date.now()}`, {
                     cache: "no-store",
                 }),
-                fetch(`/api/activity?filter=month&limit=${activityLimit}`, {
-                    cache: "no-store",
-                }),
+                activityRequest,
             ]);
             const leadsJson = await leadsResponse.json();
-            const activityJson = await activityResponse.json();
             if (!leadsResponse.ok) {
                 throw new Error(leadsJson.error ||
                     "Failed loading leads");
             }
-            if (!activityResponse.ok) {
-                throw new Error(activityJson.error ||
-                    "Failed loading activities");
-            }
+            const activityJson = activityResponse?.ok
+                ? await activityResponse.json().catch(() => [])
+                : [];
             const activityData = Array.isArray(activityJson)
-                ? activityJson.slice(0, activityLimit)
+                ? activityLimit === null
+                    ? activityJson
+                    : activityJson.slice(0, activityLimit)
                 : [];
             setLeads(Array.isArray(leadsJson)
                 ? (leadsJson as Lead[])
@@ -64,7 +71,7 @@ export function useLeadsData({ activityLimit = 6, includeCompleted = false, }: U
                 setLoading(false);
             }
         }
-    }, [activityLimit, includeCompleted]);
+    }, [activityFilter, activityLimit, includeCompleted]);
     useEffect(() => {
         void load(false);
     }, [load]);

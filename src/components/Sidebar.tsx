@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, Zap, Bell, UserRound, } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, } from "lucide-react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useSidebar } from "@/components/SidebarContext";
 import { supabase } from "@/lib/supabase/client";
@@ -86,8 +86,8 @@ export default function Sidebar() {
     const links = [
         { href: "/search", label: t("nav.search", "Search"), icon: SearchIcon },
         { href: "/dashboard", label: t("nav.dashboard", "Dashboard"), icon: LayoutDashboard },
-        { href: "/leads", label: t("nav.leads", "Leads"), icon: UserRoundCheck },
-        { href: "/customers", label: t("nav.customers", "Customers"), icon: UsersRound },
+        { href: "/leads", label: t("nav.leads", "Leads"), icon: UsersRound },
+        { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRoundCheck },
         { href: "/pipeline", label: t("nav.pipeline", "Pipeline"), icon: Workflow },
         { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
         { href: "/activities", label: t("nav.activities", "Activities"), icon: Activity },
@@ -95,7 +95,7 @@ export default function Sidebar() {
         { href: "/analytics", label: t("nav.analytics", "Analytics"), icon: BarChart3 },
         { href: "/forecast", label: t("nav.forecast", "Forecast"), icon: TrendingUp },
         { href: "/calendar", label: t("nav.calendar", "Calendar"), icon: Calendar },
-        { href: "/automations", label: t("nav.automations", "Automations"), icon: Zap },
+        { href: "/automations", label: t("nav.automations", "Automations"), icon: ListRestart },
         { href: "/notifications", label: t("nav.notifications", "Notifications"), icon: Bell },
         { href: "/feedback", label: t("nav.feedback", "Feedback"), icon: MessageSquare },
         { href: "/team", label: t("nav.team", "Team"), icon: UserRound },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
+import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
 import { rateLimit } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
@@ -180,6 +181,20 @@ export async function PUT(req: Request) {
                 status: 500
             });
         }
+        const reactivatingLead =
+            (oldLead.status === "won" || oldLead.status === "lost") &&
+            (updates.status === "new" || updates.status === "contacted" || updates.status === "proposal");
+        if (reactivatingLead) {
+            const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspace.id);
+            if (!leadCapacity.ok) {
+                return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });
+            }
+        }
+        if (updates.status && oldLead.status !== updates.status) {
+            const defaults = getDefaultStatusNextAction(updates.status);
+            updates.next_action ??= defaults.action;
+            updates.next_action_date ??= defaults.actionDate;
+        }
         /*
           Update lead
         */
@@ -205,6 +220,23 @@ export async function PUT(req: Request) {
             }, {
                 status: 500
             });
+        }
+        let warning: string | undefined;
+        const terminalStatus = updates.status === "won" || updates.status === "lost";
+        if (terminalStatus) {
+            const existingCosts = Array.isArray(user.user_metadata?.personal_deal_costs)
+                ? user.user_metadata.personal_deal_costs
+                : [];
+            const personalDealCosts = existingCosts.filter((item: any) => item?.lead_id !== id);
+            if (personalDealCosts.length !== existingCosts.length) {
+                const { error: costCleanupError } = await supabase.auth.updateUser({
+                    data: { personal_deal_costs: personalDealCosts },
+                });
+                if (costCleanupError) {
+                    console.error("DEAL COST CLEANUP ERROR:", costCleanupError);
+                    warning = "The deal moved successfully, but its saved costs could not be cleared.";
+                }
+            }
         }
         if (updates.status &&
             oldLead.status !== updates.status) {
@@ -300,7 +332,7 @@ export async function PUT(req: Request) {
             console.error("LOAD UPDATED LEAD ERROR:", currentLeadError);
             return NextResponse.json(data);
         }
-        return NextResponse.json(currentLead);
+        return NextResponse.json(warning ? { ...currentLead, warning } : currentLead);
     }
     catch (error) {
         console.error("PUT CRASH FULL:", error);
@@ -419,6 +451,25 @@ export async function PATCH(req: Request) {
         const { workspace } = await loadWorkspaceForUser(supabase, user.id);
         if (!workspace?.id) {
             return NextResponse.json({ error: "Workspace required" }, { status: 403 });
+        }
+        const { data: leadToRestore, error: leadToRestoreError } = await supabase
+            .from("leads")
+            .select("id, status")
+            .eq("id", id)
+            .eq("workspace_id", workspace.id)
+            .not("deleted_at", "is", null)
+            .maybeSingle();
+        if (leadToRestoreError) {
+            return NextResponse.json({ error: leadToRestoreError.message }, { status: 500 });
+        }
+        if (!leadToRestore) {
+            return NextResponse.json({ error: "Deleted lead not found" }, { status: 404 });
+        }
+        if (["new", "contacted", "proposal"].includes(leadToRestore.status)) {
+            const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspace.id);
+            if (!leadCapacity.ok) {
+                return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });
+            }
         }
         const { data, error, } = await supabase
             .from("leads")

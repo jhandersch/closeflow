@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { notify } from "@/lib/notifications"
+import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead, LeadSource, LeadStatus, UpdateLeadData } from "@/types";
 type Props = {
     lead: Lead;
@@ -12,33 +13,6 @@ type Props = {
     onSaved: (updatedLead: Lead) => Promise<void>;
     timeZone: string;
 };
-function getStatusNextAction(status: LeadStatus) {
-    const daysByStatus: Partial<Record<LeadStatus, number>> = {
-        contacted: 3,
-        proposal: 5,
-    };
-    const actionByStatus: Record<LeadStatus, string> = {
-        new: "No action planned",
-        contacted: "Follow up with lead",
-        proposal: "Follow up on proposal",
-        won: "No action planned",
-        lost: "No action planned",
-    };
-    const days = daysByStatus[status];
-    const action = actionByStatus[status];
-    if (!days) {
-        return {
-            action,
-            actionDate: null,
-        };
-    }
-    const actionDate = new Date();
-    actionDate.setDate(actionDate.getDate() + days);
-    return {
-        action,
-        actionDate: actionDate.toISOString(),
-    };
-}
 export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const [name, setName] = useState(lead.name);
     const [company, setCompany] = useState(lead.company);
@@ -58,7 +32,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const [saving, setSaving] = useState(false);
     const handleStatusChange = (nextStatus: LeadStatus) => {
         setStatus(nextStatus);
-        const statusNextAction = getStatusNextAction(nextStatus);
+        const statusNextAction = getDefaultStatusNextAction(nextStatus);
         setNextAction(statusNextAction.action);
         setNextActionDate(statusNextAction.actionDate
             ? statusNextAction.actionDate.slice(0, 10)
@@ -94,7 +68,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
         setSaving(true);
         try {
             const statusNextAction = lead.status !== status
-                ? getStatusNextAction(status)
+                ? getDefaultStatusNextAction(status)
                 : null;
             const updatedLead = await saveLead(lead.id, lead.status, {
                 name,

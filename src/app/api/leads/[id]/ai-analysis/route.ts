@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
+import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 export async function POST(request: NextRequest, context: {
     params: Promise<{
         id: string;
@@ -31,6 +32,16 @@ export async function POST(request: NextRequest, context: {
         }
         const analysis = `
 AI Deal Analysis
+
+Deal economics:
+Gross deal value: €${Number(lead.value ?? 0).toFixed(2)}
+${(() => {
+            const costs = getPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, id);
+            const total = costs.reduce((sum, item) => sum + item.amount, 0);
+            return costs.length
+                ? `User-entered costs: ${costs.map((item) => `${item.name}: €${item.amount.toFixed(2)}`).join(", ")}\nEstimated value after listed costs: €${(Number(lead.value ?? 0) - total).toFixed(2)} (before other expenses)`
+                : "No user-entered costs recorded for this lead.";
+        })()}
 
 Lead:
 ${lead.name}

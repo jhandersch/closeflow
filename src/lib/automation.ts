@@ -320,8 +320,7 @@ export async function runLeadAutomation(
 
   if (
     previousStatus !== lead.status &&
-    (lead.status === "new" ||
-      lead.status === "lost")
+    lead.status === "new"
   ) {
     await updateNextAction(
       supabase,

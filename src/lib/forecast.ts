@@ -33,7 +33,8 @@ const formatMonthLabel = (monthKey: string, timeZone: string) => {
 
 export function calculateForecast(
   leads: Lead[],
-  timeZone = DEFAULT_TIMEZONE
+  timeZone = DEFAULT_TIMEZONE,
+  personalCostsByLead: Record<string, number> = {},
 ) {
   let pipelineValue = 0;
   let weightedRevenue = 0;
@@ -49,9 +50,20 @@ export function calculateForecast(
   let dealsWithoutNextAction = 0;
 
   const monthlyMap = new Map<string, number>();
+  const scenarioBuckets = Array.from({ length: 6 }, () => ({ conservative: 0, expected: 0, optimistic: 0 }));
+  const now = new Date();
+  const currentMonth = getMonthKey(now, timeZone);
+  const [currentYear, currentMonthNumber] = currentMonth.split("-").map(Number);
+  const scenarioMonths = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(Date.UTC(currentYear, currentMonthNumber - 1 + index, 15, 12));
+    const monthKey = getMonthKey(date, timeZone);
+    return { monthKey, month: formatMonthLabel(monthKey, timeZone) };
+  });
 
   for (const lead of leads) {
-    const value = Number(lead.value || 0);
+    const grossValue = Number(lead.value || 0);
+    const personalCosts = Math.max(0, Number(personalCostsByLead[lead.id] || 0));
+    const value = grossValue - personalCosts;
 
     /*
      * =========================
@@ -179,6 +191,24 @@ export function calculateForecast(
         );
       }
     }
+
+    let scenarioMonthKey: string;
+    const expectedCloseDate = lead.expected_close_at ? new Date(lead.expected_close_at) : null;
+    if (expectedCloseDate && !Number.isNaN(expectedCloseDate.getTime()) && expectedCloseDate >= now) {
+      scenarioMonthKey = getMonthKey(expectedCloseDate, timeZone);
+    } else {
+      const estimatedOffset = lead.status === "proposal" ? 1 : lead.status === "contacted" ? 2 : 4;
+      const estimatedDate = new Date(Date.UTC(currentYear, currentMonthNumber - 1 + estimatedOffset, 15, 12));
+      scenarioMonthKey = getMonthKey(estimatedDate, timeZone);
+    }
+
+    const scenarioIndex = scenarioMonths.findIndex((item) => item.monthKey === scenarioMonthKey);
+    if (scenarioIndex >= 0) {
+      const uncertainty = score.risk >= 60 ? 25 : score.risk >= 40 ? 15 : 10;
+      scenarioBuckets[scenarioIndex].conservative += value * (Math.max(0, probability - uncertainty) / 100);
+      scenarioBuckets[scenarioIndex].expected += weighted;
+      scenarioBuckets[scenarioIndex].optimistic += value * (Math.min(100, probability + uncertainty) / 100);
+    }
   }
 
   /*
@@ -227,7 +257,7 @@ export function calculateForecast(
         lead.status !== "won" &&
         lead.status !== "lost"
     )
-    .map((lead) => Number(lead.value || 0));
+    .map((lead) => Number(lead.value || 0) - Math.max(0, Number(personalCostsByLead[lead.id] || 0)));
 
   const largestActiveDeal =
     activeDealValues.length > 0
@@ -240,6 +270,21 @@ export function calculateForecast(
           (largestActiveDeal / pipelineValue) * 100
         )
       : 0;
+
+  let cumulativeConservative = 0;
+  let cumulativeExpected = 0;
+  let cumulativeOptimistic = 0;
+  const scenarioForecast = scenarioMonths.map((item, index) => {
+    cumulativeConservative += scenarioBuckets[index].conservative;
+    cumulativeExpected += scenarioBuckets[index].expected;
+    cumulativeOptimistic += scenarioBuckets[index].optimistic;
+    return {
+      month: item.month,
+      conservative: Math.round(cumulativeConservative),
+      expected: Math.round(cumulativeExpected),
+      optimistic: Math.round(cumulativeOptimistic),
+    };
+  });
 
   /*
    * =========================
@@ -271,5 +316,6 @@ export function calculateForecast(
         month: formatMonthLabel(month, timeZone),
         value,
       })),
+    scenarioForecast,
   };
 }

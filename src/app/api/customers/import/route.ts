@@ -200,7 +200,7 @@ export async function POST(request: Request) {
         }
         knownKeys.add(key);
         inserted += 1;
-        await supabase
+        const { error: activityError } = await supabase
             .from("activities")
             .insert([
             {
@@ -216,6 +216,15 @@ export async function POST(request: Request) {
                 },
             },
         ]);
+        if (activityError) {
+            console.error("CUSTOMER IMPORT ACTIVITY ERROR:", activityError);
+            addIssue({
+                row: rowNumber,
+                reason: `Customer imported, but its activity could not be recorded: ${activityError.message}`,
+                company: company.trim(),
+                contact: contact.trim(),
+            });
+        }
     }
     return NextResponse.json({
         inserted,

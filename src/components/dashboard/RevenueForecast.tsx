@@ -85,6 +85,9 @@ export default function RevenueForecast({
           >
             AI-powered forecast based on pipeline health, activity and deal probability.
           </p>
+          <p className="mt-1 text-xs text-foreground/50">
+            Forecast values are adjusted by your saved costs for each open deal.
+          </p>
         </div>
 
         <div

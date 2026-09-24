@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRouteUser } from "@/lib/supabase/route";
+import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 
 export async function POST(request: NextRequest) {
   try {
+    const { user, error } = await getRouteUser(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { leads } = await request.json();
+    const leadsWithCosts = Array.isArray(leads)
+      ? leads.map((lead: any) => ({
+          ...lead,
+          personal_deal_costs: getPersonalDealCostsForLead(
+            user.user_metadata?.personal_deal_costs,
+            String(lead.id || ""),
+          ),
+        }))
+      : [];
 
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -55,6 +70,7 @@ Analyze the provided opportunities and identify the single most important deal t
 Use these signals:
 
 - Deal value
+- User-entered deal costs and estimated net value after those costs
 - Pipeline stage
 - Priority score
 - Health score
@@ -68,6 +84,7 @@ Rules:
 
 1. Focus on actionable sales advice.
 2. Prefer deals with high revenue potential.
+   Evaluate revenue potential using deal value after subtracting any listed user-entered costs.
 3. Consider risks from inactivity.
 4. Recommend one specific next step.
 5. Do not invent customer information.
@@ -110,7 +127,7 @@ Keep answers concise.
             },
             {
               role: "user",
-              content: JSON.stringify(leads, null, 2),
+              content: JSON.stringify(leadsWithCosts, null, 2),
             },
           ],
         }),

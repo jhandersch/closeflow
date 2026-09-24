@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { recordAiUsageEvent } from "@/lib/aiCost";
 import { createClient } from "@/lib/supabase/server";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 type LeadPayload = {
     id?: string;
     name?: string;
@@ -198,6 +199,7 @@ export async function POST(req: Request) {
             `Company: ${lead.company ?? "Unknown"}`,
             `Stage: ${lead.status ?? "Unknown"}`,
             `Value: €${Number(lead.value ?? 0)}`,
+            `User-entered costs and estimated net value: ${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value ?? 0))}`,
             `Notes: ${lead.notes ?? "None"}`,
             `Next action: ${lead.next_action ?? "None"}`,
         ].join("\n");
@@ -333,6 +335,7 @@ Rules:
 - recommendations must be an array of strings
 - Keep the response concise
 - Do not invent deals or numbers
+- Use each deal's user-entered costs when assessing profitability and prioritization. Distinguish gross values from estimated value after listed costs.
 - Base the analysis only on the supplied data
 - Never contradict the FORECAST values above (active deals, average health, average probability, revenue figures); treat them as factual
 - confidence must equal the FORECAST confidence value above; never calculate or report a different confidence

@@ -240,7 +240,7 @@ const dictionary: DictionaryNode = {
         lost: "Lost",
     },
     ai: {
-        subtitle: "Ask about leads, pipeline risk, negotiation coaching, email drafts, and forecast confidence.",
+        subtitle: "Ask about leads, customers, pipeline risk, negotiation coaching, email drafts, and forecast confidence.",
         salesIntelligence: "AI Sales Intelligence",
         openLead: "Open lead detail",
         loadingLeads: "Loading leads...",

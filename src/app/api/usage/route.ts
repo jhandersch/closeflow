@@ -26,6 +26,7 @@ export async function GET(request: Request) {
             usage: {
                 ai_requests: 0,
                 exports: 0,
+                active_leads: 0,
                 ai_tokens: {
                     prompt: 0,
                     completion: 0,
@@ -39,11 +40,13 @@ export async function GET(request: Request) {
                 ai_requests: 10,
                 exports: 5,
                 team_seats: 1,
+                active_leads: 50,
             },
             remaining: {
                 ai_requests: 10,
                 exports: 5,
                 team_seats: 1,
+                active_leads: 50,
             },
             seats: {
                 members: 0,
@@ -52,6 +55,12 @@ export async function GET(request: Request) {
         });
     }
     const aiUsage = await summarizeWorkspaceAiUsage(supabase, context.workspaceId, context.usage.month);
+    const { count: activeLeadsCount } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", context.workspaceId)
+        .in("status", ["new", "contacted", "proposal"])
+        .is("deleted_at", null);
     return NextResponse.json({
         workspace_id: context.workspaceId,
         plan: context.plan,
@@ -59,6 +68,7 @@ export async function GET(request: Request) {
         usage: {
             ai_requests: context.usage.aiRequests,
             exports: context.usage.exports,
+            active_leads: activeLeadsCount || 0,
             ai_tokens: {
                 prompt: aiUsage.prompt_tokens,
                 completion: aiUsage.completion_tokens,
@@ -72,6 +82,7 @@ export async function GET(request: Request) {
             ai_requests: context.limits.aiRequestsMonthly,
             exports: context.limits.exportsMonthly,
             team_seats: context.limits.teamSeats,
+            active_leads: context.limits.leadCapacity,
         },
         remaining: {
             ai_requests: context.limits.aiRequestsMonthly === null
@@ -83,6 +94,9 @@ export async function GET(request: Request) {
             team_seats: context.limits.teamSeats === null
                 ? null
                 : Math.max(context.limits.teamSeats - (context.memberCount + context.pendingInvites), 0),
+            active_leads: context.limits.leadCapacity === null
+                ? null
+                : Math.max(context.limits.leadCapacity - (activeLeadsCount || 0), 0),
         },
         seats: {
             members: context.memberCount,

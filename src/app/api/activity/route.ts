@@ -151,6 +151,10 @@ function getFromDate(
 ) {
     const now = new Date();
 
+    if (filter === "all") {
+        return new Date(0);
+    }
+
     if (filter === "today") {
         const parts =
             new Intl.DateTimeFormat(
@@ -197,6 +201,17 @@ function getFromDate(
         return new Date(
             now.getTime() -
                 7 *
+                    24 *
+                    60 *
+                    60 *
+                    1000,
+        );
+    }
+
+    if (filter === "8weeks") {
+        return new Date(
+            now.getTime() -
+                56 *
                     24 *
                     60 *
                     60 *
@@ -426,37 +441,23 @@ export async function GET(
                 timeZone,
             );
 
-        const {
-            data,
-            error: queryError,
-        } = await supabase
-            .from("activities")
-            .select(
-                "id, workspace_id, user_id, lead_id, type, title, description, action, metadata, created_at",
-            )
-            .eq(
-                "workspace_id",
-                workspace.id,
-            )
-            .gte(
-                "created_at",
-                from.toISOString(),
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false,
-                },
-            );
+        const data: Array<Record<string, any>> = [];
+        const pageSize = 1000;
+        for (let offset = 0; ; offset += pageSize) {
+            const { data: page, error: queryError } = await supabase
+                .from("activities")
+                .select("id, workspace_id, user_id, lead_id, type, title, description, action, metadata, created_at")
+                .eq("workspace_id", workspace.id)
+                .gte("created_at", from.toISOString())
+                .order("created_at", { ascending: false })
+                .order("id", { ascending: false })
+                .range(offset, offset + pageSize - 1);
 
-        if (queryError) {
-            return NextResponse.json(
-                {
-                    error:
-                        queryError.message,
-                },
-                { status: 500 },
-            );
+            if (queryError) {
+                return NextResponse.json({ error: queryError.message }, { status: 500 });
+            }
+            data.push(...(page || []));
+            if (!page || page.length < pageSize) break;
         }
 
         const normalized =

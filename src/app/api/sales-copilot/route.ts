@@ -7,6 +7,7 @@ import {
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
 import { recordAiUsageEvent } from "@/lib/aiCost";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -74,6 +75,11 @@ export async function POST(req: Request) {
 
     const pipelineJson =
       JSON.stringify(pipeline || {}).slice(0, 2000);
+    const personalCosts = formatPersonalDealCostsForLead(
+      user.user_metadata?.personal_deal_costs,
+      String(lead?.id || ""),
+      Number(lead?.value || 0),
+    );
 
     const prompt = `
 You are an AI sales copilot inside a CRM.
@@ -85,6 +91,9 @@ Lead:
   Company: ${lead?.company || "n/a"}
   Deal Value: €${lead?.value || 0}
   Current Stage: ${status || lead?.status || "n/a"}
+
+User-entered costs for this deal:
+  ${personalCosts}
 
 Notes:
   ${lead?.notes || "No notes"}
@@ -141,6 +150,9 @@ Focus on:
 - Write emails that move the deal forward
 - Avoid generic advice
 - Use the available lead context
+- Account for the listed user-entered deal costs when evaluating profitability, pricing flexibility, and recommended next steps. Clearly distinguish the estimated net amount from gross deal value.
+- Treat user-entered costs as estimates and do not invent additional costs.
+- Do not expose internal costs or margins in customer-facing email drafts.
 - Write all free-text values in English
 `;
 

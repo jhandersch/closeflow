@@ -8,6 +8,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { supabase } from "@/lib/supabase/client";
 import { planDetails } from "@/lib/planDetails";
+import BillingUsageOverview from "@/components/billing/BillingUsageOverview";
 
 type BillingState = {
     workspace_id: string | null;
@@ -493,8 +494,8 @@ export default function BillingPage() {
                         </section>
                     ) : (
                         <>
-                            <section className="relative translate-y-[220px] rounded-2xl border border-border-subtle bg-surface-1 p-6">
-                                <div className="flex flex-col gap-4 pt-16 sm:flex-row sm:items-center sm:justify-between">
+                            <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-sm text-foreground/60">
                                             Current plan
@@ -541,6 +542,8 @@ export default function BillingPage() {
                                     )}
                                 </div>
                             </section>
+
+                            <BillingUsageOverview />
 
                             <section className="grid gap-6 md:grid-cols-3">
                                 {plans.map((plan) => {

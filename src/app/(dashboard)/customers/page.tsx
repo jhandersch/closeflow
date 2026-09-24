@@ -2,11 +2,13 @@
 import { appConfirm } from "@/lib/dialogs";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLeadsData } from "@/hooks/useLeadsData";
 import { notify } from "@/lib/notifications";
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase/client";
+import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
 
 type CustomerFilter = "all" | "active" | "lost" | "vip";
 type CustomerTypeFilter = "all" | "companies" | "private";
@@ -21,6 +23,7 @@ type CustomerSummary = {
   wonDeals: number;
   lostDeals: number;
   lastContactAt: string | null;
+  nextActions: Array<{ deal: string; status: "won" | "lost"; action: string }>;
   isVip?: boolean;
 };
 
@@ -174,6 +177,7 @@ export default function CustomersPage() {
           wonDeals: lead.status === "won" ? 1 : 0,
           lostDeals: lead.status === "lost" ? 1 : 0,
           lastContactAt: lastActivity,
+          nextActions: [{ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action) }],
           isVip: lead.is_vip === true,
         });
 
@@ -185,6 +189,7 @@ export default function CustomersPage() {
       }
 
       existing.deals += 1;
+      existing.nextActions.push({ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action) });
       existing.wonDeals += lead.status === "won" ? 1 : 0;
       existing.lostDeals += lead.status === "lost" ? 1 : 0;
 
@@ -718,6 +723,26 @@ export default function CustomersPage() {
         ) : null}
       </div>
 
+      <details className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
+        <summary className="cursor-pointer list-none text-sm font-semibold text-foreground marker:hidden">
+          Spreadsheet import format
+          <span className="ml-2 text-xs font-normal text-foreground/50">View required columns and examples</span>
+        </summary>
+        <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
+          <Image
+            src="/customer-import-guide.png"
+            alt="Spreadsheet template with company, contact, and revenue columns. Company is required; contact and revenue are optional."
+            width={1200}
+            height={720}
+            className="h-auto w-full"
+            unoptimized
+          />
+        </div>
+        <a href="/customer-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
+          Download PNG guide
+        </a>
+      </details>
+
       {error ? (
         <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
           Could not load customers: {error}
@@ -793,7 +818,7 @@ export default function CustomersPage() {
                   {sectionCustomers.map((customer) => (
                     <div
                       key={customer.id}
-                      className="rounded-2xl border border-border-subtle bg-surface-1 p-5 transition hover:border-cyan-400/30"
+                      className="group cursor-pointer rounded-2xl border border-border-subtle bg-gradient-to-br from-surface-1 to-surface-2 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/5"
                     >
                       <div className="flex items-center justify-between gap-4">
                         <Link
@@ -808,16 +833,16 @@ export default function CustomersPage() {
                                 {customer.company}
                               </h2>
 
+                              <p className="mt-0.5 truncate text-sm text-foreground/55">
+                                {customer.contacts.join(", ") || "n/a"}
+                              </p>
+
                               {customer.isVip ? (
                                 <span className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
                                   ★ VIP
                                 </span>
                               ) : null}
 
-                              <p className="mt-1 text-sm text-foreground/65">
-                                Contacts:{" "}
-                                {customer.contacts.join(", ") || "n/a"}
-                              </p>
                             </div>
 
                             <div className="grid gap-3 text-sm md:grid-cols-3">
@@ -859,6 +884,18 @@ export default function CustomersPage() {
                               </div>
                             </div>
                           </div>
+                          {customer.nextActions.length ? (
+                            <div className="mt-4 border-t border-border-subtle pt-3">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">Next actions</p>
+                              <ul className="mt-2 space-y-1 text-sm text-foreground/75">
+                                {customer.nextActions.map((item, index) => (
+                                  <li key={`${customer.id}-${item.deal}-${index}`}>
+                                    {item.action}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
                         </Link>
 
                         <button

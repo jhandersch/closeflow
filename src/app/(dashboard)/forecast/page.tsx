@@ -23,6 +23,7 @@ function isValidTimeZone(timeZone: string): boolean {
 
 export default function ForecastPage() {
   const [timeZone, setTimeZone] = useState(DEFAULT_TIMEZONE);
+  const [personalCostsByLead, setPersonalCostsByLead] = useState<Record<string, number>>({});
 
   const { leads } = useLeadsData({
     activityLimit: 10,
@@ -40,12 +41,24 @@ export default function ForecastPage() {
           ? data.user.user_metadata.timezone
           : "";
 
+      const costsByLead: Record<string, number> = {};
+      const savedCosts = data.user?.user_metadata?.personal_deal_costs;
+      if (Array.isArray(savedCosts)) {
+        for (const cost of savedCosts.slice(0, 100)) {
+          const amount = Number(cost?.amount);
+          if (typeof cost?.lead_id === "string" && Number.isFinite(amount) && amount >= 0) {
+            costsByLead[cost.lead_id] = (costsByLead[cost.lead_id] || 0) + amount;
+          }
+        }
+      }
+
       const nextTimezone = isValidTimeZone(storedTimezone)
         ? storedTimezone
         : DEFAULT_TIMEZONE;
 
       if (!cancelled) {
         setTimeZone(nextTimezone);
+        setPersonalCostsByLead(costsByLead);
       }
     };
 
@@ -56,7 +69,7 @@ export default function ForecastPage() {
     };
   }, []);
 
-  const forecast = calculateForecast(leads, timeZone);
+  const forecast = calculateForecast(leads, timeZone, personalCostsByLead);
 
   const {
     insight,
@@ -64,7 +77,7 @@ export default function ForecastPage() {
     error: insightError,
   } = useRevenueForecastAI(leads, forecast, "en");
 
-  const forecastSeries = forecast.monthlyForecast;
+  const forecastSeries = forecast.scenarioForecast;
 
   return (
     <AuthGuard>
@@ -77,7 +90,7 @@ export default function ForecastPage() {
             Revenue Forecast
           </h1>
           <p className="mt-2 text-sm text-foreground/65">
-            AI-based outlook for expected revenue, risk and confidence.
+            Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.
           </p>
         </div>
 

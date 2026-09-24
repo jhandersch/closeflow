@@ -390,7 +390,7 @@ export default function AIAssistantPage() {
           </h1>
 
           <p className="mt-2 text-sm text-foreground/65">
-            Ask about leads, pipeline risk,
+            Ask about leads, customers, pipeline risk,
             negotiation coaching, email drafts,
             and forecast confidence.
           </p>

@@ -31,8 +31,10 @@ export async function POST(request: Request, context: {
             : lead.status === "new"
                 ? "Reach out to qualify the lead"
                 : lead.status === "won"
-                    ? "Hand off to onboarding"
-                    : "Review the deal and re-engage";
+                    ? "Ask the customer for feedback"
+                    : lead.status === "lost"
+                        ? "Request feedback on the decision and schedule a reactivation follow-up"
+                        : "Review the deal and re-engage";
     const priority = lead.status === "proposal" || lead.value >= 20000 || ageDays >= 7 ? "high" : ageDays >= 3 ? "medium" : "low";
     return NextResponse.json({ action, priority });
 }

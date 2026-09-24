@@ -1,89 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import AuthGuard from "@/components/AuthGuard";
-import ActivityFeed from "@/components/dashboard/ActivityFeed";
-import AIInsightCard from "@/components/dashboard/AIInsightCard";
-import RevenueCard from "@/components/dashboard/RevenueCard";
-import WinRateCard from "@/components/dashboard/WinRateCard";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import EngagementCard from "@/components/dashboard/EngagementCard";
-import HealthOverviewCard from "@/components/dashboard/HealthOverviewCard";
-import KPIGrid from "@/components/dashboard/KPIGrid";
-import PipelineChart from "@/components/dashboard/PipelineChart";
-import PriorityDealsCard from "@/components/dashboard/PriorityDealsCard";
-import RevenueForecastChart from "@/components/dashboard/RevenueForecastChart";
+import DealsNeedingAttention from "@/components/dashboard/DealsNeedingAttention";
 import ActivityTrendChart from "@/components/dashboard/ActivityTrendChart";
-import RevenueForecastAI from "@/components/dashboard/RevenueForecastAI";
-import RevenueForecast from "@/components/dashboard/RevenueForecast";
-import AIForecastCard from "@/components/dashboard/AIForecastCard";
 import TasksWidget from "@/components/dashboard/TasksWidget";
 import EmptyState from "@/components/EmptyState";
 
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useDashboardTasks } from "@/hooks/useDashboardTasks";
 import { useLeadsData } from "@/hooks/useLeadsData";
-import { useAIInsight } from "@/hooks/useAIInsight";
-import { useForecastAI } from "@/hooks/useForecastAI";
-import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI";
-
 import { loadDemoData } from "@/lib/demoData";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { notify } from "@/lib/notifications";
-import { supabase } from "@/lib/supabase/client";
-
-const DEFAULT_TIMEZONE = "Europe/Berlin";
-
-const getDateKey = (
-    value: Date,
-    timeZone: string,
-) => {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    }).formatToParts(value);
-
-    const values = Object.fromEntries(
-        parts
-            .filter((part) => part.type !== "literal")
-            .map((part) => [part.type, part.value]),
-    );
-
-    return `${values.year}-${values.month}-${values.day}`;
-};
-
-const addCalendarDays = (
-    dateKey: string,
-    days: number,
-) => {
-    const [year, month, day] = dateKey
-        .split("-")
-        .map(Number);
-
-    const date = new Date(
-        Date.UTC(
-            year,
-            month - 1,
-            day,
-        ),
-    );
-
-    date.setUTCDate(
-        date.getUTCDate() + days,
-    );
-
-    return date.toISOString().slice(0, 10);
-};
 
 export default function DashboardPage() {
     const { t } = useAppPreferences();
 
-    const locale = "en-US";
-    const [timezone, setTimezone] =
-        useState(DEFAULT_TIMEZONE);
     const [demoLoading, setDemoLoading] =
         useState(false);
 
@@ -94,190 +30,50 @@ export default function DashboardPage() {
         error,
         refresh,
     } = useLeadsData({
-        activityLimit: 240,
+        activityLimit: null,
+        activityFilter: "8weeks",
         includeCompleted: true,
     });
 
     const metrics = useDashboardMetrics(leads);
-    const forecast = metrics.forecastData;
 
     const {
         summary: taskSummary,
         loading: tasksLoading,
     } = useDashboardTasks();
 
-    const {
-        analysis: forecastAnalysis,
-        loading: forecastLoading,
-    } = useForecastAI(
-        forecast,
-        leads,
-        "en",
-    );
-
-    const {
-        insight: revenueInsight,
-        loading: revenueInsightLoading,
-        error: revenueInsightError,
-    } = useRevenueForecastAI(
-        leads,
-        forecast,
-        "en",
-    );
-
-    const {
-        insight,
-    } = useAIInsight(
-        {
-            leads,
-            revenue: metrics.revenue,
-            forecast: metrics.forecast,
-            proposalLeads:
-                metrics.proposalLeads.length,
-            atRiskDeals:
-                metrics.atRiskDeals.length,
-            highValueDeals:
-                metrics.highValueDeals.length,
-        },
-        metrics.insight,
-        "en",
-    );
-
-    useEffect(() => {
-        const loadTimezone = async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-
-            if (!user) {
-                return;
-            }
-
-            const savedTimezone =
-                typeof user.user_metadata?.timezone ===
-                    "string" &&
-                user.user_metadata.timezone.trim()
-                    ? user.user_metadata.timezone
-                    : DEFAULT_TIMEZONE;
-
-            setTimezone(savedTimezone);
-        };
-
-        void loadTimezone();
-    }, []);
-
-    const activitiesThisWeek = useMemo(() => {
-        const fromMs =
-            Date.now() -
-            7 * 24 * 60 * 60 * 1000;
-
-        return activities.filter(
-            (item) =>
-                new Date(
-                    item.created_at,
-                ).getTime() >= fromMs,
-        ).length;
-    }, [activities]);
-
     const activityTrendData = useMemo(() => {
-        const todayKey = getDateKey(
-            new Date(),
-            timezone,
-        );
+        const now = Date.now();
+        const weekMs = 7 * 24 * 60 * 60 * 1000;
 
-        const weekStarts = Array.from({
-            length: 8,
-        }).map((_, index) =>
-            addCalendarDays(
-                todayKey,
-                -(7 - index) * 7,
-            ),
-        );
+        return Array.from({ length: 8 }, (_, index) => {
+            const start = now - (8 - index) * weekMs;
+            const end = start + weekMs;
+            const label = new Intl.DateTimeFormat("en-US", {
+                month: "short",
+                day: "numeric",
+            }).format(new Date(start));
 
-        return weekStarts.map(
-            (startKey) => {
-                const endKey =
-                    addCalendarDays(
-                        startKey,
-                        7,
-                    );
-
-                const value =
-                    activities.filter(
-                        (item) => {
-                            const activityKey =
-                                getDateKey(
-                                    new Date(
-                                        item.created_at,
-                                    ),
-                                    timezone,
-                                );
-
-                            return (
-                                activityKey >=
-                                    startKey &&
-                                activityKey <
-                                    endKey
-                            );
-                        },
-                    ).length;
-
-                const [
-                    year,
-                    month,
-                    day,
-                ] = startKey
-                    .split("-")
-                    .map(Number);
-
-                const label =
-                    new Intl.DateTimeFormat(
-                        locale,
-                        {
-                            day: "2-digit",
-                            month: "2-digit",
-                            timeZone: "UTC",
-                        },
-                    ).format(
-                        new Date(
-                            Date.UTC(
-                                year,
-                                month - 1,
-                                day,
-                            ),
-                        ),
-                    );
-
-                return {
-                    label,
-                    value,
-                };
-            },
-        );
-    }, [
-        activities,
-        locale,
-        timezone,
-    ]);
+            return {
+                label,
+                value: activities.filter((activity) => {
+                    const timestamp = new Date(activity.created_at).getTime();
+                    return timestamp >= start && timestamp < end;
+                }).length,
+            };
+        });
+    }, [activities]);
 
     if (loading) {
         return (
             <AuthGuard>
                 <div className="space-y-6">
                     <div className="h-24 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
-
-                    <div className="h-32 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
-
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        {Array.from({
-                            length: 4,
-                        }).map((_, index) => (
-                            <div
-                                key={index}
-                                className="h-28 animate-pulse rounded-3xl border border-border-subtle bg-surface-1"
-                            />
-                        ))}
+                    <div className="grid gap-6 xl:grid-cols-2">
+                        <div className="h-64 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
+                        <div className="h-64 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
                     </div>
+                    <div className="h-64 animate-pulse rounded-3xl border border-border-subtle bg-surface-1" />
                 </div>
             </AuthGuard>
         );
@@ -349,7 +145,7 @@ export default function DashboardPage() {
                         )}
                         description={t(
                             "dashboard.workspaceReadyDescription",
-                            "Add your first lead or load demo data to unlock forecasting, AI insights and pipeline analytics.",
+                            "Add your first lead to see upcoming tasks and deals that need attention here.",
                         )}
                         actions={
                             <button
@@ -427,207 +223,31 @@ export default function DashboardPage() {
 
     return (
         <AuthGuard>
-            <div className="space-y-8">
+            <div className="space-y-6">
                 <DashboardHeader
-                    forecast={metrics.forecast}
                     totalLeads={metrics.total}
-                    pipelineValue={
-                        metrics.pipelineValue
-                    }
-                    attentionCount={
-                        metrics.atRiskDeals.length
-                    }
+                    pipelineValue={metrics.pipelineValue}
+                    attentionCount={metrics.atRiskDeals.length}
                 />
 
-                <AIInsightCard
-                    insight={insight}
-                />
-
-                <div className="
-                    grid
-                    gap-4
-                    md:grid-cols-2
-                    xl:grid-cols-2
-                ">
-                    <RevenueCard
-                        pipelineValue={
-                            metrics.pipelineValue
-                        }
+                <div className="grid gap-6 xl:grid-cols-2">
+                    <TasksWidget
+                        open={taskSummary.open}
+                        overdue={taskSummary.overdue}
+                        nextDue={taskSummary.nextDue}
+                        loading={tasksLoading}
                     />
-
-                    <WinRateCard
-                        winRate={Number(
-                            metrics.winRate,
-                        )}
-                    />
+                    <DealsNeedingAttention leads={metrics.atRiskDeals} />
                 </div>
 
-                <KPIGrid
-                    totalLeads={metrics.total}
-                    pipelineValue={
-                        metrics.pipelineValue
-                    }
-                    wonDeals={metrics.won}
-                    revenue={metrics.revenue}
-                    conversionRate={
-                        metrics.conversionRate
-                    }
-                    activitiesThisWeek={
-                        activitiesThisWeek
-                    }
-                    openTasks={
-                        taskSummary.open
-                    }
-                />
+                <ActivityTrendChart data={activityTrendData} />
 
-                <RevenueForecast
-                    pipelineValue={
-                        forecast.pipelineValue
-                    }
-                    weightedRevenue={
-                        forecast.weightedRevenue
-                    }
-                    revenueAtRisk={
-                        forecast.revenueAtRisk
-                    }
-                    commitRevenue={
-                        forecast.commitRevenue
-                    }
-                    bestCaseRevenue={
-                        forecast.bestCaseRevenue
-                    }
-                    confidence={
-                        forecast.confidence
-                    }
-                    averageHealth={
-                        forecast.averageHealth
-                    }
-                    averageProbability={
-                        forecast.averageProbability
-                    }
-                    activeDeals={
-                        forecast.activeDeals
-                    }
-                    singleDealRisk={
-                        forecast.singleDealRisk
-                    }
-                    dealsWithNextAction={
-                        forecast.dealsWithNextAction
-                    }
-                    dealsWithoutNextAction={
-                        forecast.dealsWithoutNextAction
-                    }
-                    nextActionCoverage={
-                        forecast.nextActionCoverage
-                    }
-                />
-
-                <AIForecastCard
-                    analysis={forecastAnalysis}
-                    loading={forecastLoading}
-                />
-
-                <div className="
-                    grid
-                    gap-6
-                    xl:grid-cols-3
-                ">
-                    <RevenueForecastChart
-                        data={metrics.forecastTrend}
-                    />
-
-                    <ActivityTrendChart
-                        data={activityTrendData}
-                    />
-
-                    <PipelineChart
-                        data={metrics.statusChartData}
-                    />
-                </div>
-
-                <RevenueForecastAI
-                    insight={revenueInsight}
-                    loading={revenueInsightLoading}
-                    error={revenueInsightError}
-                />
-
-                <div className="
-                    grid
-                    gap-6
-                    xl:grid-cols-[1.1fr_0.9fr]
-                ">
-                    <PriorityDealsCard
-                        leads={metrics.priorityDeals}
-                    />
-
-                    <div className="space-y-6">
-                        <HealthOverviewCard
-                            healthyCount={
-                                metrics.healthyLeadCount
-                            }
-                            watchlistCount={
-                                metrics.watchlistCount
-                            }
-                            atRiskCount={
-                                metrics.atRiskDeals.length
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="
-                    grid
-                    gap-6
-                    xl:grid-cols-[1fr_0.9fr]
-                ">
-                    <ActivityFeed
-                        activities={activities.slice(
-                            0,
-                            12,
-                        )}
-                        timeZone={timezone}
-                    />
-
-                    <div className="space-y-6">
-                        <EngagementCard
-                            contactedCount={
-                                metrics.contactedLeads
-                                    .length
-                            }
-                            proposalCount={
-                                metrics.proposalLeads
-                                    .length
-                            }
-                            forecastDelta={
-                                metrics.forecastDelta
-                            }
-                        />
-
-                        <TasksWidget
-                            open={
-                                taskSummary.open
-                            }
-                            completed={
-                                taskSummary.completed
-                            }
-                            overdue={
-                                taskSummary.overdue
-                            }
-                            highPriorityOpen={
-                                taskSummary.highPriorityOpen
-                            }
-                            nextDue={
-                                taskSummary.nextDue
-                            }
-                            loading={
-                                tasksLoading
-                            }
-
-                            timeZone={
-                                timezone}
-                        />
-                    </div>
-                </div>
+                <nav aria-label="Detailed sales views" className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-4">
+                    <span className="text-sm text-foreground/55">Need more detail?</span>
+                    <Link href="/forecast" className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">Open forecast →</Link>
+                    <Link href="/analytics" className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">View analytics →</Link>
+                    <Link href="/activities" className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">Recent activity →</Link>
+                </nav>
             </div>
         </AuthGuard>
     );

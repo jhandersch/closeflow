@@ -688,21 +688,21 @@ PASS: [x]
 
 **### B9) Performance**
 
-* [ ] dashboard performance acceptable
+* [x] dashboard performance acceptable
 
-* [ ] leads performance acceptable
+* [x] leads performance acceptable
 
-* [ ] customers performance acceptable
+* [x] customers performance acceptable
 
-* [ ] calendar performance acceptable
+* [x] calendar performance acceptable
 
-* [ ] AI response time acceptable
+* [x] AI response time acceptable
 
-* [ ] loading states
+* [x] loading states
 
-* [ ] no significant UI flickering
+* [x] no significant UI flickering
 
-PASS: [ ]
+PASS: [x]
 
 **### B10) Mobile**
 

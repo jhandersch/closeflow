@@ -21,7 +21,7 @@ export default function ActivityTrendChart({ data }: ActivityTrendChartProps) {
         </div>
       </div>
 
-      <div className="mt-6 h-72">
+      <div className="mt-5 h-56">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid stroke="currentColor" opacity={0.08} vertical={false}/>

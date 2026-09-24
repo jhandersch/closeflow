@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRouteUser } from "@/lib/supabase/route";
+import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 type InsightResponse = {
     headline: string;
     detail: string;
@@ -7,7 +9,20 @@ type InsightResponse = {
 };
 export async function POST(request: NextRequest) {
     try {
+        const { user, error } = await getRouteUser(request);
+        if (error || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const payload = await request.json();
+        const leadsWithCosts = Array.isArray(payload?.leads)
+            ? payload.leads.map((lead: any) => ({
+                ...lead,
+                personal_deal_costs: getPersonalDealCostsForLead(
+                    user.user_metadata?.personal_deal_costs,
+                    String(lead.id || ""),
+                ),
+            }))
+            : [];
         const apiKey = process.env.OPENAI_API_KEY;
         /*
          * =========================
@@ -132,7 +147,7 @@ export async function POST(request: NextRequest) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "gpt-5.5-mini",
+                model: "gpt-4.1-mini",
                 temperature: 0.2,
                 response_format: {
                     type: "json_object",
@@ -151,6 +166,8 @@ You must base every statement and recommendation strictly on the provided data.
 NEVER invent customers, deals, values, risks, activities or probabilities.
 
 CRITICAL BUSINESS RULES:
+
+When a lead includes user-entered deal costs, consider their effect on estimated deal profitability and prioritization. Distinguish gross deal values from estimated value after those listed costs, and never treat them as verified accounting figures.
 
 1. Only describe deals as "at risk" when atRiskDeals > 0 OR revenueAtRisk > 0.
 
@@ -202,9 +219,10 @@ ${"English"}
 `,
                     },
                     {
-                        role: "user",
+                    role: "user",
                         content: JSON.stringify({
                             ...payload,
+                            leads: leadsWithCosts,
                             derived_metrics: {
                                 nextActionCoverage,
                             },

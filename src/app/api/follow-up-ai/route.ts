@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRouteUser } from "@/lib/supabase/route";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 
 export async function POST(request: NextRequest) {
   try {
+    const { user, error } = await getRouteUser(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { lead } = await request.json();
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -33,12 +39,15 @@ You are an expert B2B sales assistant.
 
 Create a professional follow-up email.
 
+Use the user's listed deal costs to guide commercially sound recommendations, but do not disclose internal costs or margins to the customer.
+
 Consider:
 - customer name
 - company
 - deal value
 - pipeline stage
 - notes
+- user-entered costs for this deal and their effect on estimated profitability
 
 Return ONLY JSON:
 
@@ -53,7 +62,14 @@ Write subject and email in English.
             },
             {
               role: "user",
-              content: JSON.stringify(lead),
+              content: JSON.stringify({
+                ...lead,
+                personal_deal_costs: formatPersonalDealCostsForLead(
+                  user.user_metadata?.personal_deal_costs,
+                  String(lead?.id || ""),
+                  Number(lead?.value || 0),
+                ),
+              }),
             },
           ],
         }),

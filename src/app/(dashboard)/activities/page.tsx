@@ -44,12 +44,13 @@ export default function ActivitiesPage() {
         useState<ActivityItem[]>([]);
 
     const [filter, setFilter] =
-        useState<"today" | "week" | "month">(
-            "month",
+        useState<"today" | "week" | "month" | "all">(
+            "all",
         );
 
     const [loading, setLoading] =
         useState(true);
+    const [loadError, setLoadError] = useState("");
 
     useEffect(() => {
         const loadTimezone = async () => {
@@ -77,30 +78,38 @@ export default function ActivitiesPage() {
     useEffect(() => {
         const load = async () => {
             setLoading(true);
+            setLoadError("");
 
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
+            try {
+                const {
+                    data: { session },
+                } = await supabase.auth.getSession();
 
-            const response = await fetch(
-                `/api/activity?filter=${filter}`,
-                {
-                    headers: session?.access_token
-                        ? {
-                              Authorization: `Bearer ${session.access_token}`,
-                          }
-                        : undefined,
-                    credentials: "include",
-                },
-            );
-
-            if (response.ok) {
-                setActivities(
-                    (await response.json()) as ActivityItem[],
+                const response = await fetch(
+                    `/api/activity?filter=${filter}`,
+                    {
+                        headers: session?.access_token
+                            ? {
+                                  Authorization: `Bearer ${session.access_token}`,
+                              }
+                            : undefined,
+                        credentials: "include",
+                    },
                 );
-            }
 
-            setLoading(false);
+                if (response.ok) {
+                    setActivities(
+                        (await response.json()) as ActivityItem[],
+                    );
+                } else {
+                    const result = await response.json().catch(() => null);
+                    setLoadError(result?.error || "Could not load activities.");
+                }
+            } catch (error) {
+                setLoadError(error instanceof Error ? error.message : "Could not load activities.");
+            } finally {
+                setLoading(false);
+            }
         };
 
         void load();
@@ -125,6 +134,11 @@ export default function ActivitiesPage() {
             meeting_updated: "Meeting updated",
             meeting_completed: "Meeting completed",
             meeting_deleted: "Meeting deleted",
+            updated: "Lead updated",
+            lead_updated: "Lead updated",
+            lead_deleted: "Lead deleted",
+            lead_restored: "Lead restored",
+            calendar_event: "Calendar event",
             ai: "AI",
             other: "Update",
         };
@@ -252,6 +266,12 @@ export default function ActivitiesPage() {
 
                 <div className="flex flex-wrap gap-2">
                     <button
+                        onClick={() => setFilter("all")}
+                        className={`rounded-full px-3 py-1 text-xs ${filter === "all" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}
+                    >
+                        All time
+                    </button>
+                    <button
                         onClick={() => setFilter("today")}
                         className={`rounded-full px-3 py-1 text-xs ${
                             filter === "today"
@@ -283,6 +303,13 @@ export default function ActivitiesPage() {
                     >
                         30 days
                     </button>
+                </div>
+
+                {loadError ? <p role="alert" className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">{loadError}</p> : null}
+
+                <div className="flex items-center justify-between text-sm text-foreground/55">
+                    <span>{activities.length.toLocaleString(locale)} activities loaded</span>
+                    <span>{filter === "all" ? "All recorded activity" : filter === "month" ? "Last 30 days" : filter === "week" ? "Last 7 days" : "Today"}</span>
                 </div>
 
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">

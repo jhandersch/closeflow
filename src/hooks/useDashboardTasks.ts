@@ -156,8 +156,7 @@ export function useDashboardTasks() {
             tasks
                 .filter(
                     (task) =>
-                        task.status !==
-                            "completed" &&
+                        task.status === "open" &&
                         task.due_date,
                 )
                 .sort(

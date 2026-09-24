@@ -276,7 +276,7 @@ export async function POST(request: Request) {
                 continue;
             }
             updated += 1;
-            await supabase.from("activities").insert([
+            const { error: activityError } = await supabase.from("activities").insert([
                 {
                     workspace_id: workspace.id,
                     lead_id: existingLead.id,
@@ -290,6 +290,10 @@ export async function POST(request: Request) {
                     },
                 },
             ]);
+            if (activityError) {
+                console.error("LEAD IMPORT ACTIVITY ERROR:", activityError);
+                addIssue({ row: rowNumber, reason: `Lead updated, but its activity could not be recorded: ${activityError.message}`, name, company });
+            }
             continue;
         }
         /**
@@ -357,7 +361,7 @@ export async function POST(request: Request) {
             name,
             company,
         });
-        await supabase.from("activities").insert([
+        const { error: activityError } = await supabase.from("activities").insert([
             {
                 workspace_id: workspace.id,
                 lead_id: leadId,
@@ -371,6 +375,10 @@ export async function POST(request: Request) {
                 },
             },
         ]);
+        if (activityError) {
+            console.error("LEAD IMPORT ACTIVITY ERROR:", activityError);
+            addIssue({ row: rowNumber, reason: `Lead imported, but its activity could not be recorded: ${activityError.message}`, name, company });
+        }
     }
     return NextResponse.json({
         inserted,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getRouteUser } from "@/lib/supabase/route";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 export async function POST(request: Request) {
     try {
         const { user, error } = await getRouteUser(request);
@@ -9,6 +10,10 @@ export async function POST(request: Request) {
         }
         const body = await request.json();
         const lead = body.lead || {};
+        const leadWithCosts = {
+            ...lead,
+            personal_deal_costs: formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0)),
+        };
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
             return NextResponse.json({
@@ -26,11 +31,11 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: "Prepare a concise meeting brief for a sales rep. Return JSON with customer_summary, important_points, questions, risks, next_steps.",
+                    content: "Prepare a concise meeting brief for a sales rep. Use provided deal costs when discussing profitability, negotiation limits, or risks. Do not recommend disclosing internal costs or margins to the customer. Return JSON with customer_summary, important_points, questions, risks, next_steps.",
                 },
                 {
                     role: "user",
-                    content: JSON.stringify(lead),
+                content: JSON.stringify(leadWithCosts),
                 },
             ],
         });

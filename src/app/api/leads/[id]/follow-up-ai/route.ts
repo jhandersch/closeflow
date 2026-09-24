@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 export async function POST(request: Request, context: {
     params: Promise<{
         id: string;
@@ -62,6 +63,7 @@ export async function POST(request: Request, context: {
 You are an expert sales assistant.
 
 Create a follow-up email for a sales representative.
+Use the listed costs to guide commercially sound wording, but do not disclose internal costs or margins to the customer.
 
 Return JSON:
 
@@ -92,6 +94,9 @@ ${lead.value}
 
 Notes:
 ${lead.notes || "none"}
+
+User-entered deal costs:
+${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, id, Number(lead.value || 0))}
 
 Create the best follow-up.
 `

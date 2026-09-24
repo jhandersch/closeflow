@@ -4,6 +4,7 @@ import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { recordAiUsageEvent } from "@/lib/aiCost";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 export async function POST(request: Request) {
     let userId: string | null = null;
     try {
@@ -33,13 +34,16 @@ export async function POST(request: Request) {
             return NextResponse.json(fallback);
         }
         const openai = new OpenAI({ apiKey });
+        const dealCostContext = leadId
+            ? ` For lead ${leadId}, user-entered deal costs are: ${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, leadId)} Use them when answering about this deal, and distinguish gross from estimated net value.`
+            : "";
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",
             response_format: { type: "json_object" },
             messages: [
                 {
                     role: "system",
-                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance.`,
+                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance.${dealCostContext}`,
                 },
                 {
                     role: "user",

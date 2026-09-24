@@ -67,6 +67,7 @@ export function usePriorityAI(
           body: JSON.stringify({
             language: "en",
             leads: scoredLeads.map((lead) => ({
+              id: lead.id,
               name: leadDisplayName(lead),
               company: leadCompany(lead),
               status: lead.status,

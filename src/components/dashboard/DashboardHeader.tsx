@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
-import type { ForecastSummary } from "@/types/forecast";
 
 const DASHBOARD_NAME_CACHE_KEY = "closeflow_dashboard_name";
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 type DashboardHeaderProps = {
-  forecast: ForecastSummary;
   userName?: string;
   totalLeads: number;
   pipelineValue: number;
@@ -30,7 +28,6 @@ const isValidTimeZone = (value: string) => {
 };
 
 export default function DashboardHeader({
-  forecast,
   userName,
   totalLeads,
   pipelineValue,
@@ -151,9 +148,6 @@ export default function DashboardHeader({
           flex
           flex-col
           gap-6
-          xl:flex-row
-          xl:items-center
-          xl:justify-between
         "
       >
         <div className="max-w-3xl">
@@ -171,29 +165,7 @@ export default function DashboardHeader({
                 text-cyan-300
               "
             >
-              {t(
-                "dashboard.salesControlCenter",
-                "Sales Control Center"
-              )}
-            </span>
-
-            <span
-              className="
-                rounded-full
-                border
-                border-emerald-500/20
-                bg-emerald-500/10
-                px-3
-                py-1
-                text-xs
-                text-emerald-300
-              "
-            >
-              ✓{" "}
-              {t(
-                "dashboard.systemHealthy",
-                "System healthy"
-              )}
+              {t("dashboard.salesOverviewTitle", "Sales overview")}
             </span>
           </div>
 
@@ -218,7 +190,7 @@ export default function DashboardHeader({
           >
             {t(
               "dashboard.salesOverview",
-              "Your sales overview and AI recommendations for today."
+              "A focused view of your pipeline and the actions that need attention."
             )}
           </p>
 
@@ -253,7 +225,7 @@ export default function DashboardHeader({
               <p className="cf-label">
                 {t(
                   "dashboard.attention",
-                  "Attention"
+                  "At-risk deals"
                 )}
               </p>
 
@@ -285,7 +257,7 @@ export default function DashboardHeader({
             </Link>
 
             <Link
-              href="/ai"
+              href="/pipeline"
               className="
                 rounded-xl
                 border
@@ -301,49 +273,11 @@ export default function DashboardHeader({
               "
             >
               {t(
-                "dashboard.askAI",
-                "Ask AI"
+                "dashboard.openPipeline",
+                "Open pipeline"
               )}
             </Link>
           </div>
-        </div>
-
-        <div
-          className="
-            min-w-[240px]
-            rounded-2xl
-            border
-            border-cyan-500/20
-            bg-cyan-500/10
-            p-5
-          "
-        >
-          <p className="text-sm text-cyan-300">
-            {t(
-              "dashboard.aiRevenueForecast",
-              "AI revenue forecast"
-            )}
-          </p>
-
-          <p
-            className="
-              mt-2
-              text-4xl
-              font-bold
-              text-foreground
-            "
-          >
-            €{Math.round(
-              forecast.weightedRevenue
-            ).toLocaleString(locale)}
-          </p>
-
-          <p className="mt-2 text-sm text-emerald-300">
-            {t(
-              "dashboard.predictedPipelineOutcome",
-              "Predicted pipeline outcome"
-            )}
-          </p>
         </div>
       </div>
     </section>

@@ -38,10 +38,7 @@ export function useDashboardMetrics(leads: Lead[]) {
          */
         const forecastData = calculateForecast(leads);
         const forecast = forecastData;
-        const forecastTrend = forecastData.monthlyForecast.map((item) => ({
-            month: item.month,
-            value: Math.round(item.value),
-        }));
+        const forecastTrend = forecastData.scenarioForecast;
         /*
          * PIPELINE DATA
          */

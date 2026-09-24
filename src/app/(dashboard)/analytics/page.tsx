@@ -1,12 +1,13 @@
 "use client";
 import AuthGuard from "@/components/AuthGuard";
-import AIInsightCard from "@/components/dashboard/AIInsightCard";
 import RevenueCard from "@/components/dashboard/RevenueCard";
 import WinRateCard from "@/components/dashboard/WinRateCard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import PipelineChart from "@/components/dashboard/PipelineChart";
+import LeadAnalyticsExplorer from "@/components/dashboard/LeadAnalyticsExplorer";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useLeadsData } from "@/hooks/useLeadsData";
+import { useRecentRevenueEvents } from "@/hooks/useRecentRevenueEvents";
 function MetricCard({ label, value, hint }: {
     label: string;
     value: string;
@@ -22,6 +23,10 @@ export default function AnalyticsPage() {
     const locale = "en-US";
     const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true });
     const metrics = useDashboardMetrics(leads);
+    const revenueHistory = useRecentRevenueEvents();
+    const customerCount = new Set(leads
+      .filter((lead) => lead.status === "won" || lead.status === "lost")
+      .map((lead) => lead.company?.trim().toLowerCase() || `private:${lead.id}`)).size;
     if (loading) {
         return <AuthGuard><div className="text-foreground">{"Loading..."}</div></AuthGuard>;
     }
@@ -33,10 +38,10 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label={"Total Leads"} value={metrics.total.toString()} hint={"All leads in the workspace"}/>
-          <MetricCard label={"Won Deals"} value={metrics.won.toString()} hint={"Closed opportunities"}/>
+          <MetricCard label={"Active Leads"} value={metrics.total.toString()} hint={"Open opportunities"}/>
+          <MetricCard label={"Customers"} value={customerCount.toString()} hint={"Accounts with won or lost deals"}/>
           <MetricCard label={"Revenue"} value={`€${metrics.revenue.toLocaleString(locale)}`} hint={"Won revenue"}/>
-          <MetricCard label={"Conversion Rate"} value={`${metrics.conversionRate}%`} hint={"Won / won+lost"}/>
+          <MetricCard label={"Conversion Rate"} value={`${metrics.conversionRate}%`} hint={"Won / won + lost"}/>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -44,17 +49,12 @@ export default function AnalyticsPage() {
           <WinRateCard winRate={Number(metrics.winRate)}/>
         </div>
 
-        <AIInsightCard insight={{
-            headline: "AI Recommendation",
-            detail: "Focus on 3 high-value proposals",
-            actions: ["Prioritize proposal follow-ups", "Call at-risk deals today", "Review pipeline blockers"],
-            confidence: "High",
-        }}/>
-
         <div className="grid gap-6 xl:grid-cols-2">
-          <RevenueChart data={metrics.forecastTrend}/>
+          <RevenueChart data={revenueHistory}/>
           <PipelineChart data={metrics.statusChartData}/>
         </div>
+
+        <LeadAnalyticsExplorer leads={leads}/>
       </div>
     </AuthGuard>);
 }

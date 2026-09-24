@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { getRouteUser } from "@/lib/supabase/route";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 
 const fallbackResponse = () => ({
   health: "unknown",
@@ -11,6 +13,10 @@ const fallbackResponse = () => ({
 
 export async function POST(req: Request) {
   try {
+    const { user, error } = await getRouteUser(req);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { lead, activities } = await req.json();
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -42,6 +48,9 @@ ${lead.status}
 Value:
 €${lead.value}
 
+User-entered costs for this deal:
+${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0))}
+
 Activities:
 
 ${history || "No activity"}
@@ -64,6 +73,7 @@ Analyze:
 - customer engagement
 - sales risk
 - next action
+- profitability after the listed deal costs
 - Write all text values in English
 `;
 

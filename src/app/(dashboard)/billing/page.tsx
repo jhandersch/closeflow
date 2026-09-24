@@ -9,6 +9,7 @@ import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import { supabase } from "@/lib/supabase/client";
 import { planDetails } from "@/lib/planDetails";
 import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
+import BillingUsageOverview from "@/components/billing/BillingUsageOverview";
 
 type BillingState = {
     workspace_id: string | null;
@@ -547,6 +548,8 @@ export default function BillingPage() {
                                     )}
                                 </div>
                             </section>
+
+                            <BillingUsageOverview />
 
                             <section className="grid gap-6 md:grid-cols-3">
                                 {plans.map((plan) => {

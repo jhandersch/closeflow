@@ -23,6 +23,9 @@ const comparisonRows = [
             { label: "Tasks", values: { free: true, pro: true, business: true } },
             { label: "Calendar", values: { free: true, pro: true, business: true } },
             { label: "Automations", values: { free: true, pro: true, business: true } },
+            { label: "Lead and customer next actions", values: { free: true, pro: true, business: true } },
+            { label: "Activity history", values: { free: "All available activity", pro: "All available activity", business: "All available activity" } },
+            { label: "Personal deal costs", values: { free: "Included", pro: "Included", business: "Included" } },
         ],
     },
     {
@@ -35,6 +38,7 @@ const comparisonRows = [
             { label: "Risk Detection", values: { free: true, pro: true, business: true } },
             { label: "Email Generator", values: { free: true, pro: true, business: true  } },
             { label: "Revenue Forecast AI", values: { free: true, pro: true, business: true } },
+            { label: "Deal-cost-aware recommendations", values: { free: true, pro: true, business: true } },
         ],
     },
     {
@@ -51,6 +55,16 @@ const comparisonRows = [
         rows: [
             { label: "Pipeline forecasting", values: { free: true, pro: true, business: true } },
             { label: "Revenue forecasting", values: { free: true, pro: true, business: true } },
+            { label: "Conservative, expected, and optimistic scenarios", values: { free: true, pro: true, business: true } },
+            { label: "Deal concentration and pipeline risk", values: { free: true, pro: true, business: true } },
+        ],
+    },
+    {
+        category: "Analytics",
+        rows: [
+            { label: "Lead-level analytics", values: { free: true, pro: true, business: true } },
+            { label: "Won and lost outcome reporting", values: { free: true, pro: true, business: true } },
+            { label: "Six-month revenue history", values: { free: true, pro: true, business: true } },
         ],
     },
 ] as const;

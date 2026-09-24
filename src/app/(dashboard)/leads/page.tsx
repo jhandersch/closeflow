@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import AuthGuard from "@/components/AuthGuard";
 import LeadFilters from "@/components/dashboard/LeadFilters";
 import { supabase } from "@/lib/supabase/client";
@@ -669,6 +670,26 @@ export default function LeadsPage() {
               </button>) : null}
 
           </div>
+
+          <details className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
+              Spreadsheet import format
+              <span className="ml-2 text-xs font-normal text-foreground/50">View required columns and examples</span>
+            </summary>
+            <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
+              <Image
+                src="/lead-import-guide.png"
+                alt="Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format."
+                width={1600}
+                height={900}
+                className="h-auto w-full"
+                unoptimized
+              />
+            </div>
+            <a href="/lead-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
+              Download PNG guide
+            </a>
+          </details>
           
         </div>
 

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { getRouteUser } from "@/lib/supabase/route";
+import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 
 const fallbackResponse = () => ({
   summary: "AI analysis is currently unavailable.",
@@ -11,6 +13,10 @@ const fallbackResponse = () => ({
 
 export async function POST(req: Request) {
   try {
+    const { user, error: authError } = await getRouteUser(req);
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { lead, activities } = await req.json();
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -19,7 +25,7 @@ export async function POST(req: Request) {
       return NextResponse.json(fallbackResponse());
     }
 
-    const history = activities
+    const history = (activities || [])
       .map(
         (activity: any) =>
           `${activity.created_at}: ${activity.action}`,
@@ -36,6 +42,8 @@ Name: ${lead.name}
 Company: ${lead.company}
 Status: ${lead.status}
 Value: €${lead.value}
+User-entered deal costs:
+${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0))}
 Notes:
 ${lead.notes || "No notes"}
 
@@ -59,6 +67,7 @@ Focus on:
 - pipeline movement
 - next best action
 - probability of conversion
+- estimated profitability after the listed user-entered deal costs
 
 Consider that:
 - returning from a later stage to an earlier stage can indicate hesitation
