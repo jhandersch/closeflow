@@ -8,6 +8,7 @@ import InviteMemberModal from "@/components/team/InviteMemberModal";
 import MemberTable from "@/components/team/MemberTable";
 import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher";
 import { supabase } from "@/lib/supabase/client";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import type {
   Workspace,
@@ -351,9 +352,9 @@ export default function TeamPage() {
 
         if (data.inviteUrl) {
           try {
-            await navigator.clipboard.writeText(data.inviteUrl);
+            await copyTextToClipboard(data.inviteUrl);
           } catch {
-            // Clipboard access may fail. The invite was still created.
+            toast.error("Invite created, but its link could not be copied.");
           }
         }
 

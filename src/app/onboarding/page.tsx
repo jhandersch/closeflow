@@ -2,1238 +2,312 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
+    ArrowRight,
+    BarChart3,
     Building2,
-    Compass,
+    Check,
+    CircleDollarSign,
+    KanbanSquare,
     Sparkles,
     Users,
-    Check,
 } from "lucide-react";
-import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
-import { planDetails, type Plan } from "@/lib/planDetails";
-import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
-import { loadDemoData } from "@/lib/demoData";
 
 type QuickStartMode = "lead" | "demo";
-const ONBOARDING_DRAFT_KEY = "closeflow-onboarding-draft-v1";
-
-const sanitizeNextPath = (nextPath: string | null) => {
-    if (!nextPath) return null;
-    if (!nextPath.startsWith("/")) return null;
-    if (nextPath.startsWith("//")) return null;
-    return nextPath;
+type OnboardingDraft = {
+    step?: number;
+    quickStartMode?: QuickStartMode;
+    companyName?: string;
+    industry?: string;
+    teamSize?: string;
+    leadName?: string;
+    leadCompany?: string;
+    leadValue?: string;
+    leadStatus?: string;
 };
 
-const getRecommendedPlan = (teamSize: string): Plan => {
-    const size = Number(teamSize);
+const ONBOARDING_DRAFT_KEY = "closeflow-onboarding-draft-v1";
+const steps = ["Workspace", "Quick start"];
 
-    if (!Number.isInteger(size) || size <= 1) {
-        return "free";
-    }
-
-    if (size <= 5) {
-        return "pro";
-    }
-
-    return "business";
+const sanitizeNextPath = (nextPath: string | null) => {
+    if (!nextPath?.startsWith("/") || nextPath.startsWith("//")) return null;
+    return nextPath;
 };
 
 export default function OnboardingPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { t } = useAppPreferences();
-
     const nextPath = sanitizeNextPath(searchParams.get("next"));
 
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [draftReady, setDraftReady] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const [quickStartMode, setQuickStartMode] =
-        useState<QuickStartMode>("lead");
-
+    const [quickStartMode, setQuickStartMode] = useState<QuickStartMode>("lead");
     const [companyName, setCompanyName] = useState("");
     const [industry, setIndustry] = useState("");
     const [teamSize, setTeamSize] = useState("");
-    const [selectedPlan, setSelectedPlan] =
-        useState<Plan>("free");
-
-    const [detailsPlan, setDetailsPlan] =
-        useState<Plan | null>(null);
-
     const [leadName, setLeadName] = useState("");
     const [leadCompany, setLeadCompany] = useState("");
     const [leadValue, setLeadValue] = useState("");
     const [leadStatus, setLeadStatus] = useState("new");
 
-    const steps = useMemo(
-        () => [
-            {
-                id: 1,
-                title: t(
-                    "onboarding.stepWelcome",
-                    "Welcome",
-                ),
-            },
-            {
-                id: 2,
-                title: t(
-                    "onboarding.stepCompany",
-                    "Set up company",
-                ),
-            },
-            {
-                id: 3,
-                title: t(
-                    "onboarding.stepPlan",
-                    "Choose your plan",
-                ),
-            },
-            {
-                id: 4,
-                title: t(
-                    "onboarding.stepLead",
-                    "Create first lead",
-                ),
-            },
-            {
-                id: 5,
-                title: t(
-                    "onboarding.stepDashboard",
-                    "Understand dashboard",
-                ),
-            },
-        ],
-        [t],
-    );
-
-    const recommendedPlan = useMemo(
-        () => getRecommendedPlan(teamSize),
-        [teamSize],
-    );
-
     useEffect(() => {
+        let active = true;
         const checkUser = async () => {
-            const {
-                data: { user },
-                error: authError,
-            } = await supabase.auth.getUser();
-
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            if (!active) return;
             if (authError || !user) {
-                const loginTarget = nextPath
-                    ? `/login?next=${encodeURIComponent(nextPath)}`
-                    : "/login";
-
+                const loginTarget = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login";
                 router.replace(loginTarget);
                 return;
             }
-
             if (user.user_metadata?.onboarding_completed) {
-                router.replace(
-                    nextPath || "/dashboard",
-                );
+                router.replace(nextPath || "/dashboard");
                 return;
             }
-
             setLoading(false);
         };
-
         void checkUser();
+        return () => { active = false; };
     }, [nextPath, router]);
 
     useEffect(() => {
         if (loading) return;
-
-        try {
-            const saved = localStorage.getItem(
-                ONBOARDING_DRAFT_KEY,
-            );
-
-            if (!saved) return;
-
-            const draft = JSON.parse(saved) as {
-                step?: number;
-                quickStartMode?: QuickStartMode;
-                companyName?: string;
-                industry?: string;
-                teamSize?: string;
-                selectedPlan?: Plan;
-                leadName?: string;
-                leadCompany?: string;
-                leadValue?: string;
-                leadStatus?: string;
-            };
-
-            setStep(
-                typeof draft.step === "number"
-                    ? Math.min(
-                          Math.max(
-                              draft.step,
-                              0,
-                          ),
-                          4,
-                      )
-                    : 0,
-            );
-
-            setQuickStartMode(
-                draft.quickStartMode === "demo"
-                    ? "demo"
-                    : "lead",
-            );
-
-            setCompanyName(
-                draft.companyName || "",
-            );
-
-            setIndustry(
-                draft.industry || "",
-            );
-
-            setTeamSize(
-                draft.teamSize || "",
-            );
-
-            setSelectedPlan(
-                draft.selectedPlan === "pro" ||
-                    draft.selectedPlan ===
-                        "business"
-                    ? draft.selectedPlan
-                    : "free",
-            );
-
-            setLeadName(
-                draft.leadName || "",
-            );
-
-            setLeadCompany(
-                draft.leadCompany || "",
-            );
-
-            setLeadValue(
-                draft.leadValue || "",
-            );
-
-            setLeadStatus(
-                draft.leadStatus || "new",
-            );
-        } catch {
-            localStorage.removeItem(
-                ONBOARDING_DRAFT_KEY,
-            );
-        }
+        let active = true;
+        const restoreDraft = () => {
+            if (!active) return;
+            try {
+                const saved = localStorage.getItem(ONBOARDING_DRAFT_KEY);
+                if (saved) {
+                    const draft = JSON.parse(saved) as OnboardingDraft;
+                    setStep(typeof draft.step === "number" && draft.step > 0 ? 1 : 0);
+                    setQuickStartMode(draft.quickStartMode === "demo" ? "demo" : "lead");
+                    setCompanyName(draft.companyName || "");
+                    setIndustry(draft.industry || "");
+                    setTeamSize(draft.teamSize || "");
+                    setLeadName(draft.leadName || "");
+                    setLeadCompany(draft.leadCompany || "");
+                    setLeadValue(draft.leadValue || "");
+                    setLeadStatus(draft.leadStatus || "new");
+                }
+            } catch {
+                try { localStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* Storage may be unavailable. */ }
+            } finally {
+                if (active) setDraftReady(true);
+            }
+        };
+        queueMicrotask(restoreDraft);
+        return () => { active = false; };
     }, [loading]);
 
     useEffect(() => {
-        if (loading) return;
+        if (loading || !draftReady) return;
+        try {
+            localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify({
+                step, quickStartMode, companyName, industry, teamSize,
+                leadName, leadCompany, leadValue, leadStatus,
+            } satisfies OnboardingDraft));
+        } catch { /* The onboarding flow remains usable if storage is disabled. */ }
+    }, [companyName, draftReady, industry, leadCompany, leadName, leadStatus, leadValue, loading, quickStartMode, step, teamSize]);
 
-        const payload = {
-            step,
-            quickStartMode,
-            companyName,
-            industry,
-            teamSize,
-            selectedPlan,
-            leadName,
-            leadCompany,
-            leadValue,
-            leadStatus,
-        };
-
-        localStorage.setItem(
-            ONBOARDING_DRAFT_KEY,
-            JSON.stringify(payload),
-        );
-    }, [
-        companyName,
-        industry,
-        leadCompany,
-        leadName,
-        leadStatus,
-        leadValue,
-        loading,
-        quickStartMode,
-        selectedPlan,
-        step,
-        teamSize,
-    ]);
-
-    useEffect(() => {
-        if (!teamSize.trim()) {
-            setSelectedPlan("free");
-            return;
-        }
-
-        setSelectedPlan(recommendedPlan);
-    }, [recommendedPlan, teamSize]);
-
-    const progress = useMemo(
-        () =>
-            ((step + 1) /
-                steps.length) *
-            100,
-        [step, steps.length],
+    const validWorkspace = companyName.trim().length >= 2
+        && Number.isInteger(Number(teamSize))
+        && Number(teamSize) >= 1
+        && Number(teamSize) <= 20;
+    const validLead = quickStartMode === "demo" || (
+        Boolean(leadName.trim())
+        && Boolean(leadCompany.trim())
+        && (!leadValue.trim() || (Number.isFinite(Number(leadValue)) && Number(leadValue) >= 0))
     );
-
-    const canContinue = useMemo(() => {
-        if (step === 1) {
-            const parsedTeamSize =
-                Number(teamSize);
-
-            return (
-                companyName.trim().length >=
-                    2 &&
-                Number.isInteger(
-                    parsedTeamSize,
-                ) &&
-                parsedTeamSize >= 1 &&
-                parsedTeamSize <= 20
-            );
-        }
-
-        if (step === 2) {
-            return (
-                selectedPlan ===
-                recommendedPlan
-            );
-        }
-
-        if (
-            step === 3 &&
-            quickStartMode === "lead"
-        ) {
-            if (
-                !leadName.trim() ||
-                !leadCompany.trim()
-            ) {
-                return false;
-            }
-
-            if (
-                leadValue.trim() &&
-                Number.isNaN(
-                    Number(leadValue),
-                )
-            ) {
-                return false;
-            }
-        }
-
-        return true;
-    }, [
-        companyName,
-        leadCompany,
-        leadName,
-        leadValue,
-        quickStartMode,
-        recommendedPlan,
-        selectedPlan,
-        step,
-        teamSize,
-    ]);
+    const canContinue = step === 0 ? validWorkspace : validLead;
+    const progress = useMemo(() => ((step + 1) / steps.length) * 100, [step]);
 
     const handleFinish = async () => {
         setSaving(true);
         setError(null);
-
         try {
-            const {
-                data: { user },
-                error: userError,
-            } = await supabase.auth.getUser();
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw sessionError;
+            if (!session?.access_token) throw new Error("Please sign in again to finish setting up your workspace.");
 
-            if (userError || !user) {
-                throw new Error(
-                    "You need to be signed in to complete onboarding.",
-                );
-            }
-
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-
-            if (!session?.access_token) {
-                throw new Error(
-                    "No active session found.",
-                );
-            }
-
-            const response = await fetch(
-                "/api/onboarding",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                        Authorization: `Bearer ${session.access_token}`,
-                    },
-                    body: JSON.stringify({
-                        companyName:
-                            companyName.trim(),
-                        industry:
-                            industry.trim(),
-                        teamSize:
-                            teamSize.trim(),
-                        quickStartMode,
-                        leadName:
-                            leadName.trim(),
-                        leadCompany:
-                            leadCompany.trim(),
-                        leadValue:
-                            leadValue.trim(),
-                        leadStatus,
-                    }),
+            const response = await fetch("/api/onboarding", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`,
                 },
-            );
-
-            const result =
-                (await response
-                    .json()
-                    .catch(() => null)) as {
-                    error?: string;
-                } | null;
-
-            if (!response.ok) {
-                throw new Error(
-                    result?.error ||
-                        "Onboarding failed.",
-                );
-            }
-
-            const {
-                error: metadataError,
-            } = await supabase.auth.updateUser({
-                data: {
-                    onboarding_completed:
-                        true,
-                    onboarding_completed_at:
-                        new Date().toISOString(),
-                    onboarding_plan:
-                        selectedPlan,
-                },
+                body: JSON.stringify({
+                    companyName: companyName.trim(),
+                    industry: industry.trim(),
+                    teamSize: teamSize.trim(),
+                    quickStartMode,
+                    leadName: leadName.trim(),
+                    leadCompany: leadCompany.trim(),
+                    leadValue: leadValue.trim(),
+                    leadStatus,
+                }),
             });
+            const result = await response.json().catch(() => null) as { error?: string } | null;
+            if (!response.ok) throw new Error(result?.error || "We couldn't finish setting up your workspace.");
 
-            if (metadataError) {
-                throw metadataError;
-            }
-
-            localStorage.removeItem(
-                ONBOARDING_DRAFT_KEY,
-            );
-
-            router.replace(
-                nextPath || "/dashboard",
-            );
+            const { error: metadataError } = await supabase.auth.updateUser({
+                data: { onboarding_completed: true, onboarding_completed_at: new Date().toISOString() },
+            });
+            if (metadataError) throw metadataError;
+            try { localStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* Ignore unavailable storage. */ }
+            router.replace(nextPath || "/dashboard");
         } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Something went wrong while finishing onboarding.",
-            );
+            setError(err instanceof Error ? err.message : "Something went wrong while finishing setup.");
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) {
+    if (loading || !draftReady) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-                <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8">
+            <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+                <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8" aria-label="Loading onboarding">
                     <div className="h-3 w-24 animate-pulse rounded-full bg-cyan-500/30" />
-
                     <div className="mt-6 space-y-3">
                         <div className="h-4 w-full animate-pulse rounded-full bg-foreground/10" />
                         <div className="h-4 w-5/6 animate-pulse rounded-full bg-foreground/10" />
-                        <div className="h-4 w-4/6 animate-pulse rounded-full bg-foreground/10" />
                     </div>
                 </div>
-            </div>
+            </main>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto flex max-w-5xl flex-col gap-6">
-                <div className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl">
+                <header className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
+                    <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-                                {t(
-                                    "onboarding.label",
-                                    "Onboarding",
-                                )}
-                            </p>
-
-                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-                                {t(
-                                    "onboarding.welcomeTitle",
-                                    "Welcome to CloseFlow",
-                                )}
-                            </h1>
-
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">CloseFlow setup</p>
+                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Make your workspace yours</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">
-                                {t(
-                                    "onboarding.welcomeBody",
-                                    "Let's set up your CRM workspace and create your first momentum in just a few minutes.",
-                                )}
+                                A couple of details, then choose whether to add your first lead or explore a ready-made workspace.
                             </p>
                         </div>
-
-                        <div className="w-full max-w-xs rounded-2xl border border-border-subtle bg-surface-2/70 p-4">
-                            <div className="flex items-center justify-between text-sm text-foreground/65">
-                                <span>
-                                    {t(
-                                        "onboarding.progress",
-                                        "Progress",
-                                    )}
-                                </span>
-
-                                <span>
-                                    {Math.round(
-                                        progress,
-                                    )}
-                                    %
-                                </span>
+                        <div className="w-full md:max-w-xs" aria-label={`Step ${step + 1} of ${steps.length}`}>
+                            <div className="flex justify-between text-sm text-foreground/65">
+                                <span>{steps[step]}</span><span>Step {step + 1} of {steps.length}</span>
                             </div>
-
-                            <div className="mt-3 h-2 rounded-full bg-foreground/10">
-                                <div
-                                    className="h-2 rounded-full bg-cyan-400 transition-all"
-                                    style={{
-                                        width: `${progress}%`,
-                                    }}
-                                />
+                            <div className="mt-3 h-2 rounded-full bg-foreground/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+                                <div className="h-2 rounded-full bg-cyan-400 transition-all" style={{ width: `${progress}%` }} />
+                            </div>
+                            <div className="mt-3 flex gap-2" aria-hidden="true">
+                                {steps.map((item, index) => <span key={item} className={`h-1 flex-1 rounded-full ${index <= step ? "bg-cyan-400" : "bg-foreground/10"}`} />)}
                             </div>
                         </div>
                     </div>
+                </header>
 
-                    <div className="mt-6 grid gap-3 sm:grid-cols-5">
-                        {steps.map(
-                            (
-                                item,
-                                index,
-                            ) => {
-                                const current =
-                                    index ===
-                                    step;
-
-                                const done =
-                                    index <
-                                    step;
-
-                                return (
-                                    <div
-                                        key={
-                                            item.id
-                                        }
-                                        className={`rounded-2xl border px-4 py-3 text-sm ${
-                                            done
-                                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                                                : current
-                                                    ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
-                                                    : "border-border-subtle bg-surface-2/70 text-foreground/65"
-                                        }`}
-                                    >
-                                        <p className="font-medium">
-                                            {
-                                                item.title
-                                            }
-                                        </p>
-                                    </div>
-                                );
-                            },
-                        )}
-                    </div>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                    <div className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
-                        {step === 0 && (
+                <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
+                    <section className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8" aria-labelledby="step-title">
+                        {step === 0 ? (
                             <div className="space-y-6">
-                                <div className="flex items-start gap-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
-                                    <Sparkles className="mt-1 h-5 w-5 text-cyan-300" />
-
-                                    <div>
-                                        <h2 className="text-xl font-semibold">
-                                            Welcome to CloseFlow
-                                        </h2>
-
-                                        <p className="mt-2 text-sm leading-7 text-foreground/80">
-                                            We will set up your workspace, choose the right plan for your team, create your first lead, and then show you the dashboard.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl border border-border-subtle bg-surface-2/70 p-5">
-                                    <h3 className="text-lg font-semibold">
-                                        What happens next
-                                    </h3>
-
-                                    <ul className="mt-4 space-y-3 text-sm text-foreground/65">
-                                        <li>
-                                            - Set up company and team context
-                                        </li>
-
-                                        <li>
-                                            - Choose the right plan
-                                        </li>
-
-                                        <li>
-                                            - Create your first lead or explore demo data
-                                        </li>
-
-                                        <li>
-                                            - Understand the dashboard
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 1 && (
-                            <div className="space-y-5">
                                 <div>
-                                    <h2 className="text-2xl font-semibold">
-                                        Set up company
-                                    </h2>
-
-                                    <p className="mt-2 text-sm leading-7 text-foreground/65">
-                                        These details personalize your CRM.
-                                    </p>
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Building2 className="h-5 w-5" /></div>
+                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">Your workspace</h2>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">These details help organize your CRM. You can update them later in Settings.</p>
                                 </div>
-
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <label className="text-sm">
-                                        <span className="mb-2 block">
-                                            Company name
-                                        </span>
-
-                                        <input
-                                            value={
-                                                companyName
-                                            }
-                                            onChange={(
-                                                event,
-                                            ) =>
-                                                setCompanyName(
-                                                    event
-                                                        .target
-                                                        .value,
-                                                )
-                                            }
-                                            placeholder="Acme Labs"
-                                            className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                        />
-                                    </label>
-
-                                    <label className="text-sm">
-                                        <span className="mb-2 block">
-                                            Industry
-                                        </span>
-
-                                        <input
-                                            value={
-                                                industry
-                                            }
-                                            onChange={(
-                                                event,
-                                            ) =>
-                                                setIndustry(
-                                                    event
-                                                        .target
-                                                        .value,
-                                                )
-                                            }
-                                            placeholder="SaaS"
-                                            className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                        />
-                                    </label>
-                                </div>
-
                                 <label className="block text-sm">
-                                    <span className="mb-2 block">
-                                        Team size
-                                    </span>
-
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={20}
-                                        step={1}
-                                        value={
-                                            teamSize
-                                        }
-                                        onChange={(
-                                            event,
-                                        ) =>
-                                            setTeamSize(
-                                                event
-                                                    .target
-                                                    .value,
-                                            )
-                                        }
-                                        placeholder="1-20"
-                                        className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                    />
-
-                                    <p className="mt-2 text-xs text-foreground/50">
-                                        Free: 1 · Pro: up to 5 · Business: up to 20
-                                    </p>
+                                    <span className="mb-2 block font-medium">Company or workspace name <span className="text-cyan-300">*</span></span>
+                                    <input autoFocus value={companyName} onChange={(event) => setCompanyName(event.target.value)} maxLength={80} autoComplete="organization" placeholder="e.g. Northstar Studio" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none transition focus:border-cyan-400/60" />
                                 </label>
-                            </div>
-                        )}
-                        {step === 2 && (
-                            <div className="space-y-5">
-                                <div>
-                                    <h2 className="text-2xl font-semibold">
-                                        Choose your plan
-                                    </h2>
-
-                                    <p className="mt-2 text-sm leading-7 text-foreground/65">
-                                        We recommend a plan based on your team size. Your selection is saved as part of onboarding, but payment is not started yet.
-                                    </p>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <label className="block text-sm">
+                                        <span className="mb-2 block font-medium">Industry <span className="text-foreground/40">(optional)</span></span>
+                                        <select value={industry} onChange={(event) => setIndustry(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
+                                            <option value="">Choose an industry</option>
+                                            <option value="Technology">Technology</option><option value="Consulting">Consulting</option><option value="Marketing">Marketing</option><option value="Finance">Finance</option><option value="Real estate">Real estate</option><option value="Healthcare">Healthcare</option><option value="Education">Education</option><option value="Other">Other</option>
+                                        </select>
+                                    </label>
+                                    <label className="block text-sm">
+                                        <span className="mb-2 block font-medium">Team size</span>
+                                        <select value={teamSize} onChange={(event) => setTeamSize(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
+                                            <option value="">Select team size</option><option value="1">Just me</option><option value="2">2 people</option><option value="3">3 people</option><option value="4">4 people</option><option value="5">5 people</option><option value="6">6–10 people</option><option value="20">11–20 people</option>
+                                        </select>
+                                        <span className="mt-2 block text-xs leading-5 text-foreground/50">This is workspace context. It does not select or change your subscription.</span>
+                                    </label>
                                 </div>
-
-                                <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm">
-                                    <span className="font-semibold text-cyan-300">
-                                        Recommended:
-                                    </span>{" "}
-                                    <span className="text-foreground/80">
-                                        {
-                                            planDetails[
-                                                recommendedPlan
-                                            ].name
-                                        }
-                                    </span>
-                                </div>
-
-                                <div className="grid gap-4">
-                                    {(
-                                        [
-                                            "free",
-                                            "pro",
-                                            "business",
-                                        ] as Plan[]
-                                    ).map(
-                                        (
-                                            plan,
-                                        ) => {
-                                            const selected =
-                                                selectedPlan ===
-                                                plan;
-
-                                            const disabled =
-                                                !teamSize ||
-                                                plan !==
-                                                    recommendedPlan;
-
-                                            return (
-                                                <article
-                                                    key={plan}
-                                                    className={`rounded-2xl border p-5 transition ${
-                                                        selected
-                                                            ? "border-cyan-400/40 bg-cyan-500/10"
-                                                            : "border-border-subtle bg-surface-2/60"
-                                                    }`}
-                                                >
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="text-lg font-semibold">
-                                                                    {
-                                                                        planDetails[
-                                                                            plan
-                                                                        ].name
-                                                                    }
-                                                                </h3>
-
-                                                                {recommendedPlan ===
-                                                                    plan && (
-                                                                    <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[11px] font-medium text-cyan-300">
-                                                                        Recommended
-                                                                    </span>
-                                                                )}
-                                                            </div>
-
-                                                            <p className="mt-1 text-sm text-foreground/60">
-                                                                {
-                                                                    planDetails[
-                                                                        plan
-                                                                    ].description
-                                                                }
-                                                            </p>
-                                                        </div>
-
-                                                        {selected && (
-                                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-black">
-                                                                <Check
-                                                                    size={16}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="mt-4 flex items-end justify-between gap-4">
-                                                        <div>
-                                                            <p className="text-xl font-bold">
-                                                                {
-                                                                    planDetails[
-                                                                        plan
-                                                                    ].price
-                                                                }
-                                                            </p>
-
-                                                            <p className="mt-1 text-xs text-foreground/50">
-                                                                {
-                                                                    planDetails[
-                                                                        plan
-                                                                    ].seats
-                                                                }
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                type="button"
-                                                                disabled={disabled}
-                                                                onClick={() =>
-                                                                    setSelectedPlan(
-                                                                        plan,
-                                                                    )
-                                                                }
-                                                                className="rounded-xl border border-border-subtle px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-35"
-                                                            >
-                                                                {selected
-                                                                    ? "Selected"
-                                                                    : "Select"}
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setDetailsPlan(
-                                                                        plan,
-                                                                    )
-                                                                }
-                                                                className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/10"
-                                                            >
-                                                                View details
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </article>
-                                            );
-                                        },
-                                    )}
+                                <div className="rounded-2xl border border-border-subtle bg-surface-2/70 p-4 text-sm leading-6 text-foreground/65">
+                                    Your workspace starts on Free: one team member, up to 50 active leads, 10 AI requests and 5 exports per month. You can compare plans any time.
+                                    <Link href="/pricing" className="ml-1 font-medium text-cyan-300 underline decoration-cyan-300/30 underline-offset-4 hover:text-cyan-200">Compare plans</Link>
                                 </div>
                             </div>
-                        )}
-
-                        {step === 3 && (
-                            <div className="space-y-5">
+                        ) : (
+                            <div className="space-y-6">
                                 <div>
-                                    <h2 className="text-2xl font-semibold">
-                                        Quick start
-                                    </h2>
-
-                                    <p className="mt-2 text-sm leading-7 text-foreground/65">
-                                        Choose the fastest path to your first CloseFlow moment.
-                                    </p>
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Sparkles className="h-5 w-5" /></div>
+                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">How would you like to start?</h2>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">Choose a useful first step. You can change everything once you are inside CloseFlow.</p>
                                 </div>
-
-                                <div className="grid gap-3 md:grid-cols-2">
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setQuickStartMode(
-                                                "lead",
-                                            )
-                                        }
-                                        className={`rounded-2xl border px-4 py-5 text-left ${
-                                            quickStartMode ===
-                                            "lead"
-                                                ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
-                                                : "border-border-subtle bg-surface-2 text-foreground/75"
-                                        }`}
-                                    >
-                                        <p className="font-semibold">
-                                            Create my first lead
-                                        </p>
-
-                                        <p className="mt-1 text-xs">
-                                            Best path for a productive start.
-                                        </p>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <button type="button" aria-pressed={quickStartMode === "lead"} onClick={() => setQuickStartMode("lead")} className={`rounded-2xl border p-5 text-left transition ${quickStartMode === "lead" ? "border-cyan-400/50 bg-cyan-500/10" : "border-border-subtle bg-surface-2 hover:border-foreground/20"}`}>
+                                        <div className="flex items-center justify-between"><Users className="h-5 w-5 text-cyan-300" />{quickStartMode === "lead" && <Check className="h-4 w-4 text-cyan-300" />}</div>
+                                        <p className="mt-4 font-semibold">Add my first lead</p><p className="mt-1 text-xs leading-5 text-foreground/60">Start with a real opportunity in your pipeline.</p>
                                     </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setQuickStartMode(
-                                                "demo",
-                                            )
-                                        }
-                                        className={`rounded-2xl border px-4 py-5 text-left ${
-                                            quickStartMode ===
-                                            "demo"
-                                                ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
-                                                : "border-border-subtle bg-surface-2 text-foreground/75"
-                                        }`}
-                                    >
-                                        <p className="font-semibold">
-                                            Start with demo data
-                                        </p>
-
-                                        <p className="mt-1 text-xs">
-                                            Instantly populated pipeline for exploration.
-                                        </p>
+                                    <button type="button" aria-pressed={quickStartMode === "demo"} onClick={() => setQuickStartMode("demo")} className={`rounded-2xl border p-5 text-left transition ${quickStartMode === "demo" ? "border-cyan-400/50 bg-cyan-500/10" : "border-border-subtle bg-surface-2 hover:border-foreground/20"}`}>
+                                        <div className="flex items-center justify-between"><KanbanSquare className="h-5 w-5 text-cyan-300" />{quickStartMode === "demo" && <Check className="h-4 w-4 text-cyan-300" />}</div>
+                                        <p className="mt-4 font-semibold">Explore demo data</p><p className="mt-1 text-xs leading-5 text-foreground/60">See an example pipeline, tasks and activities.</p>
                                     </button>
                                 </div>
-
-                                {quickStartMode ===
-                                "lead" ? (
-                                    <>
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="text-sm">
-                                                <span className="mb-2 block">
-                                                    Name
-                                                </span>
-
-                                                <input
-                                                    value={
-                                                        leadName
-                                                    }
-                                                    onChange={(
-                                                        event,
-                                                    ) =>
-                                                        setLeadName(
-                                                            event
-                                                                .target
-                                                                .value,
-                                                        )
-                                                    }
-                                                    placeholder="Jordan Lee"
-                                                    className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                                />
-                                            </label>
-
-                                            <label className="text-sm">
-                                                <span className="mb-2 block">
-                                                    Company
-                                                </span>
-
-                                                <input
-                                                    value={
-                                                        leadCompany
-                                                    }
-                                                    onChange={(
-                                                        event,
-                                                    ) =>
-                                                        setLeadCompany(
-                                                            event
-                                                                .target
-                                                                .value,
-                                                        )
-                                                    }
-                                                    placeholder="Northstar"
-                                                    className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                                />
-                                            </label>
+                                {quickStartMode === "lead" ? (
+                                    <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-2/60 p-5">
+                                        <div><h3 className="font-medium">First lead details</h3><p className="mt-1 text-xs text-foreground/55">You can add more details and activities later.</p></div>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="text-sm"><span className="mb-2 block">Contact name <span className="text-cyan-300">*</span></span><input autoFocus value={leadName} onChange={(event) => setLeadName(event.target.value)} maxLength={120} autoComplete="name" placeholder="Jordan Lee" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">Company <span className="text-cyan-300">*</span></span><input value={leadCompany} onChange={(event) => setLeadCompany(event.target.value)} maxLength={120} autoComplete="organization" placeholder="Northstar" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                         </div>
-
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="text-sm">
-                                                <span className="mb-2 block">
-                                                    Deal value
-                                                </span>
-
-                                                <input
-                                                    type="number"
-                                                    value={
-                                                        leadValue
-                                                    }
-                                                    onChange={(
-                                                        event,
-                                                    ) =>
-                                                        setLeadValue(
-                                                            event
-                                                                .target
-                                                                .value,
-                                                        )
-                                                    }
-                                                    placeholder="12000"
-                                                    className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/50"
-                                                />
-                                            </label>
-
-                                            <label className="text-sm">
-                                                <span className="mb-2 block">
-                                                    Status
-                                                </span>
-
-                                                <select
-                                                    value={
-                                                        leadStatus
-                                                    }
-                                                    onChange={(
-                                                        event,
-                                                    ) =>
-                                                        setLeadStatus(
-                                                            event
-                                                                .target
-                                                                .value,
-                                                        )
-                                                    }
-                                                    className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none"
-                                                >
-                                                    <option value="new">
-                                                        New
-                                                    </option>
-
-                                                    <option value="contacted">
-                                                        Contacted
-                                                    </option>
-
-                                                    <option value="proposal">
-                                                        Proposal
-                                                    </option>
-
-                                                    <option value="won">
-                                                        Won
-                                                    </option>
-                                                </select>
-                                            </label>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="text-sm"><span className="mb-2 block">Estimated deal value <span className="text-foreground/40">(optional)</span></span><input type="number" min="0" step="0.01" inputMode="decimal" value={leadValue} onChange={(event) => setLeadValue(event.target.value)} placeholder="12000" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">Pipeline stage</span><select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60"><option value="new">New</option><option value="contacted">Contacted</option><option value="proposal">Proposal</option><option value="won">Won</option></select></label>
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-7">
-                                        Upon completion, realistic demo leads, activities, and tasks are loaded.
                                     </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-6 text-foreground/75">We will add sample leads, activities and tasks to this new workspace so you can explore the dashboard right away.</div>
                                 )}
                             </div>
                         )}
 
-                        {step === 4 && (
-                            <div className="space-y-5">
-                                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-                                    <div className="flex items-start gap-3">
-                                        <Building2 className="mt-1 h-5 w-5 text-emerald-300" />
-
-                                        <div>
-                                            <h2 className="text-xl font-semibold">
-                                                Explore your dashboard
-                                            </h2>
-
-                                            <p className="mt-2 text-sm leading-7">
-                                                Your workspace is ready.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl border border-border-subtle bg-surface-2/70 p-5 text-sm text-foreground/65">
-                                    <div className="flex items-center gap-3">
-                                        <Users className="h-5 w-5 text-cyan-300" />
-
-                                        <span>
-                                            Company:{" "}
-                                            {companyName ||
-                                                "Not specified"}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center gap-3">
-                                        <Compass className="h-5 w-5 text-cyan-300" />
-
-                                        <span>
-                                            Industry:{" "}
-                                            {industry ||
-                                                "Not specified"}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center gap-3">
-                                        <Users className="h-5 w-5 text-cyan-300" />
-
-                                        <span>
-                                            Team size:{" "}
-                                            {teamSize ||
-                                                "Not specified"}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center gap-3">
-                                        <Sparkles className="h-5 w-5 text-cyan-300" />
-
-                                        <span>
-                                            Plan:{" "}
-                                            {
-                                                planDetails[
-                                                    selectedPlan
-                                                ].name
-                                            }
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                                {error}
-                            </div>
-                        )}
-
-                        <PlanDetailsModal
-                            plan={detailsPlan}
-                            onClose={() => setDetailsPlan(null)}
-                        />
-
-                        <div className="mt-8 flex items-center justify-between gap-3">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setStep(
-                                        (current) =>
-                                            Math.max(
-                                                0,
-                                                current -
-                                                    1,
-                                            ),
-                                    )
-                                }
-                                disabled={
-                                    step === 0 ||
-                                    saving
-                                }
-                                className="rounded-2xl border border-border-subtle px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                Back
-                            </button>
-
-                            {step <
-                            steps.length -
-                                1 ? (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setStep(
-                                            (current) =>
-                                                Math.min(
-                                                    steps.length -
-                                                        1,
-                                                    current +
-                                                        1,
-                                                ),
-                                        )
-                                    }
-                                    disabled={
-                                        !canContinue ||
-                                        saving
-                                    }
-                                    className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
-                                >
-                                    Continue
-                                </button>
+                        {error && <div role="alert" className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>}
+                        <div className="mt-8 flex items-center justify-between gap-3 border-t border-border-subtle pt-5">
+                            <button type="button" onClick={() => { setError(null); setStep(0); }} disabled={step === 0 || saving} className="rounded-2xl border border-border-subtle px-4 py-2.5 text-sm font-medium transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40">Back</button>
+                            {step === 0 ? (
+                                <button type="button" onClick={() => { setError(null); setStep(1); }} disabled={!canContinue || saving} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-45">Continue <ArrowRight className="h-4 w-4" /></button>
                             ) : (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        void handleFinish()
-                                    }
-                                    disabled={
-                                        saving
-                                    }
-                                    className="rounded-2xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
-                                >
-                                    {saving
-                                        ? "Finishing..."
-                                        : "Finish onboarding"}
-                                </button>
+                                <button type="button" onClick={() => void handleFinish()} disabled={!canContinue || saving} className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Setting up…" : "Create my workspace"}{!saving && <ArrowRight className="h-4 w-4" />}</button>
                             )}
                         </div>
-                    </div>
+                        <p className="mt-3 text-right text-xs text-foreground/45">Your progress is saved on this device.</p>
+                    </section>
 
-                    <div className="space-y-4">
-                        <div className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
-                            <h3 className="text-lg font-semibold">
-                                Why onboarding helps
-                            </h3>
-
-                            <p className="mt-3 text-sm leading-7 text-foreground/65">
-                                A quick setup makes your new CRM immediately useful and helps us recommend the right plan.
-                            </p>
-                        </div>
-
-                        <div className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
-                            <h3 className="text-lg font-semibold">
-                                Your plan
-                            </h3>
-
-                            <p className="mt-3 text-sm leading-7 text-foreground/65">
-                                {
-                                    planDetails[
-                                        selectedPlan
-                                    ].name
-                                }
-                                {" · "}
-                                {
-                                    planDetails[
-                                        selectedPlan
-                                    ].seats
-                                }
-                            </p>
-
-                            <p className="mt-2 text-sm font-semibold text-foreground">
-                                {
-                                    planDetails[
-                                        selectedPlan
-                                    ].price
-                                }
-                            </p>
-                        </div>
-
-                        <div className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
-                            <h3 className="text-lg font-semibold">
-                                Try demo data
-                            </h3>
-
-                            <p className="mt-3 text-sm leading-7 text-foreground/65">
-                                Load realistic sample data directly.
-                            </p>
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    void loadDemoData()
-                                        .then(() => {
-                                            router.replace(
-                                                nextPath ||
-                                                    "/dashboard",
-                                            );
-                                        })
-                                        .catch(
-                                            (
-                                                err,
-                                            ) => {
-                                                setError(
-                                                    err instanceof
-                                                        Error
-                                                        ? err.message
-                                                        : "Demo data could not be loaded",
-                                                );
-                                            },
-                                        );
-                                }}
-                                className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
-                            >
-                                Load demo data
-                            </button>
-                        </div>
-                    </div>
+                    <aside className="space-y-4">
+                        <section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Included in CloseFlow</p>
+                            <h2 className="mt-2 text-lg font-semibold">A clear view of every opportunity</h2>
+                            <ul className="mt-5 space-y-4 text-sm text-foreground/70">
+                                <li className="flex gap-3"><KanbanSquare className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Leads and pipeline</strong><br />Keep contacts, deal stages and customers together.</span></li>
+                                <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Tasks and activities</strong><br />Track follow-ups and keep your next action visible.</span></li>
+                                <li className="flex gap-3"><BarChart3 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Analytics and forecasts</strong><br />Understand pipeline progress and expected revenue.</span></li>
+                                <li className="flex gap-3"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">AI deal insights</strong><br />Get help prioritizing opportunities and next steps.</span></li>
+                            </ul>
+                        </section>
+                        <section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
+                            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300"><CircleDollarSign className="h-5 w-5" /></div><div><h2 className="font-semibold">Start free</h2><p className="text-sm text-foreground/55">No payment details needed</p></div></div>
+                            <p className="mt-4 text-sm leading-6 text-foreground/65">Free includes one member, 50 active leads, 10 AI requests and 5 exports each month.</p>
+                            <Link href="/pricing" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-cyan-300 hover:text-cyan-200">View all plans <ArrowRight className="h-4 w-4" /></Link>
+                        </section>
+                    </aside>
                 </div>
+                <footer className="mx-auto mt-6 max-w-6xl text-center text-xs text-foreground/40">Already started? Your setup draft stays on this device until you finish.</footer>
             </div>
-        </div>
+        </main>
     );
 }

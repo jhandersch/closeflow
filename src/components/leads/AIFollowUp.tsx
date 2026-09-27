@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { copyTextToClipboard } from "@/lib/clipboard";
 
 export default function AIFollowUp({
   lead,
@@ -48,13 +50,13 @@ export default function AIFollowUp({
       return;
     }
 
-    await navigator.clipboard.writeText(`
-${mail.subject}
-
-${mail.email}
-`);
-
-    setCopied(true);
+    try {
+      await copyTextToClipboard(`${mail.subject}\n\n${mail.email}`);
+      setCopied(true);
+    } catch {
+      toast.error("Could not copy the email. Please copy it manually.");
+      return;
+    }
 
     setTimeout(() => {
       setCopied(false);

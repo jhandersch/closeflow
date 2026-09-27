@@ -50,7 +50,7 @@ const getTaskStatus = (
     return "open";
 };
 
-export function useDashboardTasks() {
+export function useDashboardTasks(activeLeadIds: string[]) {
     const [tasks, setTasks] =
         useState<DashboardTask[]>([]);
 
@@ -78,6 +78,12 @@ export function useDashboardTasks() {
             return;
         }
 
+        if (activeLeadIds.length === 0) {
+            setTasks([]);
+            setLoading(false);
+            return;
+        }
+
         const savedTimezone =
             typeof user.user_metadata?.timezone ===
                 "string" &&
@@ -94,6 +100,8 @@ export function useDashboardTasks() {
             .from("tasks")
             .select("*")
             .eq("user_id", user.id)
+            .is("deleted_at", null)
+            .in("lead_id", activeLeadIds)
             .order("created_at", {
                 ascending: false,
             });
@@ -120,7 +128,7 @@ export function useDashboardTasks() {
 
         setTasks(mapped);
         setLoading(false);
-    }, []);
+    }, [activeLeadIds]);
 
     useEffect(() => {
         void loadTasks();

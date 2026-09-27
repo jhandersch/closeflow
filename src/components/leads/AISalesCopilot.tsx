@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { copyTextToClipboard } from "@/lib/clipboard";
+import toast from "react-hot-toast";
 
 type Props = {
   lead: any;
@@ -28,8 +30,13 @@ export default function AISalesCopilot({
       return;
     }
 
-    await navigator.clipboard.writeText(data.emailDraft);
-    setCopied(true);
+    try {
+      await copyTextToClipboard(data.emailDraft);
+      setCopied(true);
+    } catch {
+      toast.error("Could not copy the email. Please copy it manually.");
+      return;
+    }
 
     setTimeout(() => {
       setCopied(false);

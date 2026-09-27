@@ -113,13 +113,16 @@ export default function PipelineChart({ data, }: PipelineChartProps) {
 
 
 
-            <Tooltip cursor={{ fill: "rgba(34, 211, 238, 0.08)" }} contentStyle={{
+        <Tooltip cursor={{ fill: "rgba(34, 211, 238, 0.08)" }} contentStyle={{
             background: "var(--surface-1)",
             border: "1px solid var(--border-subtle)",
             borderRadius: "12px",
             boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
-        }} formatter={(value) => [
-            `${value} ${t("dashboard.deals", "deals")}`,
+            color: "var(--foreground)",
+        }} labelStyle={{ color: "var(--foreground)" }} itemStyle={{ color: "var(--foreground)" }} formatter={(value) => [
+            `${Number(value)} ${Number(value) === 1
+                ? t("dashboard.deal", "deal")
+                : t("dashboard.deals", "deals").toLowerCase()}`,
             t("dashboard.deals", "Deals"),
         ]}/>
 

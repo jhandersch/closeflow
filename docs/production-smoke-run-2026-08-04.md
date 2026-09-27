@@ -1,6 +1,8 @@
-# CloseFlow Production Smoke Run (2026-08-29)
+# CloseFlow Production Smoke Run
 
 Purpose: final manual evidence for release promotion from CONDITIONAL GO to GO.
+
+Last recorded production run: 2026-08-29. Checklist updated for the current product on 2026-09-24. Checks added or changed in this update are **not yet executed**; prior PASS marks below only describe the earlier run and are not evidence for the current build.
 
 This document is intentionally split into two layers:
 
@@ -10,7 +12,7 @@ This document is intentionally split into two layers:
 
 ## Run Metadata
 
-* Date: 2026-08-29
+* Last recorded run: 2026-08-29; checklist updated: 2026-09-24
 
 * Start time (UTC): —
 
@@ -40,7 +42,7 @@ This document is intentionally split into two layers:
 
 * Production Deployment: PASS
 
-* Current decision: GO
+* Decision recorded in this historical snapshot: GO (the later release decision below is CONDITIONAL GO)
 
 Previously open blockers:
 
@@ -224,7 +226,7 @@ PASS: [x]
 
 Pipeline:
 
-* [x] New → Contacted → Qualified → Proposal → Won → Lost
+* [x] New → Contacted → Proposal → Won; separately, New → Contacted → Lost
 
 * [x] status changes persist
 
@@ -240,7 +242,7 @@ Automations:
 
 * [x] Proposal creates follow-up proposal task
 
-* [x] Won creates onboarding task set
+* [x] current behavior: Won sets a customer-feedback next action and does not create an onboarding task set
 
 * [x] no duplicate automation tasks
 
@@ -248,7 +250,7 @@ PASS: [x]
 
 Activity Timeline:
 
-* [x] German labels work
+* [x] English labels work
 
 * [x] order is correct
 
@@ -556,21 +558,19 @@ Layer B remains recommended hardening and does not block the current release dec
 
 ### B1) Dashboard
 
-* [x] KPI cards correct
+* [ ] active lead count, pipeline value, and at-risk deal count are correct
 
-* [x] charts correct
+* [ ] open and overdue task counts and the next upcoming task are correct
 
-* [x] forecast correct
+* [ ] at-risk deals link to the correct lead and show its next action
 
-* [x] AI insight correct
+* [ ] activity trend graph shows the rolling last eight weeks with correct weekly totals
 
-* [x] priority deals correct
+* [ ] Forecast, Analytics, and Activities links open their dedicated pages
 
-* [x] revenue trend correct
+* [ ] dashboard no longer duplicates detailed forecast, analytics, or activity-feed content
 
-* [x] activity feed correct
-
-PASS: [x]
+Status: NOT YET TESTED AGAINST THE CURRENT DASHBOARD
 
 ### B2) Leads
 
@@ -592,7 +592,13 @@ PASS: [x]
 
 * [x] error state
 
-PASS: [x]
+* [x] multiple personal costs can be added to one selected lead, edited, and deleted independently
+
+* [ ] the amount field allows clearing the default zero and entering values such as 100 normally
+
+* [x] lead import guide preview and PNG download match the supported spreadsheet columns
+
+Historical lead checks passed in the 2026-08-29 run. Current cost and import-guide checks: NOT YET TESTED.
 
 ### B3) Customers
 
@@ -608,13 +614,19 @@ PASS: [x]
 
 * [x] linked leads visible
 
+* [x] contact person is visible under the company name
+
+* [x] customer next action is visible without a redundant Won status label
+
+* [x] customer import guide preview and PNG download match the supported spreadsheet columns
+
 * [x] empty state
 
 * [x] loading state
 
 * [x] error state
 
-PASS: [x]
+Historical customer checks passed in the 2026-08-29 run. Current customer-detail and import-guide checks: NOT YET TESTED.
 
 ### B4) Search and Filters
 
@@ -684,7 +696,21 @@ PASS: [x]
 
 * [x] webhook processing
 
-PASS: [x] 
+* [x] displayed prices are Free €0, Pro €49/month, and Business €149/month
+
+* [x] Stripe Business checkout and plan change use the €149/month price, while Pro remains €49/month
+
+* [ ] plan usage overview reports active leads, AI requests, exports, and team seats accurately
+
+* [ ] won/lost leads do not consume the active lead limit
+
+* [ ] Free limits show 50 active leads, 10 AI requests/month, 5 exports/month, and 1 seat
+
+* [ ] Pro limits show unlimited active leads, 500 AI requests/month, 200 exports/month, and 5 seats
+
+* [ ] Business limits show unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, and 20 seats
+
+Historical billing checks passed in the 2026-08-29 run. Current price and usage-limit checks: NOT YET TESTED.
 
 **### B9) Performance**
 
@@ -720,10 +746,12 @@ PASS: [ ]
 
 **### B11) Browser Compatibility**
 
-* [ ] Chrome
-* [ ] Edge
-* [ ] Firefox
-* [ ] Safari
+* [x] Chrome — confirmed working by user (2026-09-27)
+* [x] Edge — confirmed working by user (2026-09-27)
+* [x] Firefox — already working in the user's daily browser
+* [ ] Safari — deferred for a later test in actual Safari, preferably against the staging or production domain
+
+Status: Chrome, Edge, and Firefox user-confirmed; Safari deferred.
 
 PASS: [ ]
 
@@ -973,6 +1001,94 @@ PASS: [ ]
 PASS: [ ]
 
 **---**
+
+## B31) Current Product Regression Checks (Checklist Update 2026-09-24)
+
+These checks cover features added or changed since the last recorded run. Execute them in a designated test workspace with disposable test records. Do not use real customer data, and do not run a live paid checkout. Record the current build/deployment, tester, date, outcome, and evidence before marking any item PASS. All items below are pending.
+
+### Deal Costs and Cost-Aware AI
+
+Setup: create an open test lead with a €10,000 deal value and a contact person. Add two personal costs, for example Onboarding (€100) and Travel (€50).
+
+* [ ] select an existing lead from the full lead list when adding costs
+
+* [ ] add multiple named costs to the same lead, and verify the €150 total and estimated value after costs (€9,850)
+
+* [ ] clear the amount input's initial zero and enter 100 without producing 0100
+
+* [ ] edit and delete one cost without changing the other cost
+
+* [ ] lead analysis, AI insights, meeting preparation, and revenue forecast consider the entered costs and distinguish gross value from estimated value after listed costs
+
+* [ ] AI output treats the values as user estimates and does not disclose internal costs or margins in customer-facing email text
+
+* [ ] AI “Confidence” is explained as confidence in the analysis, distinct from the deal's win probability
+
+* [ ] move a separate test lead to Won and another to Lost; in both cases, confirm the lead's personal costs are cleared and no longer included in its AI context
+
+### Won/Lost Lifecycle, Customers, and Next Actions
+
+* [ ] moving an open lead to Won succeeds, keeps it in the Won pipeline stage, and creates/updates the customer record
+
+* [ ] Won next action is “Ask the customer for feedback” with a due date about 14 days later; it is visible in both Analytics and Customers
+
+* [ ] customer card shows company and contact person, with the next action; it does not redundantly show a Won status
+
+* [ ] moving a separate open lead to Lost succeeds without an error, keeps it in Lost, and does not show it as a customer
+
+* [ ] Lost next action requests feedback on the decision and schedules a reactivation follow-up, with a due date about 7 days later
+
+* [ ] Analytics lists terminal leads under Won or Lost only, without an extra “Customer” status label
+
+* [ ] lead/customer status and next-action changes persist after refresh and appear in the correct activity history
+
+### Analytics and Activity History
+
+* [ ] per-lead analytics include open, Won, and Lost records in the appropriate views
+
+* [ ] conversion rate equals Won / (Won + Lost), and its definition is visible and understandable
+
+* [ ] Activities page “All time” filter loads the complete persisted history, including records beyond the first 1,000 rows
+
+* [ ] create/edit a lead, change its status, and create/complete a task; confirm those persisted events appear in the Activities page and lead timeline where applicable
+
+* [ ] dashboard Activity Trend graph plots activity counts in eight rolling seven-day buckets spanning the last 56 days; confirm a newly created event increments the correct bucket after refresh
+
+* [ ] dashboard activity graph remains a summary; the full event list and timeframe filters remain in Activities
+
+### Imports and Product Language
+
+* [ ] Leads and Customers each show an expandable spreadsheet-format guide with a legible PNG preview and working PNG download
+
+* [ ] guide headers, required fields, optional fields, and example values match the actual importer behavior
+
+* [ ] import a small disposable lead CSV and customer CSV; verify field mapping, duplicate handling, row-level error reporting, and created activity entries
+
+* [ ] current dashboard shows its summary metrics, task counts/next action, deals needing attention, and activity trend; detailed Analytics and Forecast content opens from its links
+
+* [ ] sidebar shows the person-with-check icon for Customers, the group icon for Leads, and the selected automation icon without broken rendering
+
+* [ ] all screens touched by this update use English labels, statuses, dates, and help text; no German/English mix appears
+
+### Billing and Plan Limits
+
+* [ ] Free, Pro, and Business prices match the plan overview, onboarding, and pricing page: €0, €49/month, and €149/month respectively
+
+* [ ] in Stripe test mode, Business checkout and plan changes charge €149/month and Pro remains €49/month; confirm `STRIPE_BUSINESS_PRICE_ID` points to the €149 recurring price
+
+* [ ] usage overview shows current active leads, monthly AI requests/exports, and members plus pending invites
+
+* [ ] verify Free limits: 50 active leads, 10 AI requests/month, 5 exports/month, 1 seat
+
+* [ ] verify Pro limits: unlimited active leads, 500 AI requests/month, 200 exports/month, 5 seats
+
+* [ ] verify Business limits: unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, 20 seats
+
+* [ ] Won/Lost leads do not use an active-lead slot; reopening/restoring an open lead at capacity is rejected with a clear error
+
+Overall B31 Status: NOT YET TESTED
+
+---
 
 **# Final Release Decision**
 

@@ -10,6 +10,7 @@ type TasksWidgetProps = {
         due_date: string | null;
     } | null;
     loading?: boolean;
+    error?: string | null;
 };
 
 const formatDate = (value: string) => {
@@ -20,7 +21,7 @@ const formatDate = (value: string) => {
         .format(new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))));
 };
 
-export default function TasksWidget({ open, overdue, nextDue, loading }: TasksWidgetProps) {
+export default function TasksWidget({ open, overdue, nextDue, loading, error }: TasksWidgetProps) {
     return (
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6" aria-labelledby="tasks-widget-heading">
             <div className="flex items-start justify-between gap-4">
@@ -38,6 +39,11 @@ export default function TasksWidget({ open, overdue, nextDue, loading }: TasksWi
                 </div>
             ) : (
                 <>
+                    {error && (
+                        <p role="alert" className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-200">
+                            Tasks could not be refreshed: {error}
+                        </p>
+                    )}
                     <div className="mt-5 grid grid-cols-2 gap-3">
                         <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                             <p className="text-xs text-foreground/55">Open</p>

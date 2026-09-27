@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { copyTextToClipboard } from "@/lib/clipboard";
+import toast from "react-hot-toast";
 import type { Lead } from "@/types";
 
 type AILeadSummaryProps = {
@@ -112,11 +114,13 @@ export default function AILeadSummary({
       return;
     }
 
-    await navigator.clipboard.writeText(
-      `${followUp.subject}\n\n${followUp.email}`,
-    );
-
-    setFollowCopied(true);
+    try {
+      await copyTextToClipboard(`${followUp.subject}\n\n${followUp.email}`);
+      setFollowCopied(true);
+    } catch {
+      toast.error("Could not copy the email. Please copy it manually.");
+      return;
+    }
 
     window.setTimeout(() => {
       setFollowCopied(false);

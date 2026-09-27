@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
+import toast from "react-hot-toast";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import { supabase } from "@/lib/supabase/client";
 
 type FeedbackItem = {
@@ -264,11 +266,11 @@ export default function FeedbackInboxPage() {
             </p>
 
             <button
-              onClick={() =>
-                void navigator.clipboard.writeText(
-                  feedbackUrl
-                )
-              }
+              onClick={() => {
+                void copyTextToClipboard(feedbackUrl)
+                  .then(() => toast.success("Link copied"))
+                  .catch(() => toast.error("Could not copy the link. Please copy it manually."));
+              }}
               className="mt-2 rounded-lg border border-cyan-500/30 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/15"
             >
               Copy link

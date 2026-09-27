@@ -1,459 +1,192 @@
-"use client";
-
 import Link from "next/link";
 import {
+  ArrowDown,
   ArrowRight,
   BarChart3,
-  Brain,
-  Compass,
+  CalendarCheck2,
+  Check,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardList,
+  Command,
+  KanbanSquare,
   Sparkles,
   Users,
 } from "lucide-react";
 
+const capabilities = [
+  {
+    number: "01",
+    title: "Leads that keep their context",
+    description: "Keep contact details, deal value, stage, notes and activity history together. Turn a list of names into a pipeline your team can actually work.",
+    icon: Users,
+    tag: "Leads · Customers · Import",
+  },
+  {
+    number: "02",
+    title: "A pipeline with a next step",
+    description: "See every opportunity by stage, stay on top of follow-ups with tasks and calendar events, and keep the next action close to the deal.",
+    icon: KanbanSquare,
+    tag: "Pipeline · Tasks · Calendar",
+  },
+  {
+    number: "03",
+    title: "A forecast you can inspect",
+    description: "Review pipeline performance, revenue history and scenario-based forecasts. Ask the AI assistant for deal insights using the information in your workspace.",
+    icon: BarChart3,
+    tag: "Analytics · Forecast · AI",
+  },
+];
+
+const plans = [
+  { name: "Free", price: "€0", period: "forever", description: "A focused start for one person.", points: ["1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
+  { name: "Pro", price: "€49", period: "/ month", description: "More room for a growing team.", points: ["Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
+  { name: "Business", price: "€149", period: "/ month", description: "Higher limits for larger teams.", points: ["Up to 20 team members", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
+];
+
+const exampleDeals = [
+  { name: "Northstar Studio", person: "Jordan Lee", value: "€12,000", stage: "Proposal", tone: "bg-violet-400" },
+  { name: "Lumen Works", person: "Alex Morgan", value: "€8,400", stage: "Contacted", tone: "bg-cyan-400" },
+  { name: "Fieldnote", person: "Sam Rivera", value: "€5,200", stage: "New", tone: "bg-amber-300" },
+];
+
 export default function HomePage() {
-  const features = [
-    {
-      title: "AI Lead Recommendations",
-      description:
-        "Spot the best next action for every opportunity with AI-guided prioritization.",
-      icon: Brain,
-    },
-    {
-      title: "Pipeline Intelligence",
-      description:
-        "Understand momentum, risk and opportunity health across the full pipeline.",
-      icon: Compass,
-    },
-    {
-      title: "Lead Memory",
-      description:
-        "Keep context, histories and follow-up intentions connected to each deal.",
-      icon: Users,
-    },
-    {
-      title: "Activity Intelligence",
-      description:
-        "Turn every interaction into a clear signal about what is driving progress.",
-      icon: Sparkles,
-    },
-    {
-      title: "Revenue Forecasting",
-      description:
-        "See expected revenue, weighted pipeline value and risk in one place.",
-      icon: BarChart3,
-    },
-    {
-      title: "Sales Analytics",
-      description:
-        "Track performance with a modern, executive-ready revenue view.",
-      icon: BarChart3,
-    },
-  ];
-
-  const previews = [
-    {
-      title: "Executive dashboard",
-      description:
-        "A clear view of forecast, pipeline health and the next best actions.",
-    },
-    {
-      title: "Lead detail workspace",
-      description:
-        "A focused place for context, score insights and follow-up planning.",
-    },
-    {
-      title: "AI insight layer",
-      description:
-        "Revenue and activity intelligence that explain why momentum is changing.",
-    },
-  ];
-
-  const painPoints = [
-    "Pipeline context is scattered across notes, calls and inboxes",
-    "Forecasts are hard to trust when deal momentum is unclear",
-    "Teams lose time deciding what to do next",
-  ];
-
-  const outcomes = [
-    "AI highlights where revenue is won or lost",
-    "Every lead has clear context, memory and next action",
-    "Leaders can trust the forecast and coach faster",
-  ];
-
-  const proofStats = [
-    { label: "Pipeline visibility", value: "100%" },
-    { label: "Core workflows", value: "Leads + Tasks + AI" },
-    { label: "Time to first value", value: "< 5 min with demo" },
-  ];
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-10 opacity-60">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,211,238,0.16),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(59,130,246,0.12),transparent_30%)]" />
+    <main className="min-h-screen overflow-hidden bg-background text-foreground">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-48 top-[-20rem] h-[44rem] w-[44rem] rounded-full bg-cyan-500/[0.08] blur-[120px]" />
+        <div className="absolute -right-48 top-40 h-[36rem] w-[36rem] rounded-full bg-blue-500/[0.07] blur-[120px]" />
       </div>
 
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 sm:px-8 lg:px-10">
-        <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-foreground"
-        >
-          CloseFlow
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="CloseFlow home">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400 text-slate-950"><Command className="h-5 w-5" /></span>
+          <span className="text-lg font-semibold tracking-tight">CloseFlow</span>
         </Link>
-
-        <nav className="hidden items-center gap-6 text-sm text-foreground/65 md:flex">
-          <a
-            href="#features"
-            className="transition hover:text-foreground"
-          >
-            Features
-          </a>
-          <a href="#product" className="transition hover:text-foreground">
-            Product
-          </a>
-          <a href="#pricing" className="transition hover:text-foreground">
-            Pricing
-          </a>
-          <Link
-            href="/login"
-            className="rounded-full border border-border-subtle px-4 py-2 transition hover:bg-white/5 hover:text-foreground"
-          >
-            Login
-          </Link>
+        <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm text-foreground/60 md:flex">
+          <a href="#platform" className="transition hover:text-foreground">Platform</a>
+          <a href="#how-it-works" className="transition hover:text-foreground">How it works</a>
+          <Link href="/pricing" className="transition hover:text-foreground">Pricing</Link>
         </nav>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/70 transition hover:text-foreground">Log in</Link>
+          <Link href="/login?mode=signup" className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">Start free <ArrowRight className="ml-1 inline h-4 w-4" /></Link>
+        </div>
       </header>
 
-      <main>
-        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:py-24">
-          <div className="flex flex-col justify-center">
-            <div className="inline-flex w-fit items-center rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-300">
-              Revenue OS for modern B2B sales teams
-            </div>
-
-            <h1 className="mt-6 text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
-              Stop managing pipeline data. Start managing revenue momentum.
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-foreground/65">
-              CloseFlow combines CRM execution, AI guidance, and forecast
-              intelligence so every rep and manager knows the best next move.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/login"
-                className="rounded-2xl bg-white px-5 py-3 font-semibold text-black transition hover:opacity-90"
-              >
-                Start free
-                <ArrowRight className="ml-2 inline h-4 w-4" />
-              </Link>
-
-              <Link
-                href="/demo"
-                className="rounded-2xl border border-border-subtle px-5 py-3 font-semibold text-foreground/85 transition hover:bg-white/5"
-              >
-                Load live demo workspace
-              </Link>
-
-              <a
-                href="#problem"
-                className="rounded-2xl border border-border-subtle px-5 py-3 font-semibold text-foreground/85 transition hover:bg-white/5"
-              >
-                Why teams switch
-              </a>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-6 text-sm text-foreground/55">
-              <span>Built for B2B revenue teams</span>
-              <span>•</span>
-              <span>AI-backed prioritization and follow-up</span>
-              <span>•</span>
-              <span>Executive-ready forecast clarity</span>
-            </div>
+      <section className="mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-28 lg:pt-24">
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.07] px-3 py-1.5 text-xs font-medium text-cyan-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> The CRM that keeps the next move clear
           </div>
-
-          <div className="rounded-[2rem] border border-border-subtle bg-surface-1 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] sm:p-6">
-            <div className="rounded-[1.5rem] border border-border-subtle bg-surface-2/95 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-foreground/65">
-                    Forecast outlook
-                  </p>
-                  <p className="mt-1 text-3xl font-semibold text-foreground">
-                    EUR 184k projected
-                  </p>
-                </div>
-
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300">
-                  +12.4%
-                </div>
-              </div>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border-subtle bg-white/5 p-4">
-                  <p className="text-sm text-foreground/65">Priority deals</p>
-                  <p className="mt-2 text-2xl font-semibold text-foreground">
-                    14
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-border-subtle bg-white/5 p-4">
-                  <p className="text-sm text-foreground/65">
-                    Revenue at risk
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-amber-300">
-                    EUR 24k
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
-                <p className="text-sm font-semibold text-cyan-300">
-                  AI recommendation
-                </p>
-                <p className="mt-2 text-sm leading-7 text-foreground/85">
-                  Three deals are showing stronger momentum this week.
-                  Prioritize follow-up within 24 hours.
-                </p>
-              </div>
-            </div>
+          <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[1.04] tracking-[-0.045em] sm:text-6xl lg:text-[4.4rem]">
+            Less chasing.<br /><span className="bg-gradient-to-r from-cyan-200 via-sky-300 to-blue-400 bg-clip-text text-transparent">More closing.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-base leading-7 text-foreground/65 sm:text-lg sm:leading-8">
+            Keep leads, follow-ups and forecasts in one place. CloseFlow gives your sales work a clear home—and helps you decide what to do next.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/login?mode=signup" className="inline-flex items-center justify-center rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">Create your free workspace <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <a href="#platform" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-white/[0.02] px-5 py-3 text-sm font-medium text-foreground/80 transition hover:bg-white/[0.06]">Explore the platform <ArrowDown className="h-4 w-4" /></a>
           </div>
-        </section>
+          <p className="mt-4 text-xs text-foreground/45">Free to start · No payment details needed · Upgrade when you’re ready</p>
+          <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border-subtle pt-5 text-xs text-foreground/50">
+            <span className="inline-flex items-center gap-2"><Check className="h-3.5 w-3.5 text-cyan-300" /> Leads and customers</span>
+            <span className="inline-flex items-center gap-2"><Check className="h-3.5 w-3.5 text-cyan-300" /> Tasks and pipeline</span>
+            <span className="inline-flex items-center gap-2"><Check className="h-3.5 w-3.5 text-cyan-300" /> Analytics and AI</span>
+          </div>
+        </div>
 
-        <section className="mx-auto max-w-7xl px-6 py-4 sm:px-8 lg:px-10">
-          <div className="grid gap-4 rounded-[1.6rem] border border-border-subtle bg-surface-1 p-6 md:grid-cols-3">
-            {proofStats.map((item) => (
-              <div key={item.label}>
-                <p className="text-xs uppercase tracking-[0.24em] text-foreground/45">
-                  {item.label}
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">
-                  {item.value}
-                </p>
+        <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
+          <div aria-hidden="true" className="absolute -inset-8 rounded-[3rem] bg-cyan-400/[0.07] blur-3xl" />
+          <div className="relative rounded-[1.7rem] border border-white/10 bg-[#0c1118]/95 p-2 shadow-[0_35px_100px_-35px_rgba(34,211,238,0.2)] sm:rounded-[2rem] sm:p-3">
+            <div className="overflow-hidden rounded-[1.3rem] border border-white/[0.07] bg-[#101720] sm:rounded-[1.55rem]">
+              <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3 sm:px-5">
+                <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300"><Command className="h-4 w-4" /></span><span className="text-xs font-semibold text-white/80">CloseFlow <span className="font-normal text-white/35">/ Pipeline</span></span></div>
+                <span className="rounded-lg border border-white/10 px-2.5 py-1 text-[10px] text-white/45">Example workspace</span>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section
-          id="features"
-          className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10"
-        >
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-              Features
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
-              Everything your team needs to move deals forward
-            </h2>
-          </div>
-
-          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-
-              return (
-                <div
-                  key={feature.title}
-                  className="rounded-3xl border border-border-subtle bg-surface-1 p-6"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
-                    <Icon size={20} />
+              <div className="grid sm:grid-cols-[145px_1fr]">
+                <aside className="hidden border-r border-white/[0.07] p-3 sm:block">
+                  <p className="px-2 pb-2 pt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">Workspace</p>
+                  {[["Overview", BarChart3], ["Leads", Users], ["Pipeline", KanbanSquare], ["Tasks", ClipboardList], ["Calendar", CalendarCheck2]].map(([label, Icon], index) => {
+                    const ItemIcon = Icon as typeof BarChart3;
+                    return <div key={label as string} className={`mb-1 flex items-center gap-2 rounded-lg px-2 py-2 text-[10px] ${index === 2 ? "bg-cyan-400/10 text-cyan-200" : "text-white/45"}`}><ItemIcon className="h-3.5 w-3.5" />{label as string}</div>;
+                  })}
+                </aside>
+                <div className="min-w-0 p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div><p className="text-[10px] text-white/40">Sales workspace</p><h2 className="mt-1 text-base font-semibold text-white sm:text-lg">Your pipeline</h2></div>
+                    <span className="rounded-lg bg-cyan-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-950">+ Add lead</span>
                   </div>
-
-                  <h3 className="mt-5 text-xl font-semibold text-foreground">
-                    {feature.title}
-                  </h3>
-
-                  <p className="mt-3 text-sm leading-7 text-foreground/65">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section
-          id="problem"
-          className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10"
-        >
-          <div className="grid gap-8 rounded-[2rem] border border-border-subtle bg-surface-1 p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-                Problem / solution
-              </p>
-
-              <h2 className="mt-3 text-3xl font-semibold text-foreground">
-                Traditional CRMs store records. CloseFlow drives decisions.
-              </h2>
-
-              <p className="mt-4 text-lg leading-8 text-foreground/65">
-                Your team does not need more fields and tabs. It needs clear
-                context, explainable forecast signals, and actionable next
-                steps.
-              </p>
-
-              <ul className="mt-6 space-y-3 text-sm leading-7 text-foreground/65">
-                {painPoints.map((pain) => (
-                  <li key={pain}>- {pain}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-border-subtle bg-surface-2/80 p-6">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 rounded-full bg-cyan-500/10 p-2 text-cyan-300">
-                  <Sparkles size={16} />
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground">
-                    Why teams switch
-                  </h3>
-
-                  <ul className="mt-4 space-y-3 text-sm leading-7 text-foreground/65">
-                    {outcomes.map((outcome) => (
-                      <li key={outcome}>- {outcome}</li>
-                    ))}
-                  </ul>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    {[["Open leads", "12"], ["Pipeline value", "€68.4k"], ["Follow-ups", "4 due"]].map(([name, value]) => <div key={name} className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5 sm:p-3"><p className="text-[8px] text-white/40 sm:text-[9px]">{name}</p><p className="mt-1 text-xs font-semibold text-white/85 sm:text-sm">{value}</p></div>)}
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.07]">
+                    <div className="grid grid-cols-[1.4fr_0.9fr_0.7fr] gap-2 bg-white/[0.035] px-3 py-2 text-[8px] font-medium uppercase tracking-wider text-white/35 sm:text-[9px]"><span>Lead</span><span>Stage</span><span className="text-right">Value</span></div>
+                    {exampleDeals.map((deal, index) => <div key={deal.name} className={`grid grid-cols-[1.4fr_0.9fr_0.7fr] items-center gap-2 px-3 py-3 ${index > 0 ? "border-t border-white/[0.06]" : ""}`}><div className="flex min-w-0 items-center gap-2"><span className={`h-6 w-6 shrink-0 rounded-lg ${deal.tone}/15 flex items-center justify-center text-[8px] font-semibold text-white`}>{deal.name.slice(0, 1)}</span><span className="min-w-0"><span className="block truncate text-[9px] font-medium text-white/80 sm:text-[10px]">{deal.name}</span><span className="block truncate text-[8px] text-white/35">{deal.person}</span></span></div><span className="flex items-center gap-1.5 text-[8px] text-white/55 sm:text-[9px]"><span className={`h-1.5 w-1.5 rounded-full ${deal.tone}`} />{deal.stage}</span><span className="text-right text-[9px] text-white/65 sm:text-[10px]">{deal.value}</span></div>)}
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-cyan-400/15 bg-cyan-400/[0.055] p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-200"><Sparkles className="h-3.5 w-3.5" /></span><p className="text-[9px] leading-4 text-white/60 sm:text-[10px]">Keep the next step visible: review your follow-ups and update deal activity as conversations move forward.</p></div>
                 </div>
               </div>
+              <div className="flex items-center justify-between border-t border-white/[0.07] px-4 py-2 text-[8px] text-white/30 sm:px-5"><span>Illustrative product preview</span><span>Leads · Pipeline · Tasks</span></div>
             </div>
           </div>
-        </section>
+          <div className="absolute -bottom-5 -left-3 hidden items-center gap-3 rounded-2xl border border-white/10 bg-[#141c25] px-4 py-3 shadow-xl sm:flex lg:-left-8"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300"><CalendarCheck2 className="h-4 w-4" /></span><span><span className="block text-[10px] font-medium text-white/80">A clear next action</span><span className="mt-0.5 block text-[9px] text-white/40">Keep follow-ups with the deal</span></span></div>
+        </div>
+      </section>
 
-        <section
-          id="product"
-          className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10"
-        >
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-              Product preview
-            </p>
-
-            <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
-              A closer look at the CloseFlow experience
-            </h2>
+      <section id="platform" className="border-y border-border-subtle bg-white/[0.015]">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+          <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">One connected workspace</p><h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">A practical CRM for the work between first contact and close.</h2></div>
+            <p className="max-w-xl text-sm leading-7 text-foreground/60 lg:justify-self-end">CloseFlow brings the everyday sales workflow together: organize leads, move deals through a pipeline, plan follow-ups and review your numbers without losing the story behind each opportunity.</p>
           </div>
-
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {previews.map((preview) => (
-              <div
-                key={preview.title}
-                className="rounded-[1.6rem] border border-border-subtle bg-surface-1 p-6"
-              >
-                <div className="h-36 rounded-[1.2rem] border border-dashed border-border-subtle bg-surface-2/80" />
-
-                <h3 className="mt-5 text-xl font-semibold text-foreground">
-                  {preview.title}
-                </h3>
-
-                <p className="mt-3 text-sm leading-7 text-foreground/65">
-                  {preview.description}
-                </p>
-              </div>
-            ))}
+          <div className="mt-11 grid gap-4 lg:grid-cols-3">
+            {capabilities.map(({ number, title, description, icon: Icon, tag }) => <article key={number} className="group rounded-2xl border border-border-subtle bg-surface-1 p-6 transition hover:-translate-y-1 hover:border-cyan-400/25 hover:bg-surface-1/80"><div className="flex items-center justify-between"><span className="text-xs font-medium tracking-widest text-foreground/35">{number}</span><span className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] text-cyan-200 transition group-hover:bg-cyan-400/10"><Icon className="h-5 w-5" /></span></div><h3 className="mt-7 text-lg font-semibold">{title}</h3><p className="mt-3 min-h-20 text-sm leading-6 text-foreground/60">{description}</p><p className="mt-5 border-t border-border-subtle pt-4 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground/40">{tag}</p></article>)}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10">
-          <div className="rounded-[2rem] border border-border-subtle bg-surface-1 p-8 text-center lg:p-12">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-              Social proof
-            </p>
-
-            <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
-              Built for teams that run pipeline like an operating system
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-foreground/65">
-              CloseFlow is purpose-built for revenue teams that want
-              predictable execution, faster follow-up, and trusted forecasting.
-            </p>
+      <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+        <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">A simple start</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">From workspace to first follow-up in minutes.</h2><p className="mt-4 text-sm leading-7 text-foreground/60">Set up your workspace, then choose a real lead or sample data. The onboarding helps you get into the app without making you choose a paid plan first.</p><Link href="/login?mode=signup" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">Set up your workspace <ArrowRight className="h-4 w-4" /></Link></div>
+          <div className="space-y-3">
+            {[
+              { n: "01", title: "Create your workspace", text: "Add your company name and a little team context. Your workspace starts on Free." },
+              { n: "02", title: "Choose your first step", text: "Add a real lead or load example leads, activities and tasks to explore." },
+              { n: "03", title: "Keep the next action moving", text: "Work from your pipeline, schedule follow-ups, and review analytics as your data grows." },
+            ].map((item) => <div key={item.n} className="flex gap-4 rounded-2xl border border-border-subtle bg-surface-1 p-5 sm:gap-5 sm:p-6"><span className="pt-0.5 text-xs font-semibold tracking-widest text-cyan-300">{item.n}</span><div><h3 className="font-semibold">{item.title}</h3><p className="mt-1.5 text-sm leading-6 text-foreground/60">{item.text}</p></div><ChevronRight className="ml-auto mt-1 hidden h-4 w-4 shrink-0 text-foreground/30 sm:block" /></div>)}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section
-          id="pricing"
-          className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10"
-        >
-          <div className="rounded-[2rem] border border-cyan-500/20 bg-cyan-500/10 p-8 text-center lg:p-12">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
-              Ready to try it?
-            </p>
-
-            <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
-              Start free. Upgrade when your pipeline scales.
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-foreground/80">
-              Create your workspace now, load demo data in minutes, and see
-              exactly how CloseFlow turns pipeline activity into revenue
-              movement.
-            </p>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                href="/login"
-                className="rounded-2xl bg-white px-5 py-3 font-semibold text-black transition hover:opacity-90"
-              >
-                Create your workspace
-              </Link>
-
-              <Link
-                href="/pricing"
-                className="rounded-2xl border border-border-subtle px-5 py-3 font-semibold text-foreground/85 transition hover:bg-white/5"
-              >
-                Compare plans
-              </Link>
-
-              <a
-                href="#features"
-                className="rounded-2xl border border-border-subtle px-5 py-3 font-semibold text-foreground/85 transition hover:bg-white/5"
-              >
-                Explore features
-              </a>
-            </div>
+      <section id="pricing" className="border-y border-border-subtle bg-white/[0.015]">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Straightforward plans</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Start free. Grow at your pace.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-foreground/60">Start with one person, then choose a plan when you need more capacity.</p></div><Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">Compare every feature <ArrowRight className="h-4 w-4" /></Link></div>
+          <div className="mt-9 grid gap-4 md:grid-cols-3">
+            {plans.map((plan) => <article key={plan.name} className={`rounded-2xl border bg-surface-1 p-6 ${plan.featured ? "border-cyan-400/40 shadow-[0_0_35px_-20px_rgba(34,211,238,0.25)]" : "border-border-subtle"}`}>
+              <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{plan.name}</h3><p className="mt-1 text-xs text-foreground/50">{plan.description}</p></div>{plan.featured && <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">Popular</span>}</div>
+              <p className="mt-6"><span className="text-3xl font-semibold tracking-tight">{plan.price}</span><span className="ml-1 text-xs text-foreground/45">{plan.period}</span></p>
+              <ul className="mt-5 space-y-2.5">{plan.points.map((point) => <li key={point} className="flex items-center gap-2 text-xs text-foreground/65"><Check className="h-3.5 w-3.5 shrink-0 text-cyan-300" />{point}</li>)}</ul>
+            </article>)}
           </div>
-        </section>
-      </main>
+          <p className="mt-4 text-center text-[11px] text-foreground/40">Plan limits and features shown for monthly subscriptions. See the pricing page for full details.</p>
+        </div>
+      </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-8 text-sm text-foreground/55 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-        <p>© 2026 CloseFlow</p>
+      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-[#101d27] px-6 py-12 text-center sm:px-12 sm:py-16">
+          <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(34,211,238,0.18),transparent_60%)]" />
+          <div className="relative"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200"><CircleDollarSign className="h-5 w-5" /></span><p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Your next move starts here</p><h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">Bring your pipeline into focus.</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-foreground/65">Create a free workspace and see how your leads, follow-ups and forecast fit together.</p><Link href="/login?mode=signup" className="mt-7 inline-flex items-center rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">Start free <ArrowRight className="ml-2 h-4 w-4" /></Link></div>
+        </div>
+      </section>
 
-        <div className="flex flex-wrap gap-4">
-          <a href="#features" className="transition hover:text-foreground">
-            Features
-          </a>
-          <a href="#product" className="transition hover:text-foreground">
-            Product
-          </a>
-          <a href="#pricing" className="transition hover:text-foreground">
-            Pricing
-          </a>
-          <Link href="/login" className="transition hover:text-foreground">
-            Login
-          </Link>
-          <Link
-            href="/impressum"
-            className="transition hover:text-foreground"
-          >
-            Impressum
-          </Link>
-          <Link
-            href="/datenschutz"
-            className="transition hover:text-foreground"
-          >
-            Datenschutz
-          </Link>
-          <Link href="/cookies" className="transition hover:text-foreground">
-            Cookies
-          </Link>
-          <Link href="/agb" className="transition hover:text-foreground">
-            AGB
-          </Link>
+      <footer className="border-t border-border-subtle">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-7 text-xs text-foreground/45 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
+          <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-200"><Command className="h-3.5 w-3.5" /></span><span>© 2026 CloseFlow</span></div>
+          <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2"><Link href="/pricing" className="transition hover:text-foreground">Pricing</Link><Link href="/login" className="transition hover:text-foreground">Log in</Link><Link href="/impressum" className="transition hover:text-foreground">Impressum</Link><Link href="/datenschutz" className="transition hover:text-foreground">Datenschutz</Link><Link href="/cookies" className="transition hover:text-foreground">Cookies</Link><Link href="/agb" className="transition hover:text-foreground">AGB</Link></nav>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
