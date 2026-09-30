@@ -114,12 +114,12 @@ export default function Sidebar() {
     };
     return (<>
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)] lg:flex">
+      <aside aria-label="Primary navigation" className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)] lg:flex">
         <SidebarContent hydrated={hydrated} links={links} t={t} pathname={pathname} notificationCount={notificationCount} onLinkClick={() => undefined} onLogout={() => void handleLogout()}/>
       </aside>
 
       {/* Mobile drawer */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-2xl transition-transform duration-200 lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside aria-label="Mobile navigation" aria-hidden={!open} inert={!open} className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-2xl transition-transform duration-200 lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-500/25 bg-cyan-500/10 text-sm font-semibold text-cyan-200">
@@ -127,7 +127,7 @@ export default function Sidebar() {
             </div>
             <p className="text-base font-semibold tracking-tight text-foreground">{t("brand.name", "CloseFlow")}</p>
           </div>
-          <button onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground">
+          <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground">
             <X size={16}/>
           </button>
         </div>
@@ -162,13 +162,13 @@ function SidebarContent({ hydrated, links, t, pathname, notificationCount, onLin
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1.5">
+      <nav aria-label={hydrated ? t("nav.main", "Main navigation") : "Main navigation"} className="flex-1 space-y-1.5">
         {links.map((link) => {
             const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
             const Icon = link.icon;
             const isNotifications = link.href === "/notifications";
             const isSearch = link.href === "/search";
-            return (<Link key={link.href} href={link.href} onClick={onLinkClick} className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${active
+            return (<Link key={link.href} href={link.href} onClick={onLinkClick} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${active
                     ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-100 shadow-[0_0_0_1px_rgba(56,189,248,0.12)]"
                     : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"}`}>
               <Icon size={17}/>
@@ -185,7 +185,7 @@ function SidebarContent({ hydrated, links, t, pathname, notificationCount, onLin
         })}
       </nav>
 
-      <button onClick={onLogout} className="mt-4 flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-left text-sm text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground">
+      <button type="button" onClick={onLogout} className="mt-4 flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-left text-sm text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground">
         <LogOut size={17}/>
         {hydrated ? t("nav.logout", "Logout") : <span className="block h-3 w-16 animate-pulse rounded-full bg-foreground/10"/>}
       </button>

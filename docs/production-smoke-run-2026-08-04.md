@@ -757,23 +757,25 @@ PASS: [ ]
 
 **### B12) Accessibility**
 
-* [ ] keyboard navigation
-* [ ] visible focus states
-* [ ] acceptable contrast
-* [ ] screenreader basic flow
+* [x] keyboard navigation — confirmed working by user (2026-09-30)
+* [x] visible focus states — confirmed working by user (2026-09-30)
+* [x] acceptable contrast — confirmed working by user (2026-09-30)
+* [x] screenreader basic flow — confirmed working by user (2026-09-30)
 
-Status:
+Status: PASS — all checks confirmed working by user (2026-09-30)
 
-NOT YET TESTED
+PASS: [x]
 
 **### B13) Logging and Monitoring Quality**
 
-* [ ] server logs reviewed
-* [ ] Supabase logs reviewed
-* [ ] no unexpected 500 spikes
-* [ ] no critical console errors
+* [x] local server log reviewed — development log only; workspace-member error, aborted AI request, and slow-filesystem warning noted
+* [x] Supabase logs reviewed after the migration and fresh export/usage check — user-provided 2026-09-30 11:54:36–11:54:49 excerpt shows the listed usage, audit, workspace/member, and lead-capacity requests returning 200; no `42703` or 5xx appears in the excerpt
+* [x] no unexpected 500 spikes in the reviewed smoke-run log window
+* [x] no critical console errors in the current check
 
-PASS: [ ]
+PASS: [x]
+
+Finding (2026-09-30): PostgreSQL error 42703 previously occurred because `public.usage.exports_count` was missing. The user confirmed migration `20260930_usage_exports_count.sql` was applied and that a fresh export/log check was just completed. The reviewed excerpt contains successful requests and no 42703 or 5xx. Earlier exports cannot be reconstructed, so the new counter starts at zero.
 
 **### B14) Email Templates**
 

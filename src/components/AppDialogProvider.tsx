@@ -20,6 +20,9 @@ export default function AppDialogProvider({
   const [value, setValue] = useState("");
   const activeRef = useRef<PendingDialog | null>(null);
   const queue = useRef<PendingDialog[]>([]);
+  const panelRef = useRef<HTMLElement>(null);
+  const promptRef = useRef<HTMLInputElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
 
   const handleRequest = useCallback(
     (request: DialogRequest) =>
@@ -47,9 +50,43 @@ export default function AppDialogProvider({
   useEffect(() => registerDialogHandler(handleRequest), [handleRequest]);
   useEffect(() => {
     setValue("");
-    if (!active) return;
+    if (!active) {
+      previousFocus.current?.focus();
+      previousFocus.current = null;
+      return;
+    }
+    if (!previousFocus.current) {
+      previousFocus.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    const target = promptRef.current ?? panelRef.current?.querySelector<HTMLElement>(
+      "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+    );
+    target?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") settle(null);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        settle(null);
+        return;
+      }
+      if (event.key !== "Tab" || !panelRef.current) return;
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(
+        "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
+      )).filter((element) => element.offsetParent !== null);
+      if (!focusable.length) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -69,25 +106,30 @@ export default function AppDialogProvider({
           }}
         >
           <section
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="app-dialog-title"
+            aria-describedby="app-dialog-description"
+            tabIndex={-1}
             className="w-full max-w-md rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-2xl"
           >
             <h2 id="app-dialog-title" className="text-lg font-semibold text-foreground">
               {active.request.title}
             </h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/70">
+            <p id="app-dialog-description" className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/70">
               {active.request.message}
             </p>
             {active.request.kind === "prompt" && (
               <input
-                autoFocus
+                ref={promptRef}
                 value={value}
                 onChange={(event) => setValue(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") confirm();
                 }}
+                aria-label={active.request.title}
+                aria-describedby="app-dialog-description"
                 inputMode={active.request.inputMode}
                 autoComplete={active.request.autoComplete}
                 maxLength={active.request.maxLength}
