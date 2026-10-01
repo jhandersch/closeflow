@@ -35,12 +35,14 @@ export function getExportDateKey(value: Date, timezone: string) {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
-export function formatExportDateTime(value: unknown, timezone: string) {
+export function formatCsvTimestamp(value: unknown) {
   if (typeof value !== "string" || !value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  const parts = getZonedDateParts(date, timezone);
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+
+  // The explicit UTC marker keeps spreadsheet apps from auto-formatting
+  // a narrow CSV column as a date and displaying it as ####.
+  return date.toISOString();
 }
 
 export function getExcelDateCell(value: unknown, timezone: string) {

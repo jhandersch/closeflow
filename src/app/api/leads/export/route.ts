@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import * as XLSX from "xlsx";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
-import { formatExportDateTime, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
+import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 
 type ExportLead = {
   name: string | null;
@@ -289,7 +289,7 @@ export async function GET(request: Request) {
   const csvRows = rows.map((row) =>
     row.map((value, index) =>
       index === 6 || index === 7
-        ? formatExportDateTime(value, timeZone)
+        ? formatCsvTimestamp(value)
         : value,
     ),
   );

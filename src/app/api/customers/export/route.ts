@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
-import { formatExportDateTime, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
+import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 type CustomerSummary = {
     company: string;
     contact: string;
@@ -254,7 +254,7 @@ export async function GET(request: Request) {
      */
     const csvRows = rows.map((row) =>
         row.map((value, index) => index === 6
-            ? formatExportDateTime(value, timezone)
+            ? formatCsvTimestamp(value)
             : value),
     );
     const csv = [
