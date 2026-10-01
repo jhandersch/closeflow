@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
+import { formatExportDateTime, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 type CustomerSummary = {
     company: string;
     contact: string;
@@ -38,18 +39,8 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
-    const timezone =
-    typeof user.user_metadata?.timezone === "string" &&
-    user.user_metadata.timezone.trim()
-        ? user.user_metadata.timezone
-        : "Europe/Berlin";
-
-    const exportDate = new Intl.DateTimeFormat("en-CA", {
-        timeZone: timezone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    }).format(new Date());
+    const timezone = resolveExportTimezone(user.user_metadata?.timezone);
+    const exportDate = getExportDateKey(new Date(), timezone);
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
@@ -215,6 +206,18 @@ export async function GET(request: Request) {
             ...rows,
         ];
         const worksheet = XLSX.utils.aoa_to_sheet(worksheetRows);
+        for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+            const cell = XLSX.utils.encode_cell({ r: rowIndex + 1, c: 6 });
+            const excelDate = getExcelDateCell(rows[rowIndex][6], timezone);
+            if (excelDate && worksheet[cell]) {
+                worksheet[cell] = {
+                    ...worksheet[cell],
+                    t: "n",
+                    v: excelDate.value,
+                    z: excelDate.numberFormat,
+                };
+            }
+        }
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
         /*
@@ -249,11 +252,14 @@ export async function GET(request: Request) {
      * - CRLF line endings
      * - proper CSV escaping
      */
+    const csvRows = rows.map((row) =>
+        row.map((value, index) => index === 6
+            ? formatExportDateTime(value, timezone)
+            : value),
+    );
     const csv = [
         headers.join(";"),
-        ...rows.map((row) => row
-            .map(escapeCsv)
-            .join(";")),
+        ...csvRows.map((row) => row.map(escapeCsv).join(";")),
     ].join("\r\n");
     return new NextResponse(csv, {
         status: 200,

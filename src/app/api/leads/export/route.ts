@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import * as XLSX from "xlsx";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
+import { formatExportDateTime, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 
 type ExportLead = {
   name: string | null;
@@ -19,40 +20,6 @@ type ExportLead = {
   address: string | null;
   tags: unknown;
   notes: string | null;
-};
-
-const DEFAULT_TIMEZONE = "Europe/Berlin";
-
-const isValidTimeZone = (value: string) => {
-  try {
-    Intl.DateTimeFormat("en-US", {
-      timeZone: value,
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const getDateKey = (
-  value: Date,
-  timeZone: string
-) => {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(value);
-
-  const values = Object.fromEntries(
-    parts
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value])
-  );
-
-  return `${values.year}-${values.month}-${values.day}`;
 };
 
 const escapeCsv = (value: unknown) => {
@@ -113,21 +80,8 @@ export async function GET(request: Request) {
     );
   }
 
-  const storedTimezone =
-    typeof user.user_metadata?.timezone === "string"
-      ? user.user_metadata.timezone.trim()
-      : "";
-
-  const timeZone =
-    storedTimezone &&
-    isValidTimeZone(storedTimezone)
-      ? storedTimezone
-      : DEFAULT_TIMEZONE;
-
-  const exportDate = getDateKey(
-    new Date(),
-    timeZone
-  );
+  const timeZone = resolveExportTimezone(user.user_metadata?.timezone);
+  const exportDate = getExportDateKey(new Date(), timeZone);
 
   const selectColumns = `
     name,
@@ -268,6 +222,21 @@ export async function GET(request: Request) {
         worksheetRows
       );
 
+    for (let rowIndex = 0; rowIndex < leads.length; rowIndex += 1) {
+      for (const columnIndex of [6, 7]) {
+        const cell = XLSX.utils.encode_cell({ r: rowIndex + 1, c: columnIndex });
+        const excelDate = getExcelDateCell(rows[rowIndex][columnIndex], timeZone);
+        if (excelDate && worksheet[cell]) {
+          worksheet[cell] = {
+            ...worksheet[cell],
+            t: "n",
+            v: excelDate.value,
+            z: excelDate.numberFormat,
+          };
+        }
+      }
+    }
+
     const workbook =
       XLSX.utils.book_new();
 
@@ -317,13 +286,16 @@ export async function GET(request: Request) {
     );
   }
 
+  const csvRows = rows.map((row) =>
+    row.map((value, index) =>
+      index === 6 || index === 7
+        ? formatExportDateTime(value, timeZone)
+        : value,
+    ),
+  );
   const csv = [
     headers.join(";"),
-    ...rows.map((row) =>
-      row
-        .map(escapeCsv)
-        .join(";")
-    ),
+    ...csvRows.map((row) => row.map(escapeCsv).join(";")),
   ].join("\r\n");
 
   return new NextResponse(csv, {
