@@ -816,14 +816,14 @@ PASS: [ ]
 
 **### B17) File Storage**
 
-* [ ] upload
-* [ ] download
-* [ ] delete
-* [ ] workspace isolation
+* [ ] upload a file up to 20 MB and confirm it appears in Files
+* [ ] download the file and confirm the original content and filename
+* [ ] delete the file and confirm it disappears from Files and cannot be downloaded
+* [ ] verify a member of another workspace cannot list, download, or delete it
 
-Status:
+Status: IMPLEMENTED — NOT YET VERIFIED IN PRODUCTION
 
-NOT YET TESTED
+Implementation: private `closeflow-files` Supabase Storage bucket, workspace UUID folder prefixes, membership-based Storage policies, authenticated Files page, and workspace-scoped API. The production build compiled successfully on 2026-10-01. Supabase migration `20261001_workspace_file_storage.sql` is applied. Mark PASS only after all four production checks succeed.
 
 **### B18) Export Quality**
 

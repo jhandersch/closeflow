@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, FolderOpen } from "lucide-react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useSidebar } from "@/components/SidebarContext";
 import { supabase } from "@/lib/supabase/client";
@@ -88,6 +88,7 @@ export default function Sidebar() {
         { href: "/dashboard", label: t("nav.dashboard", "Dashboard"), icon: LayoutDashboard },
         { href: "/leads", label: t("nav.leads", "Leads"), icon: UsersRound },
         { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRoundCheck },
+        { href: "/files", label: "Files", icon: FolderOpen },
         { href: "/pipeline", label: t("nav.pipeline", "Pipeline"), icon: Workflow },
         { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
         { href: "/activities", label: t("nav.activities", "Activities"), icon: Activity },
