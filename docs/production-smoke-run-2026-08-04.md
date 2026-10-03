@@ -857,7 +857,7 @@ PASS: [x]
 
 Status: PASS — 2026-10-03
 
-Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's lead update, `Task updated: Test1`, and `Meeting updated — Test1` (14:36–14:37 Europe/Berlin). Activity entries now resolve actor IDs to workspace profile display names; if a name is unavailable, the user ID remains visible as a fallback. The updated actor display is included in the pushed change.
+Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's lead update, `Task updated: Test1`, and `Meeting updated — Test1` (14:36–14:37 Europe/Berlin). After deployment, Production displayed `Actor: Jan Hendrik Andersch` on the lead, task, and meeting activity entries. Activity entries resolve actor IDs to workspace profile display names; if a name is unavailable, the user ID remains visible as a fallback.
 
 **### B20) Business Logic**
 
