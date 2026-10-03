@@ -851,13 +851,13 @@ Date formatting (2026-10-01, production): after deployment, the user confirmed t
 * [x] lead changes logged
 * [x] task changes logged
 * [x] calendar changes logged
-* [ ] user actions traceable
+* [x] user actions traceable
 
-PASS: [ ]
+PASS: [x]
 
-Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-03
+Status: PASS — 2026-10-03
 
-Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's lead update, `Task updated: Test1`, and `Meeting updated — Test1` (14:36–14:37 Europe/Berlin). The current Production UI does not display the actor. Actor IDs are now rendered in the local Activities page as `You` for the signed-in user or the user ID for another actor; verify this after deployment before marking B19 PASS.
+Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's lead update, `Task updated: Test1`, and `Meeting updated — Test1` (14:36–14:37 Europe/Berlin). Activity entries now resolve actor IDs to workspace profile display names; if a name is unavailable, the user ID remains visible as a fallback. The updated actor display is included in the pushed change.
 
 **### B20) Business Logic**
 

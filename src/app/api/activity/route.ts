@@ -460,10 +460,30 @@ export async function GET(
             if (!page || page.length < pageSize) break;
         }
 
+        const actorIds = [...new Set(
+            data
+                .map((row) => row.user_id)
+                .filter((id): id is string => typeof id === "string" && id.length > 0),
+        )];
+        const { data: profiles } = actorIds.length
+            ? await supabase
+                  .from("profiles")
+                  .select("id, full_name")
+                  .in("id", actorIds)
+            : { data: [] };
+        const actorNames = new Map(
+            (profiles || [])
+                .filter((profile) => typeof profile.full_name === "string" && profile.full_name.trim())
+                .map((profile) => [profile.id, profile.full_name.trim()]),
+        );
+
         const normalized =
             (data || []).map(
                 (row) => ({
                     ...row,
+                    actor_name: row.user_id
+                        ? actorNames.get(row.user_id) || null
+                        : null,
                     title:
                         row.title ||
                         row.action ||
