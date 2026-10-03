@@ -129,7 +129,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           </h2>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap justify-end gap-3 self-end md:self-auto">
           <div className={`
               rounded-full
               border

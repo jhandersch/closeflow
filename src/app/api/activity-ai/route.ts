@@ -97,9 +97,7 @@ Analyze:
       },
     });
 
-    const result = JSON.parse(
-      completion.choices[0].message.content || "{}",
-    );
+    const result = JSON.parse(completion.choices[0].message.content || "{}");
 
     return NextResponse.json(result);
   } catch (error) {

@@ -805,43 +805,59 @@ PASS: [ ]
 
 **### B16) Frontend Quality**
 
-* [ ] no critical React warnings
-* [ ] no hydration warnings
-* [ ] no critical console errors
-* [ ] no failed critical network requests
-* [ ] API error handling
-* [ ] retry behavior where applicable
+- [x] no critical React warnings
+- [x] no hydration warnings
+- [x] no critical console errors
+- [x] no failed critical network requests
+- [x] API error handling
+- [x] retry behavior where applicable
 
-PASS: [ ]
+PASS: [x]
+
+Status: PASS
+
+Evidence (2026-10-01, production, https://closeflow-green.vercel.app): `/`, `/login`, `/dashboard`, `/leads`, `/pipeline`, `/tasks`, `/customers`, `/analytics`, `/forecast` and `/ai` returned HTTP 200. Reloads and route loads produced no React/hydration warnings or JavaScript page errors, and no unexpected HTTP errors or failed critical requests. Two Next.js RSC prefetch requests were aborted as navigation advanced; they were non-critical. An intentional login attempt with a non-existent test address returned HTTP 400 from Supabase Auth; the UI displayed `Invalid login credentials` and allowed a second manual attempt. For the dashboard API failure path, `/api/leads` was temporarily intercepted in the browser to return 503; the error was shown, and the dashboard Retry action recovered after the interception was removed and the endpoint returned HTTP 200. The expected auth 400 and injected 503 are handled test failures, not production service errors.
+
+Separate static check: `npm run lint` now runs but reports 16 errors and 125 warnings across the repository. The production build completed successfully; the lint findings are not runtime console or hydration warnings and remain a separate cleanup item.
 
 **### B17) File Storage**
 
-* [ ] upload a file up to 20 MB and confirm it appears in Files
-* [ ] download the file and confirm the original content and filename
-* [ ] delete the file and confirm it disappears from Files and cannot be downloaded
-* [ ] verify a member of another workspace cannot list, download, or delete it
+- [x] upload a file up to 20 MB and confirm it appears in Files
+- [x] download the file and confirm the original content and filename
+- [x] delete the file and confirm it disappears from Files
+- [ ] confirm the deleted file cannot be downloaded
+- [ ] verify a member of another workspace cannot list, download, or delete it
 
-Status: IMPLEMENTED — NOT YET VERIFIED IN PRODUCTION
+Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-01
 
-Implementation: private `closeflow-files` Supabase Storage bucket, workspace UUID folder prefixes, membership-based Storage policies, authenticated Files page, and workspace-scoped API. The production build compiled successfully on 2026-10-01. Supabase migration `20261001_workspace_file_storage.sql` is applied. Mark PASS only after all four production checks succeed.
-
+Evidence: The deployed Files page accepted `closeflow-b17-smoke-20261001.txt` (75 bytes). The downloaded file matched the original test file by SHA-256. After explicit confirmation, production displayed `File deleted` and `No files yet`. The post-deletion download attempt and cross-workspace isolation check have not been performed, so B17 is not yet a full PASS. The user confirmed that the Supabase migration was applied before this smoke run.
 **### B18) Export Quality**
 
-* [ ] CSV encoding
-* [ ] Excel formatting
-* [ ] special characters
-* [ ] date formatting
+- [x] CSV encoding
+- [x] Excel formatting
+- [x] special characters
+* [x] date formatting
 
-PASS: [ ]
+PASS: [x]
+
+Status: PASS
+
+Evidence (2026-10-01, production): after `/api/workspaces/create` rejected a second workspace with HTTP 400, an explicitly approved, uniquely marked synthetic lead was created in the existing workspace. Leads and Customers CSV/XLSX exports all returned HTTP 200. CSV payloads decoded as UTF-8 and preserved accented/CJK characters, quotes, semicolons, commas, and embedded newlines with correct quoting and CRLF rows; responses have no UTF-8 BOM. Both XLSX workbooks parsed successfully, preserved the test values, and contain configured column widths. The test lead is soft-deleted and no longer appears in active leads. Four export requests were counted; delete/activity audit entries may remain.
+
+Date formatting (2026-10-01, production): after deployment, the user confirmed that Lead and Customer CSV/XLSX exports display correctly. CSV timestamps use ISO-8601 UTC strings with an explicit `Z`; XLSX timestamps are numeric date cells formatted in the user timezone. The CSV no longer displays `####` in Excel.
 
 **### B19) Audit Trail**
 
-* [ ] lead changes logged
-* [ ] task changes logged
-* [ ] calendar changes logged
+* [x] lead changes logged
+* [x] task changes logged
+* [x] calendar changes logged
 * [ ] user actions traceable
 
 PASS: [ ]
+
+Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-03
+
+Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's lead update, `Task updated: Test1`, and `Meeting updated — Test1` (14:36–14:37 Europe/Berlin). The current Production UI does not display the actor. Actor IDs are now rendered in the local Activities page as `You` for the signed-in user or the user ID for another actor; verify this after deployment before marking B19 PASS.
 
 **### B20) Business Logic**
 

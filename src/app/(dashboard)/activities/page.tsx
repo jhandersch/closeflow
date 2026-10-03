@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 type ActivityItem = {
     id: string;
     lead_id: string | null;
+    user_id: string | null;
     action?: string | null;
     type?: string | null;
     title?: string | null;
@@ -39,6 +40,8 @@ export default function ActivitiesPage() {
     const locale = "en-US";
     const [timezone, setTimezone] =
         useState(DEFAULT_TIMEZONE);
+    const [currentUserId, setCurrentUserId] =
+        useState<string | null>(null);
 
     const [activities, setActivities] =
         useState<ActivityItem[]>([]);
@@ -61,6 +64,8 @@ export default function ActivitiesPage() {
             if (!user) {
                 return;
             }
+
+            setCurrentUserId(user.id);
 
             const savedTimezone =
                 typeof user.user_metadata?.timezone ===
@@ -340,6 +345,12 @@ export default function ActivitiesPage() {
                                                 activity,
                                             )}
                                         </p>
+
+                                        {activity.user_id ? (
+                                            <p className="mt-1 break-all text-xs text-foreground/55">
+                                                Actor: {activity.user_id === currentUserId ? "You" : activity.user_id}
+                                            </p>
+                                        ) : null}
 
                                         {activity.description ? (
                                             <p className="mt-1 text-sm text-foreground/70">
