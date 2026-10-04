@@ -865,17 +865,17 @@ Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's le
 * [x] revenue calculations
 * [x] pipeline totals
 * [x] AI scores
-* [ ] dashboard values match database
+* [x] dashboard values match database
 
-PASS: [ ]
+PASS: [x]
 
-Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-04
+Status: PASS — 2026-10-04
 
 Evidence: The dashboard showed 2 active leads, €17,500 pipeline, €0 Won Revenue, 0% win rate (0 won / 0 lost), and €8,750 average open deal value. The Pipeline board independently showed €17,500 total, with one €6,400 New deal and one €11,100 Contacted deal. Analytics matched the totals: 2 active leads, €17,500 pipeline, €0 Won Revenue, 0% conversion and win rate. Its lead detail showed Sofia Patel at €11,100 with 69% close probability and 92% health, and Nina Alvarez at €6,400 with 51% close probability and 83% health; the lead cards showed the same AI scores.
 
 Revenue discrepancy observed before the fix: Forecast calculated €10,923 expected revenue from the visible close probabilities (€11,100 × 69% + €6,400 × 51%), matching Analytics' per-lead probabilities. The Leads overview showed €9,459 because it derived different probabilities from priority, health, and stage (61% for Sofia and 42% for Nina).
 
-Follow-up (2026-10-04): The Leads overview now uses the shared sales-score probability. Commit `b3d28c4` was pushed to `main`, and the production page now displays €10,923, matching Forecast and Analytics for the two observed leads. Revenue calculations pass. A direct read-only query for the two production database rows could not connect from this environment, and the Supabase dashboard requires a manual sign-in; no raw database comparison is recorded yet. B20 remains PARTIALLY VERIFIED until dashboard figures are compared to the production database rows.
+Production database comparison (2026-10-04): A read-only Supabase SQL query scoped to the workspace containing the two observed leads and filtered to `deleted_at IS NULL` returned the same two live rows: Sofia Patel (€11,100, contacted) and Nina Alvarez (€6,400, new). The resulting database metrics were 2 active leads, €17,500 pipeline, €0 Won Revenue, 0 won, 0 lost, €8,750 average active deal value, and 0% conversion rate. These match the dashboard and Analytics. The production Leads overview now shows €10,923 expected revenue, matching Forecast and Analytics using the shared 69% and 51% close probabilities. KPI calculations, revenue calculations, pipeline totals, AI scores, and dashboard-to-database values all pass.
 
 **### B21) Browser Refresh & Navigation**
 
