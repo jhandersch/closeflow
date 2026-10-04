@@ -861,13 +861,21 @@ Evidence: On 2026-10-03, the Production Activity Timeline recorded the user's le
 
 **### B20) Business Logic**
 
-* [ ] KPI calculations
+* [x] KPI calculations
 * [ ] revenue calculations
-* [ ] pipeline totals
-* [ ] AI scores
+* [x] pipeline totals
+* [x] AI scores
 * [ ] dashboard values match database
 
 PASS: [ ]
+
+Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-04
+
+Evidence: The dashboard showed 2 active leads, €17,500 pipeline, €0 Won Revenue, 0% win rate (0 won / 0 lost), and €8,750 average open deal value. The Pipeline board independently showed €17,500 total, with one €6,400 New deal and one €11,100 Contacted deal. Analytics matched the totals: 2 active leads, €17,500 pipeline, €0 Won Revenue, 0% conversion and win rate. Its lead detail showed Sofia Patel at €11,100 with 69% close probability and 92% health, and Nina Alvarez at €6,400 with 51% close probability and 83% health; the lead cards showed the same AI scores.
+
+Revenue discrepancy: Forecast calculated €10,923 expected revenue from those visible close probabilities (€11,100 × 69% + €6,400 × 51%), matching Analytics' per-lead probabilities. The Leads overview instead showed €9,459 Forecast Revenue. Its current formula derives a different probability from priority, health, and stage (61% for Sofia and 42% for Nina). These same leads therefore produce two different forecast revenue figures. Revenue calculations remain open until the displayed definitions/formulas are reconciled. The production UI views agreed on pipeline totals, but a direct comparison against database rows was not performed; that checklist item remains open.
+
+Follow-up (2026-10-04): The Leads overview formula has been changed in the working tree to use the shared sales-score probability, which should align its expected revenue with Forecast at €10,923 for the observed leads. TypeScript validation passed. The change has not been deployed, so the production discrepancy remains until rechecked after deployment. A direct read-only query for the two observed lead rows could not connect to Supabase from this environment; no raw database comparison is recorded yet. Do not mark B20 PASS until production reflects the fix and the dashboard values have been compared to the production database rows.
 
 **### B21) Browser Refresh & Navigation**
 

@@ -733,18 +733,7 @@ export default function LeadsPage() {
               {filteredLeads
             .reduce((sum, lead) => {
             const salesScore = calculateSalesScore(lead, getStaleDays(lead));
-            const priority = salesScore.priority;
-            const health = salesScore.health;
-            const probability = Math.min(95, Math.round(priority * 0.35 +
-                health * 0.35 +
-                (lead.status === "won"
-                    ? 100
-                    : lead.status === "proposal"
-                        ? 25
-                        : lead.status === "contacted"
-                            ? 10
-                            : 0)));
-            return sum + (lead.value * probability) / 100;
+            return sum + (lead.value * salesScore.probability) / 100;
         }, 0)
             .toLocaleString(locale, {
             maximumFractionDigits: 0,
