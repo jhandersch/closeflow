@@ -467,7 +467,7 @@ export default function AutomationsPage() {
             </p>
 
             <h1 className="mt-2 text-3xl font-bold text-foreground">
-              Workflow Builder
+              Automate repeatable CRM work
             </h1>
 
             <p className="mt-2 text-sm text-foreground/65">

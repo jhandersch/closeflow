@@ -76,12 +76,12 @@ export default function SearchPage() {
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{"Search"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Global Search"}</h1>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Find records across CloseFlow"}</h1>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3 focus-within:border-foreground/35">
           <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{"Search"}</span>
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none placeholder:text-foreground/40"/>
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
           {loading ? <span className="text-xs text-foreground/45">{"Search..."}</span> : null}
         </div>
 

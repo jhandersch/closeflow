@@ -448,8 +448,11 @@ export default function TeamPage() {
     <AuthGuard>
       <div className="space-y-6">
         <div>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+            Team
+          </p>
           <h1 className="text-3xl font-bold text-foreground">
-            Workspace
+            Members and invitations
           </h1>
 
           <p className="mt-1 text-foreground/60">

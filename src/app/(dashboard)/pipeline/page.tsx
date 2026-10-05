@@ -150,12 +150,12 @@ export default function PipelinePage() {
           <div>
 
               <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
-            SALES PIPELINE
+            Pipeline
           </p>
 
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Sales pipeline
+            Deal stages and progress
           </h1>
 
 

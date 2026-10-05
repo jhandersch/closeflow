@@ -75,6 +75,8 @@ function getActivityTitle(activity: {
     const normalized = raw.toLowerCase();
 
     switch (activity.type) {
+        case "customer_updated":
+            return "Customer updated";
         case "meeting_created":
             return "Meeting created";
         case "meeting_updated":

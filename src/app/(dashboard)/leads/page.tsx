@@ -617,8 +617,8 @@ export default function LeadsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">{"Pipeline"}</p>
-            <h1 className="text-3xl font-bold text-foreground">{"Leads"}</h1>
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">{"Leads"}</p>
+            <h1 className="text-3xl font-bold text-foreground">{"Manage opportunities and follow-ups"}</h1>
             <p className="mt-2 text-sm text-foreground/65">{"Search, filter, sort, and follow up on the right opportunities."}</p>
           </div>
 

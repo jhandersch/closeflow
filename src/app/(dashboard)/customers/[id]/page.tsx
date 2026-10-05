@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useLeadsData } from "@/hooks/useLeadsData";
+import { notify } from "@/lib/notifications";
 import { supabase } from "@/lib/supabase/client";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
@@ -497,6 +498,7 @@ export default function CustomerDetailPage() {
                                 body: JSON.stringify(
                                     {
                                         id: lead.id,
+                                        entity_type: "customer",
                                         company:
                                             isPrivateCustomer
                                                 ? null
@@ -544,6 +546,10 @@ export default function CustomerDetailPage() {
                     industry:
                         editIndustry.trim(),
                     isVip: editIsVip,
+                });
+
+                notify.success("Customer saved", {
+                    id: "customer-saved",
                 });
 
                 setEditing(false);

@@ -219,6 +219,8 @@ export default function ActivityTimeline({
                 return "Meeting Deleted";
             case "created":
                 return "Created";
+            case "customer_updated":
+                return "Customer Updated";
             case "ai":
                 return "AI";
             default:

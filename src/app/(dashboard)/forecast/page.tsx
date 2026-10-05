@@ -87,7 +87,7 @@ export default function ForecastPage() {
             Forecast
           </p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Revenue Forecast
+            Project expected revenue from your pipeline
           </h1>
           <p className="mt-2 text-sm text-foreground/65">
             Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.

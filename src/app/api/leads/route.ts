@@ -140,7 +140,7 @@ export async function PUT(req: Request) {
             });
         }
         const body = await req.json();
-        const { id, ...updates } = body;
+        const { id, entity_type: entityType, ...updates } = body;
         if (updates.status) {
             updates.stage_changed_at =
                 new Date().toISOString();
@@ -288,7 +288,9 @@ export async function PUT(req: Request) {
 
           Status changes are excluded here to prevent a duplicate activity.
         */
-        const trackedFields = [
+        const trackedFields = entityType === "customer"
+            ? ["company", "website", "address", "industry", "is_vip"]
+            : [
             "name",
             "company",
             "value",
@@ -302,15 +304,21 @@ export async function PUT(req: Request) {
         ];
         const changedFields = trackedFields.filter((field) => Object.prototype.hasOwnProperty.call(updates, field));
         if (!statusChanged && changedFields.length > 0) {
+            const isCustomerUpdate = entityType === "customer";
+            const activityTitle = isCustomerUpdate
+                ? "Customer updated"
+                : "Lead updated";
             const { error: activityError } = await supabase
                 .from("activities")
                 .insert({
                 lead_id: id,
                 workspace_id: workspace.id,
                 user_id: user.id,
-                type: "lead_updated",
-                action: "lead_updated",
-                title: "Lead updated",
+                type: isCustomerUpdate
+                    ? "customer_updated"
+                    : "lead_updated",
+                action: activityTitle,
+                title: activityTitle,
                 description: `Updated: ${changedFields.join(", ")}`,
                 metadata: {
                     changed_fields: changedFields,

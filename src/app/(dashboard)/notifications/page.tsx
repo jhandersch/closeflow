@@ -216,10 +216,10 @@ export default function NotificationsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-              Inbox
+              Notifications
             </p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">
-              Notifications
+              Review updates that need your attention
             </h1>
             <p className="mt-1 text-sm text-foreground/65">
               {notifications.length} active

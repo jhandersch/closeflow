@@ -154,7 +154,7 @@ export default function ProfileSettingsPage() {
           </p>
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            User profile
+            Manage your personal details
           </h1>
 
           <p className="mt-2 text-sm text-foreground/65">

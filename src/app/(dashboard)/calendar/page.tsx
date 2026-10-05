@@ -664,7 +664,7 @@ export default function CalendarPage() {
                         </p>
 
                         <h1 className="mt-2 text-3xl font-bold text-foreground">
-                            {"Meetings"}
+                            {"Meetings and follow-ups"}
                         </h1>
 
                         <p className="mt-1 text-sm text-foreground/60">

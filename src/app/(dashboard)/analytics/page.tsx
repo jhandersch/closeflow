@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
       <div className="space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{"Analytics"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Sales Metrics"}</h1>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Track performance across your pipeline"}</h1>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

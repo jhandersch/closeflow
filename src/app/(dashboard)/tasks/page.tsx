@@ -437,7 +437,7 @@ export default function TasksPage() {
               font-bold
               text-foreground
             ">
-            {"Sales tasks"}
+            {"Your follow-ups and next steps"}
           </h1>
 
 

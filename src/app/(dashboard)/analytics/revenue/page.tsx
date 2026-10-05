@@ -209,7 +209,7 @@ export default function RevenueAnalyticsPage() {
             <div className="space-y-6">
                 <div>
                     <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
-                        Revenue Analytics
+                        Analytics
                     </p>
 
                     <h1 className="mt-2 text-3xl font-bold text-foreground">

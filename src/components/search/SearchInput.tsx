@@ -39,6 +39,7 @@ export default function SearchInput({ value, onChange, onClose, onEnter, onArrow
         rounded-2xl
         border
         border-border-subtle
+        focus-within:border-foreground/35
         bg-surface-2
         px-4
         py-3
@@ -55,6 +56,7 @@ export default function SearchInput({ value, onChange, onClose, onEnter, onArrow
           text-sm
           text-foreground
           outline-none
+          focus-visible:outline-none
           placeholder:text-foreground/40
         "/>
 

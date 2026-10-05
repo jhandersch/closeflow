@@ -879,16 +879,18 @@ Production database comparison (2026-10-04): A read-only Supabase SQL query scop
 
 **### B21) Browser Refresh & Navigation**
 
-* [ ] dashboard refresh
-* [ ] leads refresh
-* [ ] customers refresh
-* [ ] calendar refresh
-* [ ] deep links
-* [ ] browser back navigation
-* [ ] browser forward navigation
-* [ ] no redirect loops
+* [x] dashboard refresh
+* [x] leads refresh
+* [x] customers refresh
+* [x] calendar refresh
+* [x] deep links
+* [x] browser back navigation
+* [x] browser forward navigation
+* [x] no redirect loops
 
-PASS: [ ]
+Evidence (2026-10-05, manual browser verification by user): Dashboard, Leads, Customers and Calendar refreshes work; deep links open correctly; browser back and forward navigation work; no redirect loops occur. All Sidebar links were also tested successfully.
+
+PASS: [x]
 
 **### B22) Permissions Matrix**
 

@@ -381,12 +381,12 @@ export default function AIAssistantPage() {
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
-          <p className="cf-label text-cyan-400">
-            AI
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
+            AI Assistant
           </p>
 
           <h1 className="cf-title mt-2 text-3xl font-bold text-foreground">
-            AI Assistant
+            Get AI-powered guidance for your deals
           </h1>
 
           <p className="mt-2 text-sm text-foreground/65">

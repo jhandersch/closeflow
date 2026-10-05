@@ -103,8 +103,8 @@ export default function FilesPage() {
     <div className="space-y-7">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Workspace</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Files</h1>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Files</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">Shared workspace files</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-foreground/60">
             Store and manage files shared with members of your current workspace.
           </p>

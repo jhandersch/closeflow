@@ -89,23 +89,23 @@ export default function Sidebar() {
         { href: "/leads", label: t("nav.leads", "Leads"), icon: UsersRound },
         { href: "/customers", label: t("nav.customers", "Customers"), icon: UserRoundCheck },
         { href: "/pipeline", label: t("nav.pipeline", "Pipeline"), icon: Workflow },
-        { href: "/files", label: "Files", icon: FolderOpen },
-        { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
-        { href: "/activities", label: t("nav.activities", "Activities"), icon: Activity },
+        { href: "/team", label: t("nav.team", "Team"), icon: UserRound },
         { href: "/ai", label: t("nav.ai", "AI Assistant"), icon: Bot },
         { href: "/analytics", label: t("nav.analytics", "Analytics"), icon: BarChart3 },
         { href: "/forecast", label: t("nav.forecast", "Forecast"), icon: TrendingUp },
+        { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
         { href: "/calendar", label: t("nav.calendar", "Calendar"), icon: Calendar },
+        { href: "/files", label: "Files", icon: FolderOpen },
         { href: "/automations", label: t("nav.automations", "Automations"), icon: ListRestart },
         { href: "/notifications", label: t("nav.notifications", "Notifications"), icon: Bell },
-        { href: "/feedback", label: t("nav.feedback", "Feedback"), icon: MessageSquare },
-        { href: "/team", label: t("nav.team", "Team"), icon: UserRound },
         ...(canManageBilling
             ? [{ href: "/billing", label: t("nav.billing", "Billing"), icon: CreditCard }]
             : []),
         ...(isPlatformAdmin
             ? [{ href: "/admin", label: t("nav.admin", "Admin"), icon: ShieldCheck }]
             : []),
+        { href: "/activities", label: t("nav.activities", "Activities"), icon: Activity },
+        { href: "/feedback", label: t("nav.feedback", "Feedback"), icon: MessageSquare },
         { href: "/trash", label: t("nav.trash", "Trash"), icon: Trash2 },
         { href: "/settings", label: t("nav.settings", "Settings"), icon: Settings2 },
     ];
