@@ -34,6 +34,15 @@ type DeletedCustomer = {
   deleted_at: string | null;
 };
 
+type DeletedCalendarEvent = {
+  id: string;
+  lead_id: string | null;
+  title: string;
+  description: string | null;
+  scheduled_at: string;
+  deleted_at: string;
+};
+
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 const formatDateTime = (value: string, timeZone: string) => {
@@ -65,6 +74,7 @@ const isValidTimeZone = (value: string) => {
 export default function TrashPage() {
   const [leads, setLeads] = useState<DeletedLead[]>([]);
   const [tasks, setTasks] = useState<DeletedTask[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<DeletedCalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [restoringCustomerKey, setRestoringCustomerKey] =
@@ -131,8 +141,17 @@ export default function TrashPage() {
         throw taskError;
       }
 
+      const calendarResponse = await fetch("/api/calendar/events?trash=true", {
+        credentials: "include",
+      });
+      const calendarResult = await calendarResponse.json().catch(() => null);
+      if (!calendarResponse.ok) {
+        throw new Error(calendarResult?.error || "Could not load deleted calendar events");
+      }
+
       setLeads((leadData ?? []) as DeletedLead[]);
       setTasks((taskData ?? []) as DeletedTask[]);
+      setCalendarEvents((calendarResult?.events ?? []) as DeletedCalendarEvent[]);
     } catch (error) {
       console.error("Trash load error:", error);
       toast.error("Could not load trash");
@@ -233,6 +252,8 @@ export default function TrashPage() {
       setLeads((current) =>
         current.filter((lead) => lead.id !== leadId)
       );
+      setTasks((current) => current.filter((task) => task.lead_id !== leadId));
+      setCalendarEvents((current) => current.filter((event) => event.lead_id !== leadId));
 
       toast.success("Lead restored");
     } catch (error) {
@@ -282,6 +303,8 @@ export default function TrashPage() {
           (lead) => !restoredIds.has(lead.id)
         )
       );
+      setTasks((current) => current.filter((task) => !restoredIds.has(task.lead_id)));
+      setCalendarEvents((current) => current.filter((event) => !event.lead_id || !restoredIds.has(event.lead_id)));
 
       toast.success("Customer restored");
     } catch (error) {
@@ -316,6 +339,7 @@ export default function TrashPage() {
         .from("tasks")
         .update({
           deleted_at: null,
+          deleted_with_lead: false,
         })
         .eq("id", taskId)
         .eq("user_id", user.id)
@@ -342,6 +366,26 @@ export default function TrashPage() {
           ? error.message
           : "Could not restore task"
       );
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
+  const restoreCalendarEvent = async (eventId: string) => {
+    setRestoringId(eventId);
+    try {
+      const response = await fetch(`/api/calendar/events/restore?id=${encodeURIComponent(eventId)}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.error || "Could not restore calendar event");
+      }
+      setCalendarEvents((current) => current.filter((event) => event.id !== eventId));
+      toast.success("Calendar event restored");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not restore calendar event");
     } finally {
       setRestoringId(null);
     }
@@ -379,9 +423,10 @@ export default function TrashPage() {
 
       setLeads([]);
       setTasks([]);
+      setCalendarEvents([]);
 
       toast.success(
-        `${(result?.deletedLeads ?? 0) + (result?.deletedTasks ?? 0)} item(s) permanently deleted`
+        `${(result?.deletedLeads ?? 0) + (result?.deletedTasks ?? 0) + (result?.deletedCalendarEvents ?? 0)} item(s) permanently deleted`
       );
     } catch (error) {
       console.error("Empty trash error:", error);
@@ -399,7 +444,8 @@ export default function TrashPage() {
   const totalItems =
     customerGroups.length +
     deletedLeadItems.length +
-    tasks.length;
+    tasks.length +
+    calendarEvents.length;
 
   return (
     <AuthGuard>
@@ -415,7 +461,7 @@ export default function TrashPage() {
             </h1>
 
             <p className="mt-2 text-sm text-foreground/65">
-              Restore deleted customers, leads, and tasks.
+              Restore deleted customers, leads, tasks, and calendar events.
             </p>
           </div>
 
@@ -450,7 +496,7 @@ export default function TrashPage() {
             </h2>
 
             <p className="mt-2 text-sm text-foreground/55">
-              Deleted customers, leads, and tasks appear here.
+              Deleted customers, leads, tasks, and calendar events appear here.
             </p>
           </div>
         ) : (
@@ -510,7 +556,7 @@ export default function TrashPage() {
                       <RotateCcw size={16} />
                       {restoringCustomerKey === customer.key
                         ? "Restoring..."
-                        : "Restore customer"}
+                        : "Restore"}
                     </button>
                   </div>
                 ))}
@@ -623,6 +669,40 @@ export default function TrashPage() {
                       {restoringId === task.id
                         ? "Restoring..."
                         : "Restore"}
+                    </button>
+                  </div>
+                ))}
+              </section>
+            ) : null}
+
+            {calendarEvents.length > 0 ? (
+              <section className="space-y-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Calendar events ({calendarEvents.length})
+                  </h2>
+                  <p className="mt-1 text-sm text-foreground/55">
+                    Deleted calendar events can be restored here.
+                  </p>
+                </div>
+                {calendarEvents.map((event) => (
+                  <div key={event.id} className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-1 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-semibold text-foreground">{event.title}</p>
+                      {event.description ? <p className="mt-1 text-sm text-foreground/55">{event.description}</p> : null}
+                      <p className="mt-2 text-xs text-foreground/40">
+                        Scheduled {formatDateTime(event.scheduled_at, timezone)}
+                        {` • Deleted on ${formatDateTime(event.deleted_at, timezone)}`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void restoreCalendarEvent(event.id)}
+                      disabled={restoringId === event.id}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <RotateCcw size={16} />
+                      {restoringId === event.id ? "Restoring..." : "Restore"}
                     </button>
                   </div>
                 ))}

@@ -1,4 +1,6 @@
 "use client";
+import { appConfirm } from "@/lib/dialogs";
+import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase/client";
@@ -354,12 +356,16 @@ export default function TasksPage() {
         if (!removedTask || !userId) {
             return;
         }
+        if (!await appConfirm(`Delete task "${removedTask.title}"?`)) {
+            return;
+        }
         const previous = tasks;
         setTasks((current) => current.filter((task) => task.id !== taskId));
           const { data: deletedTask, error, } = await supabase
               .from("tasks")
               .update({
                   deleted_at: new Date().toISOString(),
+                  deleted_with_lead: false,
               })
               .eq("id", taskId)
               .eq("user_id", userId)
@@ -381,6 +387,7 @@ export default function TasksPage() {
             type: "task_deleted",
             taskId,
         });
+        toast.success("Task deleted");
     };
     /*
      * =========================

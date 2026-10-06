@@ -931,28 +931,28 @@ PASS: [ ]
 
 Leads:
 
-* [ ] soft delete
-* [ ] restore
+* [x] soft delete (associated active tasks and calendar events move to trash)
+* [x] restore (associated records deleted with the lead are restored)
 
 Customers:
 
-* [ ] soft delete
-* [ ] restore
+* [x] soft delete (customer deals and their active tasks and calendar events move to trash)
+* [x] restore (customer deals and associated records are restored)
 
 Tasks:
 
-* [ ] soft delete
-* [ ] restore
+* [x] soft delete with confirmation and "Task deleted" feedback
+* [x] restore
 
 Calendar:
 
-* [ ] deleted events remain deleted
+* [x] deleted events remain deleted after refresh; events can be restored from trash
 
 Export:
 
-* [ ] deleted records excluded
+* [x] deleted records excluded
 
-PASS: [ ]
+PASS: [x]
 
 **### B25) Stress Test**
 

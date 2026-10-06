@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { appConfirm } from "@/lib/dialogs";
 import toast from "react-hot-toast";
 import type { ActivityType, Task, TaskPriority } from "@/types";
 export function useTasks(leadId: string) {
@@ -93,6 +94,7 @@ export function useTasks(leadId: string) {
             .from("tasks")
             .select("*")
             .eq("lead_id", leadId)
+            .is("deleted_at", null)
             .order("created_at", {
             ascending: false,
         });
@@ -277,16 +279,20 @@ export function useTasks(leadId: string) {
      */
     const deleteTask = async (id: string) => {
         const task = tasks.find((item) => item.id === id);
+        if (!task || !await appConfirm(`Delete task "${task.title}"?`)) {
+            return;
+        }
         const previous = tasks;
         setTasks((current) => current.filter((item) => item.id !== id));
-        const { error } = await supabase
-            .from("tasks")
-            .delete()
-            .eq("id", id);
-        if (error) {
+        const { data: deleted, error } = await supabase.rpc("soft_delete_task", {
+            p_task_id: id,
+            p_workspace_id: task.workspace_id ?? null,
+        });
+        if (error || !deleted) {
             console.error("Task deletion failed:", error);
             setTasks(previous);
-            throw error;
+            toast.error(error?.message || "Task could not be deleted");
+            return;
         }
         const { data: { user }, } = await supabase.auth.getUser();
         if (!user) {
@@ -307,6 +313,7 @@ export function useTasks(leadId: string) {
                 task_title: task?.title || null,
             },
         });
+        toast.success("Task deleted");
     };
     return {
         tasks,

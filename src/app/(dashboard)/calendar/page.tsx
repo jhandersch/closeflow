@@ -911,25 +911,27 @@ export default function CalendarPage() {
                                                             </p>
                                                         </div>
 
-                                                        <div className="flex flex-col gap-2">
+                                                        <div className="flex flex-wrap items-center gap-2">
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
                                                                     startEdit(
                                                                         event,
                                                                     )
                                                                 }
-                                                                className="text-xs text-cyan-300"
+                                                                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300"
                                                             >
                                                                 {"Edit"}
                                                             </button>
 
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
                                                                     void deleteEvent(
                                                                         event.id,
                                                                     )
                                                                 }
-                                                                className="flex items-center gap-1 text-xs text-red-400"
+                                                                className="flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300"
                                                             >
                                                                 <Trash2
                                                                     size={

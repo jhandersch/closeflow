@@ -264,6 +264,20 @@ export async function GET(request: Request) {
     );
   }
 
+  if (url.searchParams.get("trash") === "true") {
+    const { data, error: queryError } = await supabase
+      .from("calendar_events")
+      .select(`${selectClause}, deleted_at`)
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id)
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false });
+    if (queryError) {
+      return NextResponse.json({ error: queryError.message }, { status: 500 });
+    }
+    return NextResponse.json({ events: data ?? [] });
+  }
+
   const {
     data,
     error: queryError,
@@ -271,6 +285,7 @@ export async function GET(request: Request) {
     .from("calendar_events")
     .select(selectClause)
     .eq("workspace_id", workspace.id)
+    .is("deleted_at", null)
     .gte("scheduled_at", fromUtc)
     .lt("scheduled_at", toExclusiveUtc)
     .order("scheduled_at", {
@@ -566,6 +581,7 @@ export async function PUT(request: Request) {
     .update(updatePayload)
     .eq("id", id)
     .eq("workspace_id", workspace.id)
+    .is("deleted_at", null)
     .select(selectClause)
     .maybeSingle();
 
@@ -645,14 +661,16 @@ export async function DELETE(request: Request) {
     );
   }
 
+  const deletedAt = new Date().toISOString();
   const {
     data,
     error: deleteError,
   } = await supabase
     .from("calendar_events")
-    .delete()
+    .update({ deleted_at: deletedAt, deleted_with_lead: false, updated_at: deletedAt })
     .eq("id", id)
     .eq("workspace_id", workspace.id)
+    .is("deleted_at", null)
     .select(
       "id, lead_id, title, scheduled_at"
     )

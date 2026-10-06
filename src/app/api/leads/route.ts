@@ -396,11 +396,12 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: "Lead not found" }, { status: 404 });
         }
         // Lead soft-deleten
+        const deletedAt = new Date().toISOString();
         const { data, error, } = await supabase
             .from("leads")
             .update({
-            deleted_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            deleted_at: deletedAt,
+            updated_at: deletedAt,
         })
             .eq("id", id)
             .eq("workspace_id", workspace.id)
@@ -413,6 +414,15 @@ export async function DELETE(req: Request) {
         }
         if (!data) {
             return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+        }
+        const { error: taskDeleteError } = await supabase.rpc("soft_delete_lead_dependents", {
+            p_lead_id: id,
+            p_workspace_id: workspace.id,
+            p_deleted_at: deletedAt,
+        });
+        if (taskDeleteError) {
+            await supabase.from("leads").update({ deleted_at: null }).eq("id", id).eq("workspace_id", workspace.id);
+            return NextResponse.json({ error: taskDeleteError.message }, { status: 500 });
         }
         const { error: activityError } = await supabase
             .from("activities")
@@ -496,6 +506,13 @@ export async function PATCH(req: Request) {
         }
         if (!data) {
             return NextResponse.json({ error: "Deleted lead not found" }, { status: 404 });
+        }
+        const { error: taskRestoreError } = await supabase.rpc("restore_lead_dependents", {
+            p_lead_id: id,
+            p_workspace_id: workspace.id,
+        });
+        if (taskRestoreError) {
+            return NextResponse.json({ error: taskRestoreError.message }, { status: 500 });
         }
         // Create an activity for the restore.
         const { error: activityError } = await supabase

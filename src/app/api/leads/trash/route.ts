@@ -56,9 +56,26 @@ export async function DELETE(request: Request) {
       );
     }
 
+    const { data: deletedCalendarEvents, error: calendarEventsError } = await supabase
+      .from("calendar_events")
+      .delete()
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id)
+      .not("deleted_at", "is", null)
+      .select("id");
+
+    if (calendarEventsError) {
+      console.error("EMPTY TRASH CALENDAR EVENTS ERROR:", calendarEventsError);
+      return NextResponse.json(
+        { error: calendarEventsError.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       deletedLeads: deletedLeads?.length ?? 0,
       deletedTasks: deletedTasks?.length ?? 0,
+      deletedCalendarEvents: deletedCalendarEvents?.length ?? 0,
     });
   } catch (error) {
     console.error("EMPTY TRASH CRASH:", error);
