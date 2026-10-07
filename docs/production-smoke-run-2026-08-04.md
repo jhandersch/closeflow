@@ -962,19 +962,19 @@ PASS: [x]
 * [x] dashboard responsiveness
 * [x] search responsiveness
 * [x] filter responsiveness
-* [ ] pagination responsiveness
+* [x] pagination responsiveness
 
 Status:
 
-PARTIALLY TESTED — 2026-10-07
+TESTED — 2026-10-07
 
 Results in the production workspace:
 
 * 100, 500, and 1000-lead imports completed; the user confirmed the 1000-lead import worked quickly in one upload.
-* Dashboard loaded with 997 active leads in approximately 5.5 seconds. A task-widget “Bad Request” appeared once during initial inspection, but did not recur during the timed dashboard load.
+* Dashboard loaded with 997 active leads in approximately 5.5 seconds. The task widget intermittently showed “Bad Request” in untimed inspections; it did not appear during the timed dashboard load.
 * Global search returned a matching lead in approximately 1.6 seconds; the lead-list search returned it in approximately 0.8 seconds.
 * Status filtering returned 332 Proposal leads and 333 New leads; switching the filter and reading the result count took approximately 1.9 seconds.
-* Pagination was absent during the production test, so responsiveness could not be tested. Controls for 50 leads per page are now implemented locally; production validation is pending.
+* Pagination now shows 50 leads per page (20 pages for 997 active leads). Moving to page 2 took approximately 0.5 seconds and displayed leads 51–100. Filtering to Proposal reset the list to page 1 of 7; clearing the filter restored page 1 of 20.
 
 **### B26) Empty Workspace Experience**
 
