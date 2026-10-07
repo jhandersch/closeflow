@@ -34,6 +34,7 @@ type ImportIssue = {
     notes?: string;
 };
 const LEAD_FAVORITES_STORAGE_KEY = "closeflow_lead_favorites";
+const LEADS_PER_PAGE = 50;
 const escapeCsv = (value: unknown) => {
     const text = String(value ?? "");
     if (text.includes(",") || text.includes("\n") || text.includes('"')) {
@@ -179,6 +180,7 @@ export default function LeadsPage() {
     const todayKey = getDateKey(new Date(), timezone);
     const router = useRouter();
     const [search, setSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
     const [status, setStatus] = useState("all");
     const [priority, setPriority] = useState("all");
     const [sourceFilter, setSourceFilter] = useState("all");
@@ -378,6 +380,15 @@ export default function LeadsPage() {
       timezone,
       todayKey,
   ]);
+    const totalPages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PER_PAGE));
+    const visiblePage = Math.min(currentPage, totalPages);
+    const pageStartIndex = (visiblePage - 1) * LEADS_PER_PAGE;
+    const paginatedLeads = filteredLeads.slice(
+        pageStartIndex,
+        pageStartIndex + LEADS_PER_PAGE,
+    );
+    const firstVisibleLead = filteredLeads.length === 0 ? 0 : pageStartIndex + 1;
+    const lastVisibleLead = Math.min(pageStartIndex + LEADS_PER_PAGE, filteredLeads.length);
     const getAuthHeaders = async (includeJson = false) => {
         const { data: { session }, } = await supabase.auth.getSession();
         const headers: Record<string, string> = {};
@@ -699,7 +710,7 @@ export default function LeadsPage() {
             {"We couldn’t load your leads."} {error}
           </div>) : null}
 
-        <LeadFilters search={search} status={status} priority={priority} source={sourceFilter} dateRange={dateRange} owner={ownerFilter} sortBy={sortBy} onSearchChange={setSearch} onStatusChange={setStatus} onPriorityChange={setPriority} onSourceChange={setSourceFilter} onDateRangeChange={setDateRange} onOwnerChange={setOwnerFilter} onSortChange={setSortBy}/>
+        <LeadFilters search={search} status={status} priority={priority} source={sourceFilter} dateRange={dateRange} owner={ownerFilter} sortBy={sortBy} onSearchChange={(value) => { setSearch(value); setCurrentPage(1); }} onStatusChange={(value) => { setStatus(value); setCurrentPage(1); }} onPriorityChange={(value) => { setPriority(value); setCurrentPage(1); }} onSourceChange={(value) => { setSourceFilter(value); setCurrentPage(1); }} onDateRangeChange={(value) => { setDateRange(value); setCurrentPage(1); }} onOwnerChange={(value) => { setOwnerFilter(value); setCurrentPage(1); }} onSortChange={(value) => { setSortBy(value); setCurrentPage(1); }}/>
 
         <div className="grid gap-4 md:grid-cols-4">
 
@@ -965,6 +976,7 @@ export default function LeadsPage() {
                 setSourceFilter("all");
                 setDateRange("all");
                 setOwnerFilter("all");
+                setCurrentPage(1);
             }} className="
                   mt-5
                   rounded-xl
@@ -981,7 +993,38 @@ export default function LeadsPage() {
                 {"Clear filters"}
               </button>
             </div>)) : (view === "list" ? (<div className="space-y-3">
-            {filteredLeads.map((lead) => {
+            {filteredLeads.length > LEADS_PER_PAGE ? (
+              <nav
+                aria-label="Lead list pagination"
+                className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <p className="text-sm text-foreground/65" aria-live="polite">
+                  Showing {firstVisibleLead}–{lastVisibleLead} of {filteredLeads.length} leads
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={visiblePage === 1}
+                    className="rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground/80 transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <span className="min-w-24 text-center text-sm text-foreground/65" aria-current="page">
+                    Page {visiblePage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={visiblePage === totalPages}
+                    className="rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground/80 transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
+            ) : null}
+            {paginatedLeads.map((lead) => {
                 const staleDays = getStaleDays(lead);
                 const salesScore = calculateSalesScore(lead, staleDays);
                 const priority = salesScore.priority;
