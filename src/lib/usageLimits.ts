@@ -328,3 +328,35 @@ export async function enforceLeadCapacityLimit(
 
     return { ok: true } as const;
 }
+
+export async function getLeadCapacitySnapshot(
+    supabase: SupabaseClient,
+    userId: string,
+    workspaceId: string,
+) {
+    const context = await getWorkspaceUsageContext(supabase, userId, workspaceId);
+
+    if (!context || context.limits.leadCapacity === null) {
+        return { ok: true, available: null } as const;
+    }
+
+    const { count, error } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .in("status", ["new", "contacted", "proposal"])
+        .is("deleted_at", null);
+
+    if (error) {
+        return {
+            ok: false,
+            status: 500,
+            message: "Could not verify lead capacity.",
+        } as const;
+    }
+
+    return {
+        ok: true,
+        available: Math.max(0, context.limits.leadCapacity - (count ?? 0)),
+    } as const;
+}

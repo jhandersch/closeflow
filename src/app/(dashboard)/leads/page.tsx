@@ -458,12 +458,14 @@ export default function LeadsPage() {
             }
             const data = (await response.json()) as {
                 inserted?: number;
+                updated?: number;
+                unchanged?: number;
                 skipped?: number;
                 issues?: ImportIssue[];
             };
             const issues = Array.isArray(data.issues) ? data.issues : [];
             setImportIssues(issues);
-            setImportMessage(`Import done. Added ${data.inserted || 0} leads, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`);
+            setImportMessage(`Import done. Added ${data.inserted || 0} leads, updated ${data.updated || 0}, unchanged ${data.unchanged || 0}, skipped ${data.skipped || 0}${issues.length ? `. ${issues.length} issue(s) available in report.` : "."}`);
             await refresh();
         }
         catch (error) {
