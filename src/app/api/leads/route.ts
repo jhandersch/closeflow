@@ -101,6 +101,9 @@ export async function POST(req: Request) {
       );
     }
     const body = await req.json();
+    if (typeof body.name !== "string" || !body.name.trim()) {
+      return NextResponse.json({ error: "Contact name is required" }, { status: 400 });
+    }
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
       return NextResponse.json(
@@ -127,6 +130,8 @@ export async function POST(req: Request) {
       .from("leads")
       .insert({
         ...body,
+        name: body.name.trim(),
+        company: typeof body.company === "string" && body.company.trim() ? body.company.trim() : null,
         workspace_id: workspace.id,
         user_id: user.id,
       })
@@ -142,6 +147,34 @@ export async function POST(req: Request) {
           status: 500,
         },
       );
+    }
+    if (data.status === "won" || data.status === "lost") {
+      const { error: customerSyncError } = await supabase
+        .from("customers")
+        .upsert(
+          {
+            workspace_id: workspace.id,
+            lead_id: data.id,
+            contact: data.name,
+            company: data.company || null,
+            revenue: data.status === "won" ? data.value || 0 : 0,
+            status: data.status === "won" ? "active" : "lost",
+            notes: data.notes || null,
+            website: data.website || null,
+            address: data.address || null,
+            industry: data.industry || null,
+            is_vip: data.is_vip === true,
+          },
+          { onConflict: "lead_id" },
+        );
+      if (customerSyncError) {
+        console.error("SYNC NEW CUSTOMER RECORD ERROR:", customerSyncError);
+        await supabase.from("leads").delete().eq("id", data.id).eq("workspace_id", workspace.id);
+        return NextResponse.json(
+          { error: `Lead could not be saved as a customer: ${customerSyncError.message}` },
+          { status: 500 },
+        );
+      }
     }
     await supabase.from("activities").insert({
       workspace_id: workspace.id,
@@ -180,6 +213,17 @@ export async function PUT(req: Request) {
     }
     const body = await req.json();
     const { id, entity_type: entityType, ...updates } = body;
+    if (Object.prototype.hasOwnProperty.call(updates, "name")) {
+      if (typeof updates.name !== "string" || !updates.name.trim()) {
+        return NextResponse.json({ error: "Contact name is required" }, { status: 400 });
+      }
+      updates.name = updates.name.trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, "company")) {
+      updates.company = typeof updates.company === "string" && updates.company.trim()
+        ? updates.company.trim()
+        : null;
+    }
     if (updates.status) {
       updates.stage_changed_at = new Date().toISOString();
       updates.last_activity_at = new Date().toISOString();
@@ -410,6 +454,46 @@ export async function PUT(req: Request) {
     if (currentLeadError || !currentLead) {
       console.error("LOAD UPDATED LEAD ERROR:", currentLeadError);
       return NextResponse.json(data);
+    }
+    if (currentLead.status === "won" || currentLead.status === "lost") {
+      const { error: customerSyncError } = await supabase
+        .from("customers")
+        .upsert(
+          {
+            workspace_id: workspace.id,
+            lead_id: currentLead.id,
+            contact: currentLead.name,
+            company: currentLead.company || null,
+            revenue: currentLead.status === "won" ? currentLead.value || 0 : 0,
+            status: currentLead.status === "won" ? "active" : "lost",
+            notes: currentLead.notes || null,
+            website: currentLead.website || null,
+            address: currentLead.address || null,
+            industry: currentLead.industry || null,
+            is_vip: currentLead.is_vip === true,
+          },
+          { onConflict: "lead_id" },
+        );
+      if (customerSyncError) {
+        console.error("SYNC CUSTOMER RECORD ERROR:", customerSyncError);
+        return NextResponse.json(
+          { error: `Lead saved, but customer record could not be synchronized: ${customerSyncError.message}` },
+          { status: 500 },
+        );
+      }
+    } else {
+      const { error: customerDeleteError } = await supabase
+        .from("customers")
+        .delete()
+        .eq("lead_id", currentLead.id)
+        .eq("workspace_id", workspace.id);
+      if (customerDeleteError) {
+        console.error("REMOVE REOPENED CUSTOMER RECORD ERROR:", customerDeleteError);
+        return NextResponse.json(
+          { error: `Lead saved, but its customer record could not be removed: ${customerDeleteError.message}` },
+          { status: 500 },
+        );
+      }
     }
     return NextResponse.json(
       warning ? { ...currentLead, warning } : currentLead,

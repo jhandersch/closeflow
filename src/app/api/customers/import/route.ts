@@ -86,11 +86,17 @@ export async function POST(request: Request) {
     const headers = parseCsvLine(lines[0], delimiter).map((header) => header.toLowerCase());
     const headerIndex = (name: string) => headers.indexOf(name);
     /*
-     * Only active leads participate in
-     * duplicate detection.
-     *
-     * Soft-deleted leads are ignored.
+     * Customer records are canonical, while
+     * completed leads provide the deal history
+     * used by the Customers workspace.
      */
+    const { data: existingCustomers, error: existingCustomersError } = await supabase
+        .from("customers")
+        .select("contact, company")
+        .eq("workspace_id", workspace.id);
+    if (existingCustomersError) {
+        return NextResponse.json({ error: existingCustomersError.message }, { status: 500 });
+    }
     const { data: existingLeads, error: existingLeadsError, } = await supabase
         .from("leads")
         .select("name, company")
@@ -103,11 +109,18 @@ export async function POST(request: Request) {
             status: 500,
         });
     }
-    const knownKeys = new Set((existingLeads || []).map((lead) => `${(lead.name || "")
+    const knownKeys = new Set([
+        ...(existingCustomers || []).map((customer) => `${(customer.contact || "")
+            .trim()
+            .toLowerCase()}::${(customer.company || "")
+            .trim()
+            .toLowerCase()}`),
+        ...(existingLeads || []).map((lead) => `${(lead.name || "")
         .trim()
         .toLowerCase()}::${(lead.company || "")
         .trim()
-        .toLowerCase()}`));
+        .toLowerCase()}`),
+    ]);
     let inserted = 0;
     let skipped = 0;
     const issues: ImportIssue[] = [];
@@ -192,6 +205,28 @@ export async function POST(request: Request) {
                 row: rowNumber,
                 reason: insertError?.message ||
                     "Insert failed",
+                company: company.trim() || null,
+                contact: contact.trim(),
+            });
+            continue;
+        }
+        const { error: customerInsertError } = await supabase
+            .from("customers")
+            .insert({
+                workspace_id: workspace.id,
+                lead_id: insertedLead.id,
+                contact: contact.trim(),
+                company: company.trim() || null,
+                revenue,
+                status: "active",
+                notes: "Imported from customers file",
+            });
+        if (customerInsertError) {
+            await supabase.from("leads").delete().eq("id", insertedLead.id).eq("workspace_id", workspace.id);
+            skipped += 1;
+            addIssue({
+                row: rowNumber,
+                reason: `Customer could not be saved: ${customerInsertError.message}`,
                 company: company.trim() || null,
                 contact: contact.trim(),
             });

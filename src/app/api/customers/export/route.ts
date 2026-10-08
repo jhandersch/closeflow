@@ -13,6 +13,7 @@ type CustomerSummary = {
     last_contact_at: string;
 };
 type LeadExportRow = {
+    id: string;
     name: string | null;
     company: string | null;
     status: string | null;
@@ -58,6 +59,7 @@ export async function GET(request: Request) {
     const queryAttempts = [
         `
       name,
+      id,
       company,
       status,
       value,
@@ -67,6 +69,7 @@ export async function GET(request: Request) {
     `,
         `
       name,
+      id,
       company,
       status,
       value,
@@ -75,6 +78,7 @@ export async function GET(request: Request) {
     `,
         `
       name,
+      id,
       company,
       status,
       value,
@@ -116,18 +120,17 @@ export async function GET(request: Request) {
      */
     const byCompany = new Map<string, CustomerSummary>();
     for (const lead of leads) {
-        const key = (lead.company || "")
+        const company = (lead.company || "").trim();
+        const key = company
             .trim()
-            .toLowerCase();
-        if (!key)
-            continue;
+            .toLowerCase() || `private:${lead.id}`;
         const existing = byCompany.get(key);
         const lastActivity = lead.last_activity_at ||
             lead.created_at ||
             "";
         if (!existing) {
             byCompany.set(key, {
-                company: lead.company || "",
+                company,
                 contact: lead.name || "",
                 revenue: lead.status === "won"
                     ? Number(lead.value || 0)
