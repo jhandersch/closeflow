@@ -488,7 +488,7 @@ export default function CustomerDetailPage() {
                                     {
                                         id: lead.id,
                                         entity_type: "customer",
-                                        company: company || null,
+                                        company,
                                         website:
                                             editWebsite.trim() ||
                                             null,

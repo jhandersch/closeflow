@@ -5,6 +5,60 @@ import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
 import { rateLimit } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
+type RouteSupabase = Awaited<ReturnType<typeof getRouteUser>>["supabase"];
+type CustomerLead = {
+  id: string;
+  name: string;
+  company: string | null;
+  status: "won" | "lost";
+  value: number | null;
+  notes: string | null;
+  website?: string | null;
+  address?: string | null;
+  industry?: string | null;
+  is_vip?: boolean | null;
+};
+const syncCustomerRecord = async (
+  supabase: RouteSupabase,
+  workspaceId: string,
+  lead: CustomerLead,
+) => {
+  const { data: existing, error: lookupError } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("lead_id", lead.id)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (lookupError) return lookupError;
+
+  const basePayload = {
+    workspace_id: workspaceId,
+    lead_id: lead.id,
+    contact: lead.name,
+    company: lead.company || "",
+    revenue: lead.status === "won" ? lead.value || 0 : 0,
+    status: lead.status === "won" ? "active" : "lost",
+    notes: lead.notes || null,
+  };
+  const payload = {
+    ...basePayload,
+    website: lead.website || null,
+    address: lead.address || null,
+    industry: lead.industry || null,
+    is_vip: lead.is_vip === true,
+  };
+  const write = (value: typeof payload | typeof basePayload) =>
+    existing?.id
+      ? supabase.from("customers").update(value).eq("id", existing.id).eq("workspace_id", workspaceId)
+      : supabase.from("customers").insert(value);
+
+  const firstWrite = await write(payload);
+  if (!firstWrite.error) return null;
+
+  // Older deployments may not have the descriptive columns yet; core customer data can still be saved.
+  const fallbackWrite = await write(basePayload);
+  return fallbackWrite.error;
+};
 export async function GET(req: Request) {
   try {
     const { supabase, user, error: authError } = await getRouteUser(req);
@@ -131,7 +185,7 @@ export async function POST(req: Request) {
       .insert({
         ...body,
         name: body.name.trim(),
-        company: typeof body.company === "string" && body.company.trim() ? body.company.trim() : null,
+        company: typeof body.company === "string" ? body.company.trim() : "",
         workspace_id: workspace.id,
         user_id: user.id,
       })
@@ -149,24 +203,7 @@ export async function POST(req: Request) {
       );
     }
     if (data.status === "won" || data.status === "lost") {
-      const { error: customerSyncError } = await supabase
-        .from("customers")
-        .upsert(
-          {
-            workspace_id: workspace.id,
-            lead_id: data.id,
-            contact: data.name,
-            company: data.company || null,
-            revenue: data.status === "won" ? data.value || 0 : 0,
-            status: data.status === "won" ? "active" : "lost",
-            notes: data.notes || null,
-            website: data.website || null,
-            address: data.address || null,
-            industry: data.industry || null,
-            is_vip: data.is_vip === true,
-          },
-          { onConflict: "lead_id" },
-        );
+      const customerSyncError = await syncCustomerRecord(supabase, workspace.id, data);
       if (customerSyncError) {
         console.error("SYNC NEW CUSTOMER RECORD ERROR:", customerSyncError);
         await supabase.from("leads").delete().eq("id", data.id).eq("workspace_id", workspace.id);
@@ -220,9 +257,7 @@ export async function PUT(req: Request) {
       updates.name = updates.name.trim();
     }
     if (Object.prototype.hasOwnProperty.call(updates, "company")) {
-      updates.company = typeof updates.company === "string" && updates.company.trim()
-        ? updates.company.trim()
-        : null;
+      updates.company = typeof updates.company === "string" ? updates.company.trim() : "";
     }
     if (updates.status) {
       updates.stage_changed_at = new Date().toISOString();
@@ -456,24 +491,7 @@ export async function PUT(req: Request) {
       return NextResponse.json(data);
     }
     if (currentLead.status === "won" || currentLead.status === "lost") {
-      const { error: customerSyncError } = await supabase
-        .from("customers")
-        .upsert(
-          {
-            workspace_id: workspace.id,
-            lead_id: currentLead.id,
-            contact: currentLead.name,
-            company: currentLead.company || null,
-            revenue: currentLead.status === "won" ? currentLead.value || 0 : 0,
-            status: currentLead.status === "won" ? "active" : "lost",
-            notes: currentLead.notes || null,
-            website: currentLead.website || null,
-            address: currentLead.address || null,
-            industry: currentLead.industry || null,
-            is_vip: currentLead.is_vip === true,
-          },
-          { onConflict: "lead_id" },
-        );
+      const customerSyncError = await syncCustomerRecord(supabase, workspace.id, currentLead);
       if (customerSyncError) {
         console.error("SYNC CUSTOMER RECORD ERROR:", customerSyncError);
         return NextResponse.json(

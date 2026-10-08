@@ -150,7 +150,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: "Missing required field: contact",
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
             continue;
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: "Invalid numeric value: revenue",
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
             continue;
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: "Duplicate customer (contact + company already exists)",
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
             continue;
@@ -185,7 +185,7 @@ export async function POST(request: Request) {
             workspace_id: workspace.id,
             user_id: user.id,
             name: contact.trim(),
-            company: company.trim() || null,
+            company: company.trim(),
             status: "won",
             value: revenue,
             source: "other",
@@ -205,7 +205,7 @@ export async function POST(request: Request) {
                 row: rowNumber,
                 reason: insertError?.message ||
                     "Insert failed",
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
             continue;
@@ -216,7 +216,7 @@ export async function POST(request: Request) {
                 workspace_id: workspace.id,
                 lead_id: insertedLead.id,
                 contact: contact.trim(),
-                company: company.trim() || null,
+                company: company.trim(),
                 revenue,
                 status: "active",
                 notes: "Imported from customers file",
@@ -227,7 +227,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: `Customer could not be saved: ${customerInsertError.message}`,
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
             continue;
@@ -255,7 +255,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: `Customer imported, but its activity could not be recorded: ${activityError.message}`,
-                company: company.trim() || null,
+                company: company.trim(),
                 contact: contact.trim(),
             });
         }
