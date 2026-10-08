@@ -451,20 +451,9 @@ export default function CustomerDetailPage() {
             const company =
                 editCompany.trim();
 
-            if (
-                !isPrivateCustomer &&
-                !company
-            ) {
-                setEditError(
-                    "Company name is required.",
-                );
-                return;
-            }
-
-            const nextCustomerId =
-                isPrivateCustomer
-                    ? id
-                    : company.toLowerCase();
+            const nextCustomerId = company
+                ? company.toLowerCase()
+                : `private:${customer.leads[0].id}`;
 
             setSaving(true);
             setEditError(null);
@@ -499,10 +488,7 @@ export default function CustomerDetailPage() {
                                     {
                                         id: lead.id,
                                         entity_type: "customer",
-                                        company:
-                                            isPrivateCustomer
-                                                ? null
-                                                : company,
+                                        company: company || null,
                                         website:
                                             editWebsite.trim() ||
                                             null,
@@ -535,10 +521,7 @@ export default function CustomerDetailPage() {
                 }
 
                 setEditedCustomer({
-                    company:
-                        isPrivateCustomer
-                            ? customer.company
-                            : company,
+                    company,
                     website:
                         editWebsite.trim(),
                     address:
@@ -662,7 +645,7 @@ export default function CustomerDetailPage() {
                                 </h2>
 
                                 <p className="mt-1 text-sm text-foreground/55">
-                                    Update this customer's company information.
+                                    Update this customer&apos;s information.
                                 </p>
                             </div>
 

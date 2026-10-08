@@ -30,7 +30,7 @@ type CustomerSummary = {
 type ImportIssue = {
   row: number;
   reason: string;
-  company: string;
+  company: string | null;
   contact: string;
 };
 
@@ -731,7 +731,7 @@ export default function CustomersPage() {
         <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
           <Image
             src="/customer-import-guide.png"
-            alt="Spreadsheet template with company, contact, and revenue columns. Company is required; contact and revenue are optional."
+            alt="Spreadsheet template with contact, company, and revenue columns. Contact is required; company and revenue are optional."
             width={1200}
             height={720}
             className="h-auto w-full"

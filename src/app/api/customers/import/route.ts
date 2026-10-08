@@ -3,7 +3,7 @@ import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 type ImportIssue = {
     row: number;
     reason: string;
-    company: string;
+    company: string | null;
     contact: string;
 };
 const MAX_ISSUES_RETURNED = 500;
@@ -76,11 +76,11 @@ export async function POST(request: Request) {
     /*
      * Support both:
      *
-     * company;contact;revenue
+     * contact;company;revenue
      *
      * and:
      *
-     * company,contact,revenue
+     * contact,company,revenue
      */
     const delimiter = detectDelimiter(lines[0]);
     const headers = parseCsvLine(lines[0], delimiter).map((header) => header.toLowerCase());
@@ -129,16 +129,15 @@ export async function POST(request: Request) {
                 : "";
         };
         const company = get("company");
-        const contact = get("contact") ||
-            `Contact ${rowNumber - 1}`;
+        const contact = get("contact");
         const revenueText = get("revenue");
         const revenue = Number(revenueText || "0");
-        if (!company.trim()) {
+        if (!contact.trim()) {
             skipped += 1;
             addIssue({
                 row: rowNumber,
-                reason: "Missing required field: company",
-                company: company.trim(),
+                reason: "Missing required field: contact",
+                company: company.trim() || null,
                 contact: contact.trim(),
             });
             continue;
@@ -148,7 +147,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: "Invalid numeric value: revenue",
-                company: company.trim(),
+                company: company.trim() || null,
                 contact: contact.trim(),
             });
             continue;
@@ -163,7 +162,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: "Duplicate customer (contact + company already exists)",
-                company: company.trim(),
+                company: company.trim() || null,
                 contact: contact.trim(),
             });
             continue;
@@ -173,7 +172,7 @@ export async function POST(request: Request) {
             workspace_id: workspace.id,
             user_id: user.id,
             name: contact.trim(),
-            company: company.trim(),
+            company: company.trim() || null,
             status: "won",
             value: revenue,
             source: "other",
@@ -193,7 +192,7 @@ export async function POST(request: Request) {
                 row: rowNumber,
                 reason: insertError?.message ||
                     "Insert failed",
-                company: company.trim(),
+                company: company.trim() || null,
                 contact: contact.trim(),
             });
             continue;
@@ -221,7 +220,7 @@ export async function POST(request: Request) {
             addIssue({
                 row: rowNumber,
                 reason: `Customer imported, but its activity could not be recorded: ${activityError.message}`,
-                company: company.trim(),
+                company: company.trim() || null,
                 contact: contact.trim(),
             });
         }
