@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
+import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase/client";
 import {
     Plus,
@@ -32,6 +33,7 @@ type CalendarEvent = {
 };
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
+const PAGE_SIZE = 50;
 
 const typeIcon: Record<
     string,
@@ -318,6 +320,7 @@ export default function CalendarPage() {
     const [events, setEvents] = useState<
         CalendarEvent[]
     >([]);
+    const [page, setPage] = useState(1);
     const [loading, setLoading] =
         useState(true);
     const [showNew, setShowNew] =
@@ -632,13 +635,23 @@ export default function CalendarPage() {
         }
     };
 
+    const totalPages = Math.max(1, Math.ceil(events.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const visibleEvents = useMemo(
+        () => events.slice(
+            (currentPage - 1) * PAGE_SIZE,
+            currentPage * PAGE_SIZE,
+        ),
+        [currentPage, events],
+    );
+
     const grouped = useMemo(
         () =>
             groupByDate(
-                events,
+                visibleEvents,
                 timezone,
             ),
-        [events, timezone],
+        [visibleEvents, timezone],
     );
 
     const sortedDays = useMemo(
@@ -819,6 +832,14 @@ export default function CalendarPage() {
                     </p>
                 )}
 
+                <PaginationControls
+                    page={currentPage}
+                    pageSize={PAGE_SIZE}
+                    totalItems={events.length}
+                    label="meetings"
+                    onPageChange={setPage}
+                />
+
                 <div className="space-y-6">
                     {sortedDays.map(
                         (day) => {
@@ -951,6 +972,14 @@ export default function CalendarPage() {
                                                                 </Link>
                                                             )}
                                                         </div>
+
+                                                        <PaginationControls
+                                                            page={currentPage}
+                                                            pageSize={PAGE_SIZE}
+                                                            totalItems={events.length}
+                                                            label="meetings"
+                                                            onPageChange={setPage}
+                                                        />
                                                     </div>
                                                 );
                                             },

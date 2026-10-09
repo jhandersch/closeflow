@@ -17,6 +17,8 @@ type LeadRow = {
   status: "new" | "contacted" | "proposal" | "won" | "lost" | null;
 };
 
+const MAX_SEARCH_RESULTS = 1000;
+
 const searchLeadRows = async (
   supabase: Awaited<ReturnType<typeof getRouteUser>>["supabase"],
   workspaceId: string,
@@ -32,10 +34,10 @@ const searchLeadRows = async (
     .in("status", statuses);
 
   const results = await Promise.all([
-    baseQuery().ilike("name", searchTerm).limit(10),
-    baseQuery().ilike("company", searchTerm).limit(10),
-    baseQuery().ilike("email", searchTerm).limit(10),
-    baseQuery().ilike("phone", searchTerm).limit(10),
+    baseQuery().ilike("name", searchTerm).limit(MAX_SEARCH_RESULTS),
+    baseQuery().ilike("company", searchTerm).limit(MAX_SEARCH_RESULTS),
+    baseQuery().ilike("email", searchTerm).limit(MAX_SEARCH_RESULTS),
+    baseQuery().ilike("phone", searchTerm).limit(MAX_SEARCH_RESULTS),
   ]);
   const error = results.find((result) => result.error)?.error;
 
@@ -83,7 +85,7 @@ export async function GET(request: Request) {
         .select("id, title, lead_id")
         .eq("workspace_id", workspace.id)
         .ilike("title", `%${query}%`)
-        .limit(10),
+        .limit(MAX_SEARCH_RESULTS),
     ]);
 
     if (taskResult.error) {

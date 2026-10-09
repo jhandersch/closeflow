@@ -3,12 +3,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
+import PaginationControls from "@/components/PaginationControls";
 type SearchResult = {
     id: string;
     title: string;
     subtitle: string;
     href: string;
 };
+const PAGE_SIZE = 50;
+
 export default function SearchPage() {
     const searchParams = useSearchParams();
     const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -16,6 +19,10 @@ export default function SearchPage() {
     const [customers, setCustomers] = useState<SearchResult[]>([]);
     const [tasks, setTasks] = useState<SearchResult[]>([]);
     const [pageResults, setPageResults] = useState<SearchResult[]>([]);
+    const [leadsPage, setLeadsPage] = useState(1);
+    const [customersPage, setCustomersPage] = useState(1);
+    const [tasksPage, setTasksPage] = useState(1);
+    const [pagesPage, setPagesPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
@@ -72,6 +79,8 @@ export default function SearchPage() {
         return () => controller.abort();
     }, [query]);
     const total = leads.length + customers.length + tasks.length + pageResults.length;
+    const visibleResults = (results: SearchResult[], page: number) =>
+        results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     return (<AuthGuard>
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
@@ -81,7 +90,13 @@ export default function SearchPage() {
 
         <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3 focus-within:border-foreground/35">
           <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{"Search"}</span>
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
+          <input autoFocus value={query} onChange={(e) => {
+              setQuery(e.target.value);
+              setLeadsPage(1);
+              setCustomersPage(1);
+              setTasksPage(1);
+              setPagesPage(1);
+          }} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
           {loading ? <span className="text-xs text-foreground/45">{"Search..."}</span> : null}
         </div>
 
@@ -92,41 +107,45 @@ export default function SearchPage() {
         {leads.length > 0 ? (<section>
             <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Active Leads"} ({leads.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
-                            {leads.map((lead) => (<Link key={lead.id} href={lead.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
+                            {visibleResults(leads, leadsPage).map((lead) => (<Link key={lead.id} href={lead.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                                     <p className="font-semibold text-foreground">{lead.title}</p>
                                     <p className="mt-0.5 text-sm text-foreground/55">{lead.subtitle}</p>
                 </Link>))}
             </div>
+            <PaginationControls page={leadsPage} pageSize={PAGE_SIZE} totalItems={leads.length} label="leads" onPageChange={setLeadsPage}/>
           </section>) : null}
 
                 {customers.length > 0 ? (<section>
                         <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Customers"} ({customers.length})</p>
                         <div className="grid gap-2 sm:grid-cols-2">
-                            {customers.map((customer) => (<Link key={customer.id} href={customer.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
+                            {visibleResults(customers, customersPage).map((customer) => (<Link key={customer.id} href={customer.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                                     <p className="font-semibold text-foreground">{customer.title}</p>
                                     <p className="mt-0.5 text-sm text-foreground/55">{customer.subtitle}</p>
                                 </Link>))}
                         </div>
+                        <PaginationControls page={customersPage} pageSize={PAGE_SIZE} totalItems={customers.length} label="customers" onPageChange={setCustomersPage}/>
                     </section>) : null}
 
         {tasks.length > 0 ? (<section>
             <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Tasks"} ({tasks.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {tasks.map((task) => (<Link key={task.id} href={task.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
+              {visibleResults(tasks, tasksPage).map((task) => (<Link key={task.id} href={task.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                   <p className="font-semibold text-foreground">{task.title}</p>
                   <p className="mt-0.5 text-xs text-foreground/50">{task.subtitle}</p>
                 </Link>))}
             </div>
+            <PaginationControls page={tasksPage} pageSize={PAGE_SIZE} totalItems={tasks.length} label="tasks" onPageChange={setTasksPage}/>
           </section>) : null}
 
         {pageResults.length > 0 ? (<section>
             <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Pages"} ({pageResults.length})</p>
             <div className="grid gap-2 sm:grid-cols-3">
-              {pageResults.map((page) => (<Link key={page.href} href={page.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
+              {visibleResults(pageResults, pagesPage).map((page) => (<Link key={page.href} href={page.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                   <p className="font-semibold text-foreground">{page.title}</p>
                   <p className="mt-0.5 text-xs text-foreground/50">{page.subtitle}</p>
                 </Link>))}
             </div>
+            <PaginationControls page={pagesPage} pageSize={PAGE_SIZE} totalItems={pageResults.length} label="pages" onPageChange={setPagesPage}/>
           </section>) : null}
 
         {query.trim().length < 2 ? (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-center text-sm text-foreground/50">

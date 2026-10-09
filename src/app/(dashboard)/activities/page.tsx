@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
+import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase/client";
 
 type ActivityItem = {
@@ -19,6 +20,7 @@ type ActivityItem = {
 };
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
+const PAGE_SIZE = 50;
 
 function formatActivityDate(
     value: string,
@@ -52,6 +54,7 @@ export default function ActivitiesPage() {
     const [loading, setLoading] =
         useState(true);
     const [loadError, setLoadError] = useState("");
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         const loadTimezone = async () => {
@@ -80,6 +83,7 @@ export default function ActivitiesPage() {
         const load = async () => {
             setLoading(true);
             setLoadError("");
+            setPage(1);
 
             try {
                 const {
@@ -249,6 +253,13 @@ export default function ActivitiesPage() {
         );
     };
 
+    const totalPages = Math.max(1, Math.ceil(activities.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const visibleActivities = activities.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE,
+    );
+
     return (
         <AuthGuard>
             <div className="mx-auto max-w-4xl space-y-6">
@@ -314,6 +325,14 @@ export default function ActivitiesPage() {
                     <span>{filter === "all" ? "All recorded activity" : filter === "month" ? "Last 30 days" : filter === "week" ? "Last 7 days" : "Today"}</span>
                 </div>
 
+                <PaginationControls
+                    page={currentPage}
+                    pageSize={PAGE_SIZE}
+                    totalItems={activities.length}
+                    label="activities"
+                    onPageChange={setPage}
+                />
+
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                     {loading ? (
                         <p className="text-sm text-foreground/65">
@@ -325,7 +344,7 @@ export default function ActivitiesPage() {
                         </p>
                     ) : (
                         <div className="space-y-3">
-                            {activities.map(
+                            {visibleActivities.map(
                                 (activity) => (
                                     <article
                                         key={activity.id}
@@ -380,6 +399,14 @@ export default function ActivitiesPage() {
                         </div>
                     )}
                 </div>
+
+                <PaginationControls
+                    page={currentPage}
+                    pageSize={PAGE_SIZE}
+                    totalItems={activities.length}
+                    label="activities"
+                    onPageChange={setPage}
+                />
             </div>
         </AuthGuard>
     );

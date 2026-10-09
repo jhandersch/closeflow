@@ -3,6 +3,7 @@ import { appConfirm } from "@/lib/dialogs";
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
+import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase/client";
 import TaskBoard from "@/components/tasks/TaskBoard";
 import TaskCalendar from "@/components/tasks/TaskCalendar";
@@ -13,6 +14,8 @@ type LeadOption = {
     name: string | null;
     company: string | null;
 };
+const PAGE_SIZE = 50;
+
 const normalizePriority = (value: unknown): TaskPriority => {
     if (value === "low" ||
         value === "medium" ||
@@ -46,6 +49,7 @@ export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [leads, setLeads] = useState<LeadOption[]>([]);
     const [filter, setFilter] = useState("all");
+    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [taskTitle, setTaskTitle] = useState("");
     const [taskLeadId, setTaskLeadId] = useState("");
@@ -417,6 +421,12 @@ export default function TasksPage() {
         tasks,
         timezone,
     ]);
+    const totalPages = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const visibleTasks = filteredTasks.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE,
+    );
     /*
      * =========================
      * UI
@@ -605,7 +615,10 @@ export default function TasksPage() {
         </section>
 
 
-        <TaskFilters value={filter} onChange={setFilter}/>
+        <TaskFilters value={filter} onChange={(nextFilter) => {
+            setFilter(nextFilter);
+            setPage(1);
+        }}/>
 
 
         {loading ? (<p className="
@@ -616,8 +629,16 @@ export default function TasksPage() {
                 space-y-6
               ">
 
-              <TaskBoard
-                tasks={filteredTasks}
+            <PaginationControls
+              page={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={filteredTasks.length}
+              label="tasks"
+              onPageChange={setPage}
+            />
+
+            <TaskBoard
+              tasks={visibleTasks}
                 onToggleTask={toggleTask}
                 onDeleteTask={deleteTask}
                 onEditTask={editTask}
@@ -627,9 +648,17 @@ export default function TasksPage() {
 
 
               <TaskCalendar
-                tasks={filteredTasks.filter((task) => Boolean(task.due_date))}
+                tasks={visibleTasks.filter((task) => Boolean(task.due_date))}
                 timeZone={timezone}
             />
+
+              <PaginationControls
+                page={currentPage}
+                pageSize={PAGE_SIZE}
+                totalItems={filteredTasks.length}
+                label="tasks"
+                onPageChange={setPage}
+              />
 
             </div>)}
 

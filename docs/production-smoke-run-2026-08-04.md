@@ -991,17 +991,34 @@ PASS: [x]
 
 **### B27) Large Dataset**
 
-- [ ] 1000+ activities
-- [ ] 500+ tasks
-- [ ] 500+ calendar events
-- [ ] timeline performance
-- [ ] search performance
-- [ ] filters
-- [ ] pagination
+- [x] 1000+ activities
+- [x] 500+ tasks
+- [x] 500+ calendar events
+- [x] timeline performance
+- [x] search performance
+- [x] filters
+- [x] pagination (local build; production deployment pending)
 
 Status:
 
-NOT YET TESTED
+PARTIALLY TESTED — 2026-10-10 (Production pagination verification pending)
+
+Tested in the previously empty production workspace `CloseFlow Workspace` using synthetic records marked `B27-20261009`:
+
+- Created 10 test leads, 1,001 test activities, 500 test tasks, and 600 test calendar events. All records were visible in their respective workspace views.
+- Activities: the API returned 6,437 workspace activities in approximately 3.7 seconds. The All, Today, 7 days, and 30 days filters returned results; measured API response times ranged from approximately 1.8 to 3.8 seconds.
+- Tasks: all 500 test tasks loaded. The Open filter showed all 500; Overdue correctly narrowed the test set to 250 past-due tasks.
+- Calendar: all 600 test events loaded in the calendar view. The events API returned the 600 records in approximately 0.9 seconds; the initial view's request took approximately 1.0 second.
+- Search: global search found all 10 test leads for the shared test prefix; searching for `B27-20261009 Task 0500` returned the exact task. The search request took approximately 0.85 seconds, and the exact-task search result appeared in approximately 1.0 second.
+- At the 2026-10-09 production test, pagination was unverified: Activities, Tasks, Calendar, and Search did not expose page controls. Activities were fetched in internal 1,000-row batches, but the UI loaded the resulting list without user-facing pagination.
+
+Pagination implementation verified locally against the same production workspace data — 2026-10-10:
+
+- Activities showed 6,437 records across 129 pages; moving to page 2 displayed a different set (records 51–100).
+- Tasks showed 500 records across 10 pages; page 2 displayed a different set, and the Overdue filter reset to page 1 with 250 matching tasks.
+- Calendar showed 600 meetings across 12 pages; page 2 displayed a different set of meetings.
+- Search returned all 500 matching test tasks across 10 pages; page 2 displayed different results.
+- The production deployment has not yet been updated with these pagination changes. B27 must remain PARTIALLY TESTED until the changes are deployed and the pagination checks are repeated in Production.
 
 **### B28) Error Recovery**
 
