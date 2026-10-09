@@ -997,11 +997,11 @@ PASS: [x]
 - [x] timeline performance
 - [x] search performance
 - [x] filters
-- [x] pagination (page changes verified; calendar presentation correction pending)
+- [x] pagination
 
 Status:
 
-PARTIALLY TESTED — 2026-10-10 (Production pagination verification pending)
+PASS — 2026-10-10
 
 Tested in the previously empty production workspace `CloseFlow Workspace` using synthetic records marked `B27-20261009`:
 
@@ -1018,7 +1018,8 @@ Pagination implementation verified locally against the same production workspace
 - Tasks showed 500 records across 10 pages; page 2 displayed a different set, and the Overdue filter reset to page 1 with 250 matching tasks.
 - Calendar showed 600 meetings across 12 pages; page 2 displayed a different set of meetings.
 - Search returned all 500 matching test tasks across 10 pages; page 2 displayed different results.
-- The user confirmed the pagination deployment is live. A production inspection then found the calendar summary and pagination controls repeated inside each visible calendar entry. The correction was verified locally: the summary appears once above the entries, with one controls-only navigation below them. B27 remains PARTIALLY TESTED until this calendar presentation correction is deployed and rechecked in Production.
+- The user confirmed the pagination deployment is live. A production inspection then found the calendar summary and pagination controls repeated inside each visible calendar entry. The correction was verified locally: the summary appears once above the entries, with one controls-only navigation below them. After the correction was deployed, Production showed a single "Showing 1–50 of 600 meetings · Page 1 of 12" summary on the calendar. Page changes for Activities, Tasks, Search, and Calendar were verified with the same implementation (pagination size 50).
+- Cleanup: all synthetic B27-20261009 records (10 leads, 500 tasks, 600 calendar events, and their activities) were permanently deleted from the production workspace.
 
 **### B28) Error Recovery**
 
