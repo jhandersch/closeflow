@@ -4,6 +4,7 @@ type PaginationControlsProps = {
     totalItems: number;
     label: string;
     onPageChange: (page: number) => void;
+    showSummary?: boolean;
 };
 
 export default function PaginationControls({
@@ -12,6 +13,7 @@ export default function PaginationControls({
     totalItems,
     label,
     onPageChange,
+    showSummary = true,
 }: PaginationControlsProps) {
     const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -30,9 +32,11 @@ export default function PaginationControls({
             aria-label={`${label} pagination`}
             className="flex flex-wrap items-center justify-between gap-3 text-sm"
         >
-            <p aria-live="polite" className="text-foreground/60">
-                Showing {firstItem}–{lastItem} of {totalItems} {label} · Page {currentPage} of {totalPages}
-            </p>
+            {showSummary ? (
+                <p aria-live="polite" className="text-foreground/60">
+                    Showing {firstItem}–{lastItem} of {totalItems} {label} · Page {currentPage} of {totalPages}
+                </p>
+            ) : null}
             <div className="flex items-center gap-2">
                 <button
                     type="button"

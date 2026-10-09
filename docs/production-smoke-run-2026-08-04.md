@@ -997,7 +997,7 @@ PASS: [x]
 - [x] timeline performance
 - [x] search performance
 - [x] filters
-- [x] pagination (local build; production deployment pending)
+- [x] pagination (page changes verified; calendar presentation correction pending)
 
 Status:
 
@@ -1018,7 +1018,7 @@ Pagination implementation verified locally against the same production workspace
 - Tasks showed 500 records across 10 pages; page 2 displayed a different set, and the Overdue filter reset to page 1 with 250 matching tasks.
 - Calendar showed 600 meetings across 12 pages; page 2 displayed a different set of meetings.
 - Search returned all 500 matching test tasks across 10 pages; page 2 displayed different results.
-- The production deployment has not yet been updated with these pagination changes. B27 must remain PARTIALLY TESTED until the changes are deployed and the pagination checks are repeated in Production.
+- The user confirmed the pagination deployment is live. A production inspection then found the calendar summary and pagination controls repeated inside each visible calendar entry. The correction was verified locally: the summary appears once above the entries, with one controls-only navigation below them. B27 remains PARTIALLY TESTED until this calendar presentation correction is deployed and rechecked in Production.
 
 **### B28) Error Recovery**
 

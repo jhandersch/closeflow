@@ -973,13 +973,6 @@ export default function CalendarPage() {
                                                             )}
                                                         </div>
 
-                                                        <PaginationControls
-                                                            page={currentPage}
-                                                            pageSize={PAGE_SIZE}
-                                                            totalItems={events.length}
-                                                            label="meetings"
-                                                            onPageChange={setPage}
-                                                        />
                                                     </div>
                                                 );
                                             },
@@ -990,6 +983,15 @@ export default function CalendarPage() {
                         },
                     )}
                 </div>
+
+                <PaginationControls
+                    page={currentPage}
+                    pageSize={PAGE_SIZE}
+                    totalItems={events.length}
+                    label="meetings"
+                    onPageChange={setPage}
+                    showSummary={false}
+                />
             </div>
         </AuthGuard>
     );
