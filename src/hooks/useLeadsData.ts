@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Activity, Lead } from "@/types";
+import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 type UseLeadsDataOptions = {
     activityLimit?: number | null;
     activityFilter?: "today" | "week" | "month" | "all" | "8weeks";
@@ -54,9 +55,7 @@ export function useLeadsData({ activityLimit = 6, activityFilter = "month", incl
         }
         catch (error) {
             console.error("DASHBOARD DATA ERROR:", error);
-            setError(error instanceof Error
-                ? error.message
-                : "Unknown error");
+            setError(getUserFacingErrorMessage(error));
             // Bestehende Daten bei einem Refresh behalten.
             if (!isRefresh) {
                 setLeads([]);

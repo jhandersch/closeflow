@@ -8,6 +8,10 @@ import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
 import { recordAiUsageEvent } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import {
+  getRetryableStatus,
+  getUserFacingErrorMessage,
+} from "@/lib/errorRecovery";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -219,10 +223,13 @@ Focus on:
 
     return NextResponse.json(
       {
-        error: "Sales copilot failed",
+        error: getUserFacingErrorMessage(
+          error,
+          "AI is temporarily unavailable. Please try again in a moment.",
+        ),
       },
       {
-        status: 500,
+        status: getRetryableStatus(error),
       },
     );
   }

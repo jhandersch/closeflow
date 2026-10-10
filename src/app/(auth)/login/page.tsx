@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 
 const sanitizeNextPath = (nextPath: string | null) => {
     if (!nextPath) return null;
@@ -601,13 +602,27 @@ export default function LoginPage() {
                 return;
             }
         } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "";
+            const isConnectionError =
+                /failed to fetch|fetch failed|network|timed out|timeout|temporarily unavailable|service unavailable/i.test(
+                    message
+                );
+
             setError(
-                err instanceof Error
-                    ? err.message
-                    : t(
-                          "auth.authenticationFailed",
-                          "Authentication failed"
+                isConnectionError
+                    ? getUserFacingErrorMessage(
+                          err,
+                          t(
+                              "auth.connectionFailed",
+                              "Could not connect. Please check your connection and try again."
+                          )
                       )
+                    : message ||
+                          t(
+                              "auth.authenticationFailed",
+                              "Authentication failed"
+                          )
             );
         } finally {
             setLoading(false);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase/client";
+import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 
 type LeadLite = {
   id: string;
@@ -134,9 +135,10 @@ export default function AIAssistantPage() {
         }
       } catch (loadError) {
         setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Could not load leads."
+          getUserFacingErrorMessage(
+            loadError,
+            "Could not load leads. Please try again."
+          )
         );
       } finally {
         setLoadingLeads(false);
@@ -327,10 +329,10 @@ export default function AIAssistantPage() {
 
       setQuestion("");
     } catch (runError) {
-      const message =
-        runError instanceof Error
-          ? runError.message
-          : "Could not generate AI output";
+      const message = getUserFacingErrorMessage(
+        runError,
+        "AI is temporarily unavailable. Please try again in a moment."
+      );
 
       setError(message);
 

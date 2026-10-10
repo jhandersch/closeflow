@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
+import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 type CustomerSummary = {
     company: string;
@@ -112,7 +113,7 @@ export async function GET(request: Request) {
         }
     }
     if (queryError) {
-        return NextResponse.json({ error: queryError.message }, { status: 500 });
+        return NextResponse.json({ error: getUserFacingErrorMessage(queryError) }, { status: 500 });
     }
     const leads = leadsData || [];
     /*

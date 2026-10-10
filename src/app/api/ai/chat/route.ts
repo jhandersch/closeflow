@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
+import { getUserFacingErrorMessage, getRetryableStatus } from "@/lib/errorRecovery";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { recordAiUsageEvent } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
@@ -84,6 +85,9 @@ export async function POST(request: Request) {
                 pathname: "/api/ai/chat",
             });
         }
-        return NextResponse.json({ error: "AI failed" }, { status: 500 });
+        return NextResponse.json(
+            { error: getUserFacingErrorMessage(error, "AI is temporarily unavailable. Please try again in a moment.") },
+            { status: getRetryableStatus(error, 500) },
+        );
     }
 }

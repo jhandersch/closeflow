@@ -1023,11 +1023,19 @@ Pagination implementation verified locally against the same production workspace
 
 **### B28) Error Recovery**
 
-- [ ] API errors handled
-- [ ] Supabase errors handled
-- [ ] AI errors handled
-- [ ] user-friendly error messages
-- [ ] retry behavior where applicable
+- [x] API errors handled — authenticated `/api/leads` 503 path showed a recoverable error state
+- [x] Supabase errors handled — direct Supabase REST 503 path showed a safe error and recovered after reload
+- [x] AI errors handled — `/api/sales-copilot` 503 path showed an error and a later retry succeeded
+- [x] user-friendly error messages — verified for login, API, and AI temporary failures
+- [x] retry behavior where applicable — login and Leads retry worked after restoring the request
+
+Status: PARTIALLY VERIFIED — local error-path tests complete; changed build not yet verified in production, 2026-10-10
+
+Evidence: In the login page, a blocked authentication request and a simulated HTTP 503 both showed a friendly temporary-unavailability message rather than the raw network or server error. The login form stayed usable. After removing the interception, retrying reached the auth service and displayed the expected “Invalid login credentials” response for a disposable `.invalid` address. No account was created.
+
+In an authenticated local test workspace, an intercepted `/api/leads` GET response with HTTP 503 and a synthetic database connection error produced a friendly “data layer is temporarily unavailable” message; raw database details were hidden, no false empty-state prompt appeared, and the Retry button cleared the error after the interception was removed. An intercepted direct Supabase REST request to `workspace_members` returned a synthetic HTTP 503; the AI page displayed “Could not load leads. Please try again.” without raw PostgREST details, then recovered after removing the interception and reloading. An intercepted `/api/sales-copilot` HTTP 503 showed a friendly temporary-unavailability error without the injected gateway details; retrying the pipeline analysis after removing the interception returned a result. The test workspace contained no leads, and no CRM records were created or changed. The successful AI retry may count against that test user's AI usage. Unauthenticated requests to `/api/leads`, `/api/ai/chat`, and `/api/customers/export?format=csv` returned HTTP 401; `/api/health` returned HTTP 200.
+
+Production was checked read-only: `/api/health` returned HTTP 200 and unauthenticated `/api/leads` returned HTTP 401 with a controlled JSON error. The local error-injection checks have not been repeated against the changed build in production. Do not mark B28 PASS until that build is deployed and its error/recovery behavior is verified in the intended deployment environment.
 
 PASS: [ ]
 

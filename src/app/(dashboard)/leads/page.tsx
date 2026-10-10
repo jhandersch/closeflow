@@ -172,7 +172,7 @@ const formatDateTime = (
 };
 
 export default function LeadsPage() {
-    const { leads, setLeads, loading, error, refresh } =
+    const { leads, setLeads, loading, refreshing, error, refresh } =
     useLeadsData({ activityLimit: 0 });
 
     const locale = "en-US";
@@ -706,8 +706,16 @@ export default function LeadsPage() {
           
         </div>
 
-        {error ? (<div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-            {"We couldn’t load your leads."} {error}
+        {error ? (<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <span>{"We couldn’t load your leads."} {error}</span>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              disabled={refreshing}
+              className="rounded-xl border border-rose-200/30 px-4 py-2 font-medium text-rose-100 transition hover:bg-rose-100/10 disabled:cursor-wait disabled:opacity-60"
+            >
+              {refreshing ? "Retrying..." : "Retry"}
+            </button>
           </div>) : null}
 
         <LeadFilters search={search} status={status} priority={priority} source={sourceFilter} dateRange={dateRange} owner={ownerFilter} sortBy={sortBy} onSearchChange={(value) => { setSearch(value); setCurrentPage(1); }} onStatusChange={(value) => { setStatus(value); setCurrentPage(1); }} onPriorityChange={(value) => { setPriority(value); setCurrentPage(1); }} onSourceChange={(value) => { setSourceFilter(value); setCurrentPage(1); }} onDateRangeChange={(value) => { setDateRange(value); setCurrentPage(1); }} onOwnerChange={(value) => { setOwnerFilter(value); setCurrentPage(1); }} onSortChange={(value) => { setSortBy(value); setCurrentPage(1); }}/>
@@ -857,7 +865,7 @@ export default function LeadsPage() {
                   </div>
                 </div>
               </div>))}
-          </div>) : filteredLeads.length === 0 ? (leads.length === 0 ? (<div className="
+          </div>) : error ? null : filteredLeads.length === 0 ? (leads.length === 0 ? (<div className="
               rounded-2xl
               border
               border-border-subtle

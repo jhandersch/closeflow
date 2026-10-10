@@ -16,6 +16,10 @@ const ALLOWLIST = new Set([
   "src/app/api/workspaces/route.ts",
   "src/app/api/me/permissions/route.ts",
   "src/app/api/workspaces/invite/accept/route.ts",
+  // These user ownership filters are also constrained by workspace_id.
+  "src/app/api/calendar/events/route.ts",
+  "src/app/api/calendar/events/restore/route.ts",
+  "src/app/api/leads/trash/route.ts",
 ])
 
 const walk = (dir) => {

@@ -5,6 +5,7 @@ import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
 import { rateLimit } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
+import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 type RouteSupabase = Awaited<ReturnType<typeof getRouteUser>>["supabase"];
 type CustomerLead = {
   id: string;
@@ -99,7 +100,7 @@ export async function GET(req: Request) {
     if (error) {
       return NextResponse.json(
         {
-          error: error.message,
+          error: getUserFacingErrorMessage(error),
         },
         {
           status: 500,
@@ -195,7 +196,7 @@ export async function POST(req: Request) {
       console.error("POST LEAD ERROR:", error);
       return NextResponse.json(
         {
-          error: error.message,
+          error: getUserFacingErrorMessage(error),
         },
         {
           status: 500,
@@ -208,7 +209,7 @@ export async function POST(req: Request) {
         console.error("SYNC NEW CUSTOMER RECORD ERROR:", customerSyncError);
         await supabase.from("leads").delete().eq("id", data.id).eq("workspace_id", workspace.id);
         return NextResponse.json(
-          { error: `Lead could not be saved as a customer: ${customerSyncError.message}` },
+          { error: "Lead could not be saved. Please try again." },
           { status: 500 },
         );
       }
@@ -299,7 +300,7 @@ export async function PUT(req: Request) {
       console.error("GET OLD LEAD ERROR:", oldLeadError);
       return NextResponse.json(
         {
-          error: oldLeadError.message,
+          error: getUserFacingErrorMessage(oldLeadError),
         },
         {
           status: 500,
@@ -354,7 +355,7 @@ export async function PUT(req: Request) {
       console.error("UPDATE LEAD ERROR:", error);
       return NextResponse.json(
         {
-          error: error.message,
+          error: getUserFacingErrorMessage(error),
         },
         {
           status: 500,
@@ -495,7 +496,7 @@ export async function PUT(req: Request) {
       if (customerSyncError) {
         console.error("SYNC CUSTOMER RECORD ERROR:", customerSyncError);
         return NextResponse.json(
-          { error: `Lead saved, but customer record could not be synchronized: ${customerSyncError.message}` },
+          { error: "Lead saved, but the customer record could not be synchronized. Please try again." },
           { status: 500 },
         );
       }
@@ -508,7 +509,7 @@ export async function PUT(req: Request) {
       if (customerDeleteError) {
         console.error("REMOVE REOPENED CUSTOMER RECORD ERROR:", customerDeleteError);
         return NextResponse.json(
-          { error: `Lead saved, but its customer record could not be removed: ${customerDeleteError.message}` },
+          { error: "Lead saved, but its customer record could not be updated. Please try again." },
           { status: 500 },
         );
       }
@@ -520,7 +521,7 @@ export async function PUT(req: Request) {
     console.error("PUT CRASH FULL:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: getUserFacingErrorMessage(error),
       },
       {
         status: 500,
@@ -574,7 +575,7 @@ export async function DELETE(req: Request) {
       .maybeSingle();
     if (leadError) {
       console.error("GET LEAD BEFORE DELETE ERROR:", leadError);
-      return NextResponse.json({ error: leadError.message }, { status: 500 });
+      return NextResponse.json({ error: getUserFacingErrorMessage(leadError) }, { status: 500 });
     }
     if (!leadToDelete) {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
@@ -594,7 +595,7 @@ export async function DELETE(req: Request) {
       .maybeSingle();
     if (error) {
       console.error("DELETE LEAD ERROR:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: getUserFacingErrorMessage(error) }, { status: 500 });
     }
     if (!data) {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
@@ -614,7 +615,7 @@ export async function DELETE(req: Request) {
         .eq("id", id)
         .eq("workspace_id", workspace.id);
       return NextResponse.json(
-        { error: taskDeleteError.message },
+        { error: getUserFacingErrorMessage(taskDeleteError) },
         { status: 500 },
       );
     }
@@ -676,7 +677,7 @@ export async function PATCH(req: Request) {
       .maybeSingle();
     if (leadToRestoreError) {
       return NextResponse.json(
-        { error: leadToRestoreError.message },
+        { error: getUserFacingErrorMessage(leadToRestoreError) },
         { status: 500 },
       );
     }
@@ -712,7 +713,7 @@ export async function PATCH(req: Request) {
       .maybeSingle();
     if (error) {
       console.error("RESTORE LEAD ERROR:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: getUserFacingErrorMessage(error) }, { status: 500 });
     }
     if (!data) {
       return NextResponse.json(
@@ -729,7 +730,7 @@ export async function PATCH(req: Request) {
     );
     if (taskRestoreError) {
       return NextResponse.json(
-        { error: taskRestoreError.message },
+        { error: getUserFacingErrorMessage(taskRestoreError) },
         { status: 500 },
       );
     }
@@ -755,7 +756,7 @@ export async function PATCH(req: Request) {
     console.error("RESTORE LEAD CRASH:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: getUserFacingErrorMessage(error),
       },
       { status: 500 },
     );
