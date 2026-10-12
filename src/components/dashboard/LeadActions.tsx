@@ -142,8 +142,8 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
               w-44
               rounded-xl
               border
-              border-white/10
-              bg-slate-900
+              border-border-subtle
+              bg-surface-1
               p-2
               shadow-xl
             ">

@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  --chart-muted: #94a3b8;
+  --chart-text: #cbd5e1;
+  --chart-accent-text: #67e8f9;
+  --accent-foreground: #04121c;
   --background: #090d12;
   --foreground: #e8edf4;
   --surface-1: #0f141b;
@@ -11,6 +15,10 @@
 }
 
 html[data-theme="light"] {
+  --chart-muted: #475569;
+  --chart-text: #1e293b;
+  --chart-accent-text: #0e7490;
+  --accent-foreground: #ffffff;
   --background: #f2f5fa;
   --foreground: #0f172a;
   --surface-1: #ffffff;
@@ -21,6 +29,10 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
+  --chart-muted: #94a3b8;
+  --chart-text: #cbd5e1;
+  --chart-accent-text: #67e8f9;
+  --accent-foreground: #04121c;
   --background: #090d12;
   --foreground: #e8edf4;
   --surface-1: #0f141b;
@@ -38,6 +50,7 @@ html[data-theme="dark"] {
   --color-border-subtle: var(--border-subtle);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -174,8 +187,15 @@ html[data-theme="light"] .text-rose-400 {
 }
 
 html[data-theme="light"] .text-purple-300,
+html[data-theme="light"] .text-violet-300,
+html[data-theme="light"] .text-violet-400,
 html[data-theme="light"] .text-purple-400 {
   color: #7e22ce !important;
+}
+
+html[data-theme="light"] .text-sky-300,
+html[data-theme="light"] .text-sky-400 {
+  color: #0369a1 !important;
 }
 
 /* Opacity variants are separate Tailwind utilities and need their own mapping. */
@@ -352,6 +372,35 @@ html[data-theme="light"] .cf-card {
 html[data-theme="light"] .cf-card-soft {
   background: var(--surface-1);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+/* Solid primary call-to-action; readable in both themes. */
+.cf-btn-primary {
+  display: inline-flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  line-height: 1.25rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 55%, var(--foreground));
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: filter 0.15s ease;
+}
+
+.cf-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.cf-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .cf-label {

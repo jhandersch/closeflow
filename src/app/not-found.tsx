@@ -1,11 +1,13 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
       <div className="w-full max-w-xl rounded-3xl border border-border-subtle bg-surface-1 p-10 shadow-2xl">
+        <LogoMark size={40} className="mb-6" />
         <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
           404
         </p>
@@ -19,7 +21,7 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/dashboard"
-            className="rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90"
+            className="cf-btn-primary"
           >
             Back to dashboard
           </Link>

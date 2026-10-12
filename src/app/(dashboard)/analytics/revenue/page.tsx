@@ -208,7 +208,7 @@ export default function RevenueAnalyticsPage() {
         <AuthGuard>
             <div className="space-y-6">
                 <div>
-                    <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+                    <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
                         Analytics
                     </p>
 

@@ -441,7 +441,7 @@ export default function TasksPage() {
           <p className="
               text-sm
               uppercase
-              tracking-[0.25em]
+              tracking-[0.24em]
               text-cyan-400
             ">
             {"Tasks"}

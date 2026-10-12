@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+
+import ActivityIcon from "@/components/ActivityIcon";
 
 type ActivityFeedProps = {
     activities: Array<{
@@ -7,59 +9,10 @@ type ActivityFeedProps = {
         action?: string | null;
         created_at: string;
         type?: string;
+        metadata?: unknown;
     }>;
     timeZone: string;
 };
-
-function getActivityStyle(type?: string) {
-    switch (type) {
-        case "created":
-            return {
-                icon: "➕",
-                color: "text-emerald-300",
-                bg: "bg-emerald-500/10",
-                border: "border-emerald-500/20",
-            };
-        case "status_changed":
-            return {
-                icon: "🔄",
-                color: "text-cyan-300",
-                bg: "bg-cyan-500/10",
-                border: "border-cyan-500/20",
-            };
-        case "ai":
-            return {
-                icon: "🤖",
-                color: "text-purple-300",
-                bg: "bg-purple-500/10",
-                border: "border-purple-500/20",
-            };
-        case "meeting_created":
-        case "meeting_updated":
-        case "meeting_completed":
-        case "meeting_deleted":
-            return {
-                icon: "📆",
-                color: "text-blue-300",
-                bg: "bg-blue-500/10",
-                border: "border-blue-500/20",
-            };
-        case "follow_up":
-            return {
-                icon: "📅",
-                color: "text-amber-300",
-                bg: "bg-amber-500/10",
-                border: "border-amber-500/20",
-            };
-        default:
-            return {
-                icon: "•",
-                color: "text-foreground/70",
-                bg: "bg-white/5",
-                border: "border-border-subtle",
-            };
-    }
-}
 
 function getActivityTitle(activity: {
     title?: string | null;
@@ -150,10 +103,6 @@ export default function ActivityFeed({
             <div className="mt-5 space-y-3">
                 {activities.length > 0 ? (
                     activities.map((activity) => {
-                        const style = getActivityStyle(
-                            activity.type,
-                        );
-
                         return (
                             <div
                                 key={activity.id}
@@ -167,21 +116,7 @@ export default function ActivityFeed({
                                     p-4
                                 "
                             >
-                                <div
-                                    className={`
-                                        flex
-                                        h-10
-                                        w-10
-                                        items-center
-                                        justify-center
-                                        rounded-full
-                                        border
-                                        ${style.border}
-                                        ${style.bg}
-                                    `}
-                                >
-                                    {style.icon}
-                                </div>
+                                <ActivityIcon activity={activity} />
 
                                 <div className="flex-1">
                                     <p className="

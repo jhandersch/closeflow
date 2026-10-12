@@ -104,11 +104,11 @@ export default function PipelineChart({ data, }: PipelineChartProps) {
 
 
 
-            <XAxis type="number" stroke="#94a3b8" tick={{ fill: "#94a3b8", fontSize: 12 }} tickLine={false} axisLine={false}/>
+            <XAxis type="number" stroke="#94a3b8" tick={{ fill: "var(--chart-muted)", fontSize: 12 }} tickLine={false} axisLine={false}/>
 
 
 
-            <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fill: "#cbd5e1", fontSize: 12 }} width={90} tickLine={false} axisLine={false}/>
+            <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fill: "var(--chart-text)", fontSize: 12 }} width={90} tickLine={false} axisLine={false}/>
 
 
 

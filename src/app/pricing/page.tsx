@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
+import { LogoMark } from "@/components/Logo";
 import { planDetails, type Plan } from "@/lib/planDetails";
 
 const plans = [planDetails.free, planDetails.pro, planDetails.business];
@@ -13,8 +14,8 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
-        <Link href="/" className="text-sm font-semibold text-foreground/60 transition hover:text-foreground">
-          ← CloseFlow
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/70 transition hover:text-foreground" aria-label="CloseFlow home">
+          <LogoMark size={24} /> CloseFlow
         </Link>
 
         <header>
@@ -82,7 +83,7 @@ export default function PricingPage() {
 
                 <Link
                   href="/login?next=%2Fbilling"
-                  className="mt-3 flex h-10 w-full items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-black transition hover:opacity-90"
+                  className="cf-btn-primary mt-3 h-10 w-full"
                 >
                   {plan.id === "free" ? "Start free" : `Choose ${plan.name}`}
                 </Link>

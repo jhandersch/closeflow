@@ -43,8 +43,8 @@ export default function PipelineJourney({
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full font-bold transition ${
                   completed
-                    ? "bg-cyan-500 text-black"
-                    : "bg-zinc-800 text-foreground/55"
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-surface-2 text-foreground/55"
                 }`}
               >
                 {index + 1}

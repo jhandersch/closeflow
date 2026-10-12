@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 import {
     ArrowRight,
     BarChart3,
@@ -187,6 +188,7 @@ export default function OnboardingPage() {
                 <header className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
+                            <LogoMark size={36} className="mb-4" />
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">CloseFlow setup</p>
                             <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Make your workspace yours</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">
@@ -280,9 +282,9 @@ export default function OnboardingPage() {
                         <div className="mt-8 flex items-center justify-between gap-3 border-t border-border-subtle pt-5">
                             <button type="button" onClick={() => { setError(null); setStep(0); }} disabled={step === 0 || saving} className="rounded-2xl border border-border-subtle px-4 py-2.5 text-sm font-medium transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40">Back</button>
                             {step === 0 ? (
-                                <button type="button" onClick={() => { setError(null); setStep(1); }} disabled={!canContinue || saving} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-45">Continue <ArrowRight className="h-4 w-4" /></button>
+                                <button type="button" onClick={() => { setError(null); setStep(1); }} disabled={!canContinue || saving} className="cf-btn-primary">Continue <ArrowRight className="h-4 w-4" /></button>
                             ) : (
-                                <button type="button" onClick={() => void handleFinish()} disabled={!canContinue || saving} className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Setting up…" : "Create my workspace"}{!saving && <ArrowRight className="h-4 w-4" />}</button>
+                                <button type="button" onClick={() => void handleFinish()} disabled={!canContinue || saving} className="cf-btn-primary">{saving ? "Setting up…" : "Create my workspace"}{!saving && <ArrowRight className="h-4 w-4" />}</button>
                             )}
                         </div>
                         <p className="mt-3 text-right text-xs text-foreground/45">Your progress is saved on this device.</p>

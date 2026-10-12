@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 export const metadata: Metadata = {
     title: "Impressum | CloseFlow",
     description: "Impressum gemaess deutschem Recht fuer CloseFlow.",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 export default function ImpressumPage() {
     return (<main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-12 text-foreground sm:px-8">
       <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8">
+        <LogoMark size={36} className="mb-5" />
         <h1 className="text-3xl font-semibold">Impressum</h1>
         <p className="mt-4 text-sm leading-7 text-foreground/70">
           Information pursuant to Section 5 TMG. Replace placeholders with final company details before go-live.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import ActivityIcon from "@/components/ActivityIcon";
 import type { Activity, ActivityType } from "@/types";
 
 type ActivityTimelineProps = {
@@ -90,68 +91,6 @@ export default function ActivityTimeline({
                 text,
             )
         );
-    };
-
-    const getActivityIcon = (
-        type?: ActivityType | string,
-    ) => {
-        switch (type) {
-            case "status_changed":
-                return "SC";
-            case "note_added":
-                return "NT";
-            case "email_sent":
-                return "EM";
-            case "call_completed":
-                return "CL";
-            case "task_created":
-                return "TC";
-            case "task_completed":
-                return "TD";
-            case "created":
-                return "NW";
-            case "ai":
-                return "KI";
-            case "meeting_created":
-            case "meeting_updated":
-            case "meeting_completed":
-            case "meeting_deleted":
-                return "CA";
-            default:
-                return "EV";
-        }
-    };
-
-    const getActivityIconFor = (
-        activity: Activity,
-    ) => {
-        const event = getMetadataEvent(activity);
-
-        if (
-            event === "task_created" ||
-            event === "task_updated" ||
-            event === "task_deleted"
-        ) {
-            return "TC";
-        }
-
-        if (
-            event === "task_completed" ||
-            event === "task_reopened"
-        ) {
-            return "TD";
-        }
-
-        if (
-            event === "meeting_created" ||
-            event === "meeting_updated" ||
-            event === "meeting_deleted" ||
-            event === "meeting_completed"
-        ) {
-            return "CA";
-        }
-
-        return getActivityIcon(activity.type);
     };
 
     const filteredActivities = useMemo(() => {
@@ -523,11 +462,10 @@ export default function ActivityTimeline({
                                 className="border-b border-border-subtle pb-3"
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-semibold text-cyan-300">
-                                        {getActivityIconFor(
-                                            activity,
-                                        )}
-                                    </span>
+                                    <ActivityIcon
+                                        size="sm"
+                                        activity={activity}
+                                    />
 
                                     <div>
                                         <p className="font-medium text-foreground">

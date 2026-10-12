@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 export const metadata: Metadata = {
     title: "Datenschutz | CloseFlow",
     description: "Datenschutzerklaerung fuer CloseFlow gemaess DSGVO.",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 export default function DatenschutzPage() {
     return (<main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-12 text-foreground sm:px-8">
       <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8">
+        <LogoMark size={36} className="mb-5" />
         <h1 className="text-3xl font-semibold">Datenschutzerklaerung</h1>
         <p className="mt-4 text-sm leading-7 text-foreground/70">
           This page describes how CloseFlow processes personal data. Finalize the placeholder information with legal counsel before production.

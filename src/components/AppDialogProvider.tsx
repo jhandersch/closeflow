@@ -100,7 +100,7 @@ export default function AppDialogProvider({
       {children}
       {active && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) settle(null);
           }}
@@ -112,7 +112,7 @@ export default function AppDialogProvider({
             aria-labelledby="app-dialog-title"
             aria-describedby="app-dialog-description"
             tabIndex={-1}
-            className="w-full max-w-md rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-2xl"
+            className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl"
           >
             <h2 id="app-dialog-title" className="text-lg font-semibold text-foreground">
               {active.request.title}
@@ -147,7 +147,7 @@ export default function AppDialogProvider({
               <button
                 type="button"
                 onClick={confirm}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white ${active.request.kind === "confirm" && active.request.danger ? "bg-rose-600 hover:bg-rose-500" : "bg-cyan-600 hover:bg-cyan-500"}`}
+                className={active.request.kind === "confirm" && active.request.danger ? "rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500" : "cf-btn-primary"}
               >
                 {active.request.confirmLabel}
               </button>

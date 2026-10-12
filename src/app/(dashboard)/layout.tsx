@@ -1,5 +1,6 @@
 "use client";
 import AuthGuard from "@/components/AuthGuard";
+import Logo from "@/components/Logo";
 import Sidebar from "@/components/Sidebar";
 import Search from "@/components/Search";
 import { SidebarProvider, useSidebar } from "@/components/SidebarContext";
@@ -22,9 +23,7 @@ function DashboardContent({ children }: {
             <Menu size={18}/>
           </button>
 
-          <span className="text-sm font-semibold text-foreground">
-            CloseFlow
-          </span>
+          <Logo size={28} wordmarkClassName="text-sm font-semibold text-foreground" />
         </div>
 
         <div className="px-4 py-5 sm:px-7 lg:px-10 lg:py-8">

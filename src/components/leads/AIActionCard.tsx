@@ -61,18 +61,8 @@ export default function AIActionCard({ leadId, action, description, }: Props) {
       </p>
 
 
-      <button disabled={loading || done} onClick={completeAction} className="
-        mt-4
-        rounded-xl
-        bg-white
-        px-4
-        py-2
-        text-sm
-        font-semibold
-        text-black
-        disabled:opacity-50
-        ">
-        {loading
+      <button disabled={loading || done} onClick={completeAction}       className="cf-btn-primary mt-4">
+              {loading
             ? "Saving..."
             : done
                 ? "Completed"

@@ -79,7 +79,7 @@ function renderValue(value: string | boolean) {
     }
 
     return value ? (
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-black">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground">
             <Check className="h-4 w-4" />
         </span>
     ) : (
@@ -99,7 +99,7 @@ export default function PlanDetailsModal({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget) {
                     onClose();

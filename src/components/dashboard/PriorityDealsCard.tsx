@@ -312,7 +312,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
 
 
 
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-foreground/10">
 
                   <div className={`
                     h-full

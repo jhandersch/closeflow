@@ -33,7 +33,7 @@ export default function AIEmailGenerator({ lead }: Props) {
           <p className="text-xs uppercase tracking-widest text-cyan-400">{"AI Email Generator"}</p>
           <h3 className="mt-2 text-xl font-semibold text-foreground">{"Generate Email"}</h3>
         </div>
-        <button type="button" onClick={() => void generate()} className="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-black">
+        <button type="button" onClick={() => void generate()} className="cf-btn-primary">
           {loading ? ("Generating...") : ("Generate Email")}
         </button>
       </div>

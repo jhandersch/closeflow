@@ -452,7 +452,7 @@ export default function TrashPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
               Trash
             </p>
 

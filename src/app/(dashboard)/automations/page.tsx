@@ -477,7 +477,7 @@ export default function AutomationsPage() {
 
           <button
             onClick={openBuilder}
-            className="flex items-center gap-2 rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
+            className="cf-btn-primary"
           >
             <Plus size={15} />
             New Automation
@@ -756,7 +756,7 @@ export default function AutomationsPage() {
                     void saveAutomation()
                   }
                   disabled={bSaving}
-                  className="rounded-xl bg-cyan-600 px-5 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-60"
+                  className="cf-btn-primary"
                 >
                   {bSaving
                     ? "Saving..."

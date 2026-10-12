@@ -698,7 +698,7 @@ export default function CalendarPage() {
                             );
                             setShowNew(true);
                         }}
-                        className="flex items-center gap-2 rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white"
+                        className="cf-btn-primary"
                     >
                         <Plus size={15} />
                         {"New Meeting"}
@@ -707,8 +707,8 @@ export default function CalendarPage() {
 
                 {(showNew ||
                     editingEvent) && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-                        <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+                        <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl">
                             <div className="mb-5 flex justify-between">
                                 <h2 className="font-semibold text-foreground">
                                     {editingEvent
@@ -814,7 +814,7 @@ export default function CalendarPage() {
                                             ? void saveEdit()
                                             : void createMeeting()
                                     }
-                                    className="rounded-xl bg-cyan-600 px-5 py-2 text-white"
+                                    className="cf-btn-primary"
                                 >
                                     {creating ||
                                     savingEdit

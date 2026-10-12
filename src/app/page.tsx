@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo, { LogoMark } from "@/components/Logo";
 import {
   ArrowDown,
   ArrowRight,
@@ -8,7 +9,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardList,
-  Command,
   KanbanSquare,
   Sparkles,
   Users,
@@ -59,9 +59,8 @@ export default function HomePage() {
       </div>
 
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="CloseFlow home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400 text-slate-950"><Command className="h-5 w-5" /></span>
-          <span className="text-lg font-semibold tracking-tight">CloseFlow</span>
+        <Link href="/" className="flex items-center" aria-label="CloseFlow home">
+          <Logo size={36} />
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm text-foreground/60 md:flex">
           <a href="#platform" className="transition hover:text-foreground">Platform</a>
@@ -102,7 +101,7 @@ export default function HomePage() {
           <div className="relative rounded-[1.7rem] border border-white/10 bg-[#0c1118]/95 p-2 shadow-[0_35px_100px_-35px_rgba(34,211,238,0.2)] sm:rounded-[2rem] sm:p-3">
             <div className="overflow-hidden rounded-[1.3rem] border border-white/[0.07] bg-[#101720] sm:rounded-[1.55rem]">
               <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3 sm:px-5">
-                <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300"><Command className="h-4 w-4" /></span><span className="text-xs font-semibold text-white/80">CloseFlow <span className="font-normal text-white/35">/ Pipeline</span></span></div>
+                <div className="flex items-center gap-2"><LogoMark size={28} /><span className="text-xs font-semibold text-white/80">CloseFlow <span className="font-normal text-white/35">/ Pipeline</span></span></div>
                 <span className="rounded-lg border border-white/10 px-2.5 py-1 text-[10px] text-white/45">Example workspace</span>
               </div>
               <div className="grid sm:grid-cols-[145px_1fr]">
@@ -183,7 +182,7 @@ export default function HomePage() {
 
       <footer className="border-t border-border-subtle">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-7 text-xs text-foreground/45 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
-          <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-200"><Command className="h-3.5 w-3.5" /></span><span>© 2026 CloseFlow</span></div>
+          <div className="flex items-center gap-2"><LogoMark size={28} /><span>© 2026 CloseFlow</span></div>
           <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2"><Link href="/pricing" className="transition hover:text-foreground">Pricing</Link><Link href="/login" className="transition hover:text-foreground">Log in</Link><Link href="/impressum" className="transition hover:text-foreground">Impressum</Link><Link href="/datenschutz" className="transition hover:text-foreground">Datenschutz</Link><Link href="/cookies" className="transition hover:text-foreground">Cookies</Link><Link href="/agb" className="transition hover:text-foreground">AGB</Link></nav>
         </div>
       </footer>

@@ -158,7 +158,7 @@ export function EmailComposeModal({
             type="button"
             onClick={() => void handleSend()}
             disabled={sending}
-            className="flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-60"
+            className="cf-btn-primary"
           >
             <Send size={14} />
             {sending ? "Logging..." : "Send and log"}

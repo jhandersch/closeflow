@@ -149,7 +149,7 @@ export default function PipelinePage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
 
-              <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+              <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
             Pipeline
           </p>
 
@@ -242,7 +242,7 @@ export default function PipelinePage() {
 
 
 
-                                            <p className={`mt-3 inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>€{Number(lead.value || 0).toLocaleString("en-US")}</p>
+                                            <p className={`mt-3 inline-flex rounded-lg border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>€{Number(lead.value || 0).toLocaleString("en-US")}</p>
 
                                             {lead.next_action || lead.status === "won" || lead.status === "lost" ? (
                                               <div className="mt-3 rounded-lg border border-border-subtle/70 bg-surface-1/60 px-3 py-2">

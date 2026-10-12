@@ -71,7 +71,7 @@ export default function AIFollowUp({
 
       <button
         onClick={() => void generate()}
-        className="mt-3 rounded-xl bg-white px-4 py-2 font-semibold text-black"
+        className="cf-btn-primary mt-3"
       >
         {loading ? "Generating..." : "Generate Follow-up Email"}
       </button>

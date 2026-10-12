@@ -89,14 +89,14 @@ export default function RevenueForecastChart({
 
             <XAxis
               dataKey="month"
-              stroke="#64748b"
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
+              stroke="var(--chart-muted)"
+              tick={{ fill: "var(--chart-muted)", fontSize: 12 }}
               tickLine={false}
             />
 
             <YAxis
-              stroke="#64748b"
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
+              stroke="var(--chart-muted)"
+              tick={{ fill: "var(--chart-muted)", fontSize: 12 }}
               tickLine={false}
               tickFormatter={(value) =>
                 `€${value / 1000}k`
@@ -112,8 +112,8 @@ export default function RevenueForecastChart({
                 borderRadius: "12px",
                 boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
               }}
-              labelStyle={{ color: "#e2e8f0", fontWeight: 600, marginBottom: 4 }}
-              itemStyle={{ color: "#cbd5e1" }}
+              labelStyle={{ color: "var(--foreground)", fontWeight: 600, marginBottom: 4 }}
+              itemStyle={{ color: "var(--chart-text)" }}
               formatter={(value, name) => [
                 `€${Number(value ?? 0).toLocaleString(
                   locale
@@ -121,7 +121,7 @@ export default function RevenueForecastChart({
                 String(name),
               ]}
             />
-            <Legend wrapperStyle={{ color: "#cbd5e1", fontSize: 12, paddingTop: 8 }} />
+            <Legend wrapperStyle={{ color: "var(--chart-text)", fontSize: 12, paddingTop: 8 }} />
             <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#fb7185" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={900} />
             <Line type="monotone" dataKey="expected" name="Expected" stroke="#22d3ee" strokeWidth={3} dot={false} activeDot={{ r: 5 }} animationDuration={1100} />
             <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="#34d399" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={1300} />

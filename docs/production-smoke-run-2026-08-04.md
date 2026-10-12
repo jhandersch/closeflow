@@ -1037,7 +1037,7 @@ In an authenticated local test workspace, an intercepted `/api/leads` GET respon
 
 Production verification was completed after commit `23e7053` was deployed to `https://closeflow-green.vercel.app`, using a dedicated test workspace with zero active leads. An authenticated `/api/leads` GET intercepted to return HTTP 503 showed a friendly data-layer error, hid the injected server details, suppressed the misleading empty-workspace prompt, and recovered through the Retry button after the interception was removed. A direct Supabase `workspace_members` REST GET intercepted to return HTTP 503 showed “Could not load leads. Please try again.” without the injected PostgREST details; the AI page recovered after removing the interception and reloading. An `/api/sales-copilot` request intercepted to return HTTP 503 showed a friendly temporary-unavailability message and the assistant fallback without the injected gateway details. After removing the interception, retrying the pipeline analysis returned an AI result; this successful request may count against the test user's AI usage. These tests used GET requests or synthetic failures only; no leads or other CRM records were created or changed. Production `/api/health` returned HTTP 200, and an unauthenticated `/api/leads` request returned HTTP 401 with a controlled JSON error.
 
-PASS: [ ]
+PASS: [x]
 
 **### B29) Regression Verification**
 
@@ -1063,17 +1063,27 @@ This B29 check is therefore considered PASS for the current release evidence set
 
 **### B30) Visual QA**
 
-- [ ] no critical layout issues
-- [ ] no overflow
-- [ ] no broken icons
-- [ ] consistent spacing
-- [ ] dark mode
-- [ ] light mode
-- [ ] loading states
-- [ ] animations
-- [ ] responsive layout
+- [x] no critical layout issues
+- [x] no overflow
+- [x] no broken icons
+- [x] consistent spacing
+- [x] dark mode
+- [x] light mode
+- [x] loading states
+- [x] animations
+- [x] responsive layout
 
-PASS: [ ]
+PASS: [x]
+
+Status: PASS — manual visual QA completed 2026-10-12.
+
+Evidence:
+
+- Design consistency pass: shared `.cf-btn-primary` button style, unified page headers, modal overlays and panels, theme tokens instead of hard-coded colours.
+- Light mode: chart labels, tooltips and pipeline value colours darkened for contrast; chart text uses `--chart-*` variables.
+- Activity icons in Customer Journey and Activity Timeline unified via `ActivityIcon`.
+- New CloseFlow logo (`public/logo/closeflow-mark.svg`, `src/app/icon.svg`, `src/components/Logo.tsx`) placed across app, auth, legal and error pages; checked in dark mode.
+- `npx tsc --noEmit` and `npm run build` passed.
 
 **---**
 
@@ -1193,22 +1203,18 @@ Non-blocking production hardening:
 
 **### 🟡 CONDITIONAL GO**
 
-CloseFlow has passed the completed Layer A smoke tests. The checklist records B1–B8, including Billing (B8), as PASS. The remaining B9–B30 product-maturity checks have **not yet been executed** and must not be represented as tested or passed.
+CloseFlow has passed the completed Layer A smoke tests. The Layer B product-maturity checks have been executed progressively; the per-section `PASS` markers above are the source of truth, and B30 (Visual QA) was completed on 2026-10-12.
 
-The current release decision remains based on Layer A only.
+Layer B checks whose `PASS` marker is still unchecked (for example B10 Mobile, B11 Browser Compatibility, B14 Email Templates, B15 Localization, B22 Permissions Matrix and B23 Workspace Switching) remain **NOT YET PASSED** and must not be represented as passed.
 
-B9–B30 are currently classified as:
-
-**NOT YET TESTED**
-
-They must be executed as part of the subsequent production validation pass.
+The release decision remains **CONDITIONAL GO** until those items and the non-blocking hardening items are closed.
 
 Approvals:
 
 - Engineering approver: Jan Hendrik Andersch
 - Product approver: Jan Hendrik Andersch
 - Release commander: Jan Hendrik Andersch
-- Timestamp: 2026-09-15
+- Timestamp: 2026-10-12
 
 **Environment-Dependent Validation — Domain / Custom SMTP**
 

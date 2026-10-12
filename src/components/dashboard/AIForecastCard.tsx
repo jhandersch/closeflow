@@ -45,7 +45,7 @@ export default function AIForecastCard({ analysis, loading, }: Props) {
         return (<div className="
         rounded-2xl
         border
-        border-white/10
+        border-border-subtle
         bg-surface-1
         p-6
         ">

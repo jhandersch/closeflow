@@ -148,7 +148,7 @@ export default function AISalesCopilot({
           type="button"
           onClick={() => void generateCopilot()}
           disabled={loading}
-          className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="cf-btn-primary"
         >
           Regenerate
         </button>
@@ -246,7 +246,7 @@ export default function AISalesCopilot({
           <button
             type="button"
             onClick={() => void copyEmail()}
-            className="mt-3 rounded-xl bg-white px-4 py-2 font-semibold text-black"
+            className="cf-btn-primary mt-3"
           >
             {copied ? "Copied" : "Copy Email"}
           </button>

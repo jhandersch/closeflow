@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, FolderOpen } from "lucide-react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useSidebar } from "@/components/SidebarContext";
+import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/lib/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 function useNotificationCount(pathname: string) {
@@ -123,9 +124,7 @@ export default function Sidebar() {
       <aside aria-label="Mobile navigation" aria-hidden={!open} inert={!open} className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-2xl transition-transform duration-200 lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-500/25 bg-cyan-500/10 text-sm font-semibold text-cyan-200">
-              CF
-            </div>
+            <LogoMark size={36} />
             <p className="text-base font-semibold tracking-tight text-foreground">{t("brand.name", "CloseFlow")}</p>
           </div>
           <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground">
@@ -154,9 +153,7 @@ function SidebarContent({ hydrated, links, t, pathname, notificationCount, onLin
 }) {
     return (<div className="flex h-full flex-col">
       <div className="mb-8 hidden items-center gap-3 lg:flex">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-500/25 bg-cyan-500/10 text-sm font-semibold text-cyan-200">
-          CF
-        </div>
+        <LogoMark size={40} />
         <div>
           <p className="text-lg font-semibold tracking-tight text-foreground">{hydrated ? t("brand.name", "CloseFlow") : "CloseFlow"}</p>
           <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{hydrated ? t("brand.tagline", "Revenue OS") : "Revenue OS"}</p>

@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
     return (<AuthGuard>
       <div className="space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">{"Analytics"}</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{"Analytics"}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">{"Track performance across your pipeline"}</h1>
         </div>
 

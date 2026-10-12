@@ -448,14 +448,14 @@ export default function TeamPage() {
     <AuthGuard>
       <div className="space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
             Team
           </p>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="mt-2 text-3xl font-bold text-foreground">
             Members and invitations
           </h1>
 
-          <p className="mt-1 text-foreground/60">
+          <p className="mt-2 text-sm text-foreground/65">
             Manage members, invitations, and workspaces.
           </p>
         </div>
@@ -473,7 +473,7 @@ export default function TeamPage() {
             <button
               onClick={() => void acceptInvite()}
               disabled={acceptingInvite}
-              className="mt-4 rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="cf-btn-primary mt-4"
             >
               {acceptingInvite
                 ? "Accepting..."
@@ -540,7 +540,7 @@ export default function TeamPage() {
                   <button
                     onClick={() => void createWorkspace()}
                     disabled={creating}
-                    className="rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-black disabled:opacity-60"
+                    className="cf-btn-primary"
                   >
                     {creating ? "Creating..." : "Create"}
                   </button>

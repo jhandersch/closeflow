@@ -149,7 +149,7 @@ export default function ProfileSettingsPage() {
     <AuthGuard>
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
             Profile
           </p>
 
@@ -245,7 +245,7 @@ export default function ProfileSettingsPage() {
               type="button"
               onClick={() => void save()}
               disabled={saving}
-              className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+              className="cf-btn-primary"
             >
               {saving ? "Saving..." : "Save profile"}
             </button>

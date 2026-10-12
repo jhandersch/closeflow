@@ -52,7 +52,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
             finally {
                 setSaving(false);
             }
-        }} className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-60">
+        }} className="cf-btn-primary">
               {saving ? "Is being invited..." : "Invite"}
             </button>
           </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+import Logo from "@/components/Logo";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 
 const sanitizeNextPath = (nextPath: string | null) => {
@@ -632,9 +633,7 @@ export default function LoginPage() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground sm:px-6">
             <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_8%,transparent)] sm:p-8">
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-400">
-                    CloseFlow
-                </p>
+                <Logo size={40} className="mb-5" wordmarkClassName="text-xl font-semibold tracking-tight" />
 
                 <h1 className="mt-3 text-3xl font-semibold">
                     {mode === "login"

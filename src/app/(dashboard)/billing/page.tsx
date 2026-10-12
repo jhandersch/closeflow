@@ -446,7 +446,7 @@ export default function BillingPage() {
             ) : !canManageBilling ? (
                 <div className="mx-auto max-w-5xl">
                     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-8">
-                        <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+                        <p className="text-sm uppercase                         tracking-[0.24em] text-cyan-400">
                             Billing
                         </p>
 
@@ -461,7 +461,7 @@ export default function BillingPage() {
 
                         <Link
                             href="/"
-                            className="mt-6 inline-flex rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90"
+                            className="cf-btn-primary mt-6"
                         >
                             Back to dashboard
                         </Link>
@@ -470,7 +470,7 @@ export default function BillingPage() {
             ) : (
                 <div className="mx-auto max-w-5xl space-y-8">
                     <div>
-                        <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+                        <p className="text-sm uppercase                         tracking-[0.24em] text-cyan-400">
                             Billing
                         </p>
 
@@ -683,7 +683,7 @@ export default function BillingPage() {
                                                             actionLoading !==
                                                             null
                                                         }
-                                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-white px-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                                                        className="cf-btn-primary h-10 w-full"
                                                     >
                                                         {actionLoading ===
                                                         plan.id
@@ -744,7 +744,7 @@ export default function BillingPage() {
                                         disabled={
                                             actionLoading !== null
                                         }
-                                        className="mt-5 rounded-xl bg-white px-4 py-2 font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+                                        className="cf-btn-primary mt-5"
                                     >
                                         {actionLoading ===
                                         "portal"

@@ -102,7 +102,7 @@ export default function FeedbackForm({ workspaceId, companyName }: FeedbackFormP
 
           {error ? <p className="mb-4 text-sm text-rose-400">{error}</p> : null}
 
-          <button onClick={() => void handleSubmit()} disabled={submitting || rating === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 py-3 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-60">
+          <button onClick={() => void handleSubmit()} disabled={submitting || rating === 0} className="cf-btn-primary w-full">
             <Star size={15}/>
             {submitting ? "Submitting..." : "Submit Feedback"}
           </button>

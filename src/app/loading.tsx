@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { LogoMark } from "@/components/Logo";
 
 export default function LoadingPage() {
   const { hydrated, t } = useAppPreferences();
@@ -16,7 +17,7 @@ export default function LoadingPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
       <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8 shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_8%,transparent)]">
         <div className="flex items-center gap-4">
-          <div className="h-11 w-11 animate-pulse rounded-2xl bg-cyan-500/20" />
+          <LogoMark size={44} className="animate-pulse" />
 
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">

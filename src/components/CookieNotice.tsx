@@ -32,7 +32,7 @@ export default function CookieNotice() {
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={acknowledge} className="rounded-xl bg-cyan-500/90 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">
+        <button type="button" onClick={acknowledge} className="cf-btn-primary">
           accept all
         </button>
         <Link href="/cookies" className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground/85 transition hover:bg-foreground/5">

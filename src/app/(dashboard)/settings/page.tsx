@@ -954,10 +954,10 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <p className="text-sm uppercase tracking-[0.25em] text-cyan-400">
+        <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
           Settings
         </p>
-        <h1 className="text-3xl font-bold text-foreground">
+        <h1 className="mt-2 text-3xl font-bold text-foreground">
           Manage your workspace and preferences
         </h1>
 
