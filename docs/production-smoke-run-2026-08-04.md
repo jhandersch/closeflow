@@ -1138,7 +1138,7 @@ Progress evidence — 2026-10-13:
 
 - [x] Analytics lists terminal leads under Won or Lost only, without an extra “Customer” status label
 
-- [ ] lead/customer status and next-action changes persist after refresh and appear in the correct activity history — PARTIAL: status persisted and was recorded; next-action change was absent from the Lost lead timeline. A local API fix now compares and logs changed next-action fields, but is not yet deployed or live-verified.
+- [x] lead/customer status and next-action changes persist after refresh and appear in the correct activity history
 
 ### Analytics and Activity History
 
@@ -1174,7 +1174,7 @@ Progress evidence — 2026-10-13:
 
 - [ ] in Stripe test mode, Business checkout and plan changes charge €149/month and Pro remains €49/month; confirm `STRIPE_BUSINESS_PRICE_ID` points to the €149 recurring price
 
-- [ ] usage overview shows current active leads, monthly AI requests/exports, and members plus pending invites
+- [x] usage overview shows current active leads, monthly AI requests/exports, and members plus pending invites
 
 - [ ] verify Free limits: 50 active leads, 10 AI requests/month, 5 exports/month, 1 seat
 
@@ -1184,21 +1184,24 @@ Progress evidence — 2026-10-13:
 
 - [ ] Won/Lost leads do not use an active-lead slot; reopening/restoring an open lead at capacity is rejected with a clear error
 
-Overall B31 Status: IN PROGRESS — production checks are partially complete; local fixes are validated but not deployed, and required billing, lifecycle-history, and UI checks remain open.
+Overall B31 Status: IN PROGRESS — production checks are partially complete; several required AI, billing, capacity, and UI checks remain open.
 
 Additional activity evidence — 2026-10-13:
 
 - The Activities page “All time” view loaded 4,350 persisted activities across 87 pages, exceeding the first 1,000 rows. The newly created and completed task events were present in the list.
 - Created “B31 Task History Verification” for the disposable imported lead and completed it. After a full lead-page reload, both “Task created: B31 Task History Verification” and “Task completed” appeared in the lead timeline and Activities.
-- Edited the disposable lead's notes; the update persisted after reload and “Lead updated” appeared in its lead timeline. The previous live gap is specifically the next-action history event, which remains pending deployment of the local fix.
+- Edited the disposable lead's notes; the update persisted after reload and “Lead updated” appeared in its lead timeline.
+- After deployment of commit `3edd88b`, changed the Lost test lead's next action to a temporary B31 verification value and restored its original action. Both changes persisted and were logged with `changed_fields: ["next_action"]`; after a full reload, both “Lead updated” events appeared in the lead timeline.
 - After the task events and a dashboard reload, the activity API returned 4,347 records in its eight-week window. The latest seven-day bucket contained 3,812 events, matching the dashboard tooltip value of 3,812. The chart displayed eight points; Activities retained the All time, Today, 7 days, and 30 days filters.
 - The dashboard showed its summary metrics, open-task count and next action, deals-needing-attention section, activity trend, and links to detailed Analytics and Forecast views.
 - On Leads and Customers, the spreadsheet guides expanded and displayed their PNG previews; both download links resolved to `image/png` responses (lead guide 1,600×900, customer guide 1,200×720). The displayed headers and required/optional fields matched the importer: lead `name` is required with the listed optional fields/status values, while customer `contact` is required and `company`/`revenue` are optional.
 - The disposable customer CSV added 1 customer and skipped 2 rows (duplicate and missing contact). The lead CSV added 1 lead and skipped 1 invalid row; re-import reported 1 unchanged record and the invalid row. The imported lead timeline recorded “Lead imported from CSV”.
-- Pricing showed Free €0, Pro €49/month, and Business €149/month with the advertised plan quotas. Billing showed Business active with 6 active leads, 23/5,000 AI requests, 12/2,000 exports, and 1/20 team seats; the production UI does not separately show pending invitations. Onboarding price consistency and Stripe test-mode price IDs/checkout remain unverified; no checkout was triggered.
-- Local confidence copy and billing member/invitation breakdown remain unverified in production. Stripe test-price mapping/checkout, plan-capacity checks, and full language/icon checks remain open.
+- Pricing showed Free €0, Pro €49/month, and Business €149/month with the advertised plan quotas. Before deployment, Billing showed Business active with 6 active leads, 23/5,000 AI requests, 12/2,000 exports, and 1/20 team seats; the post-deployment invitation breakdown is recorded below. Onboarding price consistency and Stripe test-mode price IDs/checkout remain unverified; no checkout was triggered.
+- After the deployment, Billing showed the separate member/invitation breakdown (1 member, 0 pending invites). Forecast explained that forecast confidence measures estimate reliability and is separate from each deal's close probability. A fresh AI analysis for the cost test lead returned successfully and distinguished €10,000 gross, €150 in listed costs, and €9,850 after listed costs. The lead AI score/memory confidence copy remains unverified because no confidence card appeared with the generated analysis.
+- The Vercel production deployment for commit `3edd88b` completed successfully. No live paid checkout was performed.
+- Stripe test-price mapping/checkout, onboarding price consistency, plan-capacity checks, exact initial-zero behavior, Lead AI confidence copy, and full language/icon checks remain open.
 
-Local validation passed `npx tsc --noEmit`, `npm run build`, and `git diff --check`. ESLint reported 0 errors and 2 existing warnings (an explicit `any` in the lead route and the billing component's state update in an effect). Local code changes are not deployed; production verification of those changes is still required.
+The release gate passed `npm run verify:release` (tenancy guard and production build); `npx tsc --noEmit` and `git diff --check` also passed. ESLint reported 0 errors and 2 existing warnings (an explicit `any` in the lead route and the billing component's state update in an effect).
 
 ---
 
