@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, FolderOpen } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings2, Trash2, UsersRound, Workflow, Bot, BarChart3, CreditCard, ListTodo, UserRoundCheck, Activity, TrendingUp, ShieldCheck, Search as SearchIcon, X, Calendar, MessageSquare, ListRestart, Bell, UserRound, FolderOpen, Receipt } from "lucide-react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { useSidebar } from "@/components/SidebarContext";
 import { LogoMark } from "@/components/Logo";
@@ -94,6 +94,7 @@ export default function Sidebar() {
         { href: "/ai", label: t("nav.ai", "AI Assistant"), icon: Bot },
         { href: "/analytics", label: t("nav.analytics", "Analytics"), icon: BarChart3 },
         { href: "/forecast", label: t("nav.forecast", "Forecast"), icon: TrendingUp },
+        { href: "/costs", label: t("nav.costs", "Costs"), icon: Receipt },
         { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
         { href: "/calendar", label: t("nav.calendar", "Calendar"), icon: Calendar },
         { href: "/files", label: "Files", icon: FolderOpen },

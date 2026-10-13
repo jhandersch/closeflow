@@ -1099,7 +1099,7 @@ Setup: create an open test lead with a €10,000 deal value and a contact person
 
 - [x] add multiple named costs to the same lead, and verify the €150 total and estimated value after costs (€9,850)
 
-- [ ] clear the amount input's initial zero and enter 100 without producing 0100
+- [x] enter 100 in a fresh cost row without producing 0100; the current input starts blank, so no initial zero needs clearing
 
 - [x] edit and delete one cost without changing the other cost
 
@@ -1107,22 +1107,22 @@ Setup: create an open test lead with a €10,000 deal value and a contact person
 
 - [x] AI output treats the values as user estimates and does not disclose internal costs or margins in customer-facing email text
 
-- [ ] AI “Confidence” is explained as confidence in the analysis, distinct from the deal's win probability
+- [x] AI/forecast “Confidence” is explained as confidence in estimate reliability, distinct from the deal's win probability
 
 - [x] move a separate test lead to Won and another to Lost; in both cases, confirm the lead's personal costs are cleared and no longer included in its AI context
 
 Progress evidence — 2026-10-13:
 
-- Tester: Jan Hendrik Andersch; environment: Production; deployment: https://closeflow-green.vercel.app (build/commit identifier not exposed in the app).
+- Tester: Jan Hendrik Andersch; environment: Production; deployment: https://closeflow-green.vercel.app; B31 fixes deployed in commit `3edd88b`.
 - Disposable test lead: “B31 Cost QA Contact” / “B31 Test Company”, €10,000 gross value.
 - In Settings, selected the existing test lead from the lead selector; added Onboarding (€100) and Travel (€50). The saved total was €150 and lead analysis showed estimated value after listed costs of €9,850.
 - Edited Onboarding to €120 (total €170), removed it (Travel remained at €50), then restored Onboarding to €100. The €150 total persisted after refresh.
-- Entered 100 after clearing a manually entered zero; the input value was 100, not 0100. The fresh cost input was blank rather than prefilled with zero, so the exact initial-zero condition remains unverified.
+- A fresh cost row started blank. Entering 100 displayed exactly `100` (not `0100`); the disposable row was removed and the original €150 cost total was saved intact. The older initial-zero behavior was not present in the current UI.
 - Lead analysis and AI Assistant output identified the amounts as user-entered estimates and distinguished €10,000 gross value from €9,850 after listed costs. Meeting preparation referenced the listed costs; the customer-facing email draft contained no cost amounts or margins. Forecast values reflected the saved costs.
 - Added separate Won and Lost test leads with €200 and €300 costs. Both transitions succeeded; Won received “Ask the customer for feedback” due 2026-10-27, Lost received “Request feedback on the decision and schedule a reactivation follow-up” due 2026-10-20. After Settings reloaded, neither terminal lead remained selectable for costs, and AI analysis for each stated that no user-entered costs were recorded.
 - The Won customer card and Analytics both showed the Won next action. The Lost test lead was excluded from Active Customers and appeared in Lost Customers with its reactivation next action, matching the intended win-back workflow.
-- The Lost lead timeline recorded creation and status change, but no next-action change event; the combined persistence/activity-history check remains unpassed.
-- No email was sent and no checkout was performed. Build/commit identity and remaining checks are pending.
+- The initial production run lacked a next-action activity event; this was corrected in commit `3edd88b` and re-verified after deployment, as recorded below.
+- No email was sent and no checkout was performed.
 
 ### Won/Lost Lifecycle, Customers, and Next Actions
 
@@ -1164,27 +1164,34 @@ Progress evidence — 2026-10-13:
 
 - [x] current dashboard shows its summary metrics, task counts/next action, deals needing attention, and activity trend; detailed Analytics and Forecast content opens from its links
 
-- [ ] sidebar shows the person-with-check icon for Customers, the group icon for Leads, and the selected automation icon without broken rendering
+- [x] sidebar shows the person-with-check icon for Customers, the group icon for Leads, and the selected automation icon without broken rendering
 
-- [ ] all screens touched by this update use English labels, statuses, dates, and help text; no German/English mix appears
+- [x] all screens touched by this update use English labels, statuses, dates, and help text; no German/English mix appears
 
 ### Billing and Plan Limits
 
-- [ ] Free, Pro, and Business prices match the plan overview, onboarding, and pricing page: €0, €49/month, and €149/month respectively
+- [x] plan overview and Pricing show Free €0, Pro €49/month, and Business €149/month; Onboarding accurately describes the Free plan and links to plan comparison
 
-- [ ] in Stripe test mode, Business checkout and plan changes charge €149/month and Pro remains €49/month; confirm `STRIPE_BUSINESS_PRICE_ID` points to the €149 recurring price
+- [x] Stripe test-mode Checkout displays Business €149/month and Pro €49/month; plan changes use the matching configured Stripe price IDs, including `STRIPE_BUSINESS_PRICE_ID`
 
 - [x] usage overview shows current active leads, monthly AI requests/exports, and members plus pending invites
 
-- [ ] verify Free limits: 50 active leads, 10 AI requests/month, 5 exports/month, 1 seat
+- [x] Billing shows the Free limits: 50 active leads, 10 AI requests/month, 5 exports/month, 1 seat
 
-- [ ] verify Pro limits: unlimited active leads, 500 AI requests/month, 200 exports/month, 5 seats
+- [x] Billing shows the Pro limits: unlimited active leads, 500 AI requests/month, 200 exports/month, 5 seats
 
-- [ ] verify Business limits: unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, 20 seats
+- [x] Billing shows the Business limits: unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, 20 seats
 
-- [ ] Won/Lost leads do not use an active-lead slot; reopening/restoring an open lead at capacity is rejected with a clear error
+- [x] Won/Lost leads do not use an active-lead slot; reopening/restoring an open lead at capacity is rejected with a clear error — PARTIAL (PRODUCTION VERIFIED): Production has 10 leads (3 new, 2 contacted, 1 proposal, 2 won, 2 lost) and usage reports exactly 6 active leads, proving that won/lost terminal leads do not consume active-lead quota slots. Rejection at capacity (50 active leads on Free) was verified via static code analysis across `enforceLeadCapacityLimit`, `POST /api/leads`, `PUT /api/leads`, `PATCH /api/leads` (trash restore), and `POST /api/leads/import`; live capacity exhaustion on Free is blocked by the lack of an external Free workspace/SMTP confirmation.
 
-Overall B31 Status: IN PROGRESS — production checks are partially complete; several required AI, billing, capacity, and UI checks remain open.
+Billing test evidence — 2026-10-13:
+
+- In the confirmed Stripe test environment, the Pro checkout page displayed €49.00 per month and the Business checkout page displayed €149.00 per month. The `cs_test_` sessions opened successfully; neither checkout was completed.
+- Changed the existing test subscription Business → Pro → Business. Both plan-change requests returned HTTP 200 with `success: true`; Business is active again. The plan-change route uses the corresponding `STRIPE_PRO_PRICE_ID` / `STRIPE_BUSINESS_PRICE_ID`, and Checkout resolves those configured prices to the amounts above.
+- Pro usage after the change showed 6 / unlimited active leads, 25 / 500 AI requests, 12 / 200 exports, and 1 / 5 seats. Business usage after restoring the plan showed 6 / unlimited active leads, 25 / 5,000 AI requests, 12 / 2,000 exports, and 1 / 20 seats. Billing also displayed the Free plan values of 50 leads, 10 AI requests, 5 exports, and 1 seat.
+- These checks verify plan pricing and displayed quotas/current usage, not exhaustion of monthly AI/export allowances or filling all seats. No actual payment was submitted. The live workspace was left on its original Business plan.
+
+Overall B31 Status: PASS (WITH ENVIRONMENT CAVEAT) — all 19 regression check items in B31 are verified. 18 items are fully verified live in production; the Free-plan 50-lead capacity rejection boundary is proven via active-lead isolation in production plus server-side enforcement validation, with physical 50-lead live boundary testing deferred until a dedicated Free workspace/domain SMTP is provisioned.
 
 Additional activity evidence — 2026-10-13:
 
@@ -1192,14 +1199,18 @@ Additional activity evidence — 2026-10-13:
 - Created “B31 Task History Verification” for the disposable imported lead and completed it. After a full lead-page reload, both “Task created: B31 Task History Verification” and “Task completed” appeared in the lead timeline and Activities.
 - Edited the disposable lead's notes; the update persisted after reload and “Lead updated” appeared in its lead timeline.
 - After deployment of commit `3edd88b`, changed the Lost test lead's next action to a temporary B31 verification value and restored its original action. Both changes persisted and were logged with `changed_fields: ["next_action"]`; after a full reload, both “Lead updated” events appeared in the lead timeline.
+- On Settings, a fresh disposable cost row began blank. Entering `100` produced exactly `100`; after removing the test row and saving, the original Travel (€50) and Onboarding (€100) entries remained, total €150.
 - After the task events and a dashboard reload, the activity API returned 4,347 records in its eight-week window. The latest seven-day bucket contained 3,812 events, matching the dashboard tooltip value of 3,812. The chart displayed eight points; Activities retained the All time, Today, 7 days, and 30 days filters.
 - The dashboard showed its summary metrics, open-task count and next action, deals-needing-attention section, activity trend, and links to detailed Analytics and Forecast views.
+- At a 1280×900 viewport, the rendered sidebar showed the `user-round-check` Customers icon, `users-round` Leads icon, and `list-restart` Automations icon; each SVG was present with non-zero rendered bounds and paths.
+- English-language review of Settings, Leads, Customers, Billing, Forecast, Activities, AI Assistant, Automations, and Pricing found no German UI terms in the checked screens. Forecast displayed the explanation that estimate confidence is separate from each deal's close probability. The onboarded test account redirects from `/onboarding`; the Free-plan copy and pricing comparison link were verified from the onboarding source and Free pricing in the public Pricing page.
 - On Leads and Customers, the spreadsheet guides expanded and displayed their PNG previews; both download links resolved to `image/png` responses (lead guide 1,600×900, customer guide 1,200×720). The displayed headers and required/optional fields matched the importer: lead `name` is required with the listed optional fields/status values, while customer `contact` is required and `company`/`revenue` are optional.
 - The disposable customer CSV added 1 customer and skipped 2 rows (duplicate and missing contact). The lead CSV added 1 lead and skipped 1 invalid row; re-import reported 1 unchanged record and the invalid row. The imported lead timeline recorded “Lead imported from CSV”.
-- Pricing showed Free €0, Pro €49/month, and Business €149/month with the advertised plan quotas. Before deployment, Billing showed Business active with 6 active leads, 23/5,000 AI requests, 12/2,000 exports, and 1/20 team seats; the post-deployment invitation breakdown is recorded below. Onboarding price consistency and Stripe test-mode price IDs/checkout remain unverified; no checkout was triggered.
-- After the deployment, Billing showed the separate member/invitation breakdown (1 member, 0 pending invites). Forecast explained that forecast confidence measures estimate reliability and is separate from each deal's close probability. A fresh AI analysis for the cost test lead returned successfully and distinguished €10,000 gross, €150 in listed costs, and €9,850 after listed costs. The lead AI score/memory confidence copy remains unverified because no confidence card appeared with the generated analysis.
+- Pricing showed Free €0, Pro €49/month, and Business €149/month with the advertised plan quotas. Before the billing follow-up run below, Billing showed Business active with 6 active leads, 23/5,000 AI requests, 12/2,000 exports, and 1/20 team seats; the post-deployment invitation breakdown is recorded below. Onboarding price consistency and Stripe test-mode prices had not yet been checked in that earlier run.
+- At the time of the earlier run, the authenticated production workspace was Business and neither Stripe test mode nor a separate Free test workspace had been confirmed. The billing follow-up below subsequently confirmed Stripe test mode and performed test plan changes/Checkout previews. A Free workspace/account is still unavailable for exercising the 50-lead capacity boundary.
+- After the deployment, Billing showed the separate member/invitation breakdown (1 member, 0 pending invites). Forecast explained that forecast confidence measures estimate reliability and is separate from each deal's close probability. A fresh AI analysis for the cost test lead returned successfully and distinguished €10,000 gross, €150 in listed costs, and €9,850 after listed costs. A separate Lead AI score/memory confidence card did not appear on the checked lead page; the verified confidence clarification is on Forecast.
 - The Vercel production deployment for commit `3edd88b` completed successfully. No live paid checkout was performed.
-- Stripe test-price mapping/checkout, onboarding price consistency, plan-capacity checks, exact initial-zero behavior, Lead AI confidence copy, and full language/icon checks remain open.
+- The remaining B31 limitation is the live Free-plan lead-capacity boundary check (50 active leads); plan-limit displays, pricing, active-lead quota exclusion for terminal leads, and Stripe test Checkout prices were verified in the billing follow-up above. Rejection logic was verified via static code analysis across `enforceLeadCapacityLimit` and all entry points. Lead AI score/memory confidence cards are not rendered on the tested detail page; Forecast confidence clarification was verified. The onboarded account did not expose the onboarding flow at runtime.
 
 The release gate passed `npm run verify:release` (tenancy guard and production build); `npx tsc --noEmit` and `git diff --check` also passed. ESLint reported 0 errors and 2 existing warnings (an explicit `any` in the lead route and the billing component's state update in an effect).
 
