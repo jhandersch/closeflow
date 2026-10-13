@@ -62,13 +62,16 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
 
         <div className="flex justify-between items-center border-t border-border-subtle pt-4">
           <span className="text-foreground/55">
-            Confidence
+            Analysis confidence
           </span>
 
           <span className="text-emerald-400 font-bold">
             {Math.round(memory.confidence * 100)}%
           </span>
         </div>
+        <p className="text-xs text-foreground/50">
+          Confidence in this analysis, not the deal&apos;s win probability.
+        </p>
 
       </div>
 

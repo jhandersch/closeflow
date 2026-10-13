@@ -88,6 +88,9 @@ export default function RevenueForecast({
           <p className="mt-1 text-xs text-foreground/50">
             Forecast values are adjusted by your saved costs for each open deal.
           </p>
+          <p className="mt-1 text-xs text-foreground/50">
+            Forecast confidence measures estimate reliability; close probability is separate for each deal.
+          </p>
         </div>
 
         <div

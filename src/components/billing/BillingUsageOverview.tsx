@@ -9,7 +9,7 @@ type UsageData = {
     seats: { members: number; pending_invites: number };
 };
 
-function UsageMeter({ label, used, limit, suffix }: { label: string; used: number; limit: number | null; suffix: string }) {
+function UsageMeter({ label, used, limit, suffix, detail }: { label: string; used: number; limit: number | null; suffix: string; detail?: string }) {
     const unlimited = limit === null;
     const percent = unlimited ? 0 : Math.min((used / Math.max(limit, 1)) * 100, 100);
 
@@ -21,6 +21,7 @@ function UsageMeter({ label, used, limit, suffix }: { label: string; used: numbe
                     {used.toLocaleString("en-US")} / {unlimited ? "Unlimited" : limit?.toLocaleString("en-US")} {suffix}
                 </span>
             </div>
+            {detail ? <p className="mt-1 text-xs text-foreground/50">{detail}</p> : null}
             {!unlimited && <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-foreground/10">
                 <div className={`h-full rounded-full ${percent >= 90 ? "bg-amber-400" : "bg-cyan-400"}`} style={{ width: `${percent}%` }} />
             </div>}
@@ -69,7 +70,13 @@ export default function BillingUsageOverview() {
                     <UsageMeter label="Active leads" used={data.usage.active_leads} limit={data.limits.active_leads} suffix="leads" />
                     <UsageMeter label="AI requests" used={data.usage.ai_requests} limit={data.limits.ai_requests} suffix="this month" />
                     <UsageMeter label="Exports" used={data.usage.exports} limit={data.limits.exports} suffix="this month" />
-                    <UsageMeter label="Team members" used={data.seats.members + data.seats.pending_invites} limit={data.limits.team_seats} suffix="seats" />
+                    <UsageMeter
+                        label="Team members and pending invites"
+                        used={data.seats.members + data.seats.pending_invites}
+                        limit={data.limits.team_seats}
+                        suffix="seats"
+                        detail={`${data.seats.members} members · ${data.seats.pending_invites} pending invites`}
+                    />
                 </div>
             ) : (
                 <p className="text-sm text-foreground/55">Usage information is currently unavailable.</p>

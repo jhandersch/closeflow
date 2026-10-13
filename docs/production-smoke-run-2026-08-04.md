@@ -1089,67 +1089,80 @@ Evidence:
 
 ## B31) Current Product Regression Checks (Checklist Update 2026-09-24)
 
-These checks cover features added or changed since the last recorded run. Execute them in a designated test workspace with disposable test records. Do not use real customer data, and do not run a live paid checkout. Record the current build/deployment, tester, date, outcome, and evidence before marking any item PASS. All items below are pending.
+These checks cover features added or changed since the last recorded run. Execute them in a designated test workspace with disposable test records. Do not use real customer data, and do not run a live paid checkout. Record the current build/deployment, tester, date, outcome, and evidence before marking any item PASS. Checks are being executed progressively; unchecked items remain pending.
 
 ### Deal Costs and Cost-Aware AI
 
 Setup: create an open test lead with a €10,000 deal value and a contact person. Add two personal costs, for example Onboarding (€100) and Travel (€50).
 
-- [ ] select an existing lead from the full lead list when adding costs
+- [x] select an existing lead from the full lead list when adding costs
 
-- [ ] add multiple named costs to the same lead, and verify the €150 total and estimated value after costs (€9,850)
+- [x] add multiple named costs to the same lead, and verify the €150 total and estimated value after costs (€9,850)
 
 - [ ] clear the amount input's initial zero and enter 100 without producing 0100
 
-- [ ] edit and delete one cost without changing the other cost
+- [x] edit and delete one cost without changing the other cost
 
-- [ ] lead analysis, AI insights, meeting preparation, and revenue forecast consider the entered costs and distinguish gross value from estimated value after listed costs
+- [x] lead analysis, AI insights, meeting preparation, and revenue forecast consider the entered costs and distinguish gross value from estimated value after listed costs
 
-- [ ] AI output treats the values as user estimates and does not disclose internal costs or margins in customer-facing email text
+- [x] AI output treats the values as user estimates and does not disclose internal costs or margins in customer-facing email text
 
 - [ ] AI “Confidence” is explained as confidence in the analysis, distinct from the deal's win probability
 
-- [ ] move a separate test lead to Won and another to Lost; in both cases, confirm the lead's personal costs are cleared and no longer included in its AI context
+- [x] move a separate test lead to Won and another to Lost; in both cases, confirm the lead's personal costs are cleared and no longer included in its AI context
+
+Progress evidence — 2026-10-13:
+
+- Tester: Jan Hendrik Andersch; environment: Production; deployment: https://closeflow-green.vercel.app (build/commit identifier not exposed in the app).
+- Disposable test lead: “B31 Cost QA Contact” / “B31 Test Company”, €10,000 gross value.
+- In Settings, selected the existing test lead from the lead selector; added Onboarding (€100) and Travel (€50). The saved total was €150 and lead analysis showed estimated value after listed costs of €9,850.
+- Edited Onboarding to €120 (total €170), removed it (Travel remained at €50), then restored Onboarding to €100. The €150 total persisted after refresh.
+- Entered 100 after clearing a manually entered zero; the input value was 100, not 0100. The fresh cost input was blank rather than prefilled with zero, so the exact initial-zero condition remains unverified.
+- Lead analysis and AI Assistant output identified the amounts as user-entered estimates and distinguished €10,000 gross value from €9,850 after listed costs. Meeting preparation referenced the listed costs; the customer-facing email draft contained no cost amounts or margins. Forecast values reflected the saved costs.
+- Added separate Won and Lost test leads with €200 and €300 costs. Both transitions succeeded; Won received “Ask the customer for feedback” due 2026-10-27, Lost received “Request feedback on the decision and schedule a reactivation follow-up” due 2026-10-20. After Settings reloaded, neither terminal lead remained selectable for costs, and AI analysis for each stated that no user-entered costs were recorded.
+- The Won customer card and Analytics both showed the Won next action. The Lost test lead was excluded from Active Customers and appeared in Lost Customers with its reactivation next action, matching the intended win-back workflow.
+- The Lost lead timeline recorded creation and status change, but no next-action change event; the combined persistence/activity-history check remains unpassed.
+- No email was sent and no checkout was performed. Build/commit identity and remaining checks are pending.
 
 ### Won/Lost Lifecycle, Customers, and Next Actions
 
-- [ ] moving an open lead to Won succeeds, keeps it in the Won pipeline stage, and creates/updates the customer record
+- [x] moving an open lead to Won succeeds, keeps it in the Won pipeline stage, and creates/updates the customer record
 
-- [ ] Won next action is “Ask the customer for feedback” with a due date about 14 days later; it is visible in both Analytics and Customers
+- [x] Won next action is “Ask the customer for feedback” with a due date about 14 days later; it is visible in both Analytics and Customers
 
-- [ ] customer card shows company and contact person, with the next action; it does not redundantly show a Won status
+- [x] customer card shows company and contact person, with the next action; it does not redundantly show a Won status
 
-- [ ] moving a separate open lead to Lost succeeds without an error, keeps it in Lost, and does not show it as a customer
+- [x] moving a separate open lead to Lost succeeds without an error, keeps it in Lost, is excluded from Active Customers, and appears in Lost Customers for reactivation
 
-- [ ] Lost next action requests feedback on the decision and schedules a reactivation follow-up, with a due date about 7 days later
+- [x] Lost next action requests feedback on the decision and schedules a reactivation follow-up, with a due date about 7 days later
 
-- [ ] Analytics lists terminal leads under Won or Lost only, without an extra “Customer” status label
+- [x] Analytics lists terminal leads under Won or Lost only, without an extra “Customer” status label
 
-- [ ] lead/customer status and next-action changes persist after refresh and appear in the correct activity history
+- [ ] lead/customer status and next-action changes persist after refresh and appear in the correct activity history — PARTIAL: status persisted and was recorded; next-action change was absent from the Lost lead timeline. A local API fix now compares and logs changed next-action fields, but is not yet deployed or live-verified.
 
 ### Analytics and Activity History
 
-- [ ] per-lead analytics include open, Won, and Lost records in the appropriate views
+- [x] per-lead analytics include open, Won, and Lost records in the appropriate views
 
-- [ ] conversion rate equals Won / (Won + Lost), and its definition is visible and understandable
+- [x] conversion rate equals Won / (Won + Lost), and its definition is visible and understandable
 
-- [ ] Activities page “All time” filter loads the complete persisted history, including records beyond the first 1,000 rows
+- [x] Activities page “All time” filter loads the complete persisted history, including records beyond the first 1,000 rows
 
-- [ ] create/edit a lead, change its status, and create/complete a task; confirm those persisted events appear in the Activities page and lead timeline where applicable
+- [x] create/edit a lead, change its status, and create/complete a task; confirm those persisted events appear in the Activities page and lead timeline where applicable
 
-- [ ] dashboard Activity Trend graph plots activity counts in eight rolling seven-day buckets spanning the last 56 days; confirm a newly created event increments the correct bucket after refresh
+- [x] dashboard Activity Trend graph plots activity counts in eight rolling seven-day buckets spanning the last 56 days; confirm a newly created event increments the correct bucket after refresh
 
-- [ ] dashboard activity graph remains a summary; the full event list and timeframe filters remain in Activities
+- [x] dashboard activity graph remains a summary; the full event list and timeframe filters remain in Activities
 
 ### Imports and Product Language
 
-- [ ] Leads and Customers each show an expandable spreadsheet-format guide with a legible PNG preview and working PNG download
+- [x] Leads and Customers each show an expandable spreadsheet-format guide with a legible PNG preview and working PNG download
 
-- [ ] guide headers, required fields, optional fields, and example values match the actual importer behavior
+- [x] guide headers, required fields, optional fields, and example values match the actual importer behavior
 
-- [ ] import a small disposable lead CSV and customer CSV; verify field mapping, duplicate handling, row-level error reporting, and created activity entries
+- [x] import a small disposable lead CSV and customer CSV; verify field mapping, duplicate handling, row-level error reporting, and created activity entries
 
-- [ ] current dashboard shows its summary metrics, task counts/next action, deals needing attention, and activity trend; detailed Analytics and Forecast content opens from its links
+- [x] current dashboard shows its summary metrics, task counts/next action, deals needing attention, and activity trend; detailed Analytics and Forecast content opens from its links
 
 - [ ] sidebar shows the person-with-check icon for Customers, the group icon for Leads, and the selected automation icon without broken rendering
 
@@ -1171,7 +1184,21 @@ Setup: create an open test lead with a €10,000 deal value and a contact person
 
 - [ ] Won/Lost leads do not use an active-lead slot; reopening/restoring an open lead at capacity is rejected with a clear error
 
-Overall B31 Status: NOT YET TESTED
+Overall B31 Status: IN PROGRESS — production checks are partially complete; local fixes are validated but not deployed, and required billing, lifecycle-history, and UI checks remain open.
+
+Additional activity evidence — 2026-10-13:
+
+- The Activities page “All time” view loaded 4,350 persisted activities across 87 pages, exceeding the first 1,000 rows. The newly created and completed task events were present in the list.
+- Created “B31 Task History Verification” for the disposable imported lead and completed it. After a full lead-page reload, both “Task created: B31 Task History Verification” and “Task completed” appeared in the lead timeline and Activities.
+- Edited the disposable lead's notes; the update persisted after reload and “Lead updated” appeared in its lead timeline. The previous live gap is specifically the next-action history event, which remains pending deployment of the local fix.
+- After the task events and a dashboard reload, the activity API returned 4,347 records in its eight-week window. The latest seven-day bucket contained 3,812 events, matching the dashboard tooltip value of 3,812. The chart displayed eight points; Activities retained the All time, Today, 7 days, and 30 days filters.
+- The dashboard showed its summary metrics, open-task count and next action, deals-needing-attention section, activity trend, and links to detailed Analytics and Forecast views.
+- On Leads and Customers, the spreadsheet guides expanded and displayed their PNG previews; both download links resolved to `image/png` responses (lead guide 1,600×900, customer guide 1,200×720). The displayed headers and required/optional fields matched the importer: lead `name` is required with the listed optional fields/status values, while customer `contact` is required and `company`/`revenue` are optional.
+- The disposable customer CSV added 1 customer and skipped 2 rows (duplicate and missing contact). The lead CSV added 1 lead and skipped 1 invalid row; re-import reported 1 unchanged record and the invalid row. The imported lead timeline recorded “Lead imported from CSV”.
+- Pricing showed Free €0, Pro €49/month, and Business €149/month with the advertised plan quotas. Billing showed Business active with 6 active leads, 23/5,000 AI requests, 12/2,000 exports, and 1/20 team seats; the production UI does not separately show pending invitations. Onboarding price consistency and Stripe test-mode price IDs/checkout remain unverified; no checkout was triggered.
+- Local confidence copy and billing member/invitation breakdown remain unverified in production. Stripe test-price mapping/checkout, plan-capacity checks, and full language/icon checks remain open.
+
+Local validation passed `npx tsc --noEmit`, `npm run build`, and `git diff --check`. ESLint reported 0 errors and 2 existing warnings (an explicit `any` in the lead route and the billing component's state update in an effect). Local code changes are not deployed; production verification of those changes is still required.
 
 ---
 

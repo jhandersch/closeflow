@@ -291,7 +291,9 @@ export async function PUT(req: Request) {
         */
     const { data: oldLead, error: oldLeadError } = await supabase
       .from("leads")
-      .select("id,status")
+          .select(
+            "status,name,company,value,notes,source,tags,email,phone,address,website,next_action,next_action_date,industry,is_vip",
+          )
       .eq("id", id)
       .eq("workspace_id", workspace.id)
       .is("deleted_at", null)
@@ -452,11 +454,22 @@ export async function PUT(req: Request) {
             "phone",
             "address",
             "website",
+            "next_action",
+            "next_action_date",
           ];
-    const changedFields = trackedFields.filter((field) =>
-      Object.prototype.hasOwnProperty.call(updates, field),
+    const comparableValue = (value: unknown) =>
+      value == null
+        ? ""
+        : Array.isArray(value)
+          ? JSON.stringify(value)
+          : String(value);
+    const previousValues: Record<string, unknown> = oldLead;
+    const changedFields = trackedFields.filter(
+      (field) =>
+        Object.prototype.hasOwnProperty.call(updates, field) &&
+        comparableValue(updates[field]) !== comparableValue(previousValues[field]),
     );
-    if (!statusChanged && changedFields.length > 0) {
+    if (changedFields.length > 0) {
       const isCustomerUpdate = entityType === "customer";
       const activityTitle = isCustomerUpdate
         ? "Customer updated"
