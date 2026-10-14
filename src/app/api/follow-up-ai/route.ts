@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
+import { createTrackedOpenAIFetch } from "@/lib/aiCost";
 
 export async function POST(request: NextRequest) {
+  const access = await requireAiWorkspaceQuota(request);
+  if (!access.ok) return access.response;
   try {
     const { user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -20,7 +24,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const response = await fetch(
+    const trackedFetch = createTrackedOpenAIFetch(
+      access.supabase,
+      access.workspaceId,
+      access.userId,
+      "follow_up_ai",
+    );
+    const response = await trackedFetch(
       "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",

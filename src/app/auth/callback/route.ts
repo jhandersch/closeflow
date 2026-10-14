@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-const sanitizeNextPath = (nextPath: string | null) => {
+const sanitizeNextPath = (nextPath: string | null, baseUrl: string) => {
     if (!nextPath)
         return null;
     if (!nextPath.startsWith("/"))
         return null;
     if (nextPath.startsWith("//"))
         return null;
+    try {
+        if (new URL(nextPath, baseUrl).origin !== new URL(baseUrl).origin) {
+            return null;
+        }
+    }
+    catch {
+        return null;
+    }
     return nextPath;
 };
 const toLoginRedirect = (request: NextRequest, nextPath: string | null, oauthError: string) => {
@@ -43,7 +51,7 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get("type");
     const oauthError = requestUrl.searchParams.get("error");
     const oauthErrorDescription = requestUrl.searchParams.get("error_description");
-    const nextPath = sanitizeNextPath(requestUrl.searchParams.get("next"));
+    const nextPath = sanitizeNextPath(requestUrl.searchParams.get("next"), request.url);
     if (oauthError) {
         return toLoginRedirect(request, nextPath, oauthErrorDescription ||
             oauthError);
@@ -52,7 +60,17 @@ export async function GET(request: NextRequest) {
         return toLoginRedirect(request, nextPath, "Authentication callback without code");
     }
     const supabase = await createClient();
-    const { data: { user }, } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: exchangeError,
+    } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError || !user) {
+        return toLoginRedirect(
+            request,
+            nextPath,
+            "Authentication code could not be verified",
+        );
+    }
     if (user) {
         await syncProfile(supabase, user);
     }

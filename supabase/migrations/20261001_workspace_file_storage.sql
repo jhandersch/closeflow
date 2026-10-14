@@ -28,7 +28,7 @@ begin
 end;
 $$;
 
-revoke all on function public.can_access_workspace_file_folder(text) from public;
+revoke all on function public.can_access_workspace_file_folder(text) from public, anon;
 grant execute on function public.can_access_workspace_file_folder(text) to authenticated;
 
 drop policy if exists closeflow_files_workspace_read on storage.objects;

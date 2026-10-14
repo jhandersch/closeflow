@@ -114,9 +114,9 @@ begin
 end;
 $$;
 
-revoke all on function public.soft_delete_lead_dependents(uuid, uuid, timestamptz) from public;
-revoke all on function public.restore_lead_dependents(uuid, uuid) from public;
-revoke all on function public.soft_delete_task(uuid, uuid) from public;
+revoke all on function public.soft_delete_lead_dependents(uuid, uuid, timestamptz) from public, anon;
+revoke all on function public.restore_lead_dependents(uuid, uuid) from public, anon;
+revoke all on function public.soft_delete_task(uuid, uuid) from public, anon;
 grant execute on function public.soft_delete_lead_dependents(uuid, uuid, timestamptz) to authenticated;
 grant execute on function public.restore_lead_dependents(uuid, uuid) to authenticated;
 grant execute on function public.soft_delete_task(uuid, uuid) to authenticated;

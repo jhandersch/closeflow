@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
+import { createTrackedOpenAIFetch } from "@/lib/aiCost";
 export async function POST(request: NextRequest) {
-    let locale: "en" = "en";
+    const access = await requireAiWorkspaceQuota(request);
+    if (!access.ok) return access.response;
     try {
         const payload = await request.json();
-        locale = "en";
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
             return NextResponse.json({
@@ -11,14 +13,20 @@ export async function POST(request: NextRequest) {
                 nextAction: "Review priority leads and schedule follow-ups.",
             });
         }
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const trackedFetch = createTrackedOpenAIFetch(
+          access.supabase,
+          access.workspaceId,
+          access.userId,
+          "priority_analysis",
+        );
+        const response = await trackedFetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "gpt-5.5-mini",
+                model: "gpt-4.1-mini",
                 temperature: 0.3,
                 messages: [
                     {

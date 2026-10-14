@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-export type WorkspaceAccessRole = "owner" | "admin" | "member" | "viewer";
+export type WorkspaceAccessRole =
+    | "owner"
+    | "admin"
+    | "sales_manager"
+    | "sales_rep"
+    | "member"
+    | "viewer";
 type WorkspaceRoleResult = {
     ok: true;
     role: WorkspaceAccessRole;
@@ -33,6 +39,8 @@ export async function getWorkspaceUserRole(supabase: SupabaseClient, workspaceId
     const role = String(member.role).toLowerCase();
     if (role !== "owner" &&
         role !== "admin" &&
+        role !== "sales_manager" &&
+        role !== "sales_rep" &&
         role !== "member" &&
         role !== "viewer") {
         return {

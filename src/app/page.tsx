@@ -39,9 +39,9 @@ const capabilities = [
 ];
 
 const plans = [
-  { name: "Free", price: "€0", period: "forever", description: "A focused start for one person.", points: ["1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
-  { name: "Pro", price: "€49", period: "/ month", description: "More room for a growing team.", points: ["Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
-  { name: "Business", price: "€149", period: "/ month", description: "Higher limits for larger teams.", points: ["Up to 20 team members", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
+  { name: "Free", price: "€0", period: "forever", description: "Start organizing leads and follow-ups in one workspace.", points: ["1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
+  { name: "Pro", price: "€49", period: "/ month", description: "For small agencies coordinating sales across a team.", points: ["Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
+  { name: "Business", price: "€149", period: "/ month", description: "For larger teams that need more workspace capacity.", points: ["Up to 20 team members", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
 ];
 
 const exampleDeals = [
@@ -76,13 +76,13 @@ export default function HomePage() {
       <section className="mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-28 lg:pt-24">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.07] px-3 py-1.5 text-xs font-medium text-cyan-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> The CRM that keeps the next move clear
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> A sales workspace for small B2B agencies
           </div>
           <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[1.04] tracking-[-0.045em] sm:text-6xl lg:text-[4.4rem]">
-            Less chasing.<br /><span className="bg-gradient-to-r from-cyan-200 via-sky-300 to-blue-400 bg-clip-text text-transparent">More closing.</span>
+            Every opportunity.<br /><span className="bg-gradient-to-r from-cyan-200 via-sky-300 to-blue-400 bg-clip-text text-transparent">One clear next step.</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-foreground/65 sm:text-lg sm:leading-8">
-            Keep leads, follow-ups and forecasts in one place. CloseFlow gives your sales work a clear home—and helps you decide what to do next.
+            Keep leads, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/login?mode=signup" className="inline-flex items-center justify-center rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">Create your free workspace <ArrowRight className="ml-2 h-4 w-4" /></Link>

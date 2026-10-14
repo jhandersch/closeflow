@@ -46,7 +46,12 @@ export async function GET(request: Request) {
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
-    const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "export");
+    const limitCheck = await enforceAndTrackUsageLimit(
+        supabase,
+        user.id,
+        "export",
+        workspace.id,
+    );
     if (!limitCheck.ok) {
         return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status });
     }

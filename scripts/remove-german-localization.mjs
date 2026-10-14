@@ -1,6 +1,6 @@
-const fs = require("fs")
-const path = require("path")
-const ts = require("typescript")
+import fs from "node:fs";
+import path from "node:path";
+import ts from "typescript";
 
 const root = path.join(process.cwd(), "src")
 const translations = new Map([

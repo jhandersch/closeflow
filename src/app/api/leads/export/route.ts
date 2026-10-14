@@ -70,7 +70,8 @@ export async function GET(request: Request) {
     await enforceAndTrackUsageLimit(
       supabase,
       user.id,
-      "export"
+      "export",
+      workspace.id,
     );
 
   if (!limitCheck.ok) {

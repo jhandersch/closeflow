@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
+import { createTrackedOpenAIClient } from "@/lib/aiCost";
 
 const fallbackResponse = () => ({
   health: "unknown",
@@ -12,6 +13,8 @@ const fallbackResponse = () => ({
 });
 
 export async function POST(req: Request) {
+  const access = await requireAiWorkspaceQuota(req);
+  if (!access.ok) return access.response;
   try {
     const { user, error } = await getRouteUser(req);
     if (error || !user) {
@@ -77,7 +80,13 @@ Analyze:
 - Write all text values in English
 `;
 
-    const openai = new OpenAI({ apiKey });
+    const openai = createTrackedOpenAIClient(
+      apiKey,
+      access.supabase,
+      access.workspaceId,
+      access.userId,
+      "activity_ai",
+    );
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",

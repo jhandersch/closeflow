@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { sumPersonalDealCosts } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 const clamp = (value: number) => Math.max(0, Math.min(100, value));
 export async function POST(request: Request) {
+    const access = await requireAiWorkspaceQuota(request);
+    if (!access.ok) return access.response;
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,7 +40,26 @@ export async function POST(request: Request) {
         estimated_net_value: estimatedNetValue,
         estimated_personal_costs: personalDealCosts,
     };
-    const { workspace } = await loadWorkspaceForUser(supabase, user.id);
+    const { workspace } = await loadWorkspaceForUser(
+        supabase,
+        user.id,
+        access.workspaceId,
+    );
+    if (lead.id) {
+        const { data: authorizedLead, error: leadError } = await supabase
+            .from("leads")
+            .select("id")
+            .eq("id", lead.id)
+            .eq("workspace_id", access.workspaceId)
+            .maybeSingle();
+        if (leadError) {
+            console.error("AI lead-score ownership check failed:", leadError.message);
+            return NextResponse.json({ error: "Could not verify lead access." }, { status: 503 });
+        }
+        if (!authorizedLead) {
+            return NextResponse.json({ error: "Lead not found." }, { status: 404 });
+        }
+    }
     if (workspace?.id && lead.id) {
         await supabase.from("lead_scores").insert({
             lead_id: lead.id,

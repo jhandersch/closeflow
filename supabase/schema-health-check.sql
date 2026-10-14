@@ -1,9 +1,252 @@
 -- CloseFlow schema health check
 -- Run in Supabase SQL Editor.
--- The script reports missing tables, missing columns, missing functions, missing policies,
--- and RLS status for team tables.
+-- The workspace checks below reflect the current application schema. The older
+-- organization checks that follow are retained only as legacy compatibility checks.
 
--- 1) Required tables
+-- Current workspace-first schema: required tables
+with expected_tables(table_name) as (
+  values
+    ('profiles'),
+    ('workspaces'),
+    ('workspace_members'),
+    ('workspace_invites'),
+    ('teams'),
+    ('team_members'),
+    ('leads'),
+    ('lead_tags'),
+    ('lead_tag_links'),
+    ('customers'),
+    ('tasks'),
+    ('activities'),
+    ('calendar_events'),
+    ('ai_conversations'),
+    ('lead_scores'),
+    ('lead_memory'),
+    ('revenue_events'),
+    ('usage'),
+    ('subscriptions'),
+    ('notifications'),
+    ('automations'),
+    ('automation_runs'),
+    ('audit_logs'),
+    ('mfa_recovery_codes')
+)
+select
+  e.table_name,
+  case when t.tablename is null then 'missing' else 'ok' end as status
+from expected_tables e
+left join pg_tables t
+  on t.schemaname = 'public'
+ and t.tablename = e.table_name
+order by e.table_name;
+
+-- Current workspace-first schema: columns used by workspace and CRM routes
+with expected_columns(table_name, column_name) as (
+  values
+    ('profiles', 'id'),
+    ('workspaces', 'id'),
+    ('workspaces', 'name'),
+    ('workspaces', 'owner_id'),
+    ('workspaces', 'plan'),
+    ('workspace_members', 'workspace_id'),
+    ('workspace_members', 'user_id'),
+    ('workspace_members', 'role'),
+    ('workspace_invites', 'workspace_id'),
+    ('workspace_invites', 'email'),
+    ('workspace_invites', 'token'),
+    ('workspace_invites', 'expires_at'),
+    ('workspace_invites', 'accepted_at'),
+    ('leads', 'id'),
+    ('leads', 'workspace_id'),
+    ('leads', 'user_id'),
+    ('leads', 'name'),
+    ('leads', 'status'),
+    ('leads', 'deleted_at'),
+    ('customers', 'id'),
+    ('customers', 'workspace_id'),
+    ('customers', 'lead_id'),
+    ('customers', 'company'),
+    ('tasks', 'id'),
+    ('tasks', 'workspace_id'),
+    ('tasks', 'lead_id'),
+    ('tasks', 'user_id'),
+    ('tasks', 'title'),
+    ('tasks', 'completed'),
+    ('tasks', 'due_date'),
+    ('tasks', 'deleted_at'),
+    ('activities', 'id'),
+    ('activities', 'workspace_id'),
+    ('activities', 'lead_id'),
+    ('activities', 'user_id'),
+    ('activities', 'action'),
+    ('calendar_events', 'id'),
+    ('calendar_events', 'workspace_id'),
+    ('calendar_events', 'lead_id'),
+    ('calendar_events', 'user_id'),
+    ('calendar_events', 'scheduled_at'),
+    ('calendar_events', 'deleted_at'),
+    ('usage', 'workspace_id'),
+    ('usage', 'month'),
+    ('usage', 'ai_requests'),
+    ('usage', 'exports_count'),
+    ('subscriptions', 'workspace_id'),
+    ('subscriptions', 'plan'),
+    ('subscriptions', 'status'),
+    ('subscriptions', 'stripe_customer_id'),
+    ('subscriptions', 'stripe_subscription_id'),
+    ('automations', 'workspace_id'),
+    ('automation_runs', 'workspace_id'),
+    ('audit_logs', 'workspace_id')
+)
+select
+  e.table_name,
+  e.column_name,
+  case when c.column_name is null then 'missing' else 'ok' end as status
+from expected_columns e
+left join information_schema.columns c
+  on c.table_schema = 'public'
+ and c.table_name = e.table_name
+ and c.column_name = e.column_name
+order by e.table_name, e.column_name;
+
+-- Current workspace-first schema: RLS must be enabled on every tenant table
+with expected_rls(table_name) as (
+  values
+    ('profiles'),
+    ('workspaces'),
+    ('workspace_members'),
+    ('workspace_invites'),
+    ('teams'),
+    ('team_members'),
+    ('leads'),
+    ('customers'),
+    ('tasks'),
+    ('activities'),
+    ('calendar_events'),
+    ('ai_conversations'),
+    ('lead_scores'),
+    ('lead_memory'),
+    ('revenue_events'),
+    ('usage'),
+    ('subscriptions'),
+    ('notifications'),
+    ('automations'),
+    ('automation_runs'),
+    ('audit_logs'),
+    ('mfa_recovery_codes')
+)
+select
+  e.table_name,
+  case when c.relrowsecurity then 'enabled' else 'disabled_or_missing' end as rls_status
+from expected_rls e
+left join pg_namespace n
+  on n.nspname = 'public'
+left join pg_class c
+  on c.relname = e.table_name
+ and c.relnamespace = n.oid
+order by e.table_name;
+
+-- Current workspace-first schema: critical membership and data access policies
+with expected_policies(table_name, policy_name) as (
+  values
+    ('profiles', 'profiles_self_select'),
+    ('profiles', 'profiles_self_insert'),
+    ('profiles', 'profiles_self_update'),
+    ('workspaces', 'workspaces_member_select'),
+    ('workspaces', 'workspaces_owner_insert'),
+    ('workspaces', 'workspaces_manager_update'),
+    ('workspace_members', 'workspace_members_member_select'),
+    ('workspace_members', 'workspace_members_manager_insert'),
+    ('workspace_members', 'workspace_members_manager_update'),
+    ('workspace_members', 'workspace_members_manager_delete'),
+    ('workspace_invites', 'workspace_invites_member_select'),
+    ('workspace_invites', 'workspace_invites_manager_insert'),
+    ('workspace_invites', 'workspace_invites_manager_update'),
+    ('workspace_invites', 'workspace_invites_manager_delete'),
+    ('leads', 'leads_workspace_member_select'),
+    ('leads', 'leads_workspace_member_insert'),
+    ('leads', 'leads_workspace_member_update'),
+    ('leads', 'leads_workspace_member_delete'),
+    ('customers', 'customers_member_select'),
+    ('customers', 'customers_member_mutation'),
+    ('tasks', 'tasks_workspace_member_access'),
+    ('activities', 'activities_workspace_member_access'),
+    ('calendar_events', 'calendar_events_member_select'),
+    ('calendar_events', 'calendar_events_member_insert'),
+    ('calendar_events', 'calendar_events_member_update'),
+    ('calendar_events', 'calendar_events_member_delete'),
+    ('ai_conversations', 'ai_conversations_member_access'),
+    ('usage', 'usage_member_access'),
+    ('subscriptions', 'subscriptions_member_select'),
+    ('subscriptions', 'subscriptions_manager_mutation'),
+    ('automations', 'automations_member_select'),
+    ('automations', 'automations_manager_mutation'),
+    ('automation_runs', 'automation_runs_member_select'),
+    ('audit_logs', 'audit_logs_member_select'),
+    ('mfa_recovery_codes', 'mfa_recovery_codes_self_select'),
+    ('mfa_recovery_codes', 'mfa_recovery_codes_self_insert'),
+    ('mfa_recovery_codes', 'mfa_recovery_codes_self_update'),
+    ('mfa_recovery_codes', 'mfa_recovery_codes_self_delete')
+)
+select
+  e.table_name,
+  e.policy_name,
+  case when p.policyname is null then 'missing' else 'ok' end as status
+from expected_policies e
+left join pg_policies p
+  on p.schemaname = 'public'
+ and p.tablename = e.table_name
+ and p.policyname = e.policy_name
+order by e.table_name, e.policy_name;
+
+-- Current workspace-first schema: RPCs used in RLS, file access, and restore flows
+with expected_functions(function_name) as (
+  values
+    ('is_workspace_member'),
+    ('is_workspace_manager'),
+    ('can_access_workspace_file_folder'),
+    ('soft_delete_lead_dependents'),
+    ('restore_lead_dependents'),
+    ('soft_delete_task'),
+    ('soft_delete_lead_tasks'),
+    ('restore_lead_tasks')
+)
+select
+  e.function_name,
+  case when p.proname is null then 'missing' else 'ok' end as status
+from expected_functions e
+left join pg_proc p
+  on p.proname = e.function_name
+ and p.pronamespace = 'public'::regnamespace
+order by e.function_name;
+
+-- Workspace file storage must remain private and membership-scoped.
+select
+  'closeflow-files' as bucket_id,
+  case
+    when b.id is null then 'missing'
+    when b.public then 'public_bucket'
+    else 'private'
+  end as status
+from (values ('closeflow-files')) expected(id)
+left join storage.buckets b on b.id = expected.id;
+
+select
+  e.policyname,
+  case when p.policyname is null then 'missing' else 'ok' end as status
+from (values
+  ('closeflow_files_workspace_read'),
+  ('closeflow_files_workspace_insert'),
+  ('closeflow_files_workspace_delete')
+) e(policyname)
+left join pg_policies p
+  on p.schemaname = 'storage'
+ and p.tablename = 'objects'
+ and p.policyname = e.policyname
+order by e.policyname;
+
+-- Legacy organization compatibility diagnostics (not the canonical workspace model).
+-- 1) Legacy tables
 with expected_tables(table_name) as (
   values
     ('leads'),
@@ -208,7 +451,7 @@ left join information_schema.role_routine_grants g
  and g.privilege_type = 'EXECUTE'
 order by e.function_name;
 
--- 7) Compact summary
+-- 7) Legacy organization summary
 with
 required_tables as (
   select count(*) as total from (values

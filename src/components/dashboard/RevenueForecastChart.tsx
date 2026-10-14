@@ -152,7 +152,7 @@ export default function RevenueForecastChart({
       </div>
       <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4 text-sm text-foreground/65">
         <p className="font-medium text-foreground/80">How to read these paths</p>
-        <p className="mt-1">The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.</p>
+        <p className="mt-1">The expected path uses each open deal&apos;s close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.</p>
       </div>
     </section>
   );

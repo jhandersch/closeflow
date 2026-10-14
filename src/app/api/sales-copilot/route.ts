@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       await loadWorkspaceForUser(
         supabase,
         user.id,
+        req.headers.get("x-closeflow-workspace-id"),
       );
 
     const limitCheck =
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
         supabase,
         user.id,
         "ai",
+        workspace?.id,
       );
 
     if (!limitCheck.ok) {
@@ -180,14 +182,19 @@ Focus on:
       });
 
     if (workspace?.id) {
+      if (!completion.usage) {
+        return NextResponse.json(
+          { error: "AI usage could not be verified. Please try again later." },
+          { status: 503 },
+        );
+      }
       await recordAiUsageEvent(
-        supabase,
         workspace.id,
         user.id,
         "sales_copilot",
         "gpt-4.1-mini",
-        completion.usage?.prompt_tokens || 0,
-        completion.usage?.completion_tokens || 0,
+        completion.usage.prompt_tokens,
+        completion.usage.completion_tokens,
       );
     }
 

@@ -1,4 +1,4 @@
-const { spawnSync } = require("node:child_process")
+import { spawnSync } from "node:child_process";
 
 const npmExecPath = process.env.npm_execpath
 const npmRunner = npmExecPath

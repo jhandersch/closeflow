@@ -169,7 +169,12 @@ export async function POST(req: Request) {
          * This checks the user's workspace and
          * monthly AI allowance.
          */
-        const usageCheck = await enforceAndTrackUsageLimit(supabase, user.id, "ai");
+        const usageCheck = await enforceAndTrackUsageLimit(
+            supabase,
+            user.id,
+            "ai",
+            req.headers.get("x-closeflow-workspace-id"),
+        );
         if (!usageCheck.ok) {
             return NextResponse.json({
                 error: usageCheck.message,
@@ -391,19 +396,30 @@ ${"English"}
         /*
          * TOKEN / COST TRACKING
          */
-        if (usageCheck.context &&
-            completion.usage) {
+        if (usageCheck.context) {
+            if (!completion.usage) {
+                console.error("Revenue Forecast AI: provider did not return token usage.");
+                return NextResponse.json(
+                    { error: "AI usage could not be verified. Please try again later." },
+                    { status: 503 },
+                );
+            }
             try {
-                await recordAiUsageEvent(supabase, usageCheck.context.workspaceId, user.id, "revenue_forecast", "gpt-4.1-mini", completion.usage.prompt_tokens ??
-                    0, completion.usage
-                    .completion_tokens ?? 0);
+                await recordAiUsageEvent(
+                    usageCheck.context.workspaceId,
+                    user.id,
+                    "revenue_forecast",
+                    "gpt-4.1-mini",
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                );
             }
             catch (usageError) {
-                /*
-                 * Usage tracking must never break
-                 * a successful AI response.
-                 */
                 console.error("Revenue Forecast AI: usage tracking failed", usageError);
+                return NextResponse.json(
+                    { error: "AI usage could not be recorded. Please try again later." },
+                    { status: 503 },
+                );
             }
         }
         /*

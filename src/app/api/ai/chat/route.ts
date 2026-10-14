@@ -14,7 +14,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         userId = user.id;
-        const limitCheck = await enforceAndTrackUsageLimit(supabase, user.id, "ai");
+        const preferredWorkspaceId = request.headers.get("x-closeflow-workspace-id");
+        const limitCheck = await enforceAndTrackUsageLimit(
+            supabase,
+            user.id,
+            "ai",
+            preferredWorkspaceId,
+        );
         if (!limitCheck.ok) {
             return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status });
         }
@@ -25,7 +31,11 @@ export async function POST(request: Request) {
         if (!message) {
             return NextResponse.json({ error: "message is required" }, { status: 400 });
         }
-        const { workspace } = await loadWorkspaceForUser(supabase, user.id);
+        const { workspace } = await loadWorkspaceForUser(
+            supabase,
+            user.id,
+            preferredWorkspaceId,
+        );
         const apiKey = process.env.OPENAI_API_KEY;
         const fallback = {
             answer: `AI (${mode}): ${message}`,
@@ -58,7 +68,20 @@ export async function POST(request: Request) {
             sources: Array.isArray(result.sources) ? result.sources : [],
         };
         if (workspace?.id) {
-            await recordAiUsageEvent(supabase, workspace.id, user.id, "ai_chat", "gpt-4.1-mini", completion.usage?.prompt_tokens || 0, completion.usage?.completion_tokens || 0);
+            if (!completion.usage) {
+                return NextResponse.json(
+                    { error: "AI usage could not be verified. Please try again later." },
+                    { status: 503 },
+                );
+            }
+            await recordAiUsageEvent(
+                workspace.id,
+                user.id,
+                "ai_chat",
+                "gpt-4.1-mini",
+                completion.usage.prompt_tokens,
+                completion.usage.completion_tokens,
+            );
             await supabase.from("ai_conversations").insert({
                 workspace_id: workspace.id,
                 user_id: user.id,

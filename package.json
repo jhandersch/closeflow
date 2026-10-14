@@ -7,12 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "lint:tenancy": "node scripts/check-tenancy.js",
-    "verify:release": "node scripts/verify-release.js",
+    "lint:tenancy": "node scripts/check-tenancy.mjs",
+    "verify:release": "node scripts/verify-release.mjs",
+    "test:ai-cost": "node --experimental-strip-types --test tests/ai-cost.test.mjs",
+    "test:usage-quota": "node --experimental-strip-types --test tests/usage-quota.test.mjs",
+    "test:workspace-auth": "node --experimental-strip-types --test tests/workspace-auth.test.mjs",
+    "test:lead-lifecycle:production": "node tests/lead-lifecycle-production.mjs",
+    "test:auth-recovery:production": "node tests/auth-recovery-production.mjs",
+    "test:stripe-api:production": "node tests/stripe-api-production.mjs",
+    "test:ai-route-success:production": "node tests/ai-route-success-production.mjs",
+    "test:stripe-webhook:production": "node tests/stripe-webhook-production.mjs",
+    "test:workspace-invite:production": "node tests/workspace-invite-production.mjs",
+    "test:workspace-seat-concurrency:production": "node tests/workspace-seat-concurrency-production.mjs",
+    "test:ai-route-quota:production": "node tests/ai-route-quota-production.mjs",
     "test:cross-tenant": "node scripts/cross-tenant-negative-tests.js",
-    "test:cross-tenant:bootstrap": "node scripts/bootstrap-cross-tenant-env.js",
+    "test:cross-tenant:bootstrap": "node scripts/bootstrap-cross-tenant-env.mjs",
     "test:cross-tenant:seed": "node scripts/seed-cross-tenant-probe.js",
-    "test:cross-tenant:suite": "node scripts/run-cross-tenant-suite.js"
+    "test:cross-tenant:suite": "node scripts/run-cross-tenant-suite.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -21,7 +32,7 @@
     "@supabase/supabase-js": "^2.106.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
-    "next": "16.2.6",
+    "next": "^16.4.1",
     "openai": "^6.46.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -29,7 +40,7 @@
     "recharts": "^3.8.1",
     "resend": "^6.18.1",
     "stripe": "^22.1.1",
-    "xlsx": "^0.18.5",
+    "xlsx": "npm:@e965/xlsx@^0.20.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
@@ -38,8 +49,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "^16.4.1",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "pg": "^8.23.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

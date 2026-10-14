@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
+import { createTrackedOpenAIClient } from "@/lib/aiCost";
 export async function POST(request: Request, context: {
     params: Promise<{
         id: string;
     }>;
 }) {
+    const access = await requireAiWorkspaceQuota(request);
+    if (!access.ok) return access.response;
     try {
         const { id } = await context.params;
         const cookieSupabase = await createClient();
@@ -40,6 +43,7 @@ export async function POST(request: Request, context: {
             .from("leads")
             .select("*")
             .eq("id", id)
+            .eq("workspace_id", access.workspaceId)
             .single();
         if (error || !lead) {
             return NextResponse.json({
@@ -48,9 +52,17 @@ export async function POST(request: Request, context: {
                 status: 404
             });
         }
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY
-        });
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({ error: "AI is not configured." }, { status: 503 });
+        }
+        const openai = createTrackedOpenAIClient(
+            apiKey,
+            access.supabase,
+            access.workspaceId,
+            access.userId,
+            "lead_follow_up_ai",
+        );
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",
             response_format: {

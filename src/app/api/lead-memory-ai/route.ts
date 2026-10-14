@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { createTrackedOpenAIClient } from "@/lib/aiCost";
 
 const fallbackResponse = () => ({
   summary: "AI analysis is currently unavailable.",
@@ -12,6 +13,8 @@ const fallbackResponse = () => ({
 });
 
 export async function POST(req: Request) {
+    const access = await requireAiWorkspaceQuota(req);
+    if (!access.ok) return access.response;
   try {
     const { user, error: authError } = await getRouteUser(req);
     if (authError || !user) {
@@ -75,7 +78,13 @@ Consider that:
 - Write all text values in English
 `;
 
-    const openai = new OpenAI({ apiKey });
+    const openai = createTrackedOpenAIClient(
+      apiKey,
+      access.supabase,
+      access.workspaceId,
+      access.userId,
+      "lead_memory_ai",
+    );
 
     const completion =
       await openai.chat.completions.create({

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 export async function POST(request: NextRequest, context: {
     params: Promise<{
         id: string;
     }>;
 }) {
+    const access = await requireAiWorkspaceQuota(request);
+    if (!access.ok) return access.response;
     try {
         const { id } = await context.params;
         if (!id) {
@@ -15,7 +18,11 @@ export async function POST(request: NextRequest, context: {
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const { workspace, error: workspaceError, } = await loadWorkspaceForUser(supabase, user.id);
+        const { workspace, error: workspaceError, } = await loadWorkspaceForUser(
+            supabase,
+            user.id,
+            access.workspaceId,
+        );
         if (workspaceError || !workspace?.id) {
             return NextResponse.json({ error: "Workspace required" }, { status: 403 });
         }

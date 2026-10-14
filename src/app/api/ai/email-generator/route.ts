@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
+import { createTrackedOpenAIClient } from "@/lib/aiCost";
 export async function POST(request: Request) {
+    const access = await requireAiWorkspaceQuota(request);
+    if (!access.ok) return access.response;
     try {
         const { user, error } = await getRouteUser(request);
         if (error || !user) {
@@ -23,7 +26,13 @@ export async function POST(request: Request) {
                 body: `Hello${lead.name ? ` ${lead.name}` : ""},\n\nI wanted to ${goal.toLowerCase()} regarding ${lead.company || "your company"}.\n\nBest regards`,
             });
         }
-        const openai = new OpenAI({ apiKey });
+        const openai = createTrackedOpenAIClient(
+            apiKey,
+            access.supabase,
+            access.workspaceId,
+            access.userId,
+            "ai_email_generator",
+        );
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",
             response_format: { type: "json_object" },

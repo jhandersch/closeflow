@@ -255,8 +255,7 @@ export default function BillingPage() {
                 return;
             }
 
-            window.location.href =
-                data.checkoutUrl;
+            window.location.assign(data.checkoutUrl);
         } catch {
             toast.error(
                 "Could not start checkout.",
@@ -789,4 +788,3 @@ export default function BillingPage() {
         </AuthGuard>
     );
 }
-

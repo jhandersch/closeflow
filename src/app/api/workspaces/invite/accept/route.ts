@@ -53,72 +53,34 @@ export async function POST(request: Request) {
                 error: "This invitation was sent to a different email address.",
             }, { status: 403 });
         }
-        /*
-         * Check whether the user is already a member.
-         */
-        const { data: existingMember, error: memberCheckError, } = await supabase
-            .from("workspace_members")
-            .select("id, role")
-            .eq("workspace_id", invite.workspace_id)
-            .eq("user_id", user.id)
-            .maybeSingle();
-        if (memberCheckError) {
-            console.error("CHECK MEMBER ERROR:", memberCheckError);
-            return NextResponse.json({ error: memberCheckError.message }, { status: 500 });
+        const { data: acceptance, error: acceptanceError } = await supabase.rpc(
+            "accept_workspace_invite_with_limit",
+            { p_token: token },
+        );
+        if (acceptanceError) {
+            console.error("ACCEPT WORKSPACE INVITE ERROR:", acceptanceError.message);
+            const isSeatLimit = acceptanceError.code === "23514";
+            return NextResponse.json(
+                {
+                    error: isSeatLimit
+                        ? "The workspace has reached its team seat limit."
+                        : "The invitation could not be accepted.",
+                },
+                { status: isSeatLimit ? 429 : acceptanceError.code === "42501" ? 403 : 500 },
+            );
         }
-        /*
-         * Wenn bereits Mitglied:
-         * Einladung trotzdem entfernen.
-         */
-        if (existingMember) {
-            const { error: deleteInviteError } = await supabase
-                .from("workspace_invites")
-                .delete()
-                .eq("id", invite.id);
-            if (deleteInviteError) {
-                console.error("DELETE INVITE ERROR:", deleteInviteError);
-                return NextResponse.json({
-                    error: deleteInviteError.message,
-                }, { status: 500 });
-            }
-            return NextResponse.json({
-                ok: true,
-                alreadyMember: false,
-                workspaceId: invite.workspace_id,
-            });
-        }
-        /*
-         * Add the user as a workspace member.
-         */
-        const { error: insertError, } = await supabase
-            .from("workspace_members")
-            .insert({
-            workspace_id: invite.workspace_id,
-            user_id: user.id,
-            role: invite.role,
-        });
-        if (insertError) {
-            console.error("ADD WORKSPACE MEMBER ERROR:", insertError);
-            return NextResponse.json({ error: insertError.message }, { status: 500 });
-        }
-        /*
-         * Einladung nach erfolgreicher
-         * Delete the acceptance.
-         */
-        const { error: deleteInviteError, } = await supabase
-            .from("workspace_invites")
-            .delete()
-            .eq("id", invite.id);
-        if (deleteInviteError) {
-            console.error("DELETE INVITE ERROR:", deleteInviteError);
-            return NextResponse.json({
-                error: "User was added to the workspace, but the invitation could not be removed.",
-            }, { status: 500 });
+        const accepted = Array.isArray(acceptance) ? acceptance[0] : acceptance;
+        if (!accepted || accepted.workspace_id !== invite.workspace_id) {
+            console.error("Accept workspace invite RPC returned an invalid response.");
+            return NextResponse.json(
+                { error: "The invitation could not be accepted." },
+                { status: 503 },
+            );
         }
         return NextResponse.json({
             ok: true,
-            alreadyMember: false,
-            workspaceId: invite.workspace_id,
+            alreadyMember: accepted.already_member === true,
+            workspaceId: accepted.workspace_id,
         });
     }
     catch (error) {

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadWorkspaceForUser } from "@/lib/supabase/route";
 import { planDetails, type Plan } from "@/lib/planDetails";
+import { consumeWorkspaceUsage, type UsageBucket } from "@/lib/usageQuota";
 type PlanTier = Plan;
 type Limits = {
     aiRequestsMonthly: number | null;
@@ -35,7 +36,6 @@ const normalizePlan = (value: unknown): PlanTier => {
     return "free";
 };
 const monthKey = () => new Date().toISOString().slice(0, 7);
-const missingColumn = (message: string) => /column .* does not exist|schema cache/i.test(message);
 const readUsage = async (supabase: SupabaseClient, workspaceId: string, month: string): Promise<UsageSnapshot> => {
     const primary = await supabase
         .from("usage")
@@ -43,31 +43,12 @@ const readUsage = async (supabase: SupabaseClient, workspaceId: string, month: s
         .eq("workspace_id", workspaceId)
         .eq("month", month)
         .maybeSingle();
-    if (!primary.error) {
-        return {
-            aiRequests: primary.data?.ai_requests || 0,
-            exports: primary.data?.exports_count || 0,
-            month,
-        };
-    }
-    if (missingColumn(primary.error.message || "")) {
-        const fallback = await supabase
-            .from("usage")
-            .select("ai_requests")
-            .eq("workspace_id", workspaceId)
-            .eq("month", month)
-            .maybeSingle();
-        if (!fallback.error) {
-            return {
-                aiRequests: fallback.data?.ai_requests || 0,
-                exports: 0,
-                month,
-            };
-        }
+    if (primary.error) {
+        throw new Error(`Could not read workspace usage: ${primary.error.message}`);
     }
     return {
-        aiRequests: 0,
-        exports: 0,
+        aiRequests: primary.data?.ai_requests || 0,
+        exports: primary.data?.exports_count || 0,
         month,
     };
 };
@@ -83,14 +64,17 @@ export async function getWorkspaceUsageContext(
             preferredWorkspaceId,
         );
 
-    if (error || !workspace) {
+    if (error) {
+        throw new Error(`Could not verify workspace membership: ${error.message}`);
+    }
+    if (!workspace) {
         return null;
     }
 
     const month = monthKey();
 
     const [
-        { data: subscription },
+        { data: subscription, error: subscriptionError },
         usage,
         membersCountRes,
         invitesCountRes,
@@ -122,6 +106,15 @@ export async function getWorkspaceUsageContext(
             .is("accepted_at", null),
     ]);
 
+    if (subscriptionError || membersCountRes.error || invitesCountRes.error) {
+        throw new Error(
+            subscriptionError?.message ||
+                membersCountRes.error?.message ||
+                invitesCountRes.error?.message ||
+                "Could not verify workspace limits.",
+        );
+    }
+
     const plan = normalizePlan(
         subscription?.plan,
     );
@@ -137,34 +130,12 @@ export async function getWorkspaceUsageContext(
             invitesCountRes.count || 0,
     };
 }
-const incrementUsage = async (supabase: SupabaseClient, workspaceId: string, month: string, field: "ai_requests" | "exports_count") => {
-    const current = await supabase
-        .from("usage")
-        .select("ai_requests, exports_count")
-        .eq("workspace_id", workspaceId)
-        .eq("month", month)
-        .maybeSingle();
-    if (current.error && !missingColumn(current.error.message || "")) {
-        return;
-    }
-    const aiRequests = (current.data?.ai_requests || 0) + (field === "ai_requests" ? 1 : 0);
-    const exportsCount = (current.data?.exports_count || 0) + (field === "exports_count" ? 1 : 0);
-    const payload: Record<string, unknown> = {
-        workspace_id: workspaceId,
-        month,
-        ai_requests: aiRequests,
-        updated_at: new Date().toISOString(),
-    };
-    if (!current.error || !missingColumn(current.error.message || "")) {
-        payload.exports_count = exportsCount;
-    }
-    await supabase.from("usage").upsert(payload, { onConflict: "workspace_id,month" });
-};
 export async function enforceAndTrackUsageLimit(
     supabase: SupabaseClient,
     userId: string,
-    bucket: "ai" | "export",
+    bucket: UsageBucket,
     preferredWorkspaceId?: string | null,
+    requestKey = crypto.randomUUID(),
 ): Promise<
     | {
           ok: true;
@@ -176,73 +147,72 @@ export async function enforceAndTrackUsageLimit(
           message: string;
       }
 > {
-    const context =
-        await getWorkspaceUsageContext(
+    try {
+        const { workspace, error } = await loadWorkspaceForUser(
             supabase,
             userId,
             preferredWorkspaceId,
         );
-
-    if (!context) {
-        return {
-            ok: true,
-            context: null,
-        };
-    }
-
-    if (bucket === "ai") {
-        const limit =
-            context.limits.aiRequestsMonthly;
-
-        if (
-            limit !== null &&
-            context.usage.aiRequests >= limit
-        ) {
+        if (error) {
+            throw new Error(error.message);
+        }
+        if (!workspace) {
             return {
                 ok: false,
-                status: 429,
-                message: `AI request limit reached for ${context.plan.toUpperCase()} plan (${limit}/${limit}).`,
+                status: 403,
+                message: "A workspace is required to use this feature.",
             };
         }
 
-        await incrementUsage(
+        const month = monthKey();
+        const context = await getWorkspaceUsageContext(
             supabase,
-            context.workspaceId,
-            context.usage.month,
-            "ai_requests",
+            userId,
+            workspace.id,
         );
+        if (!context) {
+            return {
+                ok: false,
+                status: 503,
+                message: "Could not verify workspace limits. Please try again later.",
+            };
+        }
+
+        const reservation = await consumeWorkspaceUsage(
+            supabase,
+            workspace.id,
+            bucket,
+            requestKey,
+            month,
+        );
+        if (!reservation.ok) {
+            return reservation;
+        }
 
         return {
             ok: true,
-            context,
+            context: {
+                ...context,
+                plan: reservation.plan,
+                limits: PLAN_LIMITS[reservation.plan],
+                usage: {
+                    ...context.usage,
+                    aiRequests: bucket === "ai" ? reservation.currentCount : context.usage.aiRequests,
+                    exports: bucket === "export" ? reservation.currentCount : context.usage.exports,
+                },
+            },
         };
-    }
-
-    const exportLimit =
-        context.limits.exportsMonthly;
-
-    if (
-        exportLimit !== null &&
-        context.usage.exports >= exportLimit
-    ) {
+    } catch (error) {
+        console.error(
+            "Workspace usage check failed:",
+            error instanceof Error ? error.message : "Unknown error",
+        );
         return {
             ok: false,
-            status: 429,
-            message: `Export limit reached for ${context.plan.toUpperCase()} plan (${exportLimit}/${exportLimit}).`,
+            status: 503,
+            message: "Could not verify workspace usage. Please try again later.",
         };
     }
-
-    await incrementUsage(
-        supabase,
-        context.workspaceId,
-        context.usage.month,
-        "exports_count",
-    );
-
-    return {
-        ok: true,
-        context,
-    };
 }
 export async function enforceTeamSeatLimit(
     supabase: SupabaseClient,
@@ -264,7 +234,11 @@ export async function enforceTeamSeatLimit(
         );
 
     if (!context) {
-        return { ok: true };
+        return {
+            ok: false,
+            status: 503,
+            message: "Could not verify workspace seat limits.",
+        };
     }
 
     const seatLimit =
@@ -297,7 +271,14 @@ export async function enforceLeadCapacityLimit(
 ) {
     const context = await getWorkspaceUsageContext(supabase, userId, workspaceId);
 
-    if (!context || context.limits.leadCapacity === null) {
+    if (!context) {
+        return {
+            ok: false,
+            status: 503,
+            message: "Could not verify workspace lead limits.",
+        } as const;
+    }
+    if (context.limits.leadCapacity === null) {
         return { ok: true } as const;
     }
 
@@ -336,7 +317,14 @@ export async function getLeadCapacitySnapshot(
 ) {
     const context = await getWorkspaceUsageContext(supabase, userId, workspaceId);
 
-    if (!context || context.limits.leadCapacity === null) {
+    if (!context) {
+        return {
+            ok: false,
+            status: 503,
+            message: "Could not verify workspace lead limits.",
+        } as const;
+    }
+    if (context.limits.leadCapacity === null) {
         return { ok: true, available: null } as const;
     }
 

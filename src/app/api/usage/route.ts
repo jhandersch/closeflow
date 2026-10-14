@@ -12,12 +12,23 @@ export async function GET(request: Request) {
             "x-closeflow-workspace-id",
         );
 
-    const context =
-        await getWorkspaceUsageContext(
+    let context: Awaited<ReturnType<typeof getWorkspaceUsageContext>>;
+    try {
+        context = await getWorkspaceUsageContext(
             supabase,
             user.id,
             preferredWorkspaceId,
         );
+    } catch (usageError) {
+        console.error(
+            "Could not verify workspace usage:",
+            usageError instanceof Error ? usageError.message : "Unknown error",
+        );
+        return NextResponse.json(
+            { error: "Could not verify workspace usage. Please try again later." },
+            { status: 503 },
+        );
+    }
     if (!context) {
         return NextResponse.json({
             workspace_id: null,
@@ -54,13 +65,36 @@ export async function GET(request: Request) {
             },
         });
     }
-    const aiUsage = await summarizeWorkspaceAiUsage(supabase, context.workspaceId, context.usage.month);
-    const { count: activeLeadsCount } = await supabase
+    let aiUsage: Awaited<ReturnType<typeof summarizeWorkspaceAiUsage>>;
+    try {
+        aiUsage = await summarizeWorkspaceAiUsage(
+            supabase,
+            context.workspaceId,
+            context.usage.month,
+        );
+    } catch (usageError) {
+        console.error(
+            "Could not summarize AI usage:",
+            usageError instanceof Error ? usageError.message : "Unknown error",
+        );
+        return NextResponse.json(
+            { error: "Could not verify AI usage. Please try again later." },
+            { status: 503 },
+        );
+    }
+    const { count: activeLeadsCount, error: activeLeadsError } = await supabase
         .from("leads")
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", context.workspaceId)
         .in("status", ["new", "contacted", "proposal"])
         .is("deleted_at", null);
+    if (activeLeadsError) {
+        console.error("Could not count active leads:", activeLeadsError.message);
+        return NextResponse.json(
+            { error: "Could not verify lead usage. Please try again later." },
+            { status: 503 },
+        );
+    }
     return NextResponse.json({
         workspace_id: context.workspaceId,
         plan: context.plan,

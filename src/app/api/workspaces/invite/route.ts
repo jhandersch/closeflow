@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
-import { enforceTeamSeatLimit } from "@/lib/usageLimits";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 
@@ -66,62 +65,53 @@ export async function POST(request: Request) {
     );
   }
 
-  /*
-   * Only owners and admins may
-   * invite workspace members.
-   */
-  if (workspaceRole.role !== "owner" && workspaceRole.role !== "admin") {
+  if (
+    workspaceRole.role !== "owner" &&
+    workspaceRole.role !== "admin" &&
+    workspaceRole.role !== "sales_manager"
+  ) {
     return NextResponse.json(
       {
-        error: "Only workspace owners and admins can invite members.",
+        error: "Only workspace owners, admins, and sales managers can invite members.",
       },
       { status: 403 },
     );
   }
 
-  /*
-   * Check the team seat limit.
-   */
-  const seatLimit = await enforceTeamSeatLimit(supabase, user.id, workspaceId);
-
-  if (!seatLimit.ok) {
-    return NextResponse.json(
-      {
-        error: seatLimit.message,
-      },
-      {
-        status: seatLimit.status,
-      },
-    );
-  }
-
-  /*
-   * Create invitation.
-   */
   const token = crypto.randomUUID();
 
   const expiresAt = new Date(
     Date.now() + 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  const { error: inviteError } = await supabase
-    .from("workspace_invites")
-    .insert({
-      workspace_id: workspaceId,
-      email,
-      role,
-      token,
-      expires_at: expiresAt,
-    });
+  const { data: inviteId, error: inviteError } = await supabase.rpc(
+    "create_workspace_invite_with_limit",
+    {
+      p_workspace_id: workspaceId,
+      p_email: email,
+      p_role: role,
+      p_token: token,
+      p_expires_at: expiresAt,
+    },
+  );
 
   if (inviteError) {
-    console.error("CREATE WORKSPACE INVITE ERROR:", inviteError);
+    console.error("CREATE WORKSPACE INVITE ERROR:", inviteError.message);
 
     return NextResponse.json(
       {
-        error: inviteError.message,
+        error: inviteError.code === "23514"
+          ? "The workspace has reached its team seat limit."
+          : "The invitation could not be created.",
       },
-      { status: 500 },
+      { status: inviteError.code === "23514" ? 429 : 500 },
+    );
+  }
+  if (typeof inviteId !== "string") {
+    console.error("Create workspace invite RPC returned an invalid identifier.");
+    return NextResponse.json(
+      { error: "The invitation could not be created." },
+      { status: 503 },
     );
   }
 
@@ -151,6 +141,7 @@ export async function POST(request: Request) {
     const { error: cleanupError } = await supabase
       .from("workspace_invites")
       .delete()
+      .eq("id", inviteId)
       .eq("workspace_id", workspaceId)
       .eq("email", email)
       .eq("token", token);
