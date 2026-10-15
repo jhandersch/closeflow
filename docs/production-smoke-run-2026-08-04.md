@@ -2103,3 +2103,23 @@ The signed-in browser session exercised the deployed production UI in the user-c
 A new uniquely marked text file was uploaded through the production UI. An authenticated browser request to the same `/api/files` download URL used by the Download button returned **HTTP 200**, `text/plain`, `Content-Disposition: attachment` with the expected filename, and the exact expected file content. The UI click did not produce an observable native browser download event in the integrated browser, so the endpoint is verified but the browser's final save behavior is not. The marked file was permanently deleted through the UI; a fresh file listing returned HTTP 200 with no remaining files, and the local temporary fixture was removed. No other files were present or changed.
 
 This follow-up does not change the overall **NO-GO** release recommendation or close the separate automation, workspace-creation, authentication, tenant-isolation, billing, or operational evidence gaps.
+
+## Business Workspace Capacity Implementation and Production Verification (2026-10-15T02:27:55+02:00)
+
+The Business workspace-capacity discrepancy is resolved. The confirmed policy is up to five owned workspaces when the user owns an active Business workspace; Free and Pro allow one owned workspace. Every newly created workspace starts on Free and has its own subscription and billing. Invited workspaces do not count toward the user's owned-workspace cap.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Database migration | **PASS** | Applied `20261015020000_business_workspace_capacity.sql` with the Supabase CLI. The RPC serializes creation per owner, checks the active Business entitlement, creates the workspace and owner membership atomically, and restricts RPC execution to authenticated users. |
+| Production DB verification | **PASS — 24/24** | `supabase/verify-atomic-workspace-limits.sql`; includes function security/search-path/grants, the workspace cap implementation, and migration history. |
+| Exact Business cap | **PASS** | In a rolled-back transaction against the dedicated Business smoke owner, four additional Free workspaces were created and the sixth total owned workspace was rejected with `workspace_owner_capacity`. Rollback residue: 0. |
+| Build and tenancy guard | **PASS** | `npm run verify:release`; tenancy check passed and Next.js production build/TypeScript completed. |
+| Focused unit tests | **PASS — 6/6** | `npm run test:workspace-capacity` (4/4) and `npm run test:workspace-auth` (2/2). |
+| Full lint | **PASS with existing warnings** | 0 errors, 123 warnings. |
+| Production deploy | **PASS** | Commit `d0cb23ce6e323adae37295056f7f759e30b5eb8a` was pushed to `main`; the production Team page showed `Owned workspaces: 1/5`. Production `/api/health` returned HTTP 200. |
+| Authenticated UI create and switch | **PASS** | Created a marked second workspace; it appeared as Free, the owner count became 2/5, and switching between it and the Business workspace displayed the correct plan and preserved the count. |
+| Test-workspace cleanup | **PASS** | The marked second workspace had no leads, tasks, calendar events, activities, automations, revenue, files, invites, or subscription. It was deleted through the protected workspace-delete endpoint; the production API then listed only the original workspace and no marker. |
+
+This resolves and supersedes the earlier **Workspace creation FAIL / product behavior discrepancy** in the authenticated UI run above. No marked workspace fixture remains.
+
+**Overall release status remains NO-GO.** This implementation closes only the workspace-capacity gap. Automation trigger execution, native browser download completion, successful OAuth/PKCE and email delivery, exhaustive cross-tenant operations, real paid checkout/webhook delivery, and production monitoring/backup/restore evidence remain open; no live payment or email was performed.
