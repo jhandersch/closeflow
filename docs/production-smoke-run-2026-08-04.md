@@ -2161,3 +2161,14 @@ Executed in the Business test workspace "CloseFlow Workspace" with marked fixtur
 | Cleanup | Both test automations deleted (runs cascade). Lead soft-deleted to trash (HTTP 200). The three generated tasks remain as open fixtures tied to the trashed lead; they are marked and were not hard-deleted. |
 
 Still open: idle (`lead.idle_7d/14d`) and `task.overdue` triggers have no scheduler and do not execute. **Overall release status remains NO-GO.**
+
+
+## Scheduled Workflow Triggers (2026-10-15T17:35+02:00)
+
+| Item | Result | Evidence |
+|---|---|---|
+| Implementation | `GET /api/cron/automations` (`src/app/api/cron/automations/route.ts`) executes `lead.idle_7d`, `lead.idle_14d` and `task.overdue` workflows (tasks need a linked lead); `vercel.json` schedules it daily at 06:00 UTC. Idempotency keys: idle = lead + last_activity_at; overdue = task + due_date. Service role is used only with queries scoped to the matching automation's `workspace_id`. | `tsc` clean, `verify:release` PASS. |
+| Authorization | Bearer `CRON_SECRET` (constant-time compare); fails closed if the secret is unset. | Production: no header -> 401, wrong header -> 401. |
+| Authorized execution | **NOT VERIFIED** | `CRON_SECRET` is not yet configured in Vercel (cannot be set from this environment), so the authorized path has not been exercised in production. |
+
+Open: set `CRON_SECRET` in Vercel (Production), redeploy, then run an idle/overdue fixture test. **Overall release status remains NO-GO.**
