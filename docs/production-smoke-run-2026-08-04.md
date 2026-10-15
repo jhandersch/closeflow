@@ -2187,3 +2187,12 @@ After `CRON_SECRET` was set in Vercel and redeployed:
 | Cleanup | Marked automations, generated tasks/activities and the fixture lead were removed (hard delete of marked rows only). |
 
 Note: enabling `task.overdue` acts on all existing overdue tasks with leads in the workspace on first run; this is intended but worth noting for users. The cron runs once daily. Remaining open items: native download confirmation, OAuth/PKCE and email delivery, full cross-tenant matrix, paid Stripe checkout/webhook, monitoring/backup/restore, `/api/health` dependency checks. **Overall release status remains NO-GO.**
+
+
+## Health Endpoint Dependency Checks (2026-10-15T18:20+02:00)
+
+`GET /api/health` now verifies a database round-trip (4 s timeout) and the presence of required configuration (Supabase URL/service role, Stripe webhook secret, OpenAI key, cron secret). It returns 200 `ok` or 503 `degraded` with only per-check pass/fail (no values or error details).
+
+Production: HTTP 200, `database: ok`, `config: ok`. The 503 failure path was not exercised in production. This is a basis for an uptime monitor, but **no external monitor/alerting is configured**, so monitoring and backup/restore evidence stay open. **Overall release status remains NO-GO.**
+
+Security note: during this session a command output displayed values from `.env.local` (OpenAI key, cron secret, Stripe webhook secret) in the assistant transcript. Rotating those three secrets is recommended.
