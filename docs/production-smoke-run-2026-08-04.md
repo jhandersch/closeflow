@@ -2249,3 +2249,12 @@ The Stripe dashboard tab was not logged in, so the check used the Stripe API wit
 | Paid checkout through the UI with a Stripe test card | **NOT PERFORMED** | Would require creating a subscription on a workspace; still open. |
 
 **Overall release status remains NO-GO.**
+
+## Stripe-Testkarten-Checkout (2026-10-15, Testmodus)
+- Wegwerf-Workspace `CLOSEFLOW-UI-STRIPE-20261015`, Upgrade auf Pro mit Testkarte 4242: Zahlung PASS.
+- Webhook: `subscriptions` wurde `pro/active` mit Periodenende gesetzt, Events mit `pending_webhooks=0`: PASS. `workspaces.plan` bleibt `free`; die Plan-Auflösung läuft über die Subscription (beabsichtigt).
+- **FAIL (gefunden):** Return-/Cancel-URLs zeigten auf `http://localhost:3000` (Env-Fallback), Browser landete nach Zahlung auf einer Fehlerseite.
+- Fix: `src/lib/appUrl.ts` ignoriert localhost in Produktion und nutzt `NEXT_PUBLIC_SITE_URL` bzw. die Request-Origin; eingesetzt in `create-checkout` und `create-portal`.
+- Re-Verifikation nach Deploy: Neue Checkout-Session hat `success_url=https://closeflow-green.vercel.app/settings/billing?success=1` und `cancel_url=…?canceled=1`: PASS. Session danach abgelaufen (expire).
+- Cleanup: Test-Abo per API gekündigt (Webhook setzte `canceled`), Workspace über `/api/workspaces/delete` gelöscht (200).
+- Offen: Der Portal-Rücksprung (`create-portal`) wurde nicht live geprüft. Release-Status weiterhin NO-GO.
