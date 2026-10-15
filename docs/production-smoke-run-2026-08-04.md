@@ -2172,3 +2172,18 @@ Still open: idle (`lead.idle_7d/14d`) and `task.overdue` triggers have no schedu
 | Authorized execution | **NOT VERIFIED** | `CRON_SECRET` is not yet configured in Vercel (cannot be set from this environment), so the authorized path has not been exercised in production. |
 
 Open: set `CRON_SECRET` in Vercel (Production), redeploy, then run an idle/overdue fixture test. **Overall release status remains NO-GO.**
+
+
+## Scheduled Workflow Triggers: Production Verification (2026-10-15T18:15+02:00)
+
+After `CRON_SECRET` was set in Vercel and redeployed:
+
+| Check | Result | Evidence |
+|---|---|---|
+| Authorized cron call | **PASS** | HTTP 200 `{"ok":true,"errors":0}` (earlier 401 until the redeploy finished). |
+| `lead.idle_7d` | **PASS** | Fixture lead with `last_activity_at` 10 days old produced exactly one task and one successful run. |
+| `task.overdue` | **PASS** | Ran for the fixture task and 4 other existing overdue tasks that have leads (5 runs, `success`), each producing one marked activity. |
+| Idempotency | **PASS** | A second immediate call returned `runs: 0`. |
+| Cleanup | Marked automations, generated tasks/activities and the fixture lead were removed (hard delete of marked rows only). |
+
+Note: enabling `task.overdue` acts on all existing overdue tasks with leads in the workspace on first run; this is intended but worth noting for users. The cron runs once daily. Remaining open items: native download confirmation, OAuth/PKCE and email delivery, full cross-tenant matrix, paid Stripe checkout/webhook, monitoring/backup/restore, `/api/health` dependency checks. **Overall release status remains NO-GO.**
