@@ -2209,3 +2209,16 @@ Security note: during this session a command output displayed values from `.env.
 | Coverage limits | Rows were seeded in workspace B for 13 tables, so read/update/delete leak checks are meaningful there. For `automation_runs, notifications, revenue_events, usage_events, workspace_invites, workspace_members` no seed row could be created generically; only insert-blocking is meaningful for those (reads are vacuous). Tables without a `workspace_id` column (e.g. `lead_tag_links`, `team_members`, `profiles`) are not covered by the matrix. HTTP-layer and RPC cross-tenant checks remain in the earlier suite. |
 
 **Overall release status remains NO-GO.**
+
+
+## Anon / Unrelated-User Leak Check Against Real Production Data (2026-10-15T18:55+02:00)
+
+`tests/rls-leak-check.mjs` (`npm run test:rls-leak`, rolled back) creates one disposable user + workspace and, as `anon` and as that unrelated `authenticated` user, counts rows outside its own workspace in **all 36 public tables**, including those without `workspace_id` (`profiles`, `team_members`, `lead_tag_links`, `organization_*`, ...).
+
+| Result | Detail |
+|---|---|
+| **PASS** | 0 foreign rows visible for both roles in every table. 17 of 36 tables contain real production rows, so those checks are meaningful; the other 19 are empty and the check is vacuous there. |
+| Observation | All 36 tables have RLS enabled. `ai_generations, lead_memory, lead_scores, meetings, notes, team_members` have RLS but no policies (client access denied; service-role only). `anon`/`authenticated` hold table privileges everywhere, so RLS is the only barrier. |
+| Legacy defect (not fixed) | `organizations`, `organization_members`, `organization_invites`, `organization_audit_events` fail with 42P17 (infinite policy recursion) for client roles. This fails closed (no data exposed). The only consumer, `src/hooks/useTeamWorkspace.ts`, is not imported anywhere, so the tables appear to be dead legacy. |
+
+**Overall release status remains NO-GO.**
