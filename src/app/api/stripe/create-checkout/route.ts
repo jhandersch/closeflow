@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { resolveReturnUrl } from "@/lib/appUrl";
 import {
     getRouteUser,
     loadWorkspaceForUser,
@@ -112,19 +113,17 @@ export async function POST(request: Request) {
     const priceId =
         priceByPlan[selectedPlan];
 
-    const successUrl =
-        process.env.STRIPE_SUCCESS_URL ||
-        `${
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            "http://localhost:3000"
-        }/settings/billing?success=1`;
+    const successUrl = resolveReturnUrl(
+        request,
+        process.env.STRIPE_SUCCESS_URL,
+        "/settings/billing?success=1",
+    );
 
-    const cancelUrl =
-        process.env.STRIPE_CANCEL_URL ||
-        `${
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            "http://localhost:3000"
-        }/settings/billing?canceled=1`;
+    const cancelUrl = resolveReturnUrl(
+        request,
+        process.env.STRIPE_CANCEL_URL,
+        "/settings/billing?canceled=1",
+    );
 
     if (!apiKey || !priceId) {
         return NextResponse.json({

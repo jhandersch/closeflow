@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { resolveReturnUrl } from "@/lib/appUrl";
 import {
     getRouteUser,
     loadWorkspaceForUser,
@@ -140,12 +141,11 @@ export async function POST(request: Request) {
         {},
     );
 
-    const returnUrl =
-        process.env.STRIPE_PORTAL_RETURN_URL ||
-        `${
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            "http://localhost:3000"
-        }/settings/billing`;
+    const returnUrl = resolveReturnUrl(
+        request,
+        process.env.STRIPE_PORTAL_RETURN_URL,
+        "/settings/billing",
+    );
 
     try {
         const session =
