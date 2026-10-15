@@ -2235,3 +2235,17 @@ Checked in the Supabase dashboard (project `itqzelpofshmzeajvmma`, Database > Ba
 | Restore test | **NOT PERFORMED** | There is nothing to restore from. |
 
 Consequence: the production database holding customer CRM data currently has **no provider-managed backup or recovery path**. Required before any production release: upgrade to Pro (or implement and test an alternative export/restore routine), then perform and document a restore test. **Overall release status remains NO-GO.**
+
+
+## Stripe Test-Mode Configuration Check via API (2026-10-15T18:50+02:00)
+
+The Stripe dashboard tab was not logged in, so the check used the Stripe API with the test secret key (`sk_test_` prefix confirmed; no live key used, no payment made).
+
+| Item | Result | Evidence |
+|---|---|---|
+| Webhook endpoint | **PASS** | One endpoint `https://closeflow-green.vercel.app/api/stripe/webhook`, status `enabled`, `livemode=false`, events: `checkout.session.completed`, `customer.subscription.created/updated/deleted`, `invoice.payment_failed`. |
+| Recent event delivery | **PARTIAL** | The 15 most recent test events (2026-10-14, a prior lifecycle test: subscription created/updated/deleted, invoices, checkout expired, customer deleted) all show `pending_webhooks=0`, i.e. no deliveries outstanding. The API does not show per-attempt HTTP results here, so successful processing is evidenced only by the earlier `stripe-webhook-production` fixture test, not by this check. |
+| Test subscriptions | INFO | Two test-mode subscriptions exist: one canceled with workspace metadata, one `active` without `workspace_id` metadata (likely a leftover test object; unverified origin). |
+| Paid checkout through the UI with a Stripe test card | **NOT PERFORMED** | Would require creating a subscription on a workspace; still open. |
+
+**Overall release status remains NO-GO.**
