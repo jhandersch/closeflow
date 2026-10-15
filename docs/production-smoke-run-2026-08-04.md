@@ -2135,3 +2135,14 @@ This resolves and supersedes the earlier **Workspace creation FAIL / product beh
 Required action: either implement a server-side executor (with idempotent run records) or relabel the page so it does not imply execution. Until then, UI wording must not promise that custom workflows run. The earlier smoke PASS for automations covers create/disable/delete only, not execution.
 
 **Overall release status remains NO-GO.**
+
+
+## Custom Workflow Executor Implementation (2026-10-15)
+
+| Item | Result | Evidence |
+|---|---|---|
+| Executor | Implemented in `src/lib/workflowAutomations.ts`; called from `/api/leads` POST (`lead.created`) and PUT status change (`lead.stage.<status>`). Actions executed: `task.create`, `notify.user` (recorded as lead activity). `lead.status.update` is deliberately not executed (loop risk) and marks the run `partial`. | Code review, `tsc` clean, `verify:release` PASS. |
+| Idempotency | Migration `20261015170000_automation_run_idempotency.sql` (applied to production) adds `automation_runs.dedupe_key` with unique index and member insert/update policies scoped to the workspace. | `tests/automation-run-idempotency.mjs` (rolled back): member insert PASS, duplicate rejected 23505 PASS, status update PASS, cross-workspace insert blocked PASS. |
+| Not implemented / open | `lead.idle_7d`, `lead.idle_14d`, `task.overdue` need a scheduler and are NOT executed. No end-to-end UI run of a workflow in the production workspace yet. | Open. |
+
+**Overall release status remains NO-GO.**

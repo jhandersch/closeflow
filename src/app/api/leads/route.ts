@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
+import { runWorkflowAutomations, workflowEventForStatus } from "@/lib/workflowAutomations";
 import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
 import { rateLimit } from "@/lib/rateLimit";
@@ -223,6 +224,11 @@ export async function POST(req: Request) {
       title: "Lead created",
       description: `${data.name} was added`,
     });
+    try {
+      await runWorkflowAutomations(supabase, user.id, workspace.id, data as Lead, "lead.created");
+    } catch (workflowError) {
+      console.error("Workflow automation failed:", workflowError);
+    }
     return NextResponse.json(data);
   } catch (error) {
     console.error("POST CRASH:", error);
@@ -401,6 +407,13 @@ export async function PUT(req: Request) {
           oldLead.status,
         );
         console.log("Lead automation executed");
+        await runWorkflowAutomations(
+          supabase,
+          user.id,
+          workspace.id,
+          updatedLead,
+          workflowEventForStatus(updates.status),
+        );
       } catch (error) {
         console.error("Lead automation failed:", error);
       }
