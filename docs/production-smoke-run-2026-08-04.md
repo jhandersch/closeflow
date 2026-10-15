@@ -2146,3 +2146,18 @@ Required action: either implement a server-side executor (with idempotent run re
 | Not implemented / open | `lead.idle_7d`, `lead.idle_14d`, `task.overdue` need a scheduler and are NOT executed. No end-to-end UI run of a workflow in the production workspace yet. | Open. |
 
 **Overall release status remains NO-GO.**
+
+
+## Custom Workflow Production Verification (2026-10-15T16:58+02:00)
+
+Executed in the Business test workspace "CloseFlow Workspace" with marked fixtures, via the authenticated production session.
+
+| Check | Result | Evidence |
+|---|---|---|
+| `lead.created` workflow (preset "New lead follow-up") | **PASS** | New lead `CLOSEFLOW-UI-WF-20261015-1650` created the task "Call customer within 24h"; `automation_runs` row status `success`. |
+| `lead.stage.proposal` workflow with `task.create` + `notify.user` | **PASS** | Status change created exactly one task `CLOSEFLOW-WF follow up in 3 days` and one activity `CLOSEFLOW-WF notice`; run `success`. |
+| Idempotency | **PASS** | A repeated PUT with the same status created no further tasks, activities or runs. |
+| Built-in `runLeadAutomation` | **PASS** | Created "Follow up proposal: <lead>" on the same transition. |
+| Cleanup | Both test automations deleted (runs cascade). Lead soft-deleted to trash (HTTP 200). The three generated tasks remain as open fixtures tied to the trashed lead; they are marked and were not hard-deleted. |
+
+Still open: idle (`lead.idle_7d/14d`) and `task.overdue` triggers have no scheduler and do not execute. **Overall release status remains NO-GO.**
