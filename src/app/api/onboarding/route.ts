@@ -65,49 +65,44 @@ export async function POST(request: Request) {
                 quick_start_mode: quickStartMode,
             });
         }
-        // --------------------------------------------------
-        // Admin Client
-        // --------------------------------------------------
-        const admin = createAdminClient();
         const slug = slugifyWorkspaceName(companyName);
         // --------------------------------------------------
         // Create workspace.
         // --------------------------------------------------
-        const { data: workspace, error: workspaceError, } = await admin
-            .from("workspaces")
-            .insert({
-            name: companyName,
-            slug,
-            industry,
-            size: teamSize,
-            owner_id: user.id,
-            plan: "free",
-        })
-            .select()
-            .single();
+        const { data: createdWorkspaces, error: workspaceError } = await supabase.rpc(
+            "create_workspace_with_limit",
+            {
+                p_name: companyName,
+                p_slug: slug,
+                p_industry: industry || null,
+                p_size: teamSize || null,
+            },
+        );
         if (workspaceError) {
             console.error("ONBOARDING WORKSPACE ERROR:", workspaceError);
+            if (workspaceError.code === "23514") {
+                return NextResponse.json({ error: workspaceError.message }, { status: 409 });
+            }
+            if (workspaceError.code === "22023") {
+                return NextResponse.json({ error: workspaceError.message }, { status: 400 });
+            }
             throw workspaceError;
         }
-        if (!workspace) {
+        const createdWorkspace = Array.isArray(createdWorkspaces)
+            ? createdWorkspaces[0]
+            : null;
+        if (!createdWorkspace?.workspace_id) {
             throw new Error("Workspace creation returned no workspace");
         }
+        const workspace = {
+            id: createdWorkspace.workspace_id,
+            slug: createdWorkspace.slug,
+        };
+        // --------------------------------------------------
+        // Admin Client for privileged onboarding records.
+        // --------------------------------------------------
+        const admin = createAdminClient();
         console.log("WORKSPACE CREATED:", workspace.id);
-        // --------------------------------------------------
-        // Add the owner as a member.
-        // --------------------------------------------------
-        const { error: memberError, } = await admin
-            .from("workspace_members")
-            .insert({
-            workspace_id: workspace.id,
-            user_id: user.id,
-            role: "owner",
-            permissions: {},
-        });
-        if (memberError) {
-            console.error("ONBOARDING MEMBER ERROR:", memberError);
-            throw memberError;
-        }
         // --------------------------------------------------
         // Profil
         // --------------------------------------------------

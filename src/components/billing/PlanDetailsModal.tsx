@@ -15,6 +15,7 @@ const comparisonRows = [
     {
         category: "CRM & workspace",
         rows: [
+            { label: "Owned workspaces", values: { free: "1", pro: "1", business: "Up to 5" } },
             { label: "Team members", values: { free: "1", pro: "5", business: "20" } },
             { label: "Leads", values: { free: "50", pro: "Unlimited", business: "Unlimited" } },
             { label: "Customers", values: { free: "Included", pro: "Included", business: "Included" } },
@@ -177,6 +178,8 @@ export default function PlanDetailsModal({
                                                             currentPlan
                                                         ].price
                                                     }
+                                                    {currentPlan !== "free" &&
+                                                        " per workspace"}
                                                 </p>
 
                                                 <p className="mt-1 text-xs font-normal text-foreground/45">
@@ -253,7 +256,5 @@ export default function PlanDetailsModal({
         </div>
     );
 }
-
-
 
 

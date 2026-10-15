@@ -594,7 +594,7 @@ export default function BillingPage() {
                                                         {!isFree && (
                                                             <span className="text-sm font-normal text-foreground/50">
                                                                 {" "}
-                                                                / month
+                                                                / month per workspace
                                                             </span>
                                                         )}
                                                     </p>

@@ -39,9 +39,9 @@ const capabilities = [
 ];
 
 const plans = [
-  { name: "Free", price: "€0", period: "forever", description: "Start organizing leads and follow-ups in one workspace.", points: ["1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
-  { name: "Pro", price: "€49", period: "/ month", description: "For small agencies coordinating sales across a team.", points: ["Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
-  { name: "Business", price: "€149", period: "/ month", description: "For larger teams that need more workspace capacity.", points: ["Up to 20 team members", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
+  { name: "Free", price: "€0", period: "forever", description: "Start organizing leads and follow-ups in one workspace.", points: ["1 owned workspace", "1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
+  { name: "Pro", price: "€49", period: "/ month per workspace", description: "For small agencies coordinating sales across a team.", points: ["1 owned workspace", "Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
+  { name: "Business", price: "€149", period: "/ month per workspace", description: "For teams managing up to five workspaces, each billed separately.", points: ["Up to 5 owned workspaces", "Up to 20 team members per workspace", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
 ];
 
 const exampleDeals = [

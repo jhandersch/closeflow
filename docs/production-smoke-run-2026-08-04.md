@@ -2,7 +2,7 @@
 
 Purpose: record manual and automated evidence used for the CloseFlow release decision.
 
-Latest recorded production database interactions: the explicitly authorized migration run documented below and marker-scoped temporary test fixtures, which reported successful cleanup. No application deployment, Stripe payment/checkout operation, external AI provider call, or live email delivery was performed. Older audit sections below are timestamped historical snapshots; the latest Smoke Run Recheck at the end supersedes earlier status statements.
+Latest recorded production interactions include the explicitly authorized migration and marker-scoped fixtures documented below, one separately authorized successful AI-provider request, and the authenticated browser UI smoke run dated 2026-10-15. No deployment, real Stripe charge, or live email delivery was performed as part of that UI run. Older audit sections below are timestamped historical snapshots; the latest evidence sections supersede earlier status statements.
 
 This document is intentionally split into two layers:
 
@@ -2080,3 +2080,26 @@ A production-backed Auth fixture test used Supabase Admin `generateLink` to crea
 | Local test-server cleanup | **PASS** — port 3104 closed |
 
 **Release status is still NO-GO.** The passing gates above do not substitute for the explicitly unverified live-provider failures/broader AI success, complete OAuth/PKCE and email-delivery flow, full calendar/task/automation and workspace operations, exhaustive cross-tenant coverage, real paid Stripe/webhook delivery transitions, or production monitoring, deployment, backup, and restore evidence.
+
+## Authenticated Production UI Smoke Run (2026-10-15T01:59:33+02:00)
+
+The signed-in browser session exercised the deployed production UI in the user-confirmed dedicated test workspace. No code or deployment changes were made during this run.
+
+| Area | Result | Evidence / limitation |
+|---|---|---|
+| Dashboard and navigation | **PASS for observed pages** | Dashboard, leads, customers, pipeline, team, tasks, calendar, activities, analytics, forecast, costs, files, automations, notifications, AI, trash, billing, admin, and settings loaded in observed browser runs without observed JavaScript exceptions. This is not a substitute for every interaction on every page. |
+| Leads, pipeline, tasks, trash | **PASS for marked fixture lifecycle** | Created and edited a marked lead; moved it to Contacted; observed one follow-up task and one activity; repeat-save did not create a duplicate follow-up task. Edited, completed, reopened, soft-deleted, restored, and soft-deleted the task and lead. The marked lead and task were visible in trash afterward. |
+| Calendar | **PASS for marked fixture lifecycle** | Created, edited, soft-deleted, restored, and soft-deleted a marked calendar event; it was visible in trash afterward. |
+| Customer derivation and deletion | **PASS for marked fixture path** | A marked Won lead appeared as a customer with the expected company, deal, contact, and EUR 875 revenue. Deleting the customer removed its deal from active customer data; the customer was visible in the Customers trash section. |
+| Files | **PASS for upload, authenticated download endpoint, and delete; browser download event unverified** | Uploaded and permanently deleted marked text fixtures. The authenticated download endpoint returned HTTP 200 with the expected attachment filename and exact fixture bytes. The integrated browser did not expose a native download event, so end-user browser save behavior remains unverified. |
+| Automations | **PASS for create, deactivate, delete only** | Created, deactivated, and deleted a marked automation. No trigger execution was performed or verified. |
+| Active-data cleanup | **PASS for visible dashboard check** | The dashboard showed 6 active leads and 6 open tasks, with none of the marked fixture identifiers visible. The marked soft-deleted lead, task, calendar event, and customer remain in trash; “Empty trash” was not used. Existing B31 trash entries were left untouched. |
+| Workspace creation | **FAIL / product behavior discrepancy** | The Team UI exposed “Create workspace”, but the request returned HTTP 400, “Workspace already exists for user”, for the signed-in user. No additional workspace was created. Whether the intended product supports multiple workspaces per user is not established; do not change membership or creation policy without resolving that requirement. |
+
+**Overall release status remains NO-GO.** This UI run adds evidence only for the marked browser paths above. File download and automation execution remain unverified; workspace creation has a UI/API behavior mismatch; successful OAuth/PKCE and email delivery, broad resource-by-resource tenant isolation, paid test-checkout completion and real webhook delivery, and production monitoring/backup/restore evidence remain open. The retained trash fixtures are marked test data; existing B31 records were not altered.
+
+## File Download Endpoint Follow-up (2026-10-15T02:02:18+02:00)
+
+A new uniquely marked text file was uploaded through the production UI. An authenticated browser request to the same `/api/files` download URL used by the Download button returned **HTTP 200**, `text/plain`, `Content-Disposition: attachment` with the expected filename, and the exact expected file content. The UI click did not produce an observable native browser download event in the integrated browser, so the endpoint is verified but the browser's final save behavior is not. The marked file was permanently deleted through the UI; a fresh file listing returned HTTP 200 with no remaining files, and the local temporary fixture was removed. No other files were present or changed.
+
+This follow-up does not change the overall **NO-GO** release recommendation or close the separate automation, workspace-creation, authentication, tenant-isolation, billing, or operational evidence gaps.

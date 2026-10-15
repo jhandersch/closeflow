@@ -49,7 +49,7 @@ export default function PricingPage() {
                     <p className="mt-2 text-3xl font-bold text-foreground">
                       {plan.price.replace(/\/month$/, "")}
                       {plan.id !== "free" && (
-                        <span className="text-sm font-normal text-foreground/50"> / month</span>
+                        <span className="text-sm font-normal text-foreground/50"> / month per workspace</span>
                       )}
                     </p>
                   </div>

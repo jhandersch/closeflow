@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { resolveWorkspacePlan } from "@/lib/workspaceCapacity";
 import type { Workspace, WorkspaceInvite, WorkspaceMember, WorkspaceRole, UserProfile, } from "@/types";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const getSupabasePublicKey = () => {
@@ -255,7 +256,7 @@ export async function getWorkspacePayload(
 
         supabase
             .from("subscriptions")
-            .select("plan")
+            .select("plan,status,current_period_end")
             .eq("workspace_id", workspaceId)
             .maybeSingle(),
     ]);
@@ -297,12 +298,10 @@ export async function getWorkspacePayload(
         ]),
     );
 
-    const resolvedPlan =
-        typeof subscription?.plan === "string"
-            ? subscription.plan.toLowerCase()
-            : typeof workspace.plan === "string"
-                ? workspace.plan.toLowerCase()
-                : "free";
+    const resolvedPlan = resolveWorkspacePlan(
+        typeof workspace.plan === "string" ? workspace.plan : "free",
+        subscription,
+    );
 
     return {
         workspace: {

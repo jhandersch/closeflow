@@ -1,4 +1,4 @@
--- Read-only post-migration verification for 20261014170000.
+-- Read-only post-migration verification for 20261014170000 and 20261015020000.
 -- Run in the Supabase SQL Editor after an explicitly authorized migration.
 
 with expected_functions(function_name, identity_args, expected_search_path) as (
@@ -27,6 +27,11 @@ with expected_functions(function_name, identity_args, expected_search_path) as (
       'accept_workspace_invite_with_limit',
       'p_token text',
       'search_path=pg_catalog, pg_temp'
+    ),
+    (
+      'create_workspace_with_limit',
+      'p_name text, p_slug text, p_industry text, p_size text',
+      'search_path=pg_catalog, public'
     )
 ),
 function_checks as (
@@ -306,6 +311,42 @@ checks as (
   union all
 
   select
+    'workspace_creation_rpc_grants',
+    p.oid is not null
+      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+      and not has_function_privilege('anon', p.oid, 'EXECUTE')
+      and not exists (
+        select 1
+        from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl
+        where acl.grantee = 0
+          and acl.privilege_type = 'EXECUTE'
+      ),
+    'authenticated execute; anon/public denied'
+  from (values (1)) seed(dummy)
+  left join pg_proc p
+    on p.oid = to_regprocedure(
+      'public.create_workspace_with_limit(text,text,text,text)'
+    )
+
+  union all
+
+  select
+    'workspace_creation_atomic_plan_cap',
+    p.oid is not null
+      and position('pg_advisory_xact_lock' in pg_get_functiondef(p.oid)) > 0
+      and position('workspace_owner_capacity' in pg_get_functiondef(p.oid)) > 0
+      and position('workspace_plan_tier' in pg_get_functiondef(p.oid)) > 0
+      and position('v_limit := case when v_has_business then 5 else 1 end' in lower(pg_get_functiondef(p.oid))) > 0,
+    'owner creation is serialized and applies the Business five-workspace cap'
+  from (values (1)) seed(dummy)
+  left join pg_proc p
+    on p.oid = to_regprocedure(
+      'public.create_workspace_with_limit(text,text,text,text)'
+    )
+
+  union all
+
+  select
     f.check_name,
     f.passed,
     f.detail
@@ -321,6 +362,17 @@ checks as (
       where version = '20261015002000'
     ) then true else null end,
     'informational before ACL migration; expected after successful application'
+
+  union all
+
+  select
+    'migration_ledger_20261015020000',
+    case when exists (
+      select 1
+      from supabase_migrations.schema_migrations
+      where version = '20261015020000'
+    ) then true else null end,
+    'informational before migration; expected after successful application'
 
   union all
 

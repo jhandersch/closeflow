@@ -5,45 +5,51 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json();
+    let body: { name?: unknown };
+    try {
+        body = await request.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const name = typeof body.name === "string" ? body.name.trim() : "";
     if (!name) {
         return NextResponse.json({ error: "Workspace name is required" }, { status: 400 });
     }
-    const { data: existingMembership } = await supabase
-        .from("workspace_members")
-        .select("workspace_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-    if (existingMembership?.workspace_id) {
-        return NextResponse.json({ error: "Workspace already exists for user" }, { status: 400 });
+    const { data, error: createError } = await supabase.rpc(
+        "create_workspace_with_limit",
+        {
+            p_name: name,
+            p_slug: slugifyWorkspaceName(name),
+            p_industry: null,
+            p_size: null,
+        },
+    );
+    if (createError) {
+        if (createError.code === "22023") {
+            return NextResponse.json({ error: createError.message }, { status: 400 });
+        }
+        if (createError.code === "23514") {
+            return NextResponse.json({ error: createError.message }, { status: 409 });
+        }
+        if (createError.code === "23505") {
+            return NextResponse.json({ error: "A workspace with this name already exists." }, { status: 409 });
+        }
+        console.error("CREATE WORKSPACE RPC ERROR:", createError);
+        return NextResponse.json({ error: "Could not create workspace." }, { status: 500 });
     }
-    const { data: workspace, error: workspaceError } = await supabase
-        .from("workspaces")
-        .insert({
-        name,
-        owner_id: user.id,
-        plan: "free",
-    })
-        .select("id, name, owner_id, plan, created_at")
-        .single();
-    if (workspaceError) {
-        return NextResponse.json({ error: workspaceError.message }, { status: 500 });
+    const workspace = Array.isArray(data) ? data[0] : null;
+    if (!workspace?.workspace_id) {
+        console.error("CREATE WORKSPACE RPC RETURNED NO WORKSPACE:", user.id);
+        return NextResponse.json({ error: "Workspace creation returned no workspace." }, { status: 500 });
     }
-    const { error: memberError } = await supabase.from("workspace_members").insert({
-        workspace_id: workspace.id,
-        user_id: user.id,
-        role: "owner",
-    });
-    if (memberError) {
-        return NextResponse.json({ error: memberError.message }, { status: 500 });
-    }
-    const nextSlug = slugifyWorkspaceName(name);
     return NextResponse.json({
         workspace: {
-            ...workspace,
-            slug: nextSlug,
+            id: workspace.workspace_id,
+            name: workspace.name,
+            owner_id: workspace.owner_id,
+            plan: workspace.plan,
+            created_at: workspace.created_at,
+            slug: workspace.slug,
         },
     });
 }

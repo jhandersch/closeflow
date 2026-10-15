@@ -12,6 +12,7 @@
     "test:ai-cost": "node --experimental-strip-types --test tests/ai-cost.test.mjs",
     "test:usage-quota": "node --experimental-strip-types --test tests/usage-quota.test.mjs",
     "test:workspace-auth": "node --experimental-strip-types --test tests/workspace-auth.test.mjs",
+    "test:workspace-capacity": "node --experimental-strip-types --test tests/workspace-capacity.test.mjs",
     "test:lead-lifecycle:production": "node tests/lead-lifecycle-production.mjs",
     "test:auth-recovery:production": "node tests/auth-recovery-production.mjs",
     "test:stripe-api:production": "node tests/stripe-api-production.mjs",

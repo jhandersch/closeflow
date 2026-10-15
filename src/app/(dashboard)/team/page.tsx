@@ -9,6 +9,7 @@ import MemberTable from "@/components/team/MemberTable";
 import WorkspaceSwitcher from "@/components/team/WorkspaceSwitcher";
 import { supabase } from "@/lib/supabase/client";
 import { copyTextToClipboard } from "@/lib/clipboard";
+import { getOwnedWorkspaceCapacity } from "@/lib/workspaceCapacity";
 import { useActiveWorkspace } from "@/hooks/useActiveWorkspace";
 import type {
   Workspace,
@@ -41,6 +42,7 @@ export default function TeamPage() {
 
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [userId, setUserId] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -257,6 +259,7 @@ export default function TeamPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
+      setUserId(user?.id || "");
       setTwoFactorEnabled(
         Boolean(user?.user_metadata?.two_factor_enabled),
       );
@@ -276,6 +279,15 @@ export default function TeamPage() {
       workspaces[0] ||
       null,
     [effectiveWorkspaceId, workspaces],
+  );
+
+  const workspaceCapacity = useMemo(
+    () =>
+      getOwnedWorkspaceCapacity(
+        workspaces.map((bundle) => bundle.workspace),
+        userId,
+      ),
+    [userId, workspaces],
   );
 
   /**
@@ -301,9 +313,12 @@ export default function TeamPage() {
       });
 
       if (response.ok) {
+        const data = (await response.json()) as {
+          workspace?: { id?: string };
+        };
         setWorkspaceName("");
         toast.success("Workspace created");
-        await load();
+        await load(data.workspace?.id);
       } else {
         showActionError(
           await readApiError(
@@ -526,6 +541,10 @@ export default function TeamPage() {
                 <p className="text-sm text-foreground/65">
                   Create workspace
                 </p>
+                <p className="mt-2 text-xs text-foreground/55">
+                  Owned workspaces: {workspaceCapacity.ownedCount}/{workspaceCapacity.limit}.
+                  Each workspace starts on Free and has separate plan billing.
+                </p>
 
                 <div className="mt-3 flex gap-3">
                   <input
@@ -534,15 +553,20 @@ export default function TeamPage() {
                       setWorkspaceName(event.target.value)
                     }
                     placeholder="New workspace name"
+                    disabled={!workspaceCapacity.canCreate}
                     className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
                   />
 
                   <button
                     onClick={() => void createWorkspace()}
-                    disabled={creating}
+                    disabled={creating || !userId || !workspaceCapacity.canCreate}
                     className="cf-btn-primary"
                   >
-                    {creating ? "Creating..." : "Create"}
+                    {creating
+                      ? "Creating..."
+                      : workspaceCapacity.canCreate
+                        ? "Create"
+                        : "Limit reached"}
                   </button>
                 </div>
               </div>
