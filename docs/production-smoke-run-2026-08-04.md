@@ -2258,3 +2258,8 @@ The Stripe dashboard tab was not logged in, so the check used the Stripe API wit
 - Re-Verifikation nach Deploy: Neue Checkout-Session hat `success_url=https://closeflow-green.vercel.app/settings/billing?success=1` und `cancel_url=…?canceled=1`: PASS. Session danach abgelaufen (expire).
 - Cleanup: Test-Abo per API gekündigt (Webhook setzte `canceled`), Workspace über `/api/workspaces/delete` gelöscht (200).
 - Offen: Der Portal-Rücksprung (`create-portal`) wurde nicht live geprüft. Release-Status weiterhin NO-GO.
+
+## Externes Monitoring (2026-10-15)
+- Neu: `.github/workflows/health-check.yml` ruft alle 15 Minuten `/api/health` auf (3 Versuche, 15 s Timeout). Bei Fehlschlag schlägt der Workflow fehl; GitHub meldet fehlgeschlagene Läufe per E-Mail an den Repo-Besitzer (Standard-Benachrichtigung, nicht verifiziert).
+- Manuell geprüft: Die Live-Antwort enthält `"status":"ok"`, die Prüflogik passt dazu. Ein Lauf in GitHub Actions wurde noch nicht beobachtet (Status: offen), ebenso kein erzwungener Fehlerfall.
+- Einschränkung: GitHub-Cron kann sich verzögern und ist kein SLA-Monitoring. Für echte Alarmierung (SMS/Pager) ist ein dedizierter Dienst nötig.

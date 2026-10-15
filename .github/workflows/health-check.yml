@@ -1,0 +1,32 @@
+name: Production health check
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check /api/health
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://closeflow-green.vercel.app/api/health' }}
+        run: |
+          set -u
+          for attempt in 1 2 3; do
+            code=$(curl -s -o body.json -w "%{http_code}" --max-time 15 "$HEALTH_URL" || echo 000)
+            echo "attempt $attempt: HTTP $code"
+            if [ "$code" = "200" ] && grep -q '"status":"ok"' body.json; then
+              cat body.json
+              exit 0
+            fi
+            sleep 20
+          done
+          cat body.json || true
+          echo "::error::Health check failed (last HTTP $code)"
+          exit 1
