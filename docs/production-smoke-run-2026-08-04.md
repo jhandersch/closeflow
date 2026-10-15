@@ -2196,3 +2196,16 @@ Note: enabling `task.overdue` acts on all existing overdue tasks with leads in t
 Production: HTTP 200, `database: ok`, `config: ok`. The 503 failure path was not exercised in production. This is a basis for an uptime monitor, but **no external monitor/alerting is configured**, so monitoring and backup/restore evidence stay open. **Overall release status remains NO-GO.**
 
 Security note: during this session a command output displayed values from `.env.local` (OpenAI key, cron secret, Stripe webhook secret) in the assistant transcript. Rotating those three secrets is recommended.
+
+
+## Database-Level Cross-Tenant RLS Matrix (2026-10-15T18:45+02:00)
+
+`tests/rls-cross-tenant-matrix.mjs` (`npm run test:rls-matrix`) runs in a rolled-back production transaction with two disposable users/workspaces. As user A (member of workspace A only, role `authenticated`) it attempts read, update, delete and insert against workspace B for all 19 public tables that have `workspace_id`.
+
+| Result | Detail |
+|---|---|
+| **FINDING (fixed)** | `lead_tags` and `lead_tag_links` had RLS disabled and no policies, so any authenticated user could read/modify them across workspaces. Both tables were empty and unused by application code. Migration `20261015190000_lead_tags_rls.sql` (applied to production) enables RLS with workspace-member policies; link inserts additionally require lead and tag to share the workspace. |
+| After fix | **ALL PASS** for all 19 tables. |
+| Coverage limits | Rows were seeded in workspace B for 13 tables, so read/update/delete leak checks are meaningful there. For `automation_runs, notifications, revenue_events, usage_events, workspace_invites, workspace_members` no seed row could be created generically; only insert-blocking is meaningful for those (reads are vacuous). Tables without a `workspace_id` column (e.g. `lead_tag_links`, `team_members`, `profiles`) are not covered by the matrix. HTTP-layer and RPC cross-tenant checks remain in the earlier suite. |
+
+**Overall release status remains NO-GO.**
