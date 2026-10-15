@@ -2263,3 +2263,5 @@ The Stripe dashboard tab was not logged in, so the check used the Stripe API wit
 - Neu: `.github/workflows/health-check.yml` ruft alle 15 Minuten `/api/health` auf (3 Versuche, 15 s Timeout). Bei Fehlschlag schlägt der Workflow fehl; GitHub meldet fehlgeschlagene Läufe per E-Mail an den Repo-Besitzer (Standard-Benachrichtigung, nicht verifiziert).
 - Manuell geprüft: Die Live-Antwort enthält `"status":"ok"`, die Prüflogik passt dazu. Ein Lauf in GitHub Actions wurde noch nicht beobachtet (Status: offen), ebenso kein erzwungener Fehlerfall.
 - Einschränkung: GitHub-Cron kann sich verzögern und ist kein SLA-Monitoring. Für echte Alarmierung (SMS/Pager) ist ein dedizierter Dienst nötig.
+
+- **Update 2026-10-15 19:16:** Der geplante Lauf #1 (Event `schedule`, 17:15 UTC) von `health-check.yml` ist laut GitHub-API `completed/success`: PASS. Der Fehlerfall und die E-Mail-Benachrichtigung bleiben ungeprüft.
