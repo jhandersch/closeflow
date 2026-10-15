@@ -91,7 +91,8 @@ export async function runWorkflowAutomations(
   userId: string,
   workspaceId: string,
   lead: Lead,
-  event: string
+  event: string,
+  opts: { dedupeKey?: string } = {}
 ) {
   const { data: automations, error } = await supabase
     .from("automations")
@@ -108,9 +109,11 @@ export async function runWorkflowAutomations(
   const results: { automationId: string; status: string }[] = [];
 
   for (const automation of automations) {
-    const dedupeKey = `${event}:${lead.id}:${
-      (lead as { updated_at?: string }).updated_at || "na"
-    }`;
+    const dedupeKey =
+      opts.dedupeKey ||
+      `${event}:${lead.id}:${
+        (lead as { updated_at?: string }).updated_at || "na"
+      }`;
 
     const { error: claimError } = await supabase
       .from("automation_runs")
