@@ -2123,3 +2123,15 @@ The Business workspace-capacity discrepancy is resolved. The confirmed policy is
 This resolves and supersedes the earlier **Workspace creation FAIL / product behavior discrepancy** in the authenticated UI run above. No marked workspace fixture remains.
 
 **Overall release status remains NO-GO.** This implementation closes only the workspace-capacity gap. Automation trigger execution, native browser download completion, successful OAuth/PKCE and email delivery, exhaustive cross-tenant operations, real paid checkout/webhook delivery, and production monitoring/backup/restore evidence remain open; no live payment or email was performed.
+
+
+## Automation Execution Code Audit (2026-10-15)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Built-in status automations (`runLeadAutomation`: contacted -> follow-up task in 3 days, proposal -> follow-up task in 5 days, new -> reset next action) | Implemented; invoked from `src/hooks/useLeadActions.ts`, `src/app/api/leads/route.ts`, `src/app/api/demo/seed/route.ts`. Duplicate open tasks are prevented by title check. | Code review only; no new production run in this section. |
+| User-defined workflows (`automations` table, `/api/automations`, Automations page) | **GAP / FAIL (not executed)** | Code search shows `automations` is only created/listed/updated/deleted in `src/app/api/automations/route.ts`. No code reads `trigger_event` or `actions` to run them, and `automation_runs` is not referenced anywhere in `src`. Presets such as `lead.created`, `lead.stage.lost`, `lead.idle_7d` therefore have no runtime effect. |
+
+Required action: either implement a server-side executor (with idempotent run records) or relabel the page so it does not imply execution. Until then, UI wording must not promise that custom workflows run. The earlier smoke PASS for automations covers create/disable/delete only, not execution.
+
+**Overall release status remains NO-GO.**
