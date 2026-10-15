@@ -2222,3 +2222,16 @@ Security note: during this session a command output displayed values from `.env.
 | Legacy defect (not fixed) | `organizations`, `organization_members`, `organization_invites`, `organization_audit_events` fail with 42P17 (infinite policy recursion) for client roles. This fails closed (no data exposed). The only consumer, `src/hooks/useTeamWorkspace.ts`, is not imported anywhere, so the tables appear to be dead legacy. |
 
 **Overall release status remains NO-GO.**
+
+
+## Supabase Backup / Recovery Dashboard Check (2026-10-15T18:35+02:00)
+
+Checked in the Supabase dashboard (project `itqzelpofshmzeajvmma`, Database > Backups, authenticated browser session):
+
+| Item | Result | Evidence |
+|---|---|---|
+| Scheduled backups | **FAIL / BLOCKER** | The page states "Free Plan does not include project backups" and offers an upgrade to Pro for up to 7 days of scheduled backups. |
+| Point-in-time recovery | **FAIL** (not available on this plan) | PITR tab is part of paid plans; not configured. |
+| Restore test | **NOT PERFORMED** | There is nothing to restore from. |
+
+Consequence: the production database holding customer CRM data currently has **no provider-managed backup or recovery path**. Required before any production release: upgrade to Pro (or implement and test an alternative export/restore routine), then perform and document a restore test. **Overall release status remains NO-GO.**
