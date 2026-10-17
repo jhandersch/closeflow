@@ -59,6 +59,19 @@ export async function POST(request: Request) {
         const { workspace: existingWorkspace, } = await loadWorkspaceForUser(supabase, user.id);
         if (existingWorkspace?.id) {
             console.log("EXISTING WORKSPACE:", existingWorkspace.id);
+            // A previous attempt may have failed after the workspace was created; finish onboarding on retry.
+            if (user.user_metadata?.onboarding_completed !== true) {
+                const { error: retryMetadataError } = await supabase.auth.updateUser({
+                    data: {
+                        onboarding_completed: true,
+                        workspace_id: existingWorkspace.id,
+                    },
+                });
+                if (retryMetadataError) {
+                    console.error("ONBOARDING METADATA RETRY ERROR:", retryMetadataError);
+                    throw retryMetadataError;
+                }
+            }
             return NextResponse.json({
                 ok: true,
                 workspace_id: existingWorkspace.id,

@@ -23,19 +23,20 @@ export async function POST(request: Request) {
     const admin = createClient(url, serviceRole, {
         auth: { persistSession: false, autoRefreshToken: false },
     });
-    const cleanupOperations = [
-        admin.from("calendar_events").delete().eq("user_id", user.id),
-        admin.from("activities").delete().eq("user_id", user.id),
-        admin.from("tasks").delete().eq("user_id", user.id),
-        admin.from("leads").delete().eq("user_id", user.id),
-        admin.from("notifications").delete().eq("user_id", user.id),
-        admin.from("workspace_members").delete().eq("user_id", user.id),
-        admin.from("profiles").delete().eq("id", user.id),
-    ];
-    const cleanupResults = await Promise.all(cleanupOperations);
-    const cleanupError = cleanupResults.find((result) => result.error);
-    if (cleanupError?.error) {
-        return NextResponse.json({ error: cleanupError.error.message }, { status: 500 });
+    // One transaction: hand shared-workspace rows to the owner, remove solo data, or refuse.
+    const { data: cleanupStatus, error: cleanupError } = await admin.rpc("delete_account_data", {
+        p_user_id: user.id,
+    });
+    if (cleanupError) {
+        return NextResponse.json({ error: cleanupError.message }, { status: 500 });
+    }
+    if (cleanupStatus === "owner_has_members") {
+        return NextResponse.json({
+            error: "You own a workspace with other members. Remove the members or delete the workspace first.",
+        }, { status: 409 });
+    }
+    if (cleanupStatus !== "ok") {
+        return NextResponse.json({ error: "Account cleanup failed" }, { status: 500 });
     }
     const { error: deleteUserError } = await admin.auth.admin.deleteUser(user.id);
     if (deleteUserError) {
