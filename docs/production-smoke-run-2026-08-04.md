@@ -2454,3 +2454,16 @@ Schwäche (gering, kein Sicherheitsproblem): `src/lib/usageLimits.ts` (`getWorks
 `getWorkspaceUsageContext` nutzt jetzt `resolveWorkspacePlan` (Status + Periodenende, Fallback auf `workspaces.plan` ohne Abo), identisch zur Datenbank-Logik (`workspace_plan_tier`). Abgelaufene oder unbezahlte Abos zeigen damit auch in den Vorprüfungen (Seats, Lead-Kapazität, Import-Snapshot) den Free-Tarif. Regression: Import-Suiten 5/5, 9/9, 4/4 PASS, `tsc` ok.
 
 **Lint:** weiterhin 0 Fehler / 124 Warnungen (49 `no-explicit-any`, 32 `set-state-in-effect`, 20 ungenutzte Variablen, 16 `exhaustive-deps`, 4 `purity`, 2 `no-img-element`, 1 aria). Bewusst nicht angefasst: Die meisten betreffen UI-Komponenten ohne automatisierte UI-Tests, Änderungen bergen mehr Regressionsrisiko als Nutzen.
+
+## Stripe-Routen: Autorisierung (lokal, ohne Stripe-Kontakt)
+
+Test: `tests/local-stripe-routes-authz.mjs` (`npm run test:local-stripe-routes`), ALL PASS.
+
+- create-checkout, change-plan, create-portal: 401 ohne Auth, 403 bei aal1, 403 bei Nicht-Owner und bei Fremd-Workspace-Header.
+- change-plan: ungültiger Plan -> 400; ohne Stripe-Abo -> 400, Plan unverändert.
+- Befund D (behoben): Ein Fehler beim Stripe-Aufruf in create-checkout führte zu einem unbehandelten 500 mit leerem Body. Jetzt JSON-502 ohne Details.
+- Nicht prüfbar lokal: echter Stripe-Checkout/Portal (benötigt Stripe-Konto und Domain).
+
+## Abschluss der lokalen Prüfungen
+
+Gesamtfreigabe: **NO-GO**. Offen: Staging/Produktionsvergleich der RLS-Helper, Grants und pgcrypto-Schema; Backup/Restore; E-Mail-, OAuth-, Recovery- und Webhook-URL-Flows; sieben noch nicht angewendete Migrationen; nicht atomare Importe; Dubletten Import vs. manuell; `create_organization_invite`.

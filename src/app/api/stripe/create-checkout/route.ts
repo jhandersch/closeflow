@@ -140,27 +140,38 @@ export async function POST(request: Request) {
         {},
     );
 
-    const session =
-        await stripe.checkout.sessions.create({
-            mode: "subscription",
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
+    try {
+        const session =
+            await stripe.checkout.sessions.create({
+                mode: "subscription",
+                success_url: successUrl,
+                cancel_url: cancelUrl,
+                line_items: [
+                    {
+                        price: priceId,
+                        quantity: 1,
+                    },
+                ],
+                customer_email:
+                    user.email || undefined,
+                metadata: {
+                    user_id: user.id,
+                    workspace_id: workspace.id,
+                    plan: selectedPlan,
                 },
-            ],
-            customer_email:
-                user.email || undefined,
-            metadata: {
-                user_id: user.id,
-                workspace_id: workspace.id,
-                plan: selectedPlan,
-            },
-        });
+            });
 
-    return NextResponse.json({
-        checkoutUrl: session.url,
-    });
+        return NextResponse.json({
+            checkoutUrl: session.url,
+        });
+    } catch (stripeError) {
+        console.error(
+            "Stripe checkout creation failed:",
+            stripeError instanceof Error ? stripeError.message : "Unknown error",
+        );
+        return NextResponse.json(
+            { error: "Could not start checkout. Please try again later." },
+            { status: 502 },
+        );
+    }
 }
