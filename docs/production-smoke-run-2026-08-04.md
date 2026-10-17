@@ -2301,3 +2301,128 @@ The Stripe dashboard tab was not logged in, so the check used the Stripe API wit
 - **Stripe webhook delivery — TEILWEISE PASS / Rest vertagt:** Stripe-Event `evt_1URaf7Hk7hGwPgsalcN71Fv7` ist `invoice.payment_failed`, `livemode=false`, `pending_webhooks=0`; der Endpoint `https://closeflow-green.vercel.app/api/stripe/webhook` ist aktiv. Signierter Replay desselben Event-Payloads an Produktion erhielt HTTP 200. Der Dashboard-Event ist sichtbar; die Endpoint-Delivery-Response/HTTP-Historie wurde nicht bestätigt, da der Endpoint-Detailbereich des Dashboards während der Prüfung im Ladezustand/429 blieb. `pending_webhooks=0` allein wird nicht als erfolgreicher HTTP-Status ausgegeben.
 - **Browser-Download — TEILWEISE PASS / Rest vertagt:** Authentifizierte API-CSV-Exporte mit markierten Daten und korrekten Exportzählern sind früher PASS. Native Download-/Save-Bestätigung im integrierten Browser ist weiter nicht nachgewiesen; es wurde kein Export realer Kundendaten ausgelöst.
 - Für diese drei Restprüfungen war kein produktiver Daten- oder Abostatus geändert. Gesamtstatus bleibt **NO-GO** (Backup/Restore ist weiter auf USB-Export/Restore vertagt).
+
+## Lokale Failure-Prüfung und Korrektur der Tenant-Matrix (2026-10-17)
+- **Health failure path — PASS lokal:** Ein isolierter Next-Dev-Server verwendete eine nicht erreichbare lokale Supabase-URL. `GET /api/health` antwortete mit HTTP 503 und `{"status":"degraded","checks":{"database":"fail","config":"ok"}}`. Keine Produktionsstörung und kein Monitoring-Alarm wurden ausgelöst. GitHub-Failure-Alarm und Benachrichtigungszustellung bleiben ungeprüft.
+- **Korrektur zur bisherigen RLS-Matrix:** Die Matrix wurde so erweitert, dass sie alle 19 Workspace-Tabellen mit gültigen Pflichtfeldern befüllt und bei jedem Insert explizit Workspace B setzt. Der Live-Lauf vor der Migration seedete 19/19 Tabellen und zeigte, dass User A unter den alten permissiven `user_id`-Policies Leads und Activities in Workspace B anlegen konnte. Beide Probes wurden durch Savepoint und abschließendes Rollback vollständig zurückgesetzt; es wurden keine Testzeilen persistiert. Der frühere Lauf mit 13 befüllten Tabellen hatte diese Writes nicht aussagekräftig geprüft und gilt dafür nicht als Nachweis.
+- **Policy-Fix live angewendet:** Migration `20261017193000_remove_legacy_owner_only_crm_policies.sql` entfernt die veralteten, nur auf `user_id` prüfenden Lead-/Activity-Policies und stellt sichere, workspace-member-basierte Lead-Policies für Lesen, Erstellen, Ändern und Löschen her. Sie wurde nach Prüfung der Produktions-Projektkennung in einer einzelnen Transaktion angewendet; es wurden keine CRM-Datensätze geändert.
+- Remote-Migrations-Ledger abgeglichen: **23/23** lokale SQL-Migrationsdateien sind nun mit den Supabase-Versionseinträgen synchronisiert; keine lokale Migration blieb unregistriert.
+- **Live-Nachprüfung:** `npm run test:rls-matrix` ohne Pending-Migration-Option: **ALL PASS**, 19/19 Workspace-Tabellen befüllt; fremde Reads, Updates, Deletes und Inserts blockiert, während berechtigte Workspace-A-Inserts für Leads und Aktivitäten erlaubt bleiben. `npm run test:rls-leak`: **ALL PASS**, keine fremden Datensätze sichtbar für `anon` oder den unabhängigen authenticated User; 17/36 Tabellen enthielten echte Zeilen. Die alten `organization_*`-Policies liefern weiter `42P17` und schließen den Zugriff damit ab.
+- `npm run test:workspace-seat-concurrency:production`: **PASS** mit unabhängigen PostgreSQL-Verbindungen: Pro-Einladungsrace 4/8 akzeptiert (5/5 Sitze), AI-Quota-Idempotenz exakt einmal, konkurrierende AI-Quota 2/8 bis genau 500/500 erlaubt, Free-Lead-Race 1/8 bis 50/50 erlaubt, parallele Einladungseinlösung 4/4 erfolgreich. Alle markierten Workspaces und Auth-Fixtures wurden laut Test bereinigt.
+- `npm run lint:tenancy`, `npx eslint tests/rls-cross-tenant-matrix.mjs`, `npx tsc --noEmit` und `npm run verify:release`: **PASS**. Der Release-Verify-Build hat 98 statische Seiten generiert; damit sind Build und Tenancy-Guard belegt, nicht jedoch ein Production-Deployment.
+- **Tenant-Insert-Blocker geschlossen.** Die frühere lokale RLS-Lücke ist mit der Migration und dem erneuten unveränderten Live-Matrixtest verifiziert. Der Gesamtstatus bleibt **NO-GO**, bis die übrigen offenen Recovery-, Auth-, Monitoring-, Stripe- und Release-Gates belegt sind.
+- **Browser-Download bleibt vertagt:** Die Leads-Seite enthält CSV-/Excel-Export-Aktionen; der Export-Endpunkt liefert alle aktiven Leads des Workspace und übernimmt keine UI-Suchfilter. Da die aktuelle Produktionsworkspace echte Kundendaten enthält, wurde kein Download ausgelöst. Ein verlässlicher nativer Downloadnachweis erfordert einen isolierten Workspace mit ausschließlich synthetischen Leads oder eine gleichwertige isolierte Testumgebung.
+- Der lokale Dev-Server wurde beendet; die automatisch von Next angepasste `AGENTS.md` ist nicht verändert.
+
+## Öffentliche Feedback-Links und Service-Role-Nachprüfung (2026-10-17)
+- Beim Audit des öffentlichen `POST /api/feedback` wurde festgestellt, dass der Endpoint bisher einen frei übermittelten `workspace_id` direkt mit der Service Role in `audit_logs` schrieb. Die öffentliche Feedback-Seite zeigte außerdem den Workspace-Namen nur anhand dieser ID an.
+- Code-Fix: Feedback-Links werden jetzt mit HMAC an genau eine Workspace-ID gebunden; die Signatur wird sowohl vor dem Anzeigen des Firmennamens als auch vor dem privilegierten Insert geprüft. Das authentifizierte Feedback-Inbox-API erzeugt den Link. Eingaben für Rating, UUID, E-Mail und optionale Kontaktdaten werden validiert/begrenzt. Es ist keine neue Umgebungsvariable nötig; beim Rotieren des Supabase-Service-Role-Keys müssen bestehende Feedback-Links neu kopiert werden.
+- `npm run test:feedback-token`: **1/1 PASS** (richtiger Workspace akzeptiert, abweichender Workspace und veränderte Signatur abgelehnt). Geänderte Feedback-Dateien ESLint: **PASS**. `npm run verify:release` (Tenancy-Guard, TypeScript und Production-Build): **PASS**.
+- Dieser Feedback-Code wurde in dieser Prüfung nicht deployed. Die Live-Anwendung akzeptiert bis zu einem App-Deploy weiterhin ihr bisheriges Linkverhalten. Nach Deployment müssen ein neu erzeugter gültiger öffentlicher Link und ein ungültiger/geänderter Token ohne Datenbankeintrag im isolierten Workspace geprüft werden; alte Feedback-Links müssen neu geteilt werden.
+
+## Privilegierte Hintergrundpfade und Workflow-Fehlerbehandlung (2026-10-17)
+- Service-Role-Pfade in Cron-Automationen, Onboarding, Admin-Übersicht/-Benutzerverwaltung, Health, Account-Löschung, Stripe-Webhook, AI-Kostenbuchung und Feedback wurden statisch nach Authentifizierung und Workspace-/User-Scope geprüft. Admin-Routen verlangen Platform-Admin-E-Mail plus AAL2; Account-Löschung löscht nur Datensätze mit der angemeldeten User-ID und verlangt AAL2; Onboarding nutzt das authentifizierte Workspace-Erstellungs-RPC-Ergebnis; Stripe-Webhook validiert die Stripe-Signatur; Cron verlangt `CRON_SECRET` und die Daten-/Automationsabfragen sind je Workspace begrenzt.
+- Beim Workflow-Cron wurden zuvor Fehler beim Laden von Idle-Leads/überfälligen Tasks sowie bei Workflow-Definitionen, Task-Dedupe-Lesezugriffen und Run-Statusupdates nicht immer bis zum Cron-Ergebnis weitergegeben. Diese Fehler werden nun ausgewertet bzw. explizit weitergegeben; nicht eindeutige Run-Claim-Fehler werden nicht mehr als stilles „keine Automation“ behandelt. Dedupe-Key-Konflikte (`23505`) bleiben erwartete Idempotenz-Skips.
+- `npm run test:workflow-automations`: **3/3 PASS** (Definition-Lesefehler sichtbar, Task-Lesefehler markieren Run fehlgeschlagen statt Task doppelt anzulegen, Duplicate-Claim bleibt idempotent). `npm run test:feedback-token`: **1/1 PASS**. Geänderte Backend-Dateien ESLint und `npm run verify:release`: **PASS**.
+- Der Test prüft Mock-Verhalten des Workflow-Helfers und ist kein provozierter Fehlerlauf gegen den produktiven Cron-Endpunkt. Es wurde kein Workflow in Produktion gestartet und keine Benachrichtigung versandt.
+- Worktree-Änderungen an Feedback-Signaturen und Cron-Fehlerbehandlung sind **nicht deployed**. Der Code-Stand ist daher lokal/reviewbar, nicht der aktuelle Produktions-App-Stand.
+
+## Service-Role- und KI-Mock-Follow-up (2026-10-17)
+- Die privilegierten Zugriffe wurden zusätzlich auf Fehlerbehandlung geprüft. `/api/admin/overview` wertete zuvor die Fehler aller sieben Service-Role-Abfragen nicht aus und konnte dadurch unvollständige Admin-Kennzahlen mit HTTP 200 ausgeben. Der lokale Fix protokolliert Query-Fehler serverseitig und liefert stattdessen HTTP 503 mit einer generischen Meldung.
+- Der OpenAI-SDK-Client für KI-Kostenbuchung akzeptiert jetzt optionale Fetch- und Audit-Client-Abhängigkeiten, damit Providerantworten ohne echten OpenAI-Aufruf und Datenbankwrites getestet werden können. Der Mock-SDK-Test prüft Erfolgsantwort, Workspace/User-Zuordnung, Tokenzahlen und Kosten für alle 15 `AiFeature`-Kennungen.
+- Verifikation: `npm run test:ai-cost` **16/16 PASS**; Feedback-Token **1/1**, Workflow-Automationen **3/3**, Usage-Quota **6/6** und Workspace-Auth **2/2 PASS**. Gezieltes ESLint, TypeScript und `npm run verify:release` (Tenancy-Guard plus Next.js-Produktionsbuild) **PASS**.
+- Das sind lokale Code-/Mock-Nachweise. Die Admin-Query-Fehlerantwort wurde nicht gegen einen manipulierten oder ausgefallenen Live-Backend-Dienst injiziert; der Mock-Anbieter ersetzt keine echte Provider-, Kosten- oder Deploymentprüfung. Der direkte Provider-Smoke-Test darf nicht als Abdeckung aller Route-Handler gewertet werden.
+- Noch offen im statischen Service-Role-/Lifecycle-Audit: Kontolöschung besteht aus mehreren unabhängigen Löschungen und kann bei Teilfehlern unvollständig bleiben; Onboarding erstellt Workspace und Folgeobjekte nicht als eine atomare Gesamttransaktion. Die Admin-Übersicht lädt für Summen derzeit ganze Subscription-, Usage- und AI-Audit-Ergebnismengen. Diese Pfade brauchen gezielte Failure-/Datenintegritäts- bzw. Skalierungsprüfungen.
+- Statische Sichtung der aktuellen Workspace-RPCs/Trigger fand Authentifizierungs- und Workspace-/Rollenprüfungen in den `SECURITY DEFINER`-Schreibfunktionen; die neuen Workspace-, Usage-, Invite- und Lead/Task-Cascade-Funktionen enthalten in ihren Migrationen explizite `REVOKE`-Regeln gegenüber `PUBLIC`/`anon`. Die Storage-Folder-Prüfung begrenzt Zugriffe auf Workspace-Mitglieder.
+- Die Legacy-`organization_*`-Invite-RPCs bleiben über `useTeamWorkspace.ts` erreichbar. Ihre Basismigration enthielt keine expliziten `REVOKE`-Statements für `PUBLIC`/`anon`; eine idempotente Folge-Migration ergänzt nun diese Einschränkung und erteilt `authenticated` explizit EXECUTE-Rechte. Diese Migration ist nur lokal angelegt und nicht angewendet. Weiter offen: `accept_organization_invite` sperrt die ausgewählte Einladung nicht per `FOR UPDATE`, und der Token ist optional, wenn die Auth-E-Mail passt. Das ist kein nachgewiesener Cross-Tenant-Zugriff, aber E-Mail-Bestätigung, Parallelannahme und tatsächlicher Bedarf der Legacy-Organisationstabellen müssen separat geprüft werden. Die bekannten `organization_*`-Policy-Rekursionsfehler bleiben fail-closed und ungelöst.
+- Diese RPC-Prüfung ist nur statisch anhand der Migrationen und Call-Sites erfolgt. Tatsächliche produktive Grants, Triggerdefinitionen, Tabellenrechte und Laufzeitverhalten wurden nicht live ausgelesen oder verändert. Die neue ACL-Migration ist pending und muss vor dem Release kontrolliert angewendet und verifiziert werden; bis dahin bleiben die produktiven Grants unverändert. Auch die übrigen lokalen Änderungen sind nicht deployed. Gesamtfreigabe bleibt **NO-GO**.
+
+## Synthetische CSV-Import-/Export-Tests (2026-10-17)
+- Leads- und Kunden-CSV-Import verwenden jetzt denselben vollständigen Dokumentparser; der Kundenimport verarbeitet damit auch korrekt zitierte Felder mit Zeilenumbrüchen. Der Kundenimport liefert für ungültiges JSON explizit HTTP 400.
+- Leads- und Kunden-CSV-Export escapen jetzt Formelpräfixe in Textzellen (CSV formula injection) und behalten korrektes CSV-Quoting für Trennzeichen, Anführungszeichen und Zeilenumbrüche bei; numerische negative Werte bleiben numerisch.
+- `npm run test:csv`: **5/5 PASS** für zitierte Kommata/Semikolons, escaped quotes, CRLF, eingebettete Zeilenumbrüche, Trennzeichenerkennung, nicht geschlossene Quotes und Tabellenformel-Escaping.
+- Danach alle vorhandenen lokalen Unit-Suites ausgeführt: CSV **5/5**, KI-Kosten **16/16**, Feedback-Token **1/1**, Workflow **3/3**, Usage-Quota **6/6**, Workspace-Auth **2/2**, Workspace-Kapazität **4/4** – insgesamt **37/37 PASS**. Gezieltes ESLint und `npm run verify:release` (Tenancy-Guard und Produktionsbuild) ebenfalls **PASS**. Das vollständige `npm run lint` beendet sich mit **0 Fehlern / 124 Warnungen**; die Warnungen sind vorhanden und nicht als fehlerfreier Lint-Lauf zu zählen.
+- Diese synthetischen Unit-Tests führen keine Import-/Export-Routen gegen eine Datenbank aus und beweisen weder RLS noch Schreib-, Rollback-, Teilfehler- oder Download-Verhalten der Endpunkte. Kein produktiver Datenzugriff, Stripe- oder OpenAI-Aufruf wurde für diese Tests vorgenommen.
+- Die nächstliegenden Integrationstests benötigen PostgreSQL/Supabase. `supabase status` konnte den lokalen Stack nicht prüfen, weil die Docker-Engine auf diesem Rechner nicht läuft; die vorhandene CLI-Verknüpfung zeigt auf das Produktionsprojekt und wird nicht als Testziel verwendet. Für weitere authentifizierte Route-/DB-Integrationstests ist ein gestarteter Docker-Desktop mit lokaler Supabase-Umgebung oder ein ausdrücklich isoliertes wegwerfbares Testprojekt nötig. Die lokalen Änderungen sind nicht deployed. Gesamtfreigabe bleibt **NO-GO**.
+
+## Lokale Supabase-Neuaufbau-Prüfung (2026-10-17)
+
+Isolierter lokaler Stack (Docker, `127.0.0.1`), kein Zugriff auf Produktion, `.env.local` nicht gelesen.
+
+- **Befund 1 (hoch, Reproduzierbarkeit):** Die Migrationen im Repo lassen sich nicht auf einer leeren Datenbank einspielen. `leads`, `activities` und `tasks` werden nirgends versioniert angelegt, außerdem fehlt `leads.is_vip`. Das Basisschema wurde nur lokal aus `supabase/schema-repair-template.sql` rekonstruiert (`supabase/local-test/baseline.sql`, nur für Tests). Ein Disaster-Recovery-Neuaufbau aus dem Repo ist damit nicht belegt.
+- **Befund 2 (hoch, nur frische DB):** `is_workspace_member`/`is_workspace_manager` waren nicht `SECURITY DEFINER`, obwohl die Policies auf `workspace_members` sie aufrufen: unendliche Rekursion (SQLSTATE 54001), die Tests schlugen mit 19 FAIL fehl. Neue Migration `20261017200000_workspace_rls_helpers_security_definer.sql`, **nicht in Produktion angewendet**. Der tatsächliche Produktionsstand der Funktionen wurde nicht ausgelesen (offen).
+- **Offen:** Legacy-Tabellen `organizations`, `organization_members`, `organization_invites`, `organization_audit_events` liefern auf frischer DB `42P17` (Policy-Rekursion). Das schlägt fehl-geschlossen, ist aber ungeprüft, ob die App diese Tabellen noch nutzt.
+- **Ergebnis lokal (frischer Neuaufbau, alle 25 Migrationen inkl. der drei noch nicht angewendeten):** `test:rls-matrix` 76 PASS / 0 FAIL, `test:rls-leak` ALL PASS. Der Leak-Check ist schwach: nur 2 von 29 Tabellen enthalten Zeilen, und Fehlercodes zählen als PASS.
+- **Hinweis:** `supabase/config.toml` setzt `[db.migrations] enabled = false` nur für den lokalen Test. Vor jedem `supabase db push` auf `true` zurücksetzen oder die Datei entfernen.
+- Lokaler Lauf: `npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,realtime`, dann `node supabase\local-test\apply-local.mjs`, dann `CLOSEFLOW_LOCAL_DB=1` vor den RLS-Skripten.
+
+## Lokale Route-Integration: Lead-/Kunden-Import und -Export (2026-10-17)
+
+Next.js-Dev-Server (`127.0.0.1:3188`) gegen den lokalen Supabase-Stack, zwei unabhängige synthetische Workspaces, Bearer-Auth. Kein Produktionszugriff; Stripe/OpenAI/Resend mit Platzhaltern deaktiviert. Test: `tests/local-import-export-integration.mjs` (`npm run test:local-import-export`, bricht bei nicht-lokalen Zielen ab).
+
+Ergebnis: **9/9 PASS** — 401 ohne Auth, 400 bei ungültigem JSON und nicht geschlossenem Quote (nichts geschrieben), Lead-Import legt genau eine `created`-Aktivität je Lead an, mehrzeilige Notizen bleiben erhalten, Wiederholung des Imports erzeugt weder Duplikate noch neue Aktivitäten, Workspace B sieht keine Daten von A und importiert gleichnamige Leads unabhängig, Export enthält nur Daten des eigenen Workspace und neutralisiert Formelzellen, Kundenimport ist workspace-begrenzt.
+
+Einschränkungen: Das lokale Schema ist rekonstruiert (siehe oben). `leads.created_by` existiert in keiner Migration; der Lead-Import fiel dadurch auf den Fallback-Insert ohne `created_by` zurück. Ob Produktion die Spalte hat, ist nicht geprüft. Nicht getestet: Teilfehler mitten im Import (Rollback), Kontingentgrenzen beim Import, XLSX-Export, Onboarding und Account-Löschung.
+
+## Lokale Route-Integration: Onboarding und Account-Löschung (2026-10-17)
+
+Gleiche lokale Umgebung wie oben; für die Löschung wurde lokal TOTP aktiviert und eine echte aal2-Session per MFA-Verifikation erzeugt. Test: `tests/local-onboarding-delete-integration.mjs` (`npm run test:local-onboarding-delete`).
+
+**Befunde (vor Korrektur reproduziert, FAIL):**
+1. *Onboarding:* Nach einem Teilfehler (Workspace angelegt, danach Fehler) lieferte die Wiederholung „ok“, setzte aber nie `onboarding_completed`. Der Nutzer blieb im halb eingerichteten Zustand. Korrigiert in `src/app/api/onboarding/route.ts`.
+2. *Account-Löschung, Mitglied:* Löschte ein Mitglied sein Konto, wurden alle seine Leads in einem gemeinsamen Workspace hart gelöscht (Datenverlust für das Team). Korrigiert: Zeilen in Workspaces mit weiteren Mitgliedern bleiben erhalten.
+3. *Account-Löschung, Owner (hoch):* Löschte der Owner eines Workspaces mit weiteren Mitgliedern sein Konto, wurde der gesamte Workspace samt Daten der anderen per `ON DELETE CASCADE` zerstört. Korrigiert: HTTP 409, Konto bleibt bestehen, bis Mitglieder entfernt oder der Workspace gelöscht ist. Ein Owner allein im Workspace kann weiterhin löschen (Workspace wird entfernt).
+
+**Ergebnis nach Korrektur:** 14/14 PASS (401/403/400-Pfade, Mitglied, Owner mit Team, Solo-Owner, Fremd-Workspace unberührt). Import/Export-Suite danach erneut 9/9.
+
+**Offen/Einschränkungen:** Korrekturen sind lokal, nicht deployed. `calendar_events.user_id` hat `ON DELETE CASCADE` auf `auth.users`; Kalendereinträge eines gelöschten Mitglieds in einem gemeinsamen Workspace gehen daher weiterhin verloren (nicht getestet). Die Löschung ist weiterhin nicht transaktional (mehrere Einzelabfragen, danach `deleteUser`). Keine Workspace-Löschung/Owner-Übertragung als eigene Funktion vorhanden. Der Dev-Server-Lauf nutzt lokale Dummy-Werte für Stripe/OpenAI/Resend.
+
+## Lokale Prüfung: Import-Kontingent, Parallelität, XLSX, Kalender-Cascade (2026-10-17)
+
+Gleiche lokale Umgebung. Test: `tests/local-import-limits-integration.mjs` (`npm run test:local-import-limits`).
+
+**Ergebnis: 4 PASS, 1 FAIL (Befund B, bewusst offen gelassen; nach Entfernen des Kalender-Tests aus dieser Datei nicht erneut gelaufen).** FREE-Plan, 55 aktive Leads importiert -> genau 50 gespeichert, 5 mit Limit-Hinweis gemeldet, 50 `created`-Aktivitäten; bei erreichtem Limit kommen keine aktiven Leads dazu, `won`-Leads werden weiter importiert; zwei parallele Importe (30+30 verschiedene Zeilen, Limit 50) überschreiten das Limit nie, melden konsistent und lassen keine verwaisten oder fehlenden Aktivitäten zurück (der Datenbank-Trigger weist den überzähligen Batch als Ganzes ab); XLSX-Export liefert gültige Arbeitsmappe nur mit eigenen Zeilen.
+
+**Befund A (behoben, lokal):** Löschte ein Mitglied sein Konto, wurden dessen Kalendereinträge in gemeinsamen Workspaces per Cascade gelöscht. Jetzt werden Kalendereinträge, Aktivitäten, Aufgaben und Leads in gemeinsamen Workspaces vor der Löschung dem Workspace-Owner zugeordnet (`src/app/api/profile/delete/route.ts`). Das schützt auch vor Cascade-FKs, die das lokale rekonstruierte Schema nicht zeigt. Lösch-Test jetzt 15/15 PASS.
+
+**Befund B (offen, mittel):** Zwei gleichzeitige identische Lead-Importe (gleiche 20 Zeilen) erzeugen 40 statt 20 Leads. Die Dublettenprüfung liest vorab und ist nicht atomar. Ein Unique-Index auf `(workspace_id, lower(name), lower(company))` würde das beheben, könnte aber bestehende Produktionsdaten (Dubletten) und manuelles Anlegen gleichnamiger Leads betreffen. Entscheidung und Datenprüfung stehen aus; nicht geändert.
+
+**Weiter offen:** Kunden-Import unter Parallelität und Kontingenten, nicht-transaktionale Kontolöschung, Teilfehler innerhalb eines Batches (der Batch schlägt als Ganzes fehl, wird gemeldet; keine Teil-Inserts beobachtet).
+
+## Lokale Prüfung: Kunden-Import unter Parallelität und Limits (2026-10-17)
+
+Test: `tests/local-customer-import-concurrency.mjs` (`npm run test:local-customer-import`). Ergebnis: 3 PASS, 1 FAIL.
+
+**PASS:** zwei parallele Importe mit verschiedenen Zeilen (30+30) speichern alle 60 Kunden, jeweils 1:1 mit Lead und `created`-Aktivität, ohne Waisen; Kunden-Import funktioniert bei vollem FREE-Kontingent aktiver Leads (Kunden werden als `won` angelegt und zählen nicht); sequentieller Retry desselben Imports fügt nichts hinzu (10 übersprungen).
+
+**Befund B (erweitert, offen):** Zwei gleichzeitige identische Kunden-Importe erzeugen 40 statt 20 Kunden/Leads, gleiche Ursache wie beim Lead-Import (nicht atomare Dublettenprüfung, kein Unique-Index). Entscheidung zur Lösung steht aus.
+
+Hinweis: Der Kunden-Import fügt zeilenweise ein (Lead, dann Kunde, dann Aktivität) und räumt den Lead bei Kundenfehler wieder ab; ein Abbruch des Servers mitten in der Zeile ist nicht getestet.
+
+## Fix Befund B: Import-Lock gegen parallele Dubletten (2026-10-17, lokal)
+
+Migration `20261017210000_workspace_import_lock.sql` (nicht in Produktion angewendet): Tabelle `workspace_import_locks` (RLS an, keine Policies, Rechte entzogen) plus SECURITY-DEFINER-RPCs `acquire_workspace_import_lock` / `release_workspace_import_lock` mit Mitgliedschaftsprüfung und selbstablaufender Lease (120 s). `src/lib/import-lock.ts` umschließt `POST /api/leads/import` und `POST /api/customers/import`; ein gleichzeitiger zweiter Import wartet bis zu 30 s, danach 409. Danach prüft er gegen den dann aktuellen Bestand.
+
+Lokal: Kunden-Import-Suite 4/4, Import-Limits-Suite 5/5, Import/Export-Suite 9/9 PASS; `tsc` ok.
+
+Grenzen: Der Lock verhindert Dubletten nur zwischen Importen, nicht zwischen Import und gleichzeitigem manuellen Anlegen. Die Importe sind weiterhin nicht atomar (Teilfehler mitten in einer Zeile bleibt möglich, Kunden-Import räumt den Lead bei Kundenfehler ab). Vor Produktion: Migration anwenden, bevor der Code deployt wird, sonst antworten beide Import-Routen mit 503.
+
+## Legacy-RPC `accept_organization_invite`: Härtung und lokaler Test (2026-10-17)
+
+Migration `20261017220000_harden_accept_organization_invite.sql` (nicht in Produktion angewendet). Test: `tests/local-legacy-invite-rpc.mjs` (`npm run test:local-legacy-invite`), 6/6 PASS.
+
+Änderungen: E-Mail kommt nur noch vom authentifizierten Konto (`p_email` wird ignoriert); Konto-E-Mail muss bestätigt sein; Einladungszeile wird mit `FOR UPDATE` gesperrt; `search_path = public, extensions, pg_temp`.
+
+**Befund:** Lokal scheiterte jeder Token-Accept mit `function digest(text, unknown) does not exist`, weil pgcrypto im Schema `extensions` liegt und die Funktion `search_path=public` hatte. Ob Produktion pgcrypto in `public` oder `extensions` hat, ist nicht geprüft. Dieselbe `digest()`-Abhängigkeit hat `create_organization_invite` (`20260713_team_workspace.sql`, Zeile 339) und ist nicht angepasst; offen, bevor der Legacy-Pfad in Produktion als funktionierend gelten darf.
+
+PASS: falscher Nutzer mit fremder `p_email` abgewiesen; falscher Token abgewiesen; unbestätigtes Konto abgewiesen; anonymer Aufruf verweigert; 10 parallele Accepts ergeben genau eine Mitgliedschaft und ein Audit-Event; Wiederverwendung des Tokens wirkungslos.
+
+Hinweis: Die Legacy-Tabellen `organization_*` werden vom Client (`src/hooks/useTeamWorkspace.ts`) weiter genutzt. Der Workspace-Pfad (`accept_workspace_invite_with_limit`) war bereits getestet.
+
+## Kontolöschung transaktional (2026-10-17, lokal)
+
+Migration `20261017230000_delete_account_data_transactional.sql` (nicht in Produktion angewendet): Funktion `delete_account_data(uuid)`, nur `service_role` ausführbar. In einer Transaktion: Workspaces der Person werden mit `FOR UPDATE` gesperrt, Solo/Shared bestimmt, Owner mit Team -> Status `owner_has_members` (Route: 409), Zeilen in Shared-Workspaces an den Owner übergeben, Solo-/NULL-Workspace-Zeilen, Benachrichtigungen, Mitgliedschaften und Profil gelöscht. `src/app/api/profile/delete/route.ts` ruft nur noch diese Funktion und danach `auth.admin.deleteUser`.
+
+Lokal: Lösch-Suite 15/15 PASS, `tests/local-delete-account-rpc.mjs` (`npm run test:local-delete-rpc`) 2/2 PASS (authenticated/anon verweigert; service_role löscht Solo-Daten vollständig); `tsc` ok.
+
+Grenzen: Das Löschen des Auth-Benutzers bleibt ein separater API-Aufruf; schlägt er fehl, sind die Daten bereits entfernt, ein Retry ist idempotent (Funktion liefert `ok`). Ein erzwungener Fehler mitten in der Funktion (Rollback-Nachweis) wurde nicht getestet; die Atomarität beruht auf Postgres-Funktionssemantik. Vor Produktion: Migration vor dem Code-Deploy anwenden, sonst scheitert die Löschung mit 500. Tabellen/Spalten (`notifications`, `profiles`, `user_id` in vier Tabellen) sind lokal aus rekonstruiertem Schema und in Produktion nicht gegengeprüft.
