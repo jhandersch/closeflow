@@ -123,6 +123,18 @@ try {
     }
   };
 
+  const foreignWorkspaceDelete = await attempt(
+    "delete from public.workspaces where id=$1",
+    [wb]
+  );
+  report(foreignWorkspaceDelete.rows === 0, "workspaces: delete of foreign workspace affects 0");
+
+  const ownedWorkspaceDelete = await attempt(
+    "delete from public.workspaces where id=$1",
+    [wa]
+  );
+  report(ownedWorkspaceDelete.rows === 1, "workspaces: owner can delete own workspace");
+
   for (const { table_name: t } of tables) {
     const sel = await attempt(`select 1 from public."${t}" where workspace_id=$1`, [wb]);
     report(sel.rows === 0, `${t}: read of workspace B rows leaks 0 (${sel.error || "ok"})`);

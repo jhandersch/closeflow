@@ -257,9 +257,43 @@ const run = async () => {
   currentSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
   assert.equal(currentSubscription.cancel_at_period_end, true);
 
+  const { response: deleteWorkspaceResponse, result: deleteWorkspaceResult } =
+    await apiPost("/api/workspaces/delete", {
+      workspace_id: workspaceId,
+    });
+  assert.equal(
+    deleteWorkspaceResponse.status,
+    200,
+    `Workspace deletion API request failed: ${deleteWorkspaceResult.error || "unknown error"}.`,
+  );
+  assert.equal(deleteWorkspaceResult.ok, true);
+  const { data: deletedWorkspace, error: deletedWorkspaceError } = await admin
+    .from("workspaces")
+    .select("id")
+    .eq("id", workspaceId)
+    .maybeSingle();
+  if (deletedWorkspaceError) {
+    throw new Error("Could not verify fixture workspace deletion.");
+  }
+  assert.equal(deletedWorkspace, null, "Workspace deletion API left the workspace behind.");
+  const { data: deletedSubscription, error: deletedSubscriptionError } = await admin
+    .from("subscriptions")
+    .select("id")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (deletedSubscriptionError) {
+    throw new Error("Could not verify fixture subscription deletion.");
+  }
+  assert.equal(
+    deletedSubscription,
+    null,
+    "Workspace deletion API left its subscription behind.",
+  );
+
   console.log("PASS real Stripe test-mode Checkout API created a Pro subscription session with correct workspace/plan metadata.");
   console.log("PASS authenticated AAL2 owner received a Stripe Billing Portal session.");
   console.log("PASS test-trial subscription changed Pro → Business and scheduled Free cancellation via the application API.");
+  console.log("PASS authenticated AAL2 owner deleted the workspace and cascaded its subscription row.");
   console.log("No live-mode Stripe API, payment method, charge, or email was used; the trial subscription and checkout are removed during cleanup.");
 };
 
@@ -303,6 +337,22 @@ const cleanup = async () => {
   }
   if (workspaceId) {
     try {
+      const { error: subscriptionDeleteError } = await admin
+        .from("subscriptions")
+        .delete()
+        .eq("workspace_id", workspaceId);
+      if (subscriptionDeleteError) {
+        throw new Error("Could not delete marked subscription row.");
+      }
+      const { data: remainingSubscription, error: subscriptionVerifyError } =
+        await admin
+          .from("subscriptions")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .maybeSingle();
+      if (subscriptionVerifyError || remainingSubscription) {
+        throw new Error("Marked subscription row remains.");
+      }
       const { data: workspace, error } = await admin
         .from("workspaces")
         .select("id,name")

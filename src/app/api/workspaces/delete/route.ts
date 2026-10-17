@@ -44,38 +44,23 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: authz.message }, { status: authz.status });
         }
         /*
-         * Delete associated invitations.
-         */
-        const { error: inviteDeleteError, } = await supabase
-            .from("workspace_invites")
-            .delete()
-            .eq("workspace_id", workspaceId);
-        if (inviteDeleteError) {
-            console.error("DELETE WORKSPACE INVITES ERROR:", inviteDeleteError);
-            return NextResponse.json({ error: inviteDeleteError.message }, { status: 500 });
-        }
-        /*
-         * Delete associated members.
-         */
-        const { error: memberDeleteError, } = await supabase
-            .from("workspace_members")
-            .delete()
-            .eq("workspace_id", workspaceId);
-        if (memberDeleteError) {
-            console.error("DELETE WORKSPACE MEMBERS ERROR:", memberDeleteError);
-            return NextResponse.json({ error: memberDeleteError.message }, { status: 500 });
-        }
-        /*
          * Delete the workspace itself.
          */
-        const { error: workspaceDeleteError, } = await supabase
+        const { data: deletedWorkspace, error: workspaceDeleteError, } = await supabase
             .from("workspaces")
             .delete()
             .eq("id", workspaceId)
-            .eq("owner_id", user.id);
+            .eq("owner_id", user.id)
+            .select("id")
+            .maybeSingle();
         if (workspaceDeleteError) {
             console.error("DELETE WORKSPACE ERROR:", workspaceDeleteError);
             return NextResponse.json({ error: workspaceDeleteError.message }, { status: 500 });
+        }
+        if (!deletedWorkspace) {
+            return NextResponse.json({
+                error: "Workspace could not be deleted with current permissions.",
+            }, { status: 403 });
         }
         return NextResponse.json({
             ok: true,
