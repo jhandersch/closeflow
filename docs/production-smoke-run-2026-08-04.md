@@ -2467,3 +2467,12 @@ Test: `tests/local-stripe-routes-authz.mjs` (`npm run test:local-stripe-routes`)
 ## Abschluss der lokalen Prüfungen
 
 Gesamtfreigabe: **NO-GO**. Offen: Staging/Produktionsvergleich der RLS-Helper, Grants und pgcrypto-Schema; Backup/Restore; E-Mail-, OAuth-, Recovery- und Webhook-URL-Flows; sieben noch nicht angewendete Migrationen; nicht atomare Importe; Dubletten Import vs. manuell; `create_organization_invite`.
+
+## create_organization_invite (lokal)
+
+Befund E (behoben, Migration `20261018010000_harden_create_organization_invite`): Die RPC erlaubte einem Admin, Einladungen mit Rolle Owner/Admin zu erzeugen (Rechteeskalation; der Client ruft die RPC direkt). Zudem fehlte `extensions` im `search_path` (`digest()`), und die Gültigkeit war unbegrenzt. Jetzt: nur Owner dürfen Owner/Admin einladen, Gültigkeit max. 30 Tage, `search_path = public, extensions, pg_temp`.
+Test: `tests/local-legacy-invite-rpc.mjs` 10/10. Hinweis: Wirkung in Produktion erst nach Anwenden der Migration; das pgcrypto-Schema dort ist weiterhin ungeprüft.
+
+## Abschlussregression (lokal)
+
+Alle zehn lokalen Suiten (Import/Export, Import-Limits, Kunden-Import, Onboarding/Delete, Delete-RPC, Legacy-Invite, Webhook, Stripe-Routen, RLS-Matrix, Leak-Check) ALL PASS; `npm run verify:release` und `tsc` ohne Fehler. Gesamtfreigabe weiterhin **NO-GO** (Migrationen jetzt acht, noch nicht in Produktion).

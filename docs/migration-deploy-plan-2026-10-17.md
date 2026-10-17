@@ -55,6 +55,7 @@ Immer **vor** dem Code-Deploy, in dieser Reihenfolge (aufsteigende Zeitstempel):
 | 5 | `20261017220000_harden_accept_organization_invite.sql` | Härtet `accept_organization_invite` | 6/6 | Vorherige Funktionsdefinition aus `20260713_team_workspace.sql` neu erstellen |
 | 6 | `20261017230000_delete_account_data_transactional.sql` | `delete_account_data(uuid)` | Lösch-Suite 15/15, RPC-Test 3/3 (inkl. Rollback bei erzwungenem Fehler) | `drop function public.delete_account_data(uuid);` (erst nach Rückbau des Codes) |
 | 7 | `20261018000000_subscriptions_last_stripe_event.sql` | Spalte `subscriptions.last_stripe_event_at` (Webhook-Ereignisreihenfolge) | Webhook-Suite 8/8 | `alter table … drop column last_stripe_event_at` (erst nach Rückbau des Codes) |
+| 8 | `20261018010000_harden_create_organization_invite.sql` | Nur Owner dürfen Owner/Admin einladen, Gültigkeit max. 30 Tage, `search_path` inkl. `extensions` | Invite-Suite 10/10 | Vorherige Funktionsdefinition aus `20260713_team_workspace.sql` neu erstellen |
 
 Hinweise:
 - Migration 1 hängt funktional von 3 ab. Bei einer Datenbank, in der die Helper noch `SECURITY INVOKER` sind, kann 1 allein RLS-Rekursion auslösen. Deshalb **1 und 3 in einer Sitzung anwenden und danach sofort Check 3a** (unten) ausführen.
@@ -91,7 +92,7 @@ Hinweise:
 
 - Kein Staging/Klon, Schema in Produktion nicht gegengeprüft.
 - Backup/Restore (USB-Stick), Domain-abhängige Flows (E-Mail, OAuth, Recovery, Webhook-URL).
-- `create_organization_invite` nutzt `digest()` mit `search_path=public`; abhängig von Check 1a.
+- Migration 8 setzt `search_path = public, extensions, pg_temp`; funktioniert für beide pgcrypto-Schemata, Check 1a bleibt trotzdem sinnvoll.
 - Unique-Dubletten nur zwischen Importen verhindert, nicht gegen manuelles Anlegen.
 - Importe nicht atomar; Auth-Benutzer-Löschung separater Schritt.
 - Lint: 124 Warnungen (0 Fehler).

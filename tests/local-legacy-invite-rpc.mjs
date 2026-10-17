@@ -102,6 +102,46 @@ try {
     const second = await u.client.rpc("accept_organization_invite", { p_invite_id: id, p_token: "tok-5" });
     assert.equal(second.data, null);
   });
+  const addMember = async (org, user, role) => {
+    const r = await admin.from("organization_members").insert({ organization_id: org, member_user_id: user.id,     member_email: user.email, role, status: "active" });
+    assert.ifError(r.error);
+  };
+  const inviteRpc = (u, org, email, role, hours) =>
+    u.client.rpc("create_organization_invite", { p_organization_id: org, p_email: email, p_role: role, ...(hours ? { p_expires_in_hours: hours } : {}) });
+
+  await check("create invite: outsider and plain member are rejected", async () => {
+    const outsider = await makeUser("outsider");
+    const sales = await makeUser("sales");
+    await addMember(O, sales, "Sales");
+    assert.ok((await inviteRpc(outsider, O, "x1@example.invalid", "Sales")).error);
+    assert.ok((await inviteRpc(sales, O, "x2@example.invalid", "Sales")).error);
+  });
+
+  await check("create invite: Admin can invite Sales, token works end to end", async () => {
+    const adm = await makeUser("admin");
+    await addMember(O, adm, "Admin");
+    const invitee = await makeUser("invitee");
+    const r = await inviteRpc(adm, O, invitee.email, "Sales");
+    assert.ifError(r.error);
+    assert.ok(r.data);
+    const a = await invitee.client.rpc("accept_organization_invite", { p_email: invitee.email, p_member_name: "i", p_token: r.data });
+    assert.equal(a.data, O);
+  });
+
+  await check("create invite: Admin cannot invite as Owner or Admin", async () => {
+    const adm = await makeUser("admin2");
+    await addMember(O, adm, "Admin");
+    assert.ok((await inviteRpc(adm, O, "esc1@example.invalid", "Owner")).error, "Owner invite allowed");
+    assert.ok((await inviteRpc(adm, O, "esc2@example.invalid", "Admin")).error, "Admin invite allowed");
+  });
+
+  await check("create invite: Owner may invite Admin; expiry is capped", async () => {
+    await addMember(O, owner, "Owner");
+    const r = await inviteRpc(owner, O, "adm@example.invalid", "Admin", 100000);
+    assert.ifError(r.error);
+    const inv = await admin.from("organization_invites").select("expires_at").eq("organization_id", O).eq("email", "adm@example.invalid").single();
+    assert.ok(new Date(inv.data.expires_at).getTime() < Date.now() + 31 * 86400_000, "expiry not capped");
+  });
 } finally {
   for (const o of orgIds) await admin.from("organizations").delete().eq("id", o);
   for (const id of userIds) await admin.auth.admin.deleteUser(id).catch(() => {});
