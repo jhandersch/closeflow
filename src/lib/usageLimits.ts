@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadWorkspaceForUser } from "@/lib/supabase/route";
+import { resolveWorkspacePlan } from "@/lib/workspaceCapacity";
 import { planDetails, type Plan } from "@/lib/planDetails";
 import { consumeWorkspaceUsage, type UsageBucket } from "@/lib/usageQuota";
 type PlanTier = Plan;
@@ -81,7 +82,7 @@ export async function getWorkspaceUsageContext(
     ] = await Promise.all([
         supabase
             .from("subscriptions")
-            .select("plan")
+            .select("plan, status, current_period_end")
             .eq("workspace_id", workspace.id)
             .maybeSingle(),
         readUsage(
@@ -116,7 +117,10 @@ export async function getWorkspaceUsageContext(
     }
 
     const plan = normalizePlan(
-        subscription?.plan,
+        resolveWorkspacePlan(
+            typeof workspace.plan === "string" ? workspace.plan : "free",
+            subscription,
+        ),
     );
 
     return {

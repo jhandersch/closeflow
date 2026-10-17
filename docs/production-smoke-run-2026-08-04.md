@@ -2448,3 +2448,9 @@ Test (Webhook-Suite, jetzt 9/9): geplante Kündigung in der Zukunft -> Tarif ble
 Schwäche (gering, kein Sicherheitsproblem): `src/lib/usageLimits.ts` (`getWorkspaceUsageContext`) liest nur `subscriptions.plan` ohne Status/Periodenende. Bei abgelaufenem Abo zeigen UI-Vorprüfungen (Seat-/Lead-Vorprüfung, Snapshot im Import) noch den bezahlten Tarif; die datenbankseitige Durchsetzung greift aber korrekt (Import: Batch wird vom Trigger abgelehnt und als übersprungen gemeldet). Nicht geändert; Vereinheitlichung auf `resolveWorkspacePlan` wäre sinnvoll.
 
 `invoice.payment_failed` wird nur geloggt (kein Hinweis an Nutzer, kein Statuswechsel); Stripe setzt danach selbst `past_due`/`unpaid` per Subscription-Event, das verarbeitet wird.
+
+## Plan-Auflösung in `usageLimits.ts` vereinheitlicht (2026-10-18)
+
+`getWorkspaceUsageContext` nutzt jetzt `resolveWorkspacePlan` (Status + Periodenende, Fallback auf `workspaces.plan` ohne Abo), identisch zur Datenbank-Logik (`workspace_plan_tier`). Abgelaufene oder unbezahlte Abos zeigen damit auch in den Vorprüfungen (Seats, Lead-Kapazität, Import-Snapshot) den Free-Tarif. Regression: Import-Suiten 5/5, 9/9, 4/4 PASS, `tsc` ok.
+
+**Lint:** weiterhin 0 Fehler / 124 Warnungen (49 `no-explicit-any`, 32 `set-state-in-effect`, 20 ungenutzte Variablen, 16 `exhaustive-deps`, 4 `purity`, 2 `no-img-element`, 1 aria). Bewusst nicht angefasst: Die meisten betreffen UI-Komponenten ohne automatisierte UI-Tests, Änderungen bergen mehr Regressionsrisiko als Nutzen.
