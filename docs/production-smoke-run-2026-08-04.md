@@ -2486,3 +2486,10 @@ Auf ausdrückliche Freigabe des Betreibers (Produktions-DB enthält nur Testdate
 - `rls-cross-tenant-matrix` und `rls-leak-check` gegen Produktion: ALL PASS (Leak-Check: 17 von 37 Tabellen mit echten Zeilen, übrige leer, dort nur schwache Aussage).
 - **Code ist nicht deployed.** Produktion läuft mit altem Code gegen die neue DB (Migrationen sind additiv/kompatibel, aber nicht per End-to-End-Test auf der laufenden Produktionsinstanz belegt). Import-Lock, transaktionale Kontolöschung, Webhook-Stale-Guard und 502-Handling wirken erst nach dem Code-Deploy.
 - Weiterhin **NO-GO**: Backup/Restore, Domain-Flows, Code-Deploy mit Preview-Smoke offen.
+
+## Preview-Deployment des Release-Kandidaten (2026-10-18)
+
+Branch `release-candidate-2026-10-18` (gepusht, `main` auf GitHub unverändert), Preview via `vercel deploy`. Erster Preview-Build scheiterte, weil `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` im Preview-Environment fehlte (nur Production); der öffentliche Key wurde für Preview ergänzt. Stripe-Variablen sind in Preview bewusst nicht gesetzt.
+Test: `tests/preview-smoke.mjs` (`npm run test:preview-smoke`) gegen die Preview-URL mit Produktions-Supabase und zwei markierten Wegwerf-Mandanten, Bereinigung über `delete_account_data` (kein Rest): ALL PASS.
+Geprüft: /login 200; 401 ohne Auth auf Export/Import/Delete/Checkout; Lead-Import 2 eingefügt, Wiederholung 0, Mandanten-Isolation; Export nur eigene Zeilen; 3 parallele identische Kunden-Importe -> genau 8 Kunden (Import-Lock); Cross-Tenant-Lesen leer; `workspace_import_locks` nicht lesbar; `delete_account_data` in Produktion funktionsfähig.
+Nicht geprüft: Konto-Löschung über die App-Route (braucht aal2), Einladungs-Flow über die App, Stripe-Webhook/Checkout (Preview ohne Stripe-Variablen), E-Mail/OAuth/Recovery. Hinweis: Das Vercel-Bypass-Secret wurde beim Debuggen einmal im Terminal-Log sichtbar; bei Bedarf in den Vercel-Projekteinstellungen rotieren.
