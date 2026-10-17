@@ -81,7 +81,7 @@ const proSubscription = async (W) =>
     plan: "pro", status: "active", current_period_end: new Date(Date.now() + 30 * 864e5).toISOString(),
   })).error);
 const call = (path, token, body, headers = {}) =>
-  fetch(new URL(path, base), { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers }, body: JSON.stringify(body ?? {}) });
+  fetch(new URL(path, base), { method: "POST", headers: { "content-type": "application/json", ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers }, body: JSON.stringify(body ?? {}) });
 const exists = async (table, col, val) => (await admin.from(table).select("*", { count: "exact", head: true }).eq(col, val)).count;
 const inviteRows = async (W, email) => (await admin.from("workspace_invites").select("id,role").eq("workspace_id", W).eq("email", email)).data ?? [];
 const userExists = async (id) => Boolean((await admin.auth.admin.getUserById(id)).data.user);
