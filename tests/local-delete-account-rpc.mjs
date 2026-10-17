@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
 
 const { LOCAL_SUPABASE_URL, LOCAL_SUPABASE_SERVICE_KEY, LOCAL_SUPABASE_PUBLIC_KEY } = process.env;
 if (!LOCAL_SUPABASE_URL || !LOCAL_SUPABASE_SERVICE_KEY || !LOCAL_SUPABASE_PUBLIC_KEY) throw new Error("Missing local test configuration.");
@@ -39,6 +40,34 @@ try {
     assert.equal(r.data, "ok");
     assert.equal((await admin.from("leads").select("id").eq("user_id", uid)).data.length, 0);
     assert.equal((await admin.from("workspace_members").select("user_id").eq("user_id", uid)).data.length, 0);
+  });
+  await check("forced failure mid-function rolls back everything (no partial deletion)", async () => {
+    const e2 = `closeflow-local-rb-${randomUUID()}@example.invalid`;
+    const u2 = await admin.auth.admin.createUser({ email: e2, password: `Cf_${randomUUID()}_R8!`, email_confirm: true });
+    assert.ifError(u2.error); ids.push(u2.data.user.id);
+    const id2 = u2.data.user.id;
+    const w2 = await admin.from("workspaces").insert({ name: "LOCAL-rb", owner_id: id2, plan: "free" }).select("id").single();
+    assert.ifError(w2.error);
+    assert.ifError((await admin.from("workspace_members").insert({ workspace_id: w2.data.id, user_id: id2, role: "owner" })).error);
+    assert.ifError((await admin.from("leads").insert({ workspace_id: w2.data.id, user_id: id2, name: "RB", company: "C", status: "new" })).error);
+    const pgc = new pg.Client({ host: "127.0.0.1", port: 54322, user: "postgres", password: "postgres", database: "postgres" });
+    await pgc.connect();
+    try {
+      await pgc.query("create or replace function public.tmp_fail_member_delete() returns trigger language plpgsql as $$ begin raise exception 'forced failure'; end $$");
+      await pgc.query("create trigger tmp_fail_member_delete before delete on public.workspace_members for each row execute function public.tmp_fail_member_delete()");
+      const r = await admin.rpc("delete_account_data", { p_user_id: id2 });
+      assert.ok(r.error && /forced failure/.test(r.error.message), "expected forced failure");
+      const leads = await admin.from("leads").select("id").eq("user_id", id2);
+      assert.equal(leads.data.length, 1, "lead must survive the rolled-back call");
+      const mem = await admin.from("workspace_members").select("user_id").eq("user_id", id2);
+      assert.equal(mem.data.length, 1);
+    } finally {
+      await pgc.query("drop trigger if exists tmp_fail_member_delete on public.workspace_members");
+      await pgc.query("drop function if exists public.tmp_fail_member_delete()");
+      await pgc.end();
+    }
+    const ok = await admin.rpc("delete_account_data", { p_user_id: id2 });
+    assert.equal(ok.data, "ok");
   });
 } finally {
   for (const id of ids) await admin.auth.admin.deleteUser(id).catch(() => {});

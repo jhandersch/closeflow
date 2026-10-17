@@ -53,12 +53,13 @@ Immer **vor** dem Code-Deploy, in dieser Reihenfolge (aufsteigende Zeitstempel):
 | 3 | `20261017200000_workspace_rls_helpers_security_definer.sql` | Helper `SECURITY DEFINER` (behebt RLS-Rekursion) | Matrix 76/76 | Alte Funktionsdefinition aus 1b wiederherstellen |
 | 4 | `20261017210000_workspace_import_lock.sql` | Tabelle `workspace_import_locks` + Lock-RPCs | Import-Suiten 4/4, 5/5, 9/9 | `drop function …; drop table public.workspace_import_locks;` (erst nach Rückbau des Codes) |
 | 5 | `20261017220000_harden_accept_organization_invite.sql` | Härtet `accept_organization_invite` | 6/6 | Vorherige Funktionsdefinition aus `20260713_team_workspace.sql` neu erstellen |
-| 6 | `20261017230000_delete_account_data_transactional.sql` | `delete_account_data(uuid)` | Lösch-Suite 15/15, RPC-Test 2/2 | `drop function public.delete_account_data(uuid);` (erst nach Rückbau des Codes) |
+| 6 | `20261017230000_delete_account_data_transactional.sql` | `delete_account_data(uuid)` | Lösch-Suite 15/15, RPC-Test 3/3 (inkl. Rollback bei erzwungenem Fehler) | `drop function public.delete_account_data(uuid);` (erst nach Rückbau des Codes) |
+| 7 | `20261018000000_subscriptions_last_stripe_event.sql` | Spalte `subscriptions.last_stripe_event_at` (Webhook-Ereignisreihenfolge) | Webhook-Suite 8/8 | `alter table … drop column last_stripe_event_at` (erst nach Rückbau des Codes) |
 
 Hinweise:
 - Migration 1 hängt funktional von 3 ab. Bei einer Datenbank, in der die Helper noch `SECURITY INVOKER` sind, kann 1 allein RLS-Rekursion auslösen. Deshalb **1 und 3 in einer Sitzung anwenden und danach sofort Check 3a** (unten) ausführen.
 - Migration 5: Falls Check 1a nicht `extensions` ergibt, `search_path` in der Funktion anpassen (z. B. `public`), sonst scheitert jede Token-Annahme.
-- Migrationen 4 und 6 sind rein additiv und stören den alten Code nicht. Der neue Code stört ohne sie: Import-Routen antworten 503, Kontolöschung 500.
+- Migrationen 4, 6 und 7 sind rein additiv und stören den alten Code nicht. Der neue Code stört ohne sie: Import-Routen antworten 503, Kontolöschung 500, und der Stripe-Webhook antwortet bei Abo-Events mit 500 (Spalte fehlt; Stripe wiederholt, verliert aber nichts). Migration 7 also zwingend vor dem Code-Deploy.
 
 ## 3. Nach den Migrationen, vor dem Code-Deploy (Verifikation)
 

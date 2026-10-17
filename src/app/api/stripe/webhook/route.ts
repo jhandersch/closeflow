@@ -93,6 +93,10 @@ export async function POST(request: Request) {
     }
 
     try {
+        const eventAt = new Date(event.created * 1000).toISOString();
+        // Only apply an event if no newer one has been applied already.
+        const notStale = `last_stripe_event_at.is.null,last_stripe_event_at.lte.${eventAt}`;
+
         if (event.type === "checkout.session.completed") {
             const session =
                 event.data.object as Stripe.Checkout.Session;
@@ -118,6 +122,19 @@ export async function POST(request: Request) {
                     : null;
 
             if (workspaceId) {
+                const { data: existing, error: existingError } = await supabase
+                    .from("subscriptions")
+                    .select("last_stripe_event_at")
+                    .eq("workspace_id", workspaceId)
+                    .maybeSingle();
+                if (existingError) {
+                    throw existingError;
+                }
+                const isStale = existing?.last_stripe_event_at &&
+                    new Date(existing.last_stripe_event_at).getTime() > event.created * 1000;
+                if (isStale) {
+                    return NextResponse.json({ received: true });
+                }
                 const { error } = await supabase
                     .from("subscriptions")
                     .upsert(
@@ -129,6 +146,7 @@ export async function POST(request: Request) {
                             plan,
                             status: "active",
                             current_period_end: null,
+                            last_stripe_event_at: eventAt,
                             updated_at: new Date().toISOString(),
                         },
                         {
@@ -193,6 +211,7 @@ export async function POST(request: Request) {
                 plan,
                 status,
                 current_period_end: getPeriodEnd(subscription),
+                last_stripe_event_at: eventAt,
                 updated_at: new Date().toISOString(),
             };
 
@@ -203,6 +222,7 @@ export async function POST(request: Request) {
                     "stripe_subscription_id",
                     stripeSubscriptionId,
                 )
+                .or(notStale)
                 .select("id");
 
             if (error) {
@@ -217,7 +237,8 @@ export async function POST(request: Request) {
                         .eq(
                             "stripe_customer_id",
                             stripeCustomerId,
-                        );
+                        )
+                        .or(notStale);
 
                 if (customerError) {
                     throw customerError;

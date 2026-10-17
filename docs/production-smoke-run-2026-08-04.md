@@ -2426,3 +2426,15 @@ Migration `20261017230000_delete_account_data_transactional.sql` (nicht in Produ
 Lokal: Lösch-Suite 15/15 PASS, `tests/local-delete-account-rpc.mjs` (`npm run test:local-delete-rpc`) 2/2 PASS (authenticated/anon verweigert; service_role löscht Solo-Daten vollständig); `tsc` ok.
 
 Grenzen: Das Löschen des Auth-Benutzers bleibt ein separater API-Aufruf; schlägt er fehl, sind die Daten bereits entfernt, ein Retry ist idempotent (Funktion liefert `ok`). Ein erzwungener Fehler mitten in der Funktion (Rollback-Nachweis) wurde nicht getestet; die Atomarität beruht auf Postgres-Funktionssemantik. Vor Produktion: Migration vor dem Code-Deploy anwenden, sonst scheitert die Löschung mit 500. Tabellen/Spalten (`notifications`, `profiles`, `user_id` in vier Tabellen) sind lokal aus rekonstruiertem Schema und in Produktion nicht gegengeprüft.
+
+## Weitere lokale Prüfungen: Leak-Check, Lösch-Rollback, Stripe-Webhook (2026-10-18)
+
+**Leak-Check (lokal, `CLOSEFLOW_LOCAL_DB=1`):** Fremder Mandant (eigener Nutzer + Workspace) wird in alle Tabellen mit generischen/gezielten Fixture-Zeilen geschrieben. Ergebnis: 30/30 Tabellen mit echten Fremdzeilen (vorher 2/29), anon und authenticated sehen 0 fremde Zeilen, ALL PASS. Legacy-Tabellen `organization_*` liefern weiterhin einen Fehler (fehl-geschlossen) und zählen als bestanden.
+
+**Rollback `delete_account_data`:** Ein per Trigger erzwungener Fehler mitten in der Funktion lässt Leads und Mitgliedschaft unverändert (3/3 PASS). Damit ist die Atomarität der Löschung nachgewiesen (lokal).
+
+**Stripe-Webhook (`tests/local-stripe-webhook-integration.mjs`, `npm run test:local-stripe-webhook`):** signierte Events mit lokalem Testsecret, kein Kontakt zu Stripe. 8/8 PASS nach Fix: fehlende/falsche/manipulierte Signatur -> 400 ohne Schreibzugriff; Checkout aktiviert nur den Ziel-Workspace; Replay erzeugt kein Duplikat; Upgrade/Cancel betrifft nur die passende Subscription; unbekannte Price-ID führt zu `free`; Checkout ohne `workspace_id` schreibt nichts.
+
+**Befund C (behoben, lokal):** Das Webhook ordnete Events nicht. Ein verspätet zugestelltes, älteres `customer.subscription.updated` setzte ein gekündigtes Abo wieder auf `active`. Fix: Spalte `subscriptions.last_stripe_event_at` (Migration `20261018000000_subscriptions_last_stripe_event.sql`, nicht in Produktion angewendet); Events mit `created` älter als der letzte angewendete werden ignoriert. Reihenfolge: Migration vor Code-Deploy.
+
+**Offen/Hinweis:** Das Webhook setzt `status = canceled`, sobald `cancel_at` gesetzt ist (geplante Kündigung zum Periodenende). Ob Nutzer bis zum Periodenende ihre bezahlten Funktionen behalten, hängt davon ab, wie `status` im Produkt ausgewertet wird; nicht geprüft. `invoice.payment_failed` wird nur geloggt. Checkout/Portal/Change-Plan-Routen wurden lokal nicht gegen Stripe getestet (kein echter Stripe-Kontakt).

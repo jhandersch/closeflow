@@ -68,6 +68,87 @@ try {
     from pg_class c join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='public' and c.relkind='r' order by 1`);
 
+  if (useLocal) {
+    // Fill every table with a row owned by a second, unrelated tenant so the check is not vacuous.
+    const ub = crypto.randomUUID();
+    const wb = crypto.randomUUID();
+    await c.query(
+      "insert into auth.users (id, instance_id, aud, role, email) values ($1,'00000000-0000-0000-0000-000000000000','authenticated','authenticated',$2)",
+      [ub, `closeflow-leak-${ub}@example.invalid`]
+    );
+    await c.query("insert into public.workspaces (id, name, owner_id, plan) values ($1,'CLOSEFLOW-LEAK-B',$2,'free')", [wb, ub]);
+    await c.query("insert into public.workspace_members (workspace_id, user_id, role) values ($1,$2,'owner') on conflict do nothing", [wb, ub]);
+
+    const { rows: cols } = await c.query(`
+      select table_name t, column_name col, data_type dt, is_nullable = 'NO' as notnull, column_default is not null as hasdef, is_generated, is_identity
+      from information_schema.columns where table_schema='public' order by table_name, ordinal_position`);
+    const { rows: fks } = await c.query(`
+      select cl.relname t, a.attname col, nf.nspname rns, cf.relname rt, af.attname rcol
+      from pg_constraint k
+      join pg_class cl on cl.oid = k.conrelid join pg_namespace n on n.oid = cl.relnamespace
+      join pg_class cf on cf.oid = k.confrelid join pg_namespace nf on nf.oid = cf.relnamespace
+      join pg_attribute a on a.attrelid = k.conrelid and a.attnum = k.conkey[1]
+      join pg_attribute af on af.attrelid = k.confrelid and af.attnum = k.confkey[1]
+      where k.contype = 'f' and n.nspname = 'public' and array_length(k.conkey, 1) = 1`);
+    const fkOf = new Map(fks.map((f) => [`${f.t}.${f.col}`, f]));
+    const literal = (dt) =>
+      ({ uuid: () => crypto.randomUUID(), text: () => "leak-seed", "character varying": () => "leak-seed", integer: () => 0, bigint: () => 0, numeric: () => 0, "double precision": () => 0, boolean: () => false, "timestamp with time zone": () => new Date(), date: () => new Date(), jsonb: () => "{}", json: () => "{}", ARRAY: () => "{}" })[dt]?.() ?? null;
+    const hints = {
+      "organization_audit_events.event_type": "invite_created",
+      "organization_invites.role": "Sales",
+      "organization_members.role": "Sales",
+      "workspace_invites.role": "member",
+      "revenue_events.type": "won",
+      "usage_events.bucket": "ai",
+    };
+    const skip = new Set(["workspaces", "workspace_members"]);
+    const pending = new Set(tables.map((x) => x.t).filter((t) => !skip.has(t)));
+    const seeded = new Set();
+    for (let pass = 0; pass < 6 && pending.size; pass++) {
+      for (const t of [...pending]) {
+        const own = cols.filter((x) => x.t === t && !x.is_generated?.startsWith?.("ALWAYS") && x.is_identity !== "YES");
+        const names = [];
+        const vals = [];
+        let ok = true;
+        for (const col of own) {
+          const isOwnerCol = ["workspace_id", "user_id"].includes(col.col);
+          if (!col.notnull && !isOwnerCol) continue;
+          if (col.hasdef && !isOwnerCol) continue;
+          const fk = fkOf.get(`${t}.${col.col}`);
+          let v;
+          if (col.col === "workspace_id") v = wb;
+          else if (hints[`${t}.${col.col}`] !== undefined) v = hints[`${t}.${col.col}`];
+          else if (fk && fk.rns === "auth") v = ub;
+          else if (fk && fk.rt === "workspaces") v = wb;
+          else if (fk) {
+            const hasWs = cols.some((x) => x.t === fk.rt && x.col === "workspace_id");
+            const r = await c.query(
+              `select "${fk.rcol}" v from public."${fk.rt}" ${hasWs ? `where workspace_id = $1` : ""} limit 1`,
+              hasWs ? [wb] : []
+            );
+            if (!r.rows.length) { ok = false; break; }
+            v = r.rows[0].v;
+          } else v = literal(col.dt);
+          if (v === null) { ok = false; break; }
+          names.push(`"${col.col}"`);
+          vals.push(v);
+        }
+        if (!ok || !names.length) continue;
+        await c.query("savepoint seed");
+        try {
+          await c.query(`insert into public."${t}" (${names.join(",")}) values (${vals.map((_, i) => `$${i + 1}`).join(",")})`, vals);
+          await c.query("release savepoint seed");
+          pending.delete(t);
+          seeded.add(t);
+        } catch (e) {
+          await c.query("rollback to savepoint seed");
+          if (pass === 5) console.log(`INFO could not seed ${t}: ${e.message.slice(0, 90)}`);
+        }
+      }
+    }
+    console.log(`INFO seeded foreign-tenant rows in ${seeded.size}/${tables.length - skip.size} tables; unseeded: ${[...pending].join(", ") || "none"}`);
+  }
+
   // Totals as superuser, to show the check is not vacuous.
   const totals = {};
   for (const { t } of tables) {
