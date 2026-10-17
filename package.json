@@ -10,8 +10,11 @@
     "lint:tenancy": "node scripts/check-tenancy.mjs",
     "verify:release": "node scripts/verify-release.mjs",
     "test:ai-cost": "node --experimental-strip-types --test tests/ai-cost.test.mjs",
+    "test:csv": "node --experimental-strip-types --test tests/csv.test.mjs",
     "test:usage-quota": "node --experimental-strip-types --test tests/usage-quota.test.mjs",
     "test:workspace-auth": "node --experimental-strip-types --test tests/workspace-auth.test.mjs",
+    "test:feedback-token": "node --experimental-strip-types --test tests/feedback-token.test.mjs",
+    "test:workflow-automations": "node --experimental-strip-types --test tests/workflow-automations.test.mjs",
     "test:workspace-capacity": "node --experimental-strip-types --test tests/workspace-capacity.test.mjs",
     "test:lead-lifecycle:production": "node tests/lead-lifecycle-production.mjs",
     "test:auth-recovery:production": "node tests/auth-recovery-production.mjs",
@@ -26,7 +29,13 @@
     "test:cross-tenant:seed": "node scripts/seed-cross-tenant-probe.js",
     "test:cross-tenant:suite": "node scripts/run-cross-tenant-suite.mjs",
     "test:rls-matrix": "node tests/rls-cross-tenant-matrix.mjs",
-    "test:rls-leak": "node tests/rls-leak-check.mjs"
+    "test:rls-leak": "node tests/rls-leak-check.mjs",
+    "test:local-import-export": "node tests/local-import-export-integration.mjs",
+    "test:local-onboarding-delete": "node tests/local-onboarding-delete-integration.mjs",
+    "test:local-import-limits": "node tests/local-import-limits-integration.mjs",
+    "test:local-customer-import": "node tests/local-customer-import-concurrency.mjs",
+    "test:local-legacy-invite": "node tests/local-legacy-invite-rpc.mjs",
+    "test:local-delete-rpc": "node tests/local-delete-account-rpc.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

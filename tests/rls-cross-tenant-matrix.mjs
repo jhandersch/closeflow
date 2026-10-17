@@ -4,25 +4,38 @@ import pg from "pg";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
-const env = Object.fromEntries(
-  fs
-    .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
-    .split(/\r?\n/)
-    .filter((l) => l.includes("=") && !l.startsWith("#"))
-    .map((l) => {
-      const i = l.indexOf("=");
-      return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
-    })
-);
-const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
-const c = new pg.Client({
-  host: `db.${ref}.supabase.co`,
-  port: 5432,
-  user: "postgres",
-  password: env.SUPABASE_DB_PASSWORD,
-  database: "postgres",
-  ssl: { rejectUnauthorized: false },
-});
+// CLOSEFLOW_LOCAL_DB=1 targets only the local Supabase stack and never reads .env.local.
+const useLocal = process.env.CLOSEFLOW_LOCAL_DB === "1";
+let c;
+if (useLocal) {
+  c = new pg.Client({
+    host: "127.0.0.1",
+    port: 54322,
+    user: "postgres",
+    password: "postgres",
+    database: "postgres",
+  });
+} else {
+  const env = Object.fromEntries(
+    fs
+      .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
+      .split(/\r?\n/)
+      .filter((l) => l.includes("=") && !l.startsWith("#"))
+      .map((l) => {
+        const i = l.indexOf("=");
+        return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
+      })
+  );
+  const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
+  c = new pg.Client({
+    host: `db.${ref}.supabase.co`,
+    port: 5432,
+    user: "postgres",
+    password: env.SUPABASE_DB_PASSWORD,
+    database: "postgres",
+    ssl: { rejectUnauthorized: false },
+  });
+}
 
 let failures = 0;
 const report = (ok, msg) => {
@@ -33,6 +46,17 @@ const report = (ok, msg) => {
 await c.connect();
 try {
   await c.query("begin");
+  if (process.env.CLOSEFLOW_TEST_PENDING_RLS_MIGRATION === "YES") {
+    const migration = fs.readFileSync(
+      new URL(
+        "../supabase/migrations/20261017193000_remove_legacy_owner_only_crm_policies.sql",
+        import.meta.url
+      ),
+      "utf8"
+    );
+    await c.query(migration);
+    console.log("INFO tested pending CRM RLS migration transactionally");
+  }
   const ua = crypto.randomUUID();
   const ub = crypto.randomUUID();
   const wa = crypto.randomUUID();
@@ -68,7 +92,51 @@ try {
     [wb, ub]
   );
   refs.lead_id = lead.rows[0].id;
+  const automation = await c.query(
+    "insert into public.automations (workspace_id,name,trigger_event) values ($1,'CLOSEFLOW-RLS','lead.created') returning id",
+    [wb]
+  );
+  refs.automation_id = automation.rows[0].id;
+  const makeInsert = (cols, workspaceId, userId) => {
+    const names = [];
+    const vals = [];
+    let hasWorkspaceId = false;
+    for (const col of cols) {
+      let v = refs[col.column_name];
+      if (col.column_name === "workspace_id") {
+        v = workspaceId;
+        hasWorkspaceId = true;
+      }
+      else if (col.column_name === "user_id") v = userId;
+      if (v === undefined) {
+        if (col.column_name === "role") v = "member";
+        else if (col.column_name === "type") v = "won";
+        else if (col.column_name === "bucket") v = "ai";
+        else if (col.column_name === "month") v = "2099-01";
+        else if (col.column_name === "request_key" || col.column_name === "trigger_key") {
+          v = `CLOSEFLOW-RLS-${crypto.randomUUID()}`;
+        } else if (col.column_name === "email") {
+          v = `closeflow-rls-${crypto.randomUUID()}@example.invalid`;
+        } else if (col.column_name === "token") v = crypto.randomUUID();
+        else if (col.column_name === "actions") v = "[]";
+        else if (/char|text/.test(col.data_type)) v = "CLOSEFLOW-RLS";
+        else if (/int|numeric|double|real/.test(col.data_type)) v = 0;
+        else if (col.data_type === "boolean") v = false;
+        else if (/timestamp|date/.test(col.data_type)) v = new Date().toISOString();
+        else if (/json/.test(col.data_type)) v = "{}";
+        else continue;
+      }
+      names.push(`"${col.column_name}"`);
+      vals.push(v);
+    }
+    if (!hasWorkspaceId) {
+      names.push('"workspace_id"');
+      vals.push(workspaceId);
+    }
+    return { names, vals };
+  };
   const seeded = [];
+  const insertSpecs = new Map();
   for (const { table_name: t } of tables) {
     const { rows: cols } = await c.query(
       `select column_name, data_type from information_schema.columns
@@ -76,20 +144,12 @@ try {
        and column_default is null and is_generated='NEVER'`,
       [t]
     );
-    const names = [];
-    const vals = [];
-    for (const col of cols) {
-      let v;
-      if (col.column_name in refs) v = refs[col.column_name];
-      else if (/char|text/.test(col.data_type)) v = "CLOSEFLOW-RLS";
-      else if (/int|numeric|double|real/.test(col.data_type)) v = 0;
-      else if (col.data_type === "boolean") v = false;
-      else if (/timestamp|date/.test(col.data_type)) v = new Date().toISOString();
-      else if (/json/.test(col.data_type)) v = "{}";
-      else continue;
-      names.push(`"${col.column_name}"`);
-      vals.push(v);
+    insertSpecs.set(t, cols);
+    if (t === "workspace_members") {
+      seeded.push(t);
+      continue;
     }
+    const { names, vals } = makeInsert(cols, wb, ub);
     await c.query("savepoint seed");
     try {
       const r = await c.query(
@@ -123,6 +183,19 @@ try {
     }
   };
 
+  for (const t of ["activities", "leads"]) {
+    const { names, vals } = makeInsert(insertSpecs.get(t), wa, ua);
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(",");
+    const ownInsert = await attempt(
+      `insert into public."${t}" (${names.join(",")}) values (${placeholders})`,
+      vals
+    );
+    report(
+      ownInsert.rows === 1 && !ownInsert.error,
+      `${t}: workspace A owner can insert own workspace row`
+    );
+  }
+
   const foreignWorkspaceDelete = await attempt(
     "delete from public.workspaces where id=$1",
     [wb]
@@ -145,8 +218,16 @@ try {
     const upd = await attempt(`update public."${t}" set workspace_id=workspace_id where workspace_id=$1`, [wb]);
     report(upd.rows === 0, `${t}: update in workspace B affects 0`);
 
-    const ins = await attempt(`insert into public."${t}" (workspace_id) values ($1)`, [wb]);
-    report(ins.rows === 0, `${t}: insert into workspace B blocked (${ins.error || "no-op"})`);
+    const { names, vals } = makeInsert(insertSpecs.get(t), wb, ua);
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(",");
+    const ins = await attempt(
+      `insert into public."${t}" (${names.join(",")}) values (${placeholders})`,
+      vals
+    );
+    report(
+      ins.rows === 0 && (!ins.error || ins.error === "42501"),
+      `${t}: insert into workspace B blocked (${ins.error || "no-op"})`
+    );
   }
 } finally {
   await c.query("rollback");

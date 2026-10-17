@@ -5,25 +5,38 @@ import pg from "pg";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
-const env = Object.fromEntries(
-  fs
-    .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
-    .split(/\r?\n/)
-    .filter((l) => l.includes("=") && !l.startsWith("#"))
-    .map((l) => {
-      const i = l.indexOf("=");
-      return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
-    })
-);
-const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
-const c = new pg.Client({
-  host: `db.${ref}.supabase.co`,
-  port: 5432,
-  user: "postgres",
-  password: env.SUPABASE_DB_PASSWORD,
-  database: "postgres",
-  ssl: { rejectUnauthorized: false },
-});
+// CLOSEFLOW_LOCAL_DB=1 targets only the local Supabase stack and never reads .env.local.
+const useLocal = process.env.CLOSEFLOW_LOCAL_DB === "1";
+let c;
+if (useLocal) {
+  c = new pg.Client({
+    host: "127.0.0.1",
+    port: 54322,
+    user: "postgres",
+    password: "postgres",
+    database: "postgres",
+  });
+} else {
+  const env = Object.fromEntries(
+    fs
+      .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
+      .split(/\r?\n/)
+      .filter((l) => l.includes("=") && !l.startsWith("#"))
+      .map((l) => {
+        const i = l.indexOf("=");
+        return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
+      })
+  );
+  const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
+  c = new pg.Client({
+    host: `db.${ref}.supabase.co`,
+    port: 5432,
+    user: "postgres",
+    password: env.SUPABASE_DB_PASSWORD,
+    database: "postgres",
+    ssl: { rejectUnauthorized: false },
+  });
+}
 
 let failures = 0;
 const report = (ok, msg) => {
