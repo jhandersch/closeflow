@@ -2476,3 +2476,13 @@ Test: `tests/local-legacy-invite-rpc.mjs` 10/10. Hinweis: Wirkung in Produktion 
 ## Abschlussregression (lokal)
 
 Alle zehn lokalen Suiten (Import/Export, Import-Limits, Kunden-Import, Onboarding/Delete, Delete-RPC, Legacy-Invite, Webhook, Stripe-Routen, RLS-Matrix, Leak-Check) ALL PASS; `npm run verify:release` und `tsc` ohne Fehler. Gesamtfreigabe weiterhin **NO-GO** (Migrationen jetzt acht, noch nicht in Produktion).
+
+## Produktion: Migrationen angewendet (2026-10-18)
+
+Auf ausdrückliche Freigabe des Betreibers (Produktions-DB enthält nur Testdaten: 3 Nutzer, 4 Workspaces, 15 Leads).
+- Vorab-Check: pgcrypto in `extensions`; `is_workspace_manager` war nicht SECURITY DEFINER; `…193000` war bereits angewendet.
+- Angewendet per `supabase db query --linked` (`db push` scheiterte am DB-Passwort), Versionen in `schema_migrations` eingetragen: `…193000` (idempotent erneut), `…195000`, `…200000`, `…210000`, `…220000`, `…230000`, `20261018000000`, `20261018010000`. Alle ohne Fehler.
+- Verifikation: alle Funktionen SECURITY DEFINER mit festem `search_path`; `delete_account_data` nur `service_role`; Spalte `last_stripe_event_at` vorhanden; kein PUBLIC/anon-Grant auf die geprüften Funktionen.
+- `rls-cross-tenant-matrix` und `rls-leak-check` gegen Produktion: ALL PASS (Leak-Check: 17 von 37 Tabellen mit echten Zeilen, übrige leer, dort nur schwache Aussage).
+- **Code ist nicht deployed.** Produktion läuft mit altem Code gegen die neue DB (Migrationen sind additiv/kompatibel, aber nicht per End-to-End-Test auf der laufenden Produktionsinstanz belegt). Import-Lock, transaktionale Kontolöschung, Webhook-Stale-Guard und 502-Handling wirken erst nach dem Code-Deploy.
+- Weiterhin **NO-GO**: Backup/Restore, Domain-Flows, Code-Deploy mit Preview-Smoke offen.
