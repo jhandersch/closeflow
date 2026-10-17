@@ -36,6 +36,7 @@
     "test:local-customer-import": "node tests/local-customer-import-concurrency.mjs",
     "test:local-legacy-invite": "node tests/local-legacy-invite-rpc.mjs",
     "test:local-delete-rpc": "node tests/local-delete-account-rpc.mjs",
+    "test:preview-smoke": "node tests/preview-smoke.mjs",
     "test:local-stripe-routes": "node tests/local-stripe-routes-authz.mjs",
     "test:local-stripe-webhook": "node tests/local-stripe-webhook-integration.mjs"
   },

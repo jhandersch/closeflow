@@ -2501,3 +2501,24 @@ Production-Deployment von `664db1f` live. `tests/stripe-webhook-production.mjs` 
 - Checkout-Abschluss legt genau ein Abo an, Replay bleibt bei einer Zeile; Update, past_due, geplante Kündigung und Löschung korrekt persistiert (nutzt die neue Spalte `last_stripe_event_at`);
 - Bereinigung verifiziert.
 Nicht belegt: Stale-Guard live (nur lokal, Suite 9/9), echte Stripe-Zustellung (Dashboard-Browser nicht bedienbar), Checkout mit echter Stripe-Session.
+
+
+## Live-App-Smoke und Befund F (2026-10-18)
+
+`tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app` (Stripe Testmodus, Wegwerf-Fixtures, Cleanup 0 Reste).
+
+**Befund F (Blocker, behoben):** `/api/workspaces/invite/accept` las die Einladung vorab mit der RLS-Session des Eingeladenen. Die Policy erlaubt das nur Workspace-Mitgliedern, daher bekam jeder echte Eingeladene 404. Fix: Annahme laeuft nur noch ueber die RPC `accept_workspace_invite_with_limit` (prueft Token, Ablauf, E-Mail, Sitzplaetze) mit Fehler-Mapping. Commit `03b3e66`, Production-Deploy von `542c719`.
+
+Ergebnis nach dem Deploy: ALL PASS (16 Pruefungen)
+- Invite: 401/403, Sales-Manager und Admin koennen nicht Admin/Owner einladen, E-Mail-Fehler ohne Domain rollt die Einladung zurueck.
+- Accept: richtige E-Mail 200 (Replay 404), falsche E-Mail 403, abgelaufen 410.
+- Checkout (Testmodus): Owner erhaelt checkout.stripe.com-URL, Member 403. create-portal mit unbekanntem Kunden: JSON-Fehler.
+- Kontoloeschung: Solo-Owner 200, Team-Owner 409, Team-Mitglied 200 mit Lead-Uebergabe.
+- Webhook-Stale-Guard live: aelteres Event reaktiviert nicht, neueres schon.
+
+Der Preview-Lauf zeigte 2 FAILs (Checkout, Stale-Guard), weil Stripe-Variablen nur in Production gesetzt sind; kein Codefehler.
+
+Die Migrationen aus dem Deploy-Plan sind in Produktion angewendet.
+
+## Gesamtstatus: weiterhin NO-GO
+Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); echte Stripe-Zustellung ueber das Dashboard und Zahlung mit echter Session; nicht atomare Importe und Dubletten Import/manuell (Produktentscheidung); Bypass-Secret der Preview-Protection rotieren (stand im Terminal-Log).
