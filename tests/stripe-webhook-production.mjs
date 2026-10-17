@@ -40,11 +40,16 @@ if (!stripeSecretKey.startsWith("sk_test_")) {
   throw new Error("Refusing webhook fixture tests unless Stripe is in test mode.");
 }
 const parsedBaseUrl = new URL(baseUrl);
-if (
-  parsedBaseUrl.protocol !== "http:" ||
-  !["127.0.0.1", "localhost", "[::1]"].includes(parsedBaseUrl.hostname)
-) {
-  throw new Error("Stripe webhook fixture tests may only call a local loopback application.");
+const explicitHost = process.env.CLOSEFLOW_WEBHOOK_TARGET_HOST;
+const isLoopback =
+  parsedBaseUrl.protocol === "http:" &&
+  ["127.0.0.1", "localhost", "[::1]"].includes(parsedBaseUrl.hostname);
+const isExplicitHttps =
+  parsedBaseUrl.protocol === "https:" && explicitHost && parsedBaseUrl.hostname === explicitHost;
+if (!isLoopback && !isExplicitHttps) {
+  throw new Error(
+    "Stripe webhook fixture tests may only call a loopback app or the host named in CLOSEFLOW_WEBHOOK_TARGET_HOST.",
+  );
 }
 
 const admin = createClient(supabaseUrl, serviceRoleKey, {

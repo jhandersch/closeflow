@@ -2493,3 +2493,11 @@ Branch `release-candidate-2026-10-18` (gepusht, `main` auf GitHub unverändert),
 Test: `tests/preview-smoke.mjs` (`npm run test:preview-smoke`) gegen die Preview-URL mit Produktions-Supabase und zwei markierten Wegwerf-Mandanten, Bereinigung über `delete_account_data` (kein Rest): ALL PASS.
 Geprüft: /login 200; 401 ohne Auth auf Export/Import/Delete/Checkout; Lead-Import 2 eingefügt, Wiederholung 0, Mandanten-Isolation; Export nur eigene Zeilen; 3 parallele identische Kunden-Importe -> genau 8 Kunden (Import-Lock); Cross-Tenant-Lesen leer; `workspace_import_locks` nicht lesbar; `delete_account_data` in Produktion funktionsfähig.
 Nicht geprüft: Konto-Löschung über die App-Route (braucht aal2), Einladungs-Flow über die App, Stripe-Webhook/Checkout (Preview ohne Stripe-Variablen), E-Mail/OAuth/Recovery. Hinweis: Das Vercel-Bypass-Secret wurde beim Debuggen einmal im Terminal-Log sichtbar; bei Bedarf in den Vercel-Projekteinstellungen rotieren.
+
+## Production-Deployment: Webhook-Fixtures (2026-10-18)
+
+Production-Deployment von `664db1f` live. `tests/stripe-webhook-production.mjs` (Guard erweitert: nur Loopback oder der in `CLOSEFLOW_WEBHOOK_TARGET_HOST` genannte HTTPS-Host) gegen `closeflow-green.vercel.app`, mit lokal signierten Events (Webhook-Secret aus .env.local, Stripe im Testmodus), markiertes Wegwerf-Fixture:
+- ungültige Signatur -> abgelehnt, keine DB-Änderung; gültige Signatur wird akzeptiert (belegt, dass das lokale und das Vercel-Webhook-Secret übereinstimmen);
+- Checkout-Abschluss legt genau ein Abo an, Replay bleibt bei einer Zeile; Update, past_due, geplante Kündigung und Löschung korrekt persistiert (nutzt die neue Spalte `last_stripe_event_at`);
+- Bereinigung verifiziert.
+Nicht belegt: Stale-Guard live (nur lokal, Suite 9/9), echte Stripe-Zustellung (Dashboard-Browser nicht bedienbar), Checkout mit echter Stripe-Session.
