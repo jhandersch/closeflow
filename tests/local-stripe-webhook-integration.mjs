@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
 
 const { LOCAL_SUPABASE_URL, LOCAL_SUPABASE_SERVICE_KEY, BASE_URL } = process.env;
 if (!LOCAL_SUPABASE_URL || !LOCAL_SUPABASE_SERVICE_KEY || !BASE_URL) throw new Error("Missing local test configuration.");
@@ -98,6 +99,33 @@ try {
     const before = (await admin.from("subscriptions").select("id")).data.length;
     assert.equal((await post(evt("checkout.session.completed", { id: "cs_5", object: "checkout.session", customer: "cus_x", subscription: "sub_x", metadata: {} }))).status, 200);
     assert.equal((await admin.from("subscriptions").select("id")).data.length, before);
+  });
+  await check("billing semantics: scheduled cancel keeps paid plan until period end; expired/unknown status falls to free", async () => {
+    const C = await makeWs("stripeC");
+    const cusC = `cus_${randomUUID()}`, subC = `sub_${randomUUID()}`;
+    const pgc = new pg.Client({ host: "127.0.0.1", port: 54322, user: "postgres", password: "postgres", database: "postgres" });
+    await pgc.connect();
+    try {
+      const tier = async () => (await pgc.query("select public.workspace_plan_tier($1) t", [C])).rows[0].t;
+      assert.equal((await post(evt("checkout.session.completed", { id: "cs_6", object: "checkout.session", customer: cusC, subscription: subC, metadata: { workspace_id: C, plan: "business" } }))).status, 200);
+      assert.equal(await tier(), "business");
+      // scheduled cancellation at period end (future)
+      assert.equal((await post(evt("customer.subscription.updated", sub(subC, cusC, "price_local_business", { cancel_at: Math.floor(Date.now() / 1000) + 86400 * 10 })))).status, 200);
+      assert.equal((await row(C))[0].status, "canceled");
+      assert.equal(await tier(), "business", "paid plan must remain until the period ends");
+      // period already over
+      const past = sub(subC, cusC, "price_local_business", { cancel_at: Math.floor(Date.now() / 1000) - 10 });
+      past.items.data[0].current_period_end = Math.floor(Date.now() / 1000) - 3600;
+      assert.equal((await post(evt("customer.subscription.updated", past))).status, 200);
+      assert.equal(await tier(), "free", "expired subscription must fall back to free");
+      // resumed subscription (cancel_at cleared) is active again
+      assert.equal((await post(evt("customer.subscription.updated", sub(subC, cusC, "price_local_business")))).status, 200);
+      assert.equal((await row(C))[0].status, "active");
+      assert.equal(await tier(), "business");
+      // unpaid / incomplete never grant a paid plan
+      assert.equal((await post(evt("customer.subscription.updated", sub(subC, cusC, "price_local_business", { status: "unpaid" })))).status, 200);
+      assert.equal(await tier(), "free");
+    } finally { await pgc.end(); }
   });
 } finally {
   for (const id of userIds) await admin.auth.admin.deleteUser(id).catch(() => {});

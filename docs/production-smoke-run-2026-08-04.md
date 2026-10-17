@@ -2438,3 +2438,13 @@ Grenzen: Das Löschen des Auth-Benutzers bleibt ein separater API-Aufruf; schlä
 **Befund C (behoben, lokal):** Das Webhook ordnete Events nicht. Ein verspätet zugestelltes, älteres `customer.subscription.updated` setzte ein gekündigtes Abo wieder auf `active`. Fix: Spalte `subscriptions.last_stripe_event_at` (Migration `20261018000000_subscriptions_last_stripe_event.sql`, nicht in Produktion angewendet); Events mit `created` älter als der letzte angewendete werden ignoriert. Reihenfolge: Migration vor Code-Deploy.
 
 **Offen/Hinweis:** Das Webhook setzt `status = canceled`, sobald `cancel_at` gesetzt ist (geplante Kündigung zum Periodenende). Ob Nutzer bis zum Periodenende ihre bezahlten Funktionen behalten, hängt davon ab, wie `status` im Produkt ausgewertet wird; nicht geprüft. `invoice.payment_failed` wird nur geloggt. Checkout/Portal/Change-Plan-Routen wurden lokal nicht gegen Stripe getestet (kein echter Stripe-Kontakt).
+
+## Abo-Status `canceled` und Tarifzugriff (2026-10-18, lokal)
+
+Code-Prüfung: Das Webhook setzt `status = canceled` bei gesetztem `cancel_at` (geplante Kündigung), speichert aber `current_period_end`. Die maßgeblichen Datenbankpfade (`workspace_plan_tier`, `consume_workspace_usage`, Lead-Kapazitäts-Trigger, Seat-Funktionen) und `resolveWorkspacePlan` behandeln `past_due`/`canceled` bis `current_period_end` weiterhin als bezahlt. Ergebnis: Kunden verlieren bei geplanter Kündigung ihre Funktionen **nicht** vorzeitig. Kein Befund.
+
+Test (Webhook-Suite, jetzt 9/9): geplante Kündigung in der Zukunft -> Tarif bleibt `business`; Periode abgelaufen -> `free`; Fortsetzung (`cancel_at` entfernt) -> wieder `active`/`business`; `unpaid` -> `free`.
+
+Schwäche (gering, kein Sicherheitsproblem): `src/lib/usageLimits.ts` (`getWorkspaceUsageContext`) liest nur `subscriptions.plan` ohne Status/Periodenende. Bei abgelaufenem Abo zeigen UI-Vorprüfungen (Seat-/Lead-Vorprüfung, Snapshot im Import) noch den bezahlten Tarif; die datenbankseitige Durchsetzung greift aber korrekt (Import: Batch wird vom Trigger abgelehnt und als übersprungen gemeldet). Nicht geändert; Vereinheitlichung auf `resolveWorkspacePlan` wäre sinnvoll.
+
+`invoice.payment_failed` wird nur geloggt (kein Hinweis an Nutzer, kein Statuswechsel); Stripe setzt danach selbst `past_due`/`unpaid` per Subscription-Event, das verarbeitet wird.
