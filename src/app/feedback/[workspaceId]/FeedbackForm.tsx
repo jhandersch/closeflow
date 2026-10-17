@@ -3,9 +3,10 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 type FeedbackFormProps = {
     workspaceId: string;
+    feedbackToken: string;
     companyName?: string;
 };
-export default function FeedbackForm({ workspaceId, companyName }: FeedbackFormProps) {
+export default function FeedbackForm({ workspaceId, feedbackToken, companyName }: FeedbackFormProps) {
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(0);
     const [comment, setComment] = useState("");
@@ -26,6 +27,7 @@ export default function FeedbackForm({ workspaceId, companyName }: FeedbackFormP
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 workspace_id: workspaceId,
+                feedback_token: feedbackToken,
                 rating,
                 comment,
                 contact_name: name.trim() || null,

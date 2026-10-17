@@ -130,6 +130,8 @@ export default function FeedbackInboxPage() {
   const [loading, setLoading] = useState(true);
   const [workspaceId, setWorkspaceId] =
     useState<string | null>(null);
+  const [feedbackToken, setFeedbackToken] =
+    useState<string | null>(null);
   const [timezone, setTimezone] =
     useState(DEFAULT_TIMEZONE);
 
@@ -184,6 +186,7 @@ export default function FeedbackInboxPage() {
           (await response.json()) as {
             items: FeedbackItem[];
             workspace_id: string | null;
+            feedback_token: string | null;
           };
 
         setItems(
@@ -194,6 +197,9 @@ export default function FeedbackInboxPage() {
 
         setWorkspaceId(
           data.workspace_id || null
+        );
+        setFeedbackToken(
+          data.feedback_token || null
         );
       }
 
@@ -230,12 +236,12 @@ export default function FeedbackInboxPage() {
         )
       : null;
 
-  const feedbackUrl = workspaceId
+  const feedbackUrl = workspaceId && feedbackToken
     ? `${
         typeof window !== "undefined"
           ? window.location.origin
           : ""
-      }/feedback/${workspaceId}`
+      }/feedback/${workspaceId}?token=${encodeURIComponent(feedbackToken)}`
     : null;
 
   return (

@@ -66,7 +66,7 @@ export async function GET(request: Request) {
           Date.now() - IDLE_EVENTS[event] * 86400000
         ).toISOString();
 
-        const { data: leads } = await admin
+        const { data: leads, error: leadsError } = await admin
           .from("leads")
           .select("*")
           .eq("workspace_id", workspaceId)
@@ -74,6 +74,7 @@ export async function GET(request: Request) {
           .is("deleted_at", null)
           .lt("last_activity_at", cutoff)
           .limit(BATCH_LIMIT);
+        if (leadsError) throw leadsError;
 
         for (const lead of leads || []) {
           const results = await runWorkflowAutomations(
@@ -87,7 +88,7 @@ export async function GET(request: Request) {
           summary.runs += results.length;
         }
       } else if (event === "task.overdue") {
-        const { data: tasks } = await admin
+        const { data: tasks, error: tasksError } = await admin
           .from("tasks")
           .select("id, user_id, lead_id, due_date")
           .eq("workspace_id", workspaceId)
@@ -96,15 +97,17 @@ export async function GET(request: Request) {
           .not("lead_id", "is", null)
           .lt("due_date", today)
           .limit(BATCH_LIMIT);
+        if (tasksError) throw tasksError;
 
         for (const task of tasks || []) {
-          const { data: lead } = await admin
+          const { data: lead, error: leadError } = await admin
             .from("leads")
             .select("*")
             .eq("id", task.lead_id)
             .eq("workspace_id", workspaceId)
             .is("deleted_at", null)
             .maybeSingle();
+          if (leadError) throw leadError;
 
           if (!lead) continue;
 

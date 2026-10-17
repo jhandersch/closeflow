@@ -50,6 +50,22 @@ export async function GET(request: Request) {
             .eq("event_type", "ai.usage")
             .gte("created_at", since30d),
     ]);
+    const queryErrors = [
+        workspacesRes.error,
+        usersRes.error,
+        leadsRes.error,
+        subsRes.error,
+        usageRes.error,
+        errors24hRes.error,
+        aiUsage30dRes.error,
+    ].filter((queryError) => queryError !== null);
+    if (queryErrors.length > 0) {
+        console.error("ADMIN OVERVIEW QUERY ERROR:", queryErrors);
+        return NextResponse.json(
+            { error: "Could not load admin overview" },
+            { status: 503 },
+        );
+    }
     const monthlyRevenue = (subsRes.data || []).reduce((sum, row) => {
         const plan = String(row.plan || "free");
         const status = String(row.status || "");

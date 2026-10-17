@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  createTrackedOpenAIClient,
   createTrackedOpenAIFetch,
   recordAiUsageEvent,
   summarizeWorkspaceAiUsage,
@@ -130,6 +131,65 @@ test("tracked OpenAI fetch records usage from successful chat completions", asyn
     assert.equal(result.row.event_type, "ai.usage");
     assert.equal(result.row.payload.prompt_tokens, 15);
     assert.equal(result.row.payload.completion_tokens, 7);
+});
+
+test("tracked OpenAI SDK client records a mocked completion for every AI feature", async () => {
+  const features = [
+    "ai_chat",
+    "sales_copilot",
+    "revenue_forecast",
+    "activity_ai",
+    "ai_insight",
+    "ai_email_generator",
+    "ai_email_rewrite",
+    "ai_meeting_prep",
+    "follow_up_ai",
+    "follow_up_forecast_ai",
+    "lead_memory_ai",
+    "lead_ai_analysis",
+    "lead_follow_up_ai",
+    "priority_ai",
+    "priority_analysis",
+  ];
+
+  for (const feature of features) {
+    const result = {};
+    const client = createTrackedOpenAIClient(
+      "mock-api-key",
+      {},
+      "workspace-1",
+      "user-1",
+      feature,
+      async () => new Response(JSON.stringify({
+        id: "chatcmpl-mock",
+        object: "chat.completion",
+        created: 0,
+        model: "gpt-4.1-mini",
+        choices: [{
+          index: 0,
+          message: { role: "assistant", content: "Mock response" },
+          finish_reason: "stop",
+        }],
+        usage: { prompt_tokens: 15, completion_tokens: 7, total_tokens: 22 },
+      }), { status: 200, headers: { "content-type": "application/json" } }),
+      insertClient(result),
+    );
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [{ role: "user", content: "Mock request" }],
+    });
+
+    assert.equal(completion.choices[0].message.content, "Mock response");
+    assert.equal(result.row.event_type, "ai.usage");
+    assert.equal(result.row.workspace_id, "workspace-1");
+    assert.equal(result.row.actor_user_id, "user-1");
+    assert.equal(result.row.payload.feature, feature);
+    assert.equal(result.row.payload.prompt_tokens, 15);
+    assert.equal(result.row.payload.completion_tokens, 7);
+    assert.equal(result.row.payload.total_tokens, 22);
+    assert.equal(result.row.payload.cost_usd, 0.000017);
+  }
 });
 
 test("tracked OpenAI fetch fails closed when successful responses omit usage", async () => {

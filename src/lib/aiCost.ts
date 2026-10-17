@@ -163,6 +163,8 @@ export function createTrackedOpenAIClient(
     workspaceId: string,
     userId: string,
     feature: AiFeature,
+    fetcher: typeof fetch = fetch,
+    auditClient?: SupabaseClient,
 ): OpenAI {
     return new OpenAI({
         apiKey,
@@ -172,6 +174,8 @@ export function createTrackedOpenAIClient(
             workspaceId,
             userId,
             feature,
+            fetcher,
+            auditClient,
         ),
     });
 }

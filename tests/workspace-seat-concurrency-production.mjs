@@ -346,6 +346,9 @@ const runLeadCapacityRace = async (owner, workspaceId) => {
     );
     const created = outcomes.filter((outcome) => outcome.created);
     const rejected = outcomes.filter((outcome) => !outcome.created);
+    if (created.length !== 1 || rejected.length !== 7) {
+      console.error("Concurrent lead capacity outcomes:", outcomes);
+    }
     assert.equal(created.length, 1);
     assert.equal(rejected.length, 7);
     assert.ok(rejected.every((outcome) => outcome.errorCode === "23514"));

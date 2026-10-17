@@ -33,7 +33,7 @@ async function runAction(
     const title = text(payload.title, 200);
     if (!title) return "skipped";
 
-    const { data: existing } = await supabase
+    const { data: existing, error: lookupError } = await supabase
       .from("tasks")
       .select("id")
       .eq("workspace_id", workspaceId)
@@ -41,6 +41,7 @@ async function runAction(
       .eq("title", title)
       .eq("completed", false)
       .limit(1);
+    if (lookupError) throw lookupError;
 
     if (existing && existing.length > 0) return "skipped";
 
@@ -101,14 +102,11 @@ export async function runWorkflowAutomations(
     .eq("trigger_event", event)
     .eq("enabled", true);
 
-  if (error || !automations) {
-    if (error) console.error("Workflow load failed:", error);
-    return [];
-  }
+  if (error) throw error;
 
   const results: { automationId: string; status: string }[] = [];
 
-  for (const automation of automations) {
+  for (const automation of automations ?? []) {
     const dedupeKey =
       opts.dedupeKey ||
       `${event}:${lead.id}:${
@@ -128,7 +126,7 @@ export async function runWorkflowAutomations(
     if (claimError) {
       // 23505 = already executed for this event.
       if (claimError.code !== "23505") {
-        console.error("Workflow run claim failed:", claimError);
+        throw claimError;
       }
       continue;
     }
@@ -160,7 +158,7 @@ export async function runWorkflowAutomations(
       }
     }
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("automation_runs")
       .update({
         status,
@@ -168,6 +166,7 @@ export async function runWorkflowAutomations(
       })
       .eq("automation_id", automation.id)
       .eq("dedupe_key", dedupeKey);
+    if (updateError) throw updateError;
 
     results.push({ automationId: automation.id, status });
   }
