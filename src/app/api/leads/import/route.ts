@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { withWorkspaceImportLock } from "@/lib/import-lock";
 import { getLeadCapacitySnapshot } from "@/lib/usageLimits";
+import { parseCsvDocument } from "@/lib/csv";
 type ImportIssue = {
     row: number;
     reason: string;
@@ -19,57 +21,6 @@ type ImportIssue = {
     notes?: string;
 };
 const MAX_ISSUES_RETURNED = 500;
-/**
- * Parses a complete CSV document.
- *
- * Unlike line.split("\n"), this also supports quoted fields
- * containing commas and line breaks.
- */
-const parseCsv = (csv: string): string[][] => {
-    const rows: string[][] = [];
-    let row: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let index = 0; index < csv.length; index += 1) {
-        const char = csv[index];
-        const next = csv[index + 1];
-        if (char === '"') {
-            if (inQuotes && next === '"') {
-                current += '"';
-                index += 1;
-            }
-            else {
-                inQuotes = !inQuotes;
-            }
-            continue;
-        }
-        if (char === "," && !inQuotes) {
-            row.push(current.trim());
-            current = "";
-            continue;
-        }
-        if ((char === "\n" || char === "\r") && !inQuotes) {
-            if (char === "\r" && next === "\n") {
-                index += 1;
-            }
-            row.push(current.trim());
-            current = "";
-            if (row.some((value) => value !== "")) {
-                rows.push(row);
-            }
-            row = [];
-            continue;
-        }
-        current += char;
-    }
-    if (current !== "" || row.length > 0) {
-        row.push(current.trim());
-        if (row.some((value) => value !== "")) {
-            rows.push(row);
-        }
-    }
-    return rows;
-};
 const normalize = (value: unknown) => String(value ?? "")
     .trim()
     .toLowerCase();
@@ -153,6 +104,9 @@ const matchesExistingLead = (existing: Record<string, unknown>, candidate: Impor
 };
 
 export async function POST(request: Request) {
+    return withWorkspaceImportLock(request, importLeads);
+}
+async function importLeads(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -177,7 +131,13 @@ export async function POST(request: Request) {
     if (!csvText.trim()) {
         return NextResponse.json({ error: "csv is required" }, { status: 400 });
     }
-    const rows = parseCsv(csvText.replace(/^\uFEFF/, ""));
+    let rows: string[][];
+    try {
+        rows = parseCsvDocument(csvText.replace(/^\uFEFF/, ""), ",");
+    }
+    catch {
+        return NextResponse.json({ error: "Invalid CSV: unterminated quoted field" }, { status: 400 });
+    }
     if (rows.length < 2) {
         return NextResponse.json({
             inserted: 0,

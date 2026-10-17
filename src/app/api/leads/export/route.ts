@@ -3,6 +3,7 @@ import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import * as XLSX from "xlsx";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
+import { escapeCsvCell } from "@/lib/csv";
 
 type ExportLead = {
   name: string | null;
@@ -20,22 +21,6 @@ type ExportLead = {
   address: string | null;
   tags: unknown;
   notes: string | null;
-};
-
-const escapeCsv = (value: unknown) => {
-  const text = String(value ?? "");
-
-  if (
-    text.includes(";") ||
-    text.includes(",") ||
-    text.includes("\n") ||
-    text.includes("\r") ||
-    text.includes('"')
-  ) {
-    return `"${text.replaceAll('"', '""')}"`;
-  }
-
-  return text;
 };
 
 export async function GET(request: Request) {
@@ -296,7 +281,7 @@ export async function GET(request: Request) {
   );
   const csv = [
     headers.join(";"),
-    ...csvRows.map((row) => row.map(escapeCsv).join(";")),
+    ...csvRows.map((row) => row.map(escapeCsvCell).join(";")),
   ].join("\r\n");
 
   return new NextResponse(csv, {

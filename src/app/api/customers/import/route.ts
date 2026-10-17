@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
+import { withWorkspaceImportLock } from "@/lib/import-lock";
+import { detectCsvDelimiter, parseCsvDocument } from "@/lib/csv";
 type ImportIssue = {
     row: number;
     reason: string;
@@ -7,41 +9,10 @@ type ImportIssue = {
     contact: string;
 };
 const MAX_ISSUES_RETURNED = 500;
-const parseCsvLine = (line: string, delimiter: "," | ";") => {
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        const next = line[index + 1];
-        if (char === '"') {
-            if (inQuotes && next === '"') {
-                current += '"';
-                index += 1;
-            }
-            else {
-                inQuotes = !inQuotes;
-            }
-            continue;
-        }
-        if (char === delimiter && !inQuotes) {
-            values.push(current);
-            current = "";
-            continue;
-        }
-        current += char;
-    }
-    values.push(current);
-    return values.map((value) => value.trim());
-};
-const detectDelimiter = (headerLine: string) => {
-    const semicolonCount = (headerLine.match(/;/g) || []).length;
-    const commaCount = (headerLine.match(/,/g) || []).length;
-    return semicolonCount > commaCount
-        ? ";"
-        : ",";
-};
 export async function POST(request: Request) {
+    return withWorkspaceImportLock(request, importCustomers);
+}
+async function importCustomers(request: Request) {
     const { supabase, user, error, } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,8 +21,17 @@ export async function POST(request: Request) {
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
-    const body = await request.json();
-    const csvText = typeof body.csv === "string"
+    let body: unknown;
+    try {
+        body = await request.json();
+    }
+    catch {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const csvText = typeof body === "object" &&
+        body !== null &&
+        "csv" in body &&
+        typeof body.csv === "string"
         ? body.csv
         : "";
     if (!csvText.trim()) {
@@ -61,11 +41,17 @@ export async function POST(request: Request) {
      * Remove UTF-8 BOM if present.
      */
     const normalizedCsv = csvText.replace(/^\uFEFF/, "");
-    const lines = normalizedCsv
-        .split(/\r?\n/)
-        .map((line: string) => line.trim())
-        .filter(Boolean);
-    if (lines.length < 2) {
+    const firstLineEnd = normalizedCsv.search(/[\r\n]/);
+    const headerLine = firstLineEnd < 0 ? normalizedCsv : normalizedCsv.slice(0, firstLineEnd);
+    const delimiter = detectCsvDelimiter(headerLine);
+    let rows: string[][];
+    try {
+        rows = parseCsvDocument(normalizedCsv, delimiter);
+    }
+    catch {
+        return NextResponse.json({ error: "Invalid CSV: unterminated quoted field" }, { status: 400 });
+    }
+    if (rows.length < 2) {
         return NextResponse.json({
             inserted: 0,
             skipped: 0,
@@ -82,8 +68,7 @@ export async function POST(request: Request) {
      *
      * contact,company,revenue
      */
-    const delimiter = detectDelimiter(lines[0]);
-    const headers = parseCsvLine(lines[0], delimiter).map((header) => header.toLowerCase());
+    const headers = rows[0].map((header) => header.toLowerCase());
     const headerIndex = (name: string) => headers.indexOf(name);
     /*
      * Customer records are canonical, while
@@ -130,11 +115,8 @@ export async function POST(request: Request) {
             issues.push(issue);
         }
     };
-    for (const [lineIndex, line] of lines
-        .slice(1)
-        .entries()) {
-        const rowNumber = lineIndex + 2;
-        const values = parseCsvLine(line, delimiter);
+    for (const [rowIndex, values] of rows.slice(1).entries()) {
+        const rowNumber = rowIndex + 2;
         const get = (column: string) => {
             const index = headerIndex(column);
             return index >= 0

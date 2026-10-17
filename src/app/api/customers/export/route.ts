@@ -4,6 +4,7 @@ import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
+import { escapeCsvCell } from "@/lib/csv";
 type CustomerSummary = {
     company: string;
     contact: string;
@@ -21,17 +22,6 @@ type LeadExportRow = {
     value: number | null;
     last_activity_at?: string | null;
     created_at: string | null;
-};
-const escapeCsv = (value: unknown) => {
-    const text = String(value ?? "");
-    if (text.includes(";") ||
-        text.includes(",") ||
-        text.includes("\n") ||
-        text.includes("\r") ||
-        text.includes('"')) {
-        return `"${text.replaceAll('"', '""')}"`;
-    }
-    return text;
 };
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
@@ -268,7 +258,7 @@ export async function GET(request: Request) {
     );
     const csv = [
         headers.join(";"),
-        ...csvRows.map((row) => row.map(escapeCsv).join(";")),
+        ...csvRows.map((row) => row.map(escapeCsvCell).join(";")),
     ].join("\r\n");
     return new NextResponse(csv, {
         status: 200,
