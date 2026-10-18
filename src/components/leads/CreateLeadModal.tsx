@@ -75,7 +75,11 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             if (!response.ok) {
                 throw new Error("Could not create lead");
             }
-            toast.success("Lead created");
+            if (response.headers.get("x-closeflow-duplicate-lead") === "true") {
+                toast("A lead with this name and company already exists. This lead was still created.");
+            } else {
+                toast.success("Lead created");
+            }
             resetForm();
             onCreated();
             onClose();

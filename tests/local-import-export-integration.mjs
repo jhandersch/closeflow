@@ -118,6 +118,24 @@ try {
     assert.equal(alice.data.notes, "Zeile 1\nZeile 2");
   });
 
+  await check("manual exact duplicate warns but remains allowed", async () => {
+    const body = { name: "Manual Duplicate", company: "Import Test GmbH", status: "new", value: 1 };
+    const first = await call(A, "POST", "/api/leads", body);
+    assert.equal(first.status, 200, await first.text());
+    assert.notEqual(first.headers.get("x-closeflow-duplicate-lead"), "true");
+    const second = await call(A, "POST", "/api/leads", body);
+    assert.equal(second.status, 200, await second.text());
+    assert.equal(second.headers.get("x-closeflow-duplicate-lead"), "true");
+    const duplicateRows = await admin
+      .from("leads")
+      .select("id")
+      .eq("workspace_id", A.workspaceId)
+      .eq("name", body.name)
+      .eq("company", body.company);
+    assert.ifError(duplicateRows.error);
+    assert.equal(duplicateRows.data.length, 2);
+  });
+
   await check("lead import A retry: no duplicate leads, no new activities", async () => {
     const before = await counts(A);
     const r = await call(A, "POST", "/api/leads/import", { csv });

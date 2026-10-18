@@ -182,12 +182,44 @@ export async function POST(req: Request) {
         { status: leadCapacity.status },
       );
     }
+    const name = body.name.trim();
+    const company = typeof body.company === "string" ? body.company.trim() : "";
+    const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+    const matchingLeads = () => supabase
+      .from("leads")
+      .select("id")
+      .eq("workspace_id", workspace.id)
+      .is("deleted_at", null)
+      .ilike("name", escapeLikePattern(name));
+    let duplicateLookup = company
+      ? await matchingLeads()
+        .ilike("company", escapeLikePattern(company))
+        .limit(1)
+        .maybeSingle()
+      : await matchingLeads()
+        .is("company", null)
+        .limit(1)
+        .maybeSingle();
+    if (!company && !duplicateLookup.error && !duplicateLookup.data) {
+      duplicateLookup = await matchingLeads()
+        .eq("company", "")
+        .limit(1)
+        .maybeSingle();
+    }
+    const { data: existingDuplicate, error: duplicateLookupError } = duplicateLookup;
+    if (duplicateLookupError) {
+      console.error("CHECK LEAD DUPLICATE ERROR:", duplicateLookupError);
+      return NextResponse.json(
+        { error: "Could not check for an existing lead." },
+        { status: 500 },
+      );
+    }
     const { data, error } = await supabase
       .from("leads")
       .insert({
         ...body,
-        name: body.name.trim(),
-        company: typeof body.company === "string" ? body.company.trim() : "",
+        name,
+        company,
         workspace_id: workspace.id,
         user_id: user.id,
       })
@@ -229,7 +261,12 @@ export async function POST(req: Request) {
     } catch (workflowError) {
       console.error("Workflow automation failed:", workflowError);
     }
-    return NextResponse.json(data);
+    return NextResponse.json(
+      data,
+      existingDuplicate
+        ? { headers: { "x-closeflow-duplicate-lead": "true" } }
+        : undefined,
+    );
   } catch (error) {
     console.error("POST CRASH:", error);
     return NextResponse.json(
