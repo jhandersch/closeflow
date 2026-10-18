@@ -95,7 +95,7 @@ Hinweise:
 - Kein Staging/Klon, Schema in Produktion nicht gegengeprüft.
 - Backup/Restore (USB-Stick), Domain-abhängige Flows (E-Mail, OAuth, Recovery, Webhook-URL).
 - Migration 8 setzt `search_path = public, extensions, pg_temp`; funktioniert für beide pgcrypto-Schemata, Check 1a bleibt trotzdem sinnvoll.
-- Unique-Dubletten nur zwischen Importen verhindert, nicht gegen manuelles Anlegen.
-- CRM-Importe werden mit Migration 9 je Zeile atomar; manuelles Anlegen teilt weiterhin keinen Eindeutigkeitsmechanismus mit den Imports.
+- Imports verhindern Duplikate entsprechend ihren bestehenden Regeln; manuelle exakte Lead-Dubletten erhalten eine Warnung, werden aber erlaubt. Gleichzeitige Import-/Create-Anfragen können die Warnung umgehen, da kein globaler Unique-Key besteht.
+- CRM-Importe werden mit Migration 9 je Zeile atomar.
 - Auth-Benutzer-Löschung bleibt ein separater Schritt nach der transaktionalen Datenbereinigung.
 - Lint: 124 Warnungen (0 Fehler).
