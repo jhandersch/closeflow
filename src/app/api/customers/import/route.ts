@@ -8,6 +8,11 @@ type ImportIssue = {
     company: string | null;
     contact: string;
 };
+type ImportRpcResult = {
+    row_number: number;
+    lead_id: string | null;
+    error_message: string | null;
+};
 const MAX_ISSUES_RETURNED = 500;
 export async function POST(request: Request) {
     return withWorkspaceImportLock(request, importCustomers);
@@ -110,11 +115,16 @@ async function importCustomers(request: Request) {
     let skipped = 0;
     const issues: ImportIssue[] = [];
     const addIssue = (issue: ImportIssue) => {
-        if (issues.length <
-            MAX_ISSUES_RETURNED) {
+        if (issues.length < MAX_ISSUES_RETURNED) {
             issues.push(issue);
         }
     };
+    const candidates: Array<{
+        rowNumber: number;
+        contact: string;
+        company: string;
+        revenue: number;
+    }> = [];
     for (const [rowIndex, values] of rows.slice(1).entries()) {
         const rowNumber = rowIndex + 2;
         const get = (column: string) => {
@@ -162,83 +172,37 @@ async function importCustomers(request: Request) {
             });
             continue;
         }
-        const now = new Date().toISOString();
-        const payload = {
-            workspace_id: workspace.id,
-            user_id: user.id,
-            name: contact.trim(),
+        candidates.push({
+            rowNumber,
+            contact: contact.trim(),
             company: company.trim(),
-            status: "won",
-            value: revenue,
-            source: "other",
-            notes: "Imported from customers file",
-            stage_changed_at: now,
-            last_activity_at: now,
-        };
-        const { data: insertedLead, error: insertError, } = await supabase
-            .from("leads")
-            .insert([payload])
-            .select("id")
-            .single();
-        if (insertError ||
-            !insertedLead?.id) {
+            revenue,
+        });
+    }
+
+    const IMPORT_BATCH_SIZE = 100;
+    for (let offset = 0; offset < candidates.length; offset += IMPORT_BATCH_SIZE) {
+        const batch = candidates.slice(offset, offset + IMPORT_BATCH_SIZE);
+        const { data, error: importError } = await supabase.rpc("import_customer_with_activity", {
+            p_workspace_id: workspace.id,
+            p_user_id: user.id,
+            p_rows: batch,
+        });
+        const rpcResults: ImportRpcResult[] = Array.isArray(data) ? data : [];
+        const results = new Map(rpcResults.map((result) => [result.row_number, result]));
+        for (const candidate of batch) {
+            const result = results.get(candidate.rowNumber);
+            if (!importError && result?.lead_id && !result.error_message) {
+                inserted += 1;
+                knownKeys.add(`${candidate.contact.toLowerCase()}::${candidate.company.toLowerCase()}`);
+                continue;
+            }
             skipped += 1;
             addIssue({
-                row: rowNumber,
-                reason: insertError?.message ||
-                    "Insert failed",
-                company: company.trim(),
-                contact: contact.trim(),
-            });
-            continue;
-        }
-        const { error: customerInsertError } = await supabase
-            .from("customers")
-            .insert({
-                workspace_id: workspace.id,
-                lead_id: insertedLead.id,
-                contact: contact.trim(),
-                company: company.trim(),
-                revenue,
-                status: "active",
-                notes: "Imported from customers file",
-            });
-        if (customerInsertError) {
-            await supabase.from("leads").delete().eq("id", insertedLead.id).eq("workspace_id", workspace.id);
-            skipped += 1;
-            addIssue({
-                row: rowNumber,
-                reason: `Customer could not be saved: ${customerInsertError.message}`,
-                company: company.trim(),
-                contact: contact.trim(),
-            });
-            continue;
-        }
-        knownKeys.add(key);
-        inserted += 1;
-        const { error: activityError } = await supabase
-            .from("activities")
-            .insert([
-            {
-                workspace_id: workspace.id,
-                lead_id: insertedLead.id,
-                user_id: user.id,
-                title: "Customer imported from file",
-                description: "Customer imported from file",
-                action: "Customer imported from file",
-                type: "created",
-                metadata: {
-                    source: "customers_import",
-                },
-            },
-        ]);
-        if (activityError) {
-            console.error("CUSTOMER IMPORT ACTIVITY ERROR:", activityError);
-            addIssue({
-                row: rowNumber,
-                reason: `Customer imported, but its activity could not be recorded: ${activityError.message}`,
-                company: company.trim(),
-                contact: contact.trim(),
+                row: candidate.rowNumber,
+                reason: result?.error_message || importError?.message || "Import returned no result for row.",
+                company: candidate.company,
+                contact: candidate.contact,
             });
         }
     }

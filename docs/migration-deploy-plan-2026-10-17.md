@@ -1,7 +1,7 @@
 # Migrations- und Deploy-Plan (Stand 2026-10-17)
 
-**Status: Entwurf. Nichts davon ist in Produktion ausgeführt. Gesamtfreigabe bleibt NO-GO.**
-Alle Migrationen wurden nur gegen eine lokal rekonstruierte Datenbank (`supabase/local-test/baseline.sql`) geprüft, nicht gegen den Produktionsstand. Das ist die größte Restunsicherheit dieses Plans.
+**Aktueller Status (2026-10-18): Migrationen 1-9 wurden in Production angewendet und in `schema_migrations` erfasst; Gesamtfreigabe bleibt NO-GO.**
+Die frühen Migrationen wurden manuell über die Supabase Management API angewendet, da `db push` das DB-Passwort ablehnte. Produktion hat weiterhin weder einen Staging-Klon noch einen geprüften Backup-/Restore-Pfad.
 
 ## 0. Voraussetzungen
 
@@ -57,6 +57,8 @@ Immer **vor** dem Code-Deploy, in dieser Reihenfolge (aufsteigende Zeitstempel):
 | 7 | `20261018000000_subscriptions_last_stripe_event.sql` | Spalte `subscriptions.last_stripe_event_at` (Webhook-Ereignisreihenfolge) | Webhook-Suite 8/8 | `alter table … drop column last_stripe_event_at` (erst nach Rückbau des Codes) |
 | 8 | `20261018010000_harden_create_organization_invite.sql` | Nur Owner dürfen Owner/Admin einladen, Gültigkeit max. 30 Tage, `search_path` inkl. `extensions` | Invite-Suite 10/10 | Vorherige Funktionsdefinition aus `20260713_team_workspace.sql` neu erstellen |
 
+| 9 | `20261018020000_atomic_crm_import_rows.sql` | Lead-/Kundenzeile und zugehörige Aktivität je Zeile atomar schreiben | Migration in Production angewendet; Live-Routentest folgt, lokaler Stack wegen Docker nicht verfügbar | Erst Code zurückrollen, dann beide Import-RPCs entfernen |
+
 Hinweise:
 - Migration 1 hängt funktional von 3 ab. Bei einer Datenbank, in der die Helper noch `SECURITY INVOKER` sind, kann 1 allein RLS-Rekursion auslösen. Deshalb **1 und 3 in einer Sitzung anwenden und danach sofort Check 3a** (unten) ausführen.
 - Migration 5: Falls Check 1a nicht `extensions` ergibt, `search_path` in der Funktion anpassen (z. B. `public`), sonst scheitert jede Token-Annahme.
@@ -94,5 +96,6 @@ Hinweise:
 - Backup/Restore (USB-Stick), Domain-abhängige Flows (E-Mail, OAuth, Recovery, Webhook-URL).
 - Migration 8 setzt `search_path = public, extensions, pg_temp`; funktioniert für beide pgcrypto-Schemata, Check 1a bleibt trotzdem sinnvoll.
 - Unique-Dubletten nur zwischen Importen verhindert, nicht gegen manuelles Anlegen.
-- Importe nicht atomar; Auth-Benutzer-Löschung separater Schritt.
+- CRM-Importe werden mit Migration 9 je Zeile atomar; manuelles Anlegen teilt weiterhin keinen Eindeutigkeitsmechanismus mit den Imports.
+- Auth-Benutzer-Löschung bleibt ein separater Schritt nach der transaktionalen Datenbereinigung.
 - Lint: 124 Warnungen (0 Fehler).

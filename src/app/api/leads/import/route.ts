@@ -36,8 +36,7 @@ const parseNumber = (value: string) => {
     return Number.isFinite(number) ? number : null;
 };
 const ACTIVE_STATUSES = new Set(["new", "contacted", "proposal"]);
-const INSERT_BATCH_SIZE = 100;
-const UPDATE_CONCURRENCY = 20;
+const IMPORT_BATCH_SIZE = 100;
 type ImportCandidate = {
     rowNumber: number;
     key: string;
@@ -60,22 +59,13 @@ type ExistingLead = Record<string, unknown> & {
     name: string | null;
     company: string | null;
 };
-
-const toLeadPayload = (candidate: ImportCandidate) => ({
-    name: candidate.name,
-    company: candidate.company,
-    status: candidate.status,
-    value: candidate.value,
-    notes: candidate.notes,
-    source: candidate.source,
-    email: candidate.email,
-    phone: candidate.phone,
-    website: candidate.website,
-    address: candidate.address,
-    tags: candidate.tags,
-    stage_changed_at: candidate.stageChangedAt,
-    last_activity_at: new Date().toISOString(),
-});
+type ImportRpcResult = {
+    row_number: number;
+    lead_id: string | null;
+    name?: string | null;
+    company?: string | null;
+    error_message: string | null;
+};
 
 const matchesExistingLead = (existing: Record<string, unknown>, candidate: ImportCandidate) => {
     const sameTags = JSON.stringify(Array.isArray(existing.tags) ? existing.tags : []) === JSON.stringify(candidate.tags);
@@ -316,106 +306,67 @@ async function importLeads(request: Request) {
         allowedInserts.push(candidate);
     }
 
-    for (let offset = 0; offset < allowedInserts.length; offset += INSERT_BATCH_SIZE) {
-        const batch = allowedInserts.slice(offset, offset + INSERT_BATCH_SIZE);
-        const payloads = batch.map((candidate) => ({
-            workspace_id: workspace.id,
-            user_id: user.id,
-            created_by: user.id,
-            ...toLeadPayload(candidate),
+    for (let offset = 0; offset < allowedInserts.length; offset += IMPORT_BATCH_SIZE) {
+        const batch = allowedInserts.slice(offset, offset + IMPORT_BATCH_SIZE);
+        const rpcRows = batch.map((candidate) => ({
+            ...candidate,
+            stageChangedAt: candidate.stageChangedAt,
+            lastActivityAt: new Date().toISOString(),
         }));
-        let insertResult = await supabase.from("leads").insert(payloads).select("id, name, company");
-        if (insertResult.error && /column .* does not exist|schema cache/i.test(insertResult.error.message || "")) {
-            const fallbackPayloads = batch.map((candidate) => ({
-                workspace_id: workspace.id,
-                user_id: user.id,
+        const { data, error: importError } = await supabase.rpc("import_leads_with_activity", {
+            p_workspace_id: workspace.id,
+            p_user_id: user.id,
+            p_rows: rpcRows,
+            p_operation: "insert",
+        });
+        const rpcResults: ImportRpcResult[] = Array.isArray(data) ? data : [];
+        const results = new Map(rpcResults.map((result) => [result.row_number, result]));
+        for (const candidate of batch) {
+            const result = results.get(candidate.rowNumber);
+            if (!importError && result?.lead_id && !result.error_message) {
+                inserted += 1;
+                continue;
+            }
+            skipped += 1;
+            addIssue({
+                row: candidate.rowNumber,
+                reason: result?.error_message || importError?.message || "Import returned no result for row.",
                 name: candidate.name,
                 company: candidate.company,
-                status: candidate.status,
-                value: candidate.value,
-                notes: candidate.notes,
-                stage_changed_at: candidate.stageChangedAt,
-                last_activity_at: new Date().toISOString(),
-            }));
-            insertResult = await supabase.from("leads").insert(fallbackPayloads).select("id, name, company");
-        }
-        if (insertResult.error || !insertResult.data) {
-            const reason = insertResult.error?.message || "Insert failed";
-            for (const candidate of batch) {
-                skipped += 1;
-                addIssue({ row: candidate.rowNumber, reason, name: candidate.name, company: candidate.company });
-            }
-            continue;
-        }
-
-        inserted += insertResult.data.length;
-        const insertedActivities = insertResult.data.map((lead) => ({
-            workspace_id: workspace.id,
-            lead_id: lead.id,
-            user_id: user.id,
-            title: "Lead imported from CSV",
-            description: "Lead imported from CSV",
-            action: "Lead imported from CSV",
-            type: "created",
-            metadata: { source: "csv_import" },
-        }));
-        const { error: activityError } = await supabase.from("activities").insert(insertedActivities);
-        if (activityError) {
-            console.error("LEAD IMPORT ACTIVITY ERROR:", activityError);
-            for (const lead of insertResult.data) {
-                const candidate = batch.find((item) => item.key === `${normalize(lead.name)}::${normalize(lead.company)}`);
-                if (candidate) {
-                    addIssue({ row: candidate.rowNumber, reason: `Lead imported, but its activity could not be recorded: ${activityError.message}`, name: candidate.name, company: candidate.company });
-                }
-            }
+            });
         }
     }
 
     const updates = [...pendingUpdates.entries()];
-    for (let offset = 0; offset < updates.length; offset += UPDATE_CONCURRENCY) {
-        const batch = updates.slice(offset, offset + UPDATE_CONCURRENCY);
-        const results = await Promise.all(batch.map(async ([id, candidate]) => {
-            const payload = toLeadPayload(candidate);
-            let result = await supabase.from("leads").update(payload).eq("id", id).eq("workspace_id", workspace.id).select("id").maybeSingle();
-            if (result.error && /column .* does not exist|schema cache/i.test(result.error.message || "")) {
-                result = await supabase.from("leads").update({
-                    name: candidate.name,
-                    company: candidate.company,
-                    status: candidate.status,
-                    value: candidate.value,
-                    notes: candidate.notes,
-                    stage_changed_at: candidate.stageChangedAt,
-                    last_activity_at: new Date().toISOString(),
-                }).eq("id", id).eq("workspace_id", workspace.id).select("id").maybeSingle();
-            }
-            return { id, candidate, error: result.error, updated: Boolean(result.data?.id) };
+    for (let offset = 0; offset < updates.length; offset += IMPORT_BATCH_SIZE) {
+        const batch = updates.slice(offset, offset + IMPORT_BATCH_SIZE);
+        const rpcRows = batch.map(([id, candidate]) => ({
+            ...candidate,
+            id,
+            stageChangedAt: candidate.stageChangedAt,
+            lastActivityAt: new Date().toISOString(),
         }));
-        const successful = results.filter((result) => result.updated && !result.error);
-        updated += successful.length;
-        for (const result of results) {
-            if (!result.updated || result.error) {
-                skipped += 1;
-                addIssue({ row: result.candidate.rowNumber, reason: result.error?.message || "Update failed", name: result.candidate.name, company: result.candidate.company });
+        const { data, error: importError } = await supabase.rpc("import_leads_with_activity", {
+            p_workspace_id: workspace.id,
+            p_user_id: user.id,
+            p_rows: rpcRows,
+            p_operation: "update",
+        });
+        const rpcResults: ImportRpcResult[] = Array.isArray(data) ? data : [];
+        const results = new Map(rpcResults.map((result) => [result.row_number, result]));
+        for (const [, candidate] of batch) {
+            const result = results.get(candidate.rowNumber);
+            if (!importError && result?.lead_id && !result.error_message) {
+                updated += 1;
+                continue;
             }
-        }
-        if (successful.length) {
-            const activities = successful.map(({ id }) => ({
-                workspace_id: workspace.id,
-                lead_id: id,
-                user_id: user.id,
-                title: "Lead updated from CSV",
-                description: "Lead updated from CSV import",
-                action: "Lead updated from CSV",
-                type: "updated",
-                metadata: { source: "csv_import" },
-            }));
-            const { error: activityError } = await supabase.from("activities").insert(activities);
-            if (activityError) {
-                console.error("LEAD IMPORT ACTIVITY ERROR:", activityError);
-                for (const result of successful) {
-                    addIssue({ row: result.candidate.rowNumber, reason: `Lead updated, but its activity could not be recorded: ${activityError.message}`, name: result.candidate.name, company: result.candidate.company });
-                }
-            }
+            skipped += 1;
+            addIssue({
+                row: candidate.rowNumber,
+                reason: result?.error_message || importError?.message || "Import returned no result for row.",
+                name: candidate.name,
+                company: candidate.company,
+            });
         }
     }
 

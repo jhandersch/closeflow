@@ -170,6 +170,55 @@ try {
     assert.doesNotThrow(() => JSON.parse(t), `non-JSON body (status ${r.status}): ${t.slice(0, 80)}`);
   });
 
+  // ---------- Atomic CRM imports ----------
+  await check("lead import inserts and updates atomically with exactly one matching activity", async () => {
+    const name = `${marker}-lead`;
+    const company = `${marker}-company`;
+    const csv = `name,company,status,value\n${name},${company},new,100`;
+    const first = await call("/api/leads/import", O.aal2, { csv }, H);
+    const firstJson = await first.json();
+    assert.equal(first.status, 200, JSON.stringify(firstJson));
+    assert.equal(firstJson.inserted, 1, JSON.stringify(firstJson));
+
+    const updated = await call("/api/leads/import", O.aal2, {
+      csv: `name,company,status,value\n${name},${company},new,175`,
+    }, H);
+    const updatedJson = await updated.json();
+    assert.equal(updated.status, 200, JSON.stringify(updatedJson));
+    assert.equal(updatedJson.updated, 1, JSON.stringify(updatedJson));
+
+    const lead = await admin.from("leads").select("id,value").eq("workspace_id", W).eq("name", name).single();
+    assert.ifError(lead.error);
+    assert.equal(Number(lead.data.value), 175);
+    const activities = await admin.from("activities").select("type").eq("workspace_id", W).eq("lead_id", lead.data.id);
+    assert.ifError(activities.error);
+    assert.deepEqual(activities.data.map((activity) => activity.type).sort(), ["created", "updated"]);
+  });
+  await check("customer import keeps existing duplicate-skip behavior and continues valid rows", async () => {
+    const contact = `${marker}-customer`;
+    const company = `${marker}-customer-company`;
+    const csv = [
+      "contact,company,revenue",
+      `${contact},${company},125`,
+      `${contact},${company},125`,
+      `${marker}-customer-2,${company},250`,
+      ",${company},0",
+    ].join("\n");
+    const response = await call("/api/customers/import", O.aal2, { csv }, H);
+    const result = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(result));
+    assert.equal(result.inserted, 2, JSON.stringify(result));
+    assert.equal(result.skipped, 2, JSON.stringify(result));
+    const customers = await admin.from("customers").select("lead_id,contact").eq("workspace_id", W).like("contact", `${marker}-customer%`);
+    assert.ifError(customers.error);
+    assert.equal(customers.data.length, 2);
+    assert.equal(new Set(customers.data.map((customer) => customer.lead_id)).size, 2);
+    const leadIds = customers.data.map((customer) => customer.lead_id);
+    const activities = await admin.from("activities").select("lead_id,type").eq("workspace_id", W).in("lead_id", leadIds);
+    assert.ifError(activities.error);
+    assert.equal(activities.data.filter((activity) => activity.type === "created").length, 2);
+  });
+
   // ---------- Account deletion route ----------
   const D = await makeUser("solo");
   const DW = await makeWorkspace("solo", D);

@@ -154,15 +154,22 @@ try {
     assert.equal((await call(null, "GET", "/api/leads/export")).status, 401);
   });
 
-  await check("customer import: unterminated quote -> 400; valid import is workspace-scoped", async () => {
+  await check("customer import: malformed CSV is rejected; duplicate rows are skipped while valid rows continue", async () => {
     const bad = await call(A, "POST", "/api/customers/import", { csv: 'contact,company\r\n"Open' });
     assert.equal(bad.status, 400);
     const good = await call(A, "POST", "/api/customers/import", {
-      csv: "contact,company,email\r\nCarla Kunde,Gamma GmbH,carla@example.invalid",
+      csv: [
+        "contact,company,email",
+        "Carla Kunde,Gamma GmbH,carla@example.invalid",
+        "Carla Kunde,Gamma GmbH,carla@example.invalid",
+        "Dina Kunde,Delta GmbH,dina@example.invalid",
+      ].join("\r\n"),
     });
     const j = await good.json();
     assert.equal(good.status, 200, JSON.stringify(j));
-    assert.equal((await counts(A)).customers.length >= 1, true);
+    assert.equal(j.inserted, 2, JSON.stringify(j));
+    assert.equal(j.skipped, 1, JSON.stringify(j));
+    assert.equal((await counts(A)).customers.length, 2);
     assert.equal((await counts(B)).customers.length, 0);
   });
 } finally {
