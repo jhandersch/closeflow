@@ -2521,7 +2521,7 @@ Der Preview-Lauf zeigte 2 FAILs (Checkout, Stale-Guard), weil Stripe-Variablen n
 Die Migrationen aus dem Deploy-Plan sind in Produktion angewendet.
 
 ## Gesamtstatus: weiterhin NO-GO
-Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); echte Stripe-Zustellung ueber das Dashboard und Zahlung mit echter Session; nicht atomare Importe und Dubletten Import/manuell (Produktentscheidung); Bypass-Secret der Preview-Protection rotieren (stand im Terminal-Log).
+Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); echte Stripe-Zustellung ueber das Dashboard und Zahlung mit echter Session; Dubletten zwischen Import und manuellem Anlegen (Produktentscheidung).
 
 ## CRM-Importe zeilenweise atomar (2026-10-18)
 
@@ -2531,4 +2531,4 @@ Der bestehende Importvertrag bleibt: Leads mit gleichem normalisiertem Name/Firm
 
 Commit `7d6fdb0` ist nach `main` gepusht und Production ist live. `tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app`: **ALL PASS**. Neu: Lead-Import legt an und aktualisiert samt genau einer Aktivitaet je Vorgang; Kunden-Import ueberspringt doppelte CSV-Zeilen und verarbeitet gueltige Folgezeilen weiter. Wegwerf-Fixtures bereinigt (0 Workspaces, 0 Benutzer). Release-Gates, TypeScript und CSV-Unit-Tests: PASS; gezieltes ESLint: 0 Fehler, 1 bereits vorhandene Warnung (`asUser` unbenutzt).
 
-Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status` meldet, dass Docker Desktop/Linux Engine nicht erreichbar ist. Die Import-Routen wurden stattdessen gegen Production mit markierten Wegwerf-Fixtures verifiziert. Gesamtstatus bleibt **NO-GO** ausschliesslich wegen der oben genannten USB-/Domain-/Stripe-/Produktentscheidungen und des noch zu rotierenden Preview-Bypass-Secrets.
+Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status` meldet, dass Docker Desktop/Linux Engine nicht erreichbar ist. Die Import-Routen wurden stattdessen gegen Production mit markierten Wegwerf-Fixtures verifiziert. Das Preview-Bypass-Secret wurde am 2026-10-18 ueber die Vercel-CLI rotiert; alte und neue Werte wurden nicht ausgegeben. Gesamtstatus bleibt **NO-GO** wegen der oben genannten USB-/Domain-/Stripe-/Produktentscheidungen.
