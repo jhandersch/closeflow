@@ -2521,7 +2521,7 @@ Der Preview-Lauf zeigte 2 FAILs (Checkout, Stale-Guard), weil Stripe-Variablen n
 Die Migrationen aus dem Deploy-Plan sind in Produktion angewendet.
 
 ## Gesamtstatus: weiterhin NO-GO
-Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); echte Stripe-Zustellung ueber das Dashboard und Zahlung mit echter Session; eine harte globale Dublettensperre fuer gleichzeitiges Importieren und manuelles Erstellen.
+Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); Live-Modus-Stripe-Zustellung und echte Live-Zahlung; eine harte globale Dublettensperre fuer gleichzeitiges Importieren und manuelles Erstellen.
 
 ## CRM-Importe zeilenweise atomar (2026-10-18)
 
@@ -2531,4 +2531,10 @@ Der bestehende Importvertrag bleibt: Leads mit gleichem normalisiertem Name/Firm
 
 Commit `3f32ae6` ist nach `main` gepusht und Production ist live. `tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app`: **17 PASS, ALL PASS**. Verifiziert wurden Lead-Import (Anlegen, Aktualisieren, Aktivitaeten), Kunden-Import (Dubletten ueberspringen, gueltige Folgezeilen verarbeiten) und manuelle Dublettenwarnung bei weiterhin erlaubtem Erstellen. Wegwerf-Fixtures bereinigt (0 Workspaces, 0 Benutzer). Release-Gates, TypeScript und CSV-Unit-Tests: PASS; gezieltes ESLint: 0 Fehler, 3 bereits vorhandene Warnungen (ein `any`, zwei unbenutzte Werte).
 
-Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status` meldet, dass Docker Desktop/Linux Engine nicht erreichbar ist. Die Import-Routen wurden stattdessen gegen Production mit markierten Wegwerf-Fixtures verifiziert. Das Preview-Bypass-Secret wurde am 2026-10-18 ueber die Vercel-CLI rotiert; alte und neue Werte wurden nicht ausgegeben. Gesamtstatus bleibt **NO-GO** wegen der oben genannten USB-/Domain-/Stripe-Punkte und des noch nicht abgesicherten Gleichzeitigkeitfalls fuer manuelle Leads.
+Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status` meldet, dass Docker Desktop/Linux Engine nicht erreichbar ist. Die Import-Routen wurden stattdessen gegen Production mit markierten Wegwerf-Fixtures verifiziert. Das Preview-Bypass-Secret wurde am 2026-10-18 ueber die Vercel-CLI rotiert; alte und neue Werte wurden nicht ausgegeben. Gesamtstatus bleibt **NO-GO** wegen der oben genannten USB-/Domain-/Live-Stripe-Punkte.
+
+## Abgeschlossener Stripe-Testmodus-Checkout (2026-10-18)
+
+Eine markierte Production-Testworkspace wurde ueber `POST /api/stripe/create-checkout` in den Stripe-Testmodus geleitet. Hosted Checkout wurde mit einer Stripe-Testkarte abgeschlossen. Stripe meldete die Session als `complete` und `paid`; der echte Testmodus-Webhook aktualisierte die passende Subscription in Production. Damit sind Checkout, Testzahlung und Testmodus-Webhook-Zustellung belegt, nicht aber Live-Modus-Zahlung oder Live-Modus-Webhook-Konfiguration.
+
+Cleanup verifiziert: Test-Subscription storniert, Stripe-Testkunde geloescht sowie Test-Workspace und Auth-Nutzer entfernt. Der Browser hatte fuer den Ruecksprung keine App-Cookies und landete erwartungsgemaess auf Login mit `next=/settings/billing?success=1`; das ist kein Beleg fuer eine angemeldete Post-Checkout-UI-Sitzung.
