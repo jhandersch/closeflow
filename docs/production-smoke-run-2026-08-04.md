@@ -2522,3 +2522,13 @@ Die Migrationen aus dem Deploy-Plan sind in Produktion angewendet.
 
 ## Gesamtstatus: weiterhin NO-GO
 Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); echte Stripe-Zustellung ueber das Dashboard und Zahlung mit echter Session; nicht atomare Importe und Dubletten Import/manuell (Produktentscheidung); Bypass-Secret der Preview-Protection rotieren (stand im Terminal-Log).
+
+## CRM-Importe zeilenweise atomar (2026-10-18)
+
+Migration `20261018020000_atomic_crm_import_rows.sql` ist in Production angewendet und in `supabase_migrations.schema_migrations` erfasst. Beide Funktionen laufen als `SECURITY INVOKER`, pruefen Auth-User und Workspace-Mitgliedschaft und akzeptieren hoechstens 100 Zeilen pro RPC-Aufruf. Lead/Kunde und die jeweilige Aktivitaet committen oder rollen je Zeile gemeinsam zurueck; andere Zeilen koennen weiterlaufen.
+
+Der bestehende Importvertrag bleibt: Leads mit gleichem normalisiertem Name/Firma werden aktualisiert, Kunden-Dubletten (Kontakt/Firma) uebersprungen. Import und manuelles Anlegen verwenden weiterhin keinen gemeinsamen Eindeutigkeitsmechanismus; gleichzeitiges manuelles Erstellen kann daher weiterhin eine Dublette erzeugen.
+
+Commit `7d6fdb0` ist nach `main` gepusht und Production ist live. `tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app`: **ALL PASS**. Neu: Lead-Import legt an und aktualisiert samt genau einer Aktivitaet je Vorgang; Kunden-Import ueberspringt doppelte CSV-Zeilen und verarbeitet gueltige Folgezeilen weiter. Wegwerf-Fixtures bereinigt (0 Workspaces, 0 Benutzer). Release-Gates, TypeScript und CSV-Unit-Tests: PASS; gezieltes ESLint: 0 Fehler, 1 bereits vorhandene Warnung (`asUser` unbenutzt).
+
+Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status` meldet, dass Docker Desktop/Linux Engine nicht erreichbar ist. Die Import-Routen wurden stattdessen gegen Production mit markierten Wegwerf-Fixtures verifiziert. Gesamtstatus bleibt **NO-GO** ausschliesslich wegen der oben genannten USB-/Domain-/Stripe-/Produktentscheidungen und des noch zu rotierenden Preview-Bypass-Secrets.

@@ -57,7 +57,7 @@ Immer **vor** dem Code-Deploy, in dieser Reihenfolge (aufsteigende Zeitstempel):
 | 7 | `20261018000000_subscriptions_last_stripe_event.sql` | Spalte `subscriptions.last_stripe_event_at` (Webhook-Ereignisreihenfolge) | Webhook-Suite 8/8 | `alter table … drop column last_stripe_event_at` (erst nach Rückbau des Codes) |
 | 8 | `20261018010000_harden_create_organization_invite.sql` | Nur Owner dürfen Owner/Admin einladen, Gültigkeit max. 30 Tage, `search_path` inkl. `extensions` | Invite-Suite 10/10 | Vorherige Funktionsdefinition aus `20260713_team_workspace.sql` neu erstellen |
 
-| 9 | `20261018020000_atomic_crm_import_rows.sql` | Lead-/Kundenzeile und zugehörige Aktivität je Zeile atomar schreiben | Migration in Production angewendet; Live-Routentest folgt, lokaler Stack wegen Docker nicht verfügbar | Erst Code zurückrollen, dann beide Import-RPCs entfernen |
+| 9 | `20261018020000_atomic_crm_import_rows.sql` | Lead-/Kundenzeile und zugehörige Aktivität je Zeile atomar schreiben | Production-Migration und Live-Routentest PASS; lokaler Stack wegen Docker nicht verfügbar | Erst Code zurückrollen, dann beide Import-RPCs entfernen |
 
 Hinweise:
 - Migration 1 hängt funktional von 3 ab. Bei einer Datenbank, in der die Helper noch `SECURITY INVOKER` sind, kann 1 allein RLS-Rekursion auslösen. Deshalb **1 und 3 in einer Sitzung anwenden und danach sofort Check 3a** (unten) ausführen.
