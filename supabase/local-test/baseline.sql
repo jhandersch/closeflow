@@ -7,6 +7,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.leads (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
+  created_by uuid references auth.users(id) on delete set null,
   name text not null,
   company text not null,
   status text not null default 'new',
@@ -25,6 +26,7 @@ alter table public.leads add column if not exists phone text;
 alter table public.leads add column if not exists address text;
 alter table public.leads add column if not exists website text;
 alter table public.leads add column if not exists owner_id uuid;
+alter table public.leads add column if not exists created_by uuid references auth.users(id) on delete set null;
 alter table public.leads add column if not exists next_action text;
 alter table public.leads add column if not exists next_action_date timestamptz;
 alter table public.leads add column if not exists is_vip boolean not null default false;

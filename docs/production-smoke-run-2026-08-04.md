@@ -2538,3 +2538,25 @@ Die lokalen PostgreSQL-Integrationstests konnten nicht laufen: `supabase status`
 Eine markierte Production-Testworkspace wurde ueber `POST /api/stripe/create-checkout` in den Stripe-Testmodus geleitet. Hosted Checkout wurde mit einer Stripe-Testkarte abgeschlossen. Stripe meldete die Session als `complete` und `paid`; der echte Testmodus-Webhook aktualisierte die passende Subscription in Production. Damit sind Checkout, Testzahlung und Testmodus-Webhook-Zustellung belegt, nicht aber Live-Modus-Zahlung oder Live-Modus-Webhook-Konfiguration.
 
 Cleanup verifiziert: Test-Subscription storniert, Stripe-Testkunde geloescht sowie Test-Workspace und Auth-Nutzer entfernt. Der Browser hatte fuer den Ruecksprung keine App-Cookies und landete erwartungsgemaess auf Login mit `next=/settings/billing?success=1`; das ist kein Beleg fuer eine angemeldete Post-Checkout-UI-Sitzung.
+
+## Erneute Release-Pruefrunde (2026-10-18)
+
+Alle folgenden Produktionspruefungen verwendeten ausschliesslich zufaellige, markierte Wegwerf-Fixtures. Die jeweiligen Harnesses bestaetigten ihre Bereinigung; es wurden keine echten Kundendatensaetze geaendert.
+
+- `npm run verify:release`, `npx tsc --noEmit` und der Production-Build: **PASS**.
+- Alle sieben Unit-Testgruppen (`ai-cost`, `csv`, `feedback-token`, `usage-quota`, `workflow-automations`, `workspace-auth`, `workspace-capacity`): **37/37 PASS**.
+- Vollstaendiges `npm run lint`: **0 Fehler, 125 Warnungen** (Exitcode 0); deshalb kein warnungsfreier Lint-Status.
+- `tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app`: **18 PASS, ALL PASS**; Cleanup: 0 Workspaces und 0 Benutzer.
+- Production-backed lokale App-Tests: Lead-Lebenszyklus, synthetischer Recovery-Token, Stripe-Test-API, signierte Test-Webhooks, Workspace-Einladungen, konkurrierende Seat-/AI-Quota-/Lead-Limits und erschöpfte AI-Quota: **PASS**. Alle Fixtures wurden bereinigt. Die AI-Quota-Pruefung erhielt fuer alle 16 Routen HTTP 429; sie loeste keinen Provider-Aufruf aus.
+- Cross-Tenant-API-Negativtests: **7/7 PASS**; markierte Workspace-/Nutzer-Fixtures wurden bereinigt.
+- Zurueckgerollte RLS-Matrix: **20/20 tenantbezogene Tabellen** bestanden Read/Insert/Update/Delete-Isolationspruefungen. Zusaetzliche Leak-Pruefung: **0 fremde Zeilen sichtbar**; 17 von 37 Tabellen enthielten fuer den Leak-Test aussagekraeftige Zeilen. Legacy-Organisationstabellen lieferten Policy-Fehler statt sichtbarer Zeilen.
+- Zurueckgerollter Automation-RLS-/Idempotenztest: **4/4 PASS**.
+- Read-only Schemaabfrage: **24/24** erwartete Workspace-Tabellen vorhanden und RLS aktiviert. Remote-Migrationshistorie: **30/30** Versionen stimmen mit lokal ueberein, einschliesslich `20261018020000`.
+- Production `/api/health`: **HTTP 200**, Datenbank und Konfiguration jeweils `ok`.
+- Angemeldeter Production-Browser-Ruecksprung nach Checkout: Login leitete auf `/settings/billing?success=1` weiter; die Billing-Seite lud und zeigte den Subscription-Status `active`. Dabei wurde festgestellt, dass die UI den Rueckgabeparameter nicht bestaetigte.
+- Checkout-Rueckmeldung in `src/app/(dashboard)/settings/billing/page.tsx` ergaenzt: Erfolg und Abbruch werden bestaetigt und der jeweilige Queryparameter wird entfernt. Lokaler Browser-Smoke mit markiertem Wegwerf-Account: Erfolgs- und Abbruchmeldung erschienen; nach Refresh erschien keine doppelte Erfolgsmeldung.
+- Nach der Checkout-Rueckmeldungs-Aenderung erneut ausgefuehrt: `npm run verify:release`, Production-Build und `npx tsc --noEmit` **PASS**; gezieltes ESLint **0 Fehler**, eine bestehende `react-hooks/set-state-in-effect`-Warnung an der Billing-Lade-Effect-Logik.
+
+Nach dem Start von Docker Desktop wurden die lokale Supabase-Baseline und alle 30 Migrationen erfolgreich auf den lokalen Stack angewendet. Der lokale RLS-Matrixtest bestand fuer 19 tenantbezogene Tabellen; der Leak-Check bestand fuer 30/30 mit Fixture-Zeilen belegte Tabellen. Alle acht lokalen DB-/Routen-Integrationssuiten bestanden: Import/Export, Import-Limits, paralleler Kundenimport, Legacy-Invite-RPC, Account-Loesch-RPC, Onboarding/Loeschung, Stripe-Routen-Autorisierung und Stripe-Webhooks. Die erste Runde deckte eine fehlende `leads.created_by`-Spalte in der lokalen Baseline sowie eine veraltete Test-Erwartung (manuelle Dubletten werden bewusst angelegt) auf. Baseline/Reparaturtemplate wurden an den bestaetigten Production-Schema-Stand angepasst, der Test korrigiert und die betroffenen Suites erneut bestanden. Aenderungen blieben auf lokale Test-/Schema-Vorlagen und die Checkout-Rueckmeldung beschraenkt; keine Production-Daten wurden geaendert.
+
+Die Checkout-Rueckmeldung ist lokal gebaut und getestet, aber noch nicht auf Production deployed; dort bleibt bis zu einem Deployment die zuvor beobachtete fehlende Meldung bestehen. Der Preview-Smoke benoetigt hier nicht konfigurierte Preview-URL und Bypass-Zugang. Domain-gebundene Mail/OAuth-Flows, Live-Stripe-Zahlung/-Webhook und Backup/Restore bleiben offen. Der Gesamtstatus ist daher weiterhin **NO-GO**.

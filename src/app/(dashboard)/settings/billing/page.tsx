@@ -101,6 +101,34 @@ export default function BillingPage() {
         void loadTimezone();
     }, []);
 
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        const checkoutSuccess =
+            url.searchParams.get("success") === "1";
+        const checkoutCanceled =
+            url.searchParams.get("canceled") === "1";
+
+        if (!checkoutSuccess && !checkoutCanceled) {
+            return;
+        }
+
+        url.searchParams.delete("success");
+        url.searchParams.delete("canceled");
+        window.history.replaceState(
+            window.history.state,
+            "",
+            `${url.pathname}${url.search}${url.hash}`,
+        );
+
+        if (checkoutSuccess) {
+            toast.success(
+                "Checkout complete. Your subscription details are refreshing.",
+            );
+        } else {
+            toast("Checkout canceled. No subscription changes were made.");
+        }
+    }, []);
+
     const loadBilling = useCallback(async () => {
         setBillingLoading(true);
 

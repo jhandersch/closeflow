@@ -59,6 +59,7 @@ with expected_columns(table_name, column_name) as (
     ('leads', 'id'),
     ('leads', 'workspace_id'),
     ('leads', 'user_id'),
+    ('leads', 'created_by'),
     ('leads', 'name'),
     ('leads', 'status'),
     ('leads', 'deleted_at'),

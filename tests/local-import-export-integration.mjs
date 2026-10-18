@@ -152,7 +152,7 @@ try {
     const r = await call(B, "POST", "/api/leads/import", { csv });
     const j = await r.json();
     assert.equal(j.inserted, 2, JSON.stringify(j));
-    assert.equal((await counts(A)).leads.length, 2);
+    assert.equal((await counts(A)).leads.length, 4);
     assert.equal((await counts(B)).leads.length, 2);
   });
 
