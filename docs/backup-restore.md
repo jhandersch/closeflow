@@ -44,6 +44,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-public.ps1 -
 - Restore läuft in einer Transaktion (Fehler = Rollback). Auth-Daten werden nicht erneut eingespielt.
 - Wichtig: Der Dump nutzt `--no-privileges`. Nach `DROP SCHEMA public CASCADE` fehlen alle Grants; das Skript stellt sie aus einem Schema-Dump mit Rechten wieder her und vergleicht sie danach.
 - Dry-Run lokal: 37 Tabellen, 0 Zeilenabweichungen, Rechte 1149/1149 identisch, RLS 37/37, 84 Policies.
+- Production-Lauf 2026-10-19 (Backup `backup-20261019-203016`, Free-Plan): 37 Tabellen, 0 Zeilenabweichungen, Rechte 1096/1096 identisch, RLS 37/37, 84 Policies. Danach: `/api/health` 200, `/login` 200, `/api/leads` ohne Session 401, PostgREST mit Publishable Key liefert `[]` (RLS greift, keine Permission-Fehler). Nicht erneut getestet: Login mit echtem Konto und authentifizierte Lead-Liste.
 
 ## Offen
 
