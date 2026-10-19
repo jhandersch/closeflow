@@ -34,6 +34,17 @@ Das Passwort wird verdeckt abgefragt. Das Skript schreibt `backup-<Zeitstempel>`
 - `auth-data.sql`: 3 Nutzer, Identitäten und MFA-Faktor wiederhergestellt; keine verwaisten Verweise von `workspace_members` und `workspaces` auf `auth.users`.
 - Befund: Das lokale Auth-Image war älter als die Produktion. `mfa_recovery_code_sets`, `mfa_recovery_codes`, `scim_tokens`, `scim_users` und die Spalte `one_time_tokens.expires_at` fehlten dort, die Daten dieser Tabellen wurden beim Test nicht eingespielt. Das ist ein Versionsunterschied der Testumgebung, kein Backup-Fehler, wurde aber nicht gegen ein neues Supabase-Cloud-Projekt geprüft.
 
+## In-Place-Restore von `public` (scripts/restore-supabase-public.ps1)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-public.ps1 -DbHost "<HOST>" -DbUser "postgres.<REF>" -BackupDir "F:\CloseFlow-Backups\backup-<timestamp>"
+```
+
+- Bricht ab, wenn die Live-Zeilenzahlen vom Backup abweichen; erstellt vorher Sicherheits-Dumps (`pre-restore-*.sql`).
+- Restore läuft in einer Transaktion (Fehler = Rollback). Auth-Daten werden nicht erneut eingespielt.
+- Wichtig: Der Dump nutzt `--no-privileges`. Nach `DROP SCHEMA public CASCADE` fehlen alle Grants; das Skript stellt sie aus einem Schema-Dump mit Rechten wieder her und vergleicht sie danach.
+- Dry-Run lokal: 37 Tabellen, 0 Zeilenabweichungen, Rechte 1149/1149 identisch, RLS 37/37, 84 Policies.
+
 ## Offen
 
 - Restore in ein echtes neues Supabase-Cloud-Projekt (inklusive der oben genannten Auth-Tabellen).
