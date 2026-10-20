@@ -51,8 +51,19 @@ foreach ($name in $requiredFiles) {
     Write-Host "OK  $name"
 }
 
-if ($expectedHashes.Count -ne $requiredFiles.Count) {
+if ($expectedHashes.Count -lt $requiredFiles.Count -or $expectedHashes.Count -gt ($requiredFiles.Count + 1)) {
     throw 'SHA256SUMS.txt enthaelt unerwartete oder fehlende Eintraege.'
+}
+
+# Optional (erst seit 2026-10-20): Rechte-Datei fuer den Restore
+$privName = 'public-privileges.sql'
+if ($expectedHashes.ContainsKey($privName)) {
+    $privPath = Join-Path $BackupDir $privName
+    if (-not (Test-Path -LiteralPath $privPath -PathType Leaf)) { throw "Backup-Datei fehlt: $privName" }
+    if ((Get-FileHash -LiteralPath $privPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedHashes[$privName]) { throw "SHA-256 stimmt nicht ueberein: $privName" }
+    Write-Host "OK  $privName"
+} else {
+    Write-Warning "$privName fehlt (altes Backup): ein Restore in ein leeres Projekt hat dann keine Tabellenrechte."
 }
 
 Write-Host "Backup-Pruefung erfolgreich: $BackupDir"

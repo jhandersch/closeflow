@@ -10,7 +10,7 @@ Voraussetzungen: Docker Desktop läuft, Zielmedium ist verschlüsselt (BitLocker
 powershell -ExecutionPolicy Bypass -File .\scripts\backup-supabase.ps1 -DbHost "<HOST>" -DbUser "<BENUTZER>"
 ```
 
-Das Passwort wird verdeckt abgefragt. Das Skript schreibt `backup-<Zeitstempel>` mit `public.sql`, `auth-data.sql`, `storage-metadata.sql`, `migrations-ledger.sql` und `SHA256SUMS.txt`.
+Das Passwort wird verdeckt abgefragt. Das Skript schreibt `backup-<Zeitstempel>` mit `public.sql`, `public-privileges.sql` (Schema mit Rechten, für den Restore), `auth-data.sql`, `storage-metadata.sql`, `migrations-ledger.sql` und `SHA256SUMS.txt`.
 
 `auth-data.sql` enthält Passwort-Hashes und MFA-Daten. Nie ins Repository legen und nur auf verschlüsselten Medien speichern.
 
@@ -63,9 +63,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-public.ps1 -
 - Dry-Run lokal: 37 Tabellen, 0 Zeilenabweichungen, Rechte 1149/1149 identisch, RLS 37/37, 84 Policies.
 - Production-Lauf 2026-10-19 (Backup `backup-20261019-203016`, Free-Plan): 37 Tabellen, 0 Zeilenabweichungen, Rechte 1096/1096 identisch, RLS 37/37, 84 Policies. Danach: `/api/health` 200, `/login` 200, `/api/leads` ohne Session 401, PostgREST mit Publishable Key liefert `[]` (RLS greift, keine Permission-Fehler). Nicht erneut getestet: Login mit echtem Konto und authentifizierte Lead-Liste.
 
+## Restore in ein neues, leeres Projekt (scripts/restore-supabase-fresh.ps1)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-fresh.ps1 -DbHost "<HOST>" -DbUser "postgres.<TEST-REF>" -BackupDir "<Laufwerk>:\CloseFlow-Backups\backup-<timestamp>" [-PrivilegesFile "<Datei>"] [-ShowPassword]
+```
+
+- Lehnt Production und nicht-leere Ziele ab, spielt auth-Daten und public je in einer Transaktion ein, danach Vergleich der Zeilenzahlen.
+- Tabellenrechte kommen aus `public-privileges.sql` (neue Backups ab 2026-10-20). Für ältere Backups per `-PrivilegesFile` angeben; `-GrantsOnly` wendet nur die Rechte an.
+- Testlauf 2026-10-20 (Backup `backup-20261020-132228`, neues leeres Free-Projekt, Region eu-central-1): auth 26 Tabellen/212 Zeilen und public 37 Tabellen/5.061 Zeilen, jeweils 0 Abweichungen; RLS 37/37; 84 Policies; 0 verwaiste Verweise. Rechte-Einträge 1096 (identisch zu Production), erst nach Anwendung der Rechte-Datei. Ohne sie waren es 305, weil der Dump mit `--no-privileges` erstellt wird.
+- Die MFA-Recovery- und SCIM-Tabellen aus dem Auth-Befund wurden hier erstmals gegen ein echtes Cloud-Projekt wiederhergestellt (alle 26 auth-Tabellen ohne Abweichung).
+- Nicht getestet: Login mit einem wiederhergestellten Konto, App gegen das Testprojekt, Migrations-Ledger.
+
 ## Offen
 
-- Restore in ein echtes neues Supabase-Cloud-Projekt (inklusive der oben genannten Auth-Tabellen).
 - Zweite Kopie an anderem Ort; der wöchentliche Rhythmus ist vereinbart, aber noch nicht als wiederkehrender Ablauf eingerichtet.
-- Der Production-In-Place-Restore prüfte nur den Restore in dasselbe Projekt. Er ersetzt keinen Restore-Test in ein leeres Projekt.
 - Bei Pro-Upgrade: Provider-Backups und Restore-Test über das Dashboard zusätzlich nutzen.

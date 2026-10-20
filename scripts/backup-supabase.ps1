@@ -49,6 +49,8 @@ try {
     }
 
     Invoke-Dump 'public.sql' '--format=plain --no-owner --no-privileges --schema=public'
+    # Schema-Dump MIT Rechten: der Restore stellt daraus die GRANTs wieder her
+    Invoke-Dump 'public-privileges.sql' '--format=plain --no-owner --schema-only --schema=public'
     Invoke-Dump 'auth-data.sql' '--format=plain --data-only --no-owner --no-privileges --schema=auth --exclude-table=auth.schema_migrations'
     Invoke-Dump 'storage-metadata.sql' '--format=plain --data-only --no-owner --no-privileges --schema=storage --exclude-table=storage.migrations'
     Invoke-Dump 'migrations-ledger.sql' '--format=plain --no-owner --no-privileges --schema=supabase_migrations'
