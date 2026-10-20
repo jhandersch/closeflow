@@ -77,5 +77,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-fresh.ps1 -D
 
 ## Offen
 
-- Zweite Kopie an anderem Ort; der wöchentliche Rhythmus ist vereinbart, aber noch nicht als wiederkehrender Ablauf eingerichtet.
+- **Zweite Kopie an anderem Ort (akzeptiertes Risiko, Entscheidung 2026-10-20):** Bis jetzt gibt es nur den verschlüsselten Stick. Die Datenbank enthält nur Test-Konten und Testdaten. **Pflicht vor dem ersten echten Kunden bzw. vor echten Kundendaten:** zweite, verschlüsselte Kopie (zweiter Stick oder verschlüsseltes Archiv) und dort `verify-supabase-backup.ps1` ausführen.
+- Wöchentlicher Rhythmus ist vereinbart, aber noch nicht als wiederkehrender Termin eingerichtet; ab echten Kundendaten verbindlich.
+- Aufräumen auf dem Stick nach der zweiten Kopie: nur das neueste Backup (`backup-20261020-173444` oder jünger) behalten.
 - Bei Pro-Upgrade: Provider-Backups und Restore-Test über das Dashboard zusätzlich nutzen.
