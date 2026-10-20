@@ -42,16 +42,16 @@ function Invoke-Dump([string]$Name, [string]$DumpArgs) {
 }
 
 try {
+    $objects = cmd /c "$dockerBase psql -Atc ""select count(*) from storage.objects"""
+    if ($LASTEXITCODE -ne 0) { throw 'Storage-Zaehlung fehlgeschlagen.' }
+    if ([int]$objects -gt 0) {
+        throw "Storage enthaelt $objects Dateien. Die Dateiinhalte werden von diesem Skript nicht gesichert; Backup abgebrochen."
+    }
+
     Invoke-Dump 'public.sql' '--format=plain --no-owner --no-privileges --schema=public'
     Invoke-Dump 'auth-data.sql' '--format=plain --data-only --no-owner --no-privileges --schema=auth --exclude-table=auth.schema_migrations'
     Invoke-Dump 'storage-metadata.sql' '--format=plain --data-only --no-owner --no-privileges --schema=storage --exclude-table=storage.migrations'
     Invoke-Dump 'migrations-ledger.sql' '--format=plain --no-owner --no-privileges --schema=supabase_migrations'
-
-    $objects = cmd /c "$dockerBase psql -Atc ""select count(*) from storage.objects"""
-    if ($LASTEXITCODE -ne 0) { throw 'Storage-Zaehlung fehlgeschlagen.' }
-    if ([int]$objects -gt 0) {
-        Write-Warning "storage.objects enthaelt $objects Dateien. Deren Inhalte sind NICHT in diesem Backup und muessen separat gesichert werden."
-    }
 }
 finally {
     Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue

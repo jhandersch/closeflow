@@ -14,10 +14,27 @@ Das Passwort wird verdeckt abgefragt. Das Skript schreibt `backup-<Zeitstempel>`
 
 `auth-data.sql` enthält Passwort-Hashes und MFA-Daten. Nie ins Repository legen und nur auf verschlüsselten Medien speichern.
 
-## Nicht enthalten
+Nach jedem Lauf (und nach jedem Kopieren auf ein weiteres Medium) Prüfsummen und Vollständigkeit kontrollieren:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-supabase-backup.ps1 -BackupDir "F:\CloseFlow-Backups\backup-<Zeitstempel>"
+```
+
+## Regelmäßiger Ablauf
+
+Der vereinbarte Rhythmus ist wöchentlich sowie zusätzlich vor Datenbankmigrationen oder geplanten Restore-Arbeiten:
+
+1. Docker Desktop starten und das verschlüsselte USB-Laufwerk anschließen/entsperren.
+2. Das Backup-Skript mit dem aktuellen Session-Pooler-Host und -Benutzer ausführen.
+3. Prüfen, dass der Lauf erfolgreich war; anschließend das Prüfsummen-Skript auf dem neuen Backup-Ordner ausführen.
+4. Eine zweite Kopie auf ein separates, verschlüsseltes Medium an einem anderen Ort kopieren und dort ebenfalls das Prüfsummen-Skript ausführen.
+5. Die zweite Kopie und der wöchentliche Rhythmus sind noch nicht eingerichtet. Für die Auth-Daten keine unverschlüsselte Cloud-Kopie verwenden.
+
+## Nicht enthalten / harte Grenzen
 
 - Dateiinhalte aus Supabase Storage (nur Metadaten). Der Bucket `closeflow-files` war am 2026-10-19 leer.
 - Vault-/Verschlüsselungs-Rootschlüssel, Custom-Role-Passwörter, Edge-Function-Secrets, Vercel- und Stripe-Konfiguration.
+- Das Backup-Skript bricht ab, wenn Storage-Dateien vorhanden sind, damit kein unvollständiges Backup als erfolgreich erscheint. In dem Fall müssen die Dateiinhalte separat gesichert werden, bevor ein vollständiges Backup möglich ist.
 
 ## Restore (getestet gegen lokalen Supabase-Stack)
 
@@ -49,5 +66,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-public.ps1 -
 ## Offen
 
 - Restore in ein echtes neues Supabase-Cloud-Projekt (inklusive der oben genannten Auth-Tabellen).
-- Zweite Kopie an anderem Ort und fester Backup-Rhythmus.
+- Zweite Kopie an anderem Ort; der wöchentliche Rhythmus ist vereinbart, aber noch nicht als wiederkehrender Ablauf eingerichtet.
+- Der Production-In-Place-Restore prüfte nur den Restore in dasselbe Projekt. Er ersetzt keinen Restore-Test in ein leeres Projekt.
 - Bei Pro-Upgrade: Provider-Backups und Restore-Test über das Dashboard zusätzlich nutzen.
