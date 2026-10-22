@@ -69,6 +69,11 @@ export default function LoginPage() {
     const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
     const [mfaRecoveryCode, setMfaRecoveryCode] = useState("");
     const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+    const [mfaForPasswordReset, setMfaForPasswordReset] = useState(false);
+
+    function getMfaApi(): MfaApi | null {
+        return (supabase.auth as unknown as { mfa?: MfaApi }).mfa || null;
+    }
 
     /*
      * Prevent the normal authenticated-user redirect while MFA
@@ -122,6 +127,79 @@ export default function LoginPage() {
                 return;
             }
 
+            const mfaApi = getMfaApi();
+            if (!mfaApi?.getAuthenticatorAssuranceLevel) {
+                setError(
+                    t(
+                        "auth.mfaStatusFailed",
+                        "Could not determine two-factor authentication status"
+                    )
+                );
+                return;
+            }
+
+            const { data: aalData, error: aalError } =
+                await mfaApi.getAuthenticatorAssuranceLevel();
+            if (aalError) {
+                setError(
+                    aalError.message ||
+                        t(
+                            "auth.mfaStatusFailed",
+                            "Could not determine two-factor authentication status"
+                        )
+                );
+                return;
+            }
+
+            if (
+                aalData?.nextLevel === "aal2" &&
+                aalData.currentLevel !== "aal2"
+            ) {
+                const { data: factorsData, error: factorsError } =
+                    await mfaApi.listFactors?.() || {
+                        data: null,
+                        error: null,
+                    };
+                if (factorsError) {
+                    setError(
+                        factorsError.message ||
+                            t(
+                                "auth.mfaFactorsFailed",
+                                "Could not load two-factor authentication"
+                            )
+                    );
+                    return;
+                }
+
+                const verifiedFactor = (factorsData?.totp || []).find(
+                    (factor) => factor.status === "verified"
+                );
+                if (!verifiedFactor?.id) {
+                    setError(
+                        t(
+                            "auth.twoFactorNotConfigured",
+                            "2FA is required but no verified TOTP factor is configured"
+                        )
+                    );
+                    return;
+                }
+
+                setMfaForPasswordReset(true);
+                setMfaFactorId(verifiedFactor.id);
+                setMfaCode("");
+                setUseRecoveryCode(false);
+                setMode("mfa");
+                setError(null);
+                setSuccess(
+                    t(
+                        "auth.twoFactorCodeRequired",
+                        "Enter the 6-digit code from your authenticator app to continue."
+                    )
+                );
+                return;
+            }
+
+            setMfaForPasswordReset(false);
             setMode("reset");
             setError(null);
             setSuccess(
@@ -249,10 +327,6 @@ export default function LoginPage() {
         setLoading(false);
     };
 
-    const getMfaApi = (): MfaApi | null => {
-        return (supabase.auth as unknown as { mfa?: MfaApi }).mfa || null;
-    };
-
     const startMfaIfRequired = async (): Promise<boolean> => {
         const mfaApi = getMfaApi();
 
@@ -320,6 +394,7 @@ export default function LoginPage() {
         setMfaCode("");
         setMfaRecoveryCode("");
         setUseRecoveryCode(false);
+        setMfaForPasswordReset(false);
         setMode("mfa");
         setError(null);
         setSuccess(
@@ -417,6 +492,34 @@ export default function LoginPage() {
             }
 
             if (mode === "reset") {
+                const mfaApi = getMfaApi();
+                const { data: aalData, error: aalError } =
+                    await mfaApi?.getAuthenticatorAssuranceLevel?.() || {
+                        data: null,
+                        error: null,
+                    };
+
+                if (aalError) {
+                    throw new Error(
+                        aalError.message ||
+                            t(
+                                "auth.mfaStatusFailed",
+                                "Could not determine two-factor authentication status"
+                            )
+                    );
+                }
+                if (
+                    aalData?.nextLevel === "aal2" &&
+                    aalData.currentLevel !== "aal2"
+                ) {
+                    throw new Error(
+                        t(
+                            "auth.twoFactorCodeRequired",
+                            "Two-factor code required. Enter your authenticator code."
+                        )
+                    );
+                }
+
                 if (password.length < 8) {
                     throw new Error(
                         t(
@@ -499,6 +602,15 @@ export default function LoginPage() {
             }
 
             if (mode === "mfa") {
+                if (mfaForPasswordReset && useRecoveryCode) {
+                    throw new Error(
+                        t(
+                            "auth.authenticatorRequiredForPasswordReset",
+                            "Use your authenticator app to verify this password reset."
+                        )
+                    );
+                }
+
                 if (useRecoveryCode) {
                     if (!mfaRecoveryCode.trim()) {
                         throw new Error(
@@ -599,6 +711,18 @@ export default function LoginPage() {
                             )
                         );
                     }
+                }
+
+                if (mfaForPasswordReset) {
+                    setMfaForPasswordReset(false);
+                    setMode("reset");
+                    setSuccess(
+                        t(
+                            "auth.recoveryVerified",
+                            "Two-factor authentication verified. Set your new password."
+                        )
+                    );
+                    return;
                 }
 
                 /*
@@ -887,27 +1011,29 @@ export default function LoginPage() {
                                 className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
                             />
 
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setUseRecoveryCode(
-                                        (current) => !current
-                                    );
-                                    setError(null);
-                                    setSuccess(null);
-                                }}
-                                className="text-left text-sm text-cyan-300 transition hover:text-cyan-200"
-                            >
-                                {useRecoveryCode
-                                    ? t(
-                                          "auth.useAuthenticatorInstead",
-                                          "Use authenticator code instead"
-                                      )
-                                    : t(
-                                          "auth.useRecoveryInstead",
-                                          "Use recovery code instead"
-                                      )}
-                            </button>
+                            {!mfaForPasswordReset ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setUseRecoveryCode(
+                                            (current) => !current
+                                        );
+                                        setError(null);
+                                        setSuccess(null);
+                                    }}
+                                    className="text-left text-sm text-cyan-300 transition hover:text-cyan-200"
+                                >
+                                    {useRecoveryCode
+                                        ? t(
+                                              "auth.useAuthenticatorInstead",
+                                              "Use authenticator code instead"
+                                          )
+                                        : t(
+                                              "auth.useRecoveryInstead",
+                                              "Use recovery code instead"
+                                          )}
+                                </button>
+                            ) : null}
                         </>
                     ) : null}
                 </div>
