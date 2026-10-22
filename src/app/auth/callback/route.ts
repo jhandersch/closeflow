@@ -71,26 +71,21 @@ export async function GET(request: NextRequest) {
             "Authentication code could not be verified",
         );
     }
-    if (user) {
-        await syncProfile(supabase, user);
-    }
     /*
      * PASSWORD RECOVERY
      *
      * Recovery must go to the reset-password
      * UI and must NOT go directly to the dashboard.
      */
-    if (type === "recovery") {
+    if (type === "recovery" || nextPath === "/login?mode=reset") {
         return NextResponse.redirect(new URL("/login?mode=reset", request.url));
+    }
+    if (user) {
+        await syncProfile(supabase, user);
     }
     /*
      * Normal OAuth / authentication flow.
      */
-    const isPasswordRecovery = type === "recovery" ||
-        nextPath === "/login?mode=reset";
-    if (isPasswordRecovery) {
-        return NextResponse.redirect(new URL("/login?mode=reset", request.url));
-    }
     let destination = nextPath ||
         "/dashboard";
     if (user &&

@@ -390,9 +390,15 @@ export default function LoginPage() {
             }
 
             if (mode === "forgot") {
+                const resetUrl = new URL(
+                    "/auth/callback",
+                    window.location.origin
+                );
+                resetUrl.searchParams.set("next", "/login?mode=reset");
+
                 const { error } =
                     await supabase.auth.resetPasswordForEmail(email.trim(), {
-                        redirectTo: `${window.location.origin}/login?mode=reset`,
+                        redirectTo: resetUrl.toString(),
                     });
 
                 if (error) {
