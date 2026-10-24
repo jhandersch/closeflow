@@ -243,7 +243,23 @@ export async function loadWorkspaceForUser(
     return {
         error: null,
         workspace: workspace as Workspace,
+        role: String(membership.role).toLowerCase(),
     };
+}
+export const READ_ONLY_ERROR = "Viewers have read-only access to this workspace.";
+export function isReadOnlyRole(role: string | null | undefined) {
+    return role === "viewer";
+}
+export async function denyReadOnlyWrite(request: RouteRequest): Promise<Response | null> {
+    const { supabase, user } = await getRouteUser(request);
+    if (!user) {
+        return null;
+    }
+    const { role } = await loadWorkspaceForUser(supabase, user.id);
+    if (isReadOnlyRole(role)) {
+        return Response.json({ error: READ_ONLY_ERROR }, { status: 403 });
+    }
+    return null;
 }
 export async function getWorkspacePayload(
     supabase: Awaited<ReturnType<typeof createRouteSupabase>>,

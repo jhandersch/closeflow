@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser } from "@/lib/supabase/route";
 
 export const runtime = "nodejs";
 
@@ -81,6 +81,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await denyReadOnlyWrite(request);
+  if (denied) return denied;
   const { supabase, user, error } = await getRouteUser(request);
   if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -121,6 +123,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await denyReadOnlyWrite(request);
+  if (denied) return denied;
   const { supabase, user, error } = await getRouteUser(request);
   if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

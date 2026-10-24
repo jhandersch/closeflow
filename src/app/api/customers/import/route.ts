@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { withWorkspaceImportLock } from "@/lib/import-lock";
 import { detectCsvDelimiter, parseCsvDocument } from "@/lib/csv";
 type ImportIssue = {
@@ -15,6 +15,8 @@ type ImportRpcResult = {
 };
 const MAX_ISSUES_RETURNED = 500;
 export async function POST(request: Request) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     return withWorkspaceImportLock(request, importCustomers);
 }
 async function importCustomers(request: Request) {

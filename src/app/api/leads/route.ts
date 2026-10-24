@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
 import { runWorkflowAutomations, workflowEventForStatus } from "@/lib/workflowAutomations";
 import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
@@ -123,6 +123,8 @@ export async function GET(req: Request) {
 }
 export async function POST(req: Request) {
   try {
+    const denied = await denyReadOnlyWrite(req);
+    if (denied) return denied;
     const { supabase, user, error: authError } = await getRouteUser(req);
     if (authError || !user) {
       return NextResponse.json(
@@ -281,6 +283,8 @@ export async function POST(req: Request) {
 }
 export async function PUT(req: Request) {
   try {
+    const denied = await denyReadOnlyWrite(req);
+    if (denied) return denied;
     const { supabase, user, error: authError } = await getRouteUser(req);
     if (authError || !user) {
       return NextResponse.json(
@@ -594,6 +598,8 @@ export async function PUT(req: Request) {
 }
 export async function DELETE(req: Request) {
   try {
+    const denied = await denyReadOnlyWrite(req);
+    if (denied) return denied;
     const { supabase, user, error: authError } = await getRouteUser(req);
     if (authError || !user) {
       return NextResponse.json(
@@ -715,6 +721,8 @@ export async function DELETE(req: Request) {
 }
 export async function PATCH(req: Request) {
   try {
+    const denied = await denyReadOnlyWrite(req);
+    if (denied) return denied;
     const { supabase, user, error: authError } = await getRouteUser(req);
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

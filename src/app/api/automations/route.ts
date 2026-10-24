@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser, requireMfaForWorkspaceRole } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, requireMfaForWorkspaceRole } from "@/lib/supabase/route";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -20,6 +20,8 @@ export async function GET(request: Request) {
     return NextResponse.json(data || []);
 }
 export async function POST(request: Request) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,6 +59,8 @@ export async function POST(request: Request) {
     return NextResponse.json(data);
 }
 export async function PATCH(request: Request) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -88,6 +92,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json(data);
 }
 export async function DELETE(request: Request) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

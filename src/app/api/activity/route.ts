@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+    denyReadOnlyWrite,
     getRouteUser,
     loadWorkspaceForUser,
 } from "@/lib/supabase/route";
@@ -232,6 +233,8 @@ function getFromDate(
 export async function POST(
     request: Request,
 ) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     const {
         supabase,
         user,

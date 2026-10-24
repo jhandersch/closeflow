@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { withWorkspaceImportLock } from "@/lib/import-lock";
 import { getLeadCapacitySnapshot } from "@/lib/usageLimits";
 import { parseCsvDocument } from "@/lib/csv";
@@ -94,6 +94,8 @@ const matchesExistingLead = (existing: Record<string, unknown>, candidate: Impor
 };
 
 export async function POST(request: Request) {
+    const denied = await denyReadOnlyWrite(request);
+    if (denied) return denied;
     return withWorkspaceImportLock(request, importLeads);
 }
 async function importLeads(request: Request) {

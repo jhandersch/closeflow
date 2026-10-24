@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 
 export async function DELETE(request: Request) {
+  const denied = await denyReadOnlyWrite(request);
+  if (denied) return denied;
   try {
     const { supabase, user, error: authError } = await getRouteUser(request);
 

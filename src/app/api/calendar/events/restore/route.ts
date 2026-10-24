@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 
 export async function POST(request: Request) {
+  const denied = await denyReadOnlyWrite(request);
+  if (denied) return denied;
   const { supabase, user, error } = await getRouteUser(request);
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
