@@ -4,6 +4,30 @@ Purpose: record manual and automated evidence used for the CloseFlow release dec
 
 Latest recorded production interactions include the explicitly authorized migration and marker-scoped fixtures documented below, one separately authorized successful AI-provider request, and the authenticated browser UI smoke run dated 2026-10-15. No deployment, real Stripe charge, or live email delivery was performed as part of that UI run. Older audit sections below are timestamped historical snapshots; the latest evidence sections supersede earlier status statements.
 
+## Status Update 2026-10-24 (domain, auth, WIP mode)
+
+Current decision: **NO-GO (unchanged)**. The app is deliberately held back by a work-in-progress placeholder (`src/proxy.ts`, commit `0cedb38`). Verified live with `curl`: `/login` returns 503 with the placeholder, `/api/health` returns 200. The bypass cookie and `WIP_MODE=off` were not tested.
+
+Done and evidenced:
+
+- Domain `closeflowapp.de` with `www` as canonical; the apex redirects with 308. Both are valid in Vercel. `NEXT_PUBLIC_SITE_URL` is set to `https://www.closeflowapp.de` and was redeployed.
+- IONOS mailboxes, SPF/DKIM/DMARC PASS, Supabase custom SMTP configured.
+- Password reset including the MFA (AAL2) step fixed and confirmed by the owner (commits `d3da8d1`, `2668b99`).
+- Google OAuth: branding URLs, authorized domains, developer contact, publishing status "In Produktion"; client origin and Supabase callback are correct. The user-support email is still a freenet address (Google allows only a Google account or group).
+- Supabase redirect URLs added for `https://www.closeflowapp.de/**` and `/auth/callback`.
+- Stripe test webhook moved to `https://www.closeflowapp.de/api/stripe/webhook`; an unsigned POST returns 400 as expected.
+- Health check workflow points at the new domain.
+- Backups: second copy on a BitLocker-encrypted stick verified (see `docs/backup-restore.md`).
+
+Still open (blocking):
+
+- No business, Impressum or real legal data yet. `impressum` and `datenschutz` still contain placeholders and must be replaced and reviewed before launch.
+- Practical tests of Google login, registration mail, magic link and a full password-reset on the live domain (requires the WIP bypass).
+- Stripe Live: keys, price IDs, live webhook and a live payment test with refund.
+- Global duplicate lock for concurrent import and manual create.
+- Direct Supabase signup is still possible; disable "Allow new users to sign up" while in WIP.
+- Backup follow-ups: off-site storage of the second stick, separate BitLocker recovery key, recurring reminder.
+
 This document is intentionally split into two layers:
 
 - Layer A (Release Blocking): mandatory for release decision.
