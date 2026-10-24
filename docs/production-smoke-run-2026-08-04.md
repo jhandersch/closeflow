@@ -21,6 +21,9 @@ Done and evidenced:
 
 Still open (blocking):
 
+- Update 2026-10-24 (later): the WIP placeholder was reverted (`3c68b59`); the site is public again, new signups stay blocked in Supabase ("Allow new users to sign up" off). Verified live by the owner: Google login, magic link across browsers, signup confirmation mail and password reset mail (German templates from `support@closeflowapp.de`, `token_hash` links, callback commit `bda8f6c`). Re-enable signups at go-live.
+- Plan limits, import lock, atomic seat check on invite accept, AI quota on all AI routes and `/api/health` DB check were found already implemented in code (not re-tested live). `npm run lint`: 0 errors, 125 warnings.
+- Invite mails use Resend with sender `onboarding@resend.dev` unless `EMAIL_FROM` is set; the sender domain must be verified in Resend before go-live.
 - No business, Impressum or real legal data yet. `impressum` and `datenschutz` still contain placeholders and must be replaced and reviewed before launch.
 - Practical tests of Google login, registration mail, magic link and a full password-reset on the live domain (requires the WIP bypass).
 - Stripe Live: keys, price IDs, live webhook and a live payment test with refund.
