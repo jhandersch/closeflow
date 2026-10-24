@@ -11,7 +11,7 @@ export async function sendWorkspaceInviteEmail({ to, inviteUrl, workspaceName = 
         throw new Error("RESEND_API_KEY is missing");
     }
     const { data, error } = await resend.emails.send({
-        from: "CloseFlow <onboarding@resend.dev>",
+        from: process.env.EMAIL_FROM || "CloseFlow <onboarding@resend.dev>",
         to,
         subject: `You're invited to join ${workspaceName}`,
         html: `
