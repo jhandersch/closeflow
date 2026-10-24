@@ -3,8 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 const BYPASS_COOKIE = "cf_wip_bypass";
 const BYPASS_PARAM = "wip_bypass";
 
-// Platzhalterseite aktiv, bis WIP_MODE=off gesetzt wird.
-const wipEnabled = () => (process.env.WIP_MODE || "").trim().toLowerCase() !== "off";
+// Platzhalterseite aktiv, bis WIP_MODE=off gesetzt wird. Lokal (next dev) nie aktiv, außer WIP_MODE=on.
+const wipEnabled = () => {
+  const mode = (process.env.WIP_MODE || "").trim().toLowerCase();
+  if (mode === "off") return false;
+  if (mode === "on") return true;
+  return process.env.NODE_ENV === "production";
+};
 
 export function proxy(request: NextRequest) {
   if (!wipEnabled()) return NextResponse.next();
