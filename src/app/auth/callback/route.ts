@@ -56,14 +56,31 @@ export async function GET(request: NextRequest) {
         return toLoginRedirect(request, nextPath, oauthErrorDescription ||
             oauthError);
     }
-    if (!code) {
+    const tokenHash = requestUrl.searchParams.get("token_hash");
+    if (!code && !tokenHash) {
         return toLoginRedirect(request, nextPath, "Authentication callback without code");
     }
     const supabase = await createClient();
-    const {
-        data: { user },
-        error: exchangeError,
-    } = await supabase.auth.exchangeCodeForSession(code);
+    /*
+     * Email links with token_hash work on any device/browser, unlike the PKCE
+     * code which needs the code verifier cookie of the browser that started the flow.
+     */
+    const emailOtpTypes = ["signup", "magiclink", "recovery", "invite", "email", "email_change"];
+    let exchange;
+    if (tokenHash) {
+        if (!type || !emailOtpTypes.includes(type)) {
+            return toLoginRedirect(request, nextPath, "Authentication code could not be verified");
+        }
+        const verified = await supabase.auth.verifyOtp({
+            type: type as "signup" | "magiclink" | "recovery" | "invite" | "email" | "email_change",
+            token_hash: tokenHash,
+        });
+        exchange = { data: { user: verified.data.user }, error: verified.error };
+    }
+    else {
+        exchange = await supabase.auth.exchangeCodeForSession(code as string);
+    }
+    const { data: { user }, error: exchangeError } = exchange;
     if (exchangeError || !user) {
         return toLoginRedirect(
             request,
