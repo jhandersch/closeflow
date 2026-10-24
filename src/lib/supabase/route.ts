@@ -145,6 +145,19 @@ export type WorkspacePayload = {
     invites: WorkspaceInvite[];
     profile: UserProfile | null;
 };
+export const ACTIVE_WORKSPACE_COOKIE = "closeflow_active_workspace";
+
+// Only a hint: the value is matched against the user's memberships before use.
+async function readActiveWorkspaceCookie(): Promise<string | null> {
+    try {
+        const { cookies } = await import("next/headers");
+        const store = await cookies();
+        return store.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
+    }
+    catch {
+        return null;
+    }
+}
 export async function loadWorkspaceForUser(
     supabase: Awaited<
         ReturnType<typeof createRouteSupabase>
@@ -187,12 +200,16 @@ export async function loadWorkspaceForUser(
         };
     }
 
+    const requestedWorkspaceId =
+        preferredWorkspaceId ??
+        (await readActiveWorkspaceCookie());
+
     const preferredMembership =
-        preferredWorkspaceId
+        requestedWorkspaceId
             ? memberships.find(
                   (membership) =>
                       membership.workspace_id ===
-                      preferredWorkspaceId,
+                      requestedWorkspaceId,
               )
             : null;
 

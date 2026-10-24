@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "closeflow_active_workspace";
 
+function persistWorkspace(workspaceId: string) {
+    window.localStorage.setItem(STORAGE_KEY, workspaceId);
+    document.cookie = `${STORAGE_KEY}=${encodeURIComponent(workspaceId)}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+}
+
 export function useActiveWorkspace(
     availableWorkspaceIds: string[],
 ) {
@@ -20,6 +25,7 @@ export function useActiveWorkspace(
             availableWorkspaceIds.includes(stored)
         ) {
             setActiveWorkspaceId(stored);
+            persistWorkspace(stored);
             return;
         }
 
@@ -27,10 +33,7 @@ export function useActiveWorkspace(
             const first = availableWorkspaceIds[0];
 
             setActiveWorkspaceId(first);
-            window.localStorage.setItem(
-                STORAGE_KEY,
-                first,
-            );
+            persistWorkspace(first);
         }
     }, [availableWorkspaceIds.join("|")]);
 
@@ -45,10 +48,7 @@ export function useActiveWorkspace(
 
     setActiveWorkspaceId(workspaceId);
 
-    window.localStorage.setItem(
-        STORAGE_KEY,
-        workspaceId,
-    );
+    persistWorkspace(workspaceId);
 
     window.dispatchEvent(
         new Event(
