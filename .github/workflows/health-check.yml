@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Check /api/health
         env:
-          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://closeflow-green.vercel.app/api/health' }}
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://www.closeflowapp.de/api/health' }}
         run: |
           set -u
           for attempt in 1 2 3; do
