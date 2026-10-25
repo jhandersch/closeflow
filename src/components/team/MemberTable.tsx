@@ -4,10 +4,11 @@ import type { WorkspaceMember, WorkspaceRole } from "@/types";
 type MemberTableProps = {
     members: WorkspaceMember[];
     currentUserId?: string | null;
+    canManage?: boolean;
     onUpdateRole: (userId: string, role: WorkspaceRole) => Promise<void> | void;
     onRemoveMember: (userId: string) => Promise<void> | void;
 };
-export default function MemberTable({ members, currentUserId, onUpdateRole, onRemoveMember }: MemberTableProps) {
+export default function MemberTable({ members, currentUserId, canManage = true, onUpdateRole, onRemoveMember }: MemberTableProps) {
     return (<div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-1">
       <div className="border-b border-border-subtle px-5 py-4">
         <h2 className="text-xl font-semibold text-foreground">Members</h2>
@@ -31,10 +32,12 @@ export default function MemberTable({ members, currentUserId, onUpdateRole, onRe
 
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-foreground/5 px-3 py-1 text-xs text-foreground/65">{member.role}</span>
+                {canManage ? (<>
                 <RoleSelector value={member.role} onChange={(role) => void onUpdateRole(member.user_id, role)} disabled={isOwner || isCurrentUser}/>
                 <button type="button" onClick={() => void onRemoveMember(member.user_id)} disabled={isOwner || isCurrentUser} className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-300 disabled:opacity-50">
                   Remove
                 </button>
+                </>) : null}
               </div>
             </div>);
         })}

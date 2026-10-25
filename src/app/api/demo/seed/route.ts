@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 import type { Lead } from "@/types";
@@ -97,6 +97,10 @@ const demoLeads: DemoLeadSeed[] = [
 ];
 const isMissingSchemaError = (message: string) => /column .* does not exist|relation .* does not exist|schema cache/i.test(message);
 export async function POST(request: Request) {
+    const readOnlyDenied = await denyReadOnlyWrite(request);
+    if (readOnlyDenied) {
+        return readOnlyDenied;
+    }
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

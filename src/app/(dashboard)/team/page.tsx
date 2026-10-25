@@ -459,6 +459,44 @@ export default function TeamPage() {
     }
   };
 
+  /**
+   * Revoke a pending invitation.
+   */
+  const revokeInvite = async (inviteId: string) => {
+    if (!selectedWorkspace) {
+      return;
+    }
+
+    const response = await fetch("/api/workspaces/invite/revoke", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        workspace_id: selectedWorkspace.workspace.id,
+        invite_id: inviteId,
+      }),
+    });
+
+    if (response.ok) {
+      toast.success("Invite revoked");
+      await load(selectedWorkspace.workspace.id);
+    } else {
+      showActionError(
+        await readApiError(
+          response,
+          "Could not revoke invite",
+        ),
+      );
+    }
+  };
+
+  const currentRole =
+    selectedWorkspace?.members.find((member) => member.user_id === userId)
+      ?.role ?? null;
+  const canManageMembers = currentRole === "owner" || currentRole === "admin";
+  const canInvite = canManageMembers || (currentRole as string | null) === "sales_manager";
+
   return (
     <AuthGuard>
       <div className="space-y-6">
@@ -595,18 +633,21 @@ export default function TeamPage() {
                   />
                 </div>
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setInviteOpen(true)}
-                    className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
-                  >
-                    Invite User
-                  </button>
-                </div>
+                {canInvite ? (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setInviteOpen(true)}
+                      className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
+                    >
+                      Invite User
+                    </button>
+                  </div>
+                ) : null}
 
                 <MemberTable
                   members={selectedWorkspace.members}
-                  currentUserId={null}
+                  currentUserId={userId}
+                  canManage={canManageMembers}
                   onUpdateRole={updateRole}
                   onRemoveMember={removeMember}
                 />
@@ -625,9 +666,20 @@ export default function TeamPage() {
                       selectedWorkspace.invites.map((invite) => (
                         <div
                           key={invite.id}
-                          className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80"
+                          className="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80"
                         >
-                          {invite.email} · {invite.role}
+                          <span>
+                            {invite.email} · {invite.role}
+                          </span>
+                          {canInvite ? (
+                            <button
+                              type="button"
+                              onClick={() => void revokeInvite(invite.id)}
+                              className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-xs text-rose-300"
+                            >
+                              Revoke
+                            </button>
+                          ) : null}
                         </div>
                       ))
                     )}
