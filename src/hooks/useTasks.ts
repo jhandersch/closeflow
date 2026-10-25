@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { appConfirm } from "@/lib/dialogs";
@@ -65,10 +66,7 @@ export function useTasks(leadId: string) {
         catch (error) {
             // Do not fail the task mutation when activity logging fails.
             console.warn("Task activity logging skipped:", error);
-            const message = error instanceof Error
-                ? error.message
-                : "Unknown error";
-            toast.error(`Could not save activity: ${message}`);
+            toast.error(toDisplayMessage(error, "Could not save activity"));
         }
     };
     const resolveWorkspaceId = async (preferredWorkspaceId?: string | null) => {
@@ -291,7 +289,7 @@ export function useTasks(leadId: string) {
         if (error || !deleted) {
             console.error("Task deletion failed:", error);
             setTasks(previous);
-            toast.error(error?.message || "Task could not be deleted");
+            toast.error(toDisplayMessage(error, "Task could not be deleted"));
             return;
         }
         const { data: { user }, } = await supabase.auth.getUser();

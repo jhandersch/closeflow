@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 import { useEffect, useMemo, useState } from "react";
 import { DragDropContext, Draggable, Droppable, type DropResult, } from "@hello-pangea/dnd";
 import AuthGuard from "@/components/AuthGuard";
@@ -138,7 +139,7 @@ export default function PipelinePage() {
         catch (error) {
             console.error("Pipeline update error", error);
             setColumns(previousColumns);
-            toast.error(error instanceof Error ? error.message : "Pipeline update failed");
+            toast.error(toDisplayMessage(error, "Pipeline update failed"));
         }
     };
     return (<AuthGuard>

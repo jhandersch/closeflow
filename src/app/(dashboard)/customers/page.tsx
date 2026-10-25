@@ -1,4 +1,5 @@
 "use client";
+import { readApiError } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 
 import Link from "next/link";
@@ -431,8 +432,7 @@ export default function CustomersPage() {
       });
 
       if (!response.ok) {
-        const message =
-          (await response.text()) || "Import failed.";
+        const message = await readApiError(response, "Import failed.");
 
         setImportError(message);
 

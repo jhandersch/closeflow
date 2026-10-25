@@ -1,4 +1,5 @@
 "use client";
+import { readApiError } from "@/lib/apiError";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -406,19 +407,7 @@ export default function LeadsPage() {
             credentials: "include",
         });
         if (!response.ok) {
-            let message = `${format.toUpperCase()} export failed.`;
-            try {
-                const data = (await response.json()) as {
-                    error?: string;
-                };
-                if (data.error)
-                    message = data.error;
-            }
-            catch {
-                const text = await response.text();
-                if (text)
-                    message = text;
-            }
+            const message = await readApiError(response, `${format.toUpperCase()} export failed.`);
             setDemoMessage(message);
             return;
         }
@@ -463,8 +452,7 @@ export default function LeadsPage() {
                 body: JSON.stringify({ csv: resolvedCsvText }),
             });
             if (!response.ok) {
-                const text = await response.text();
-                setDemoMessage(text || ("CSV import failed."));
+                setDemoMessage(await readApiError(response, "CSV import failed."));
                 return;
             }
             const data = (await response.json()) as {
@@ -590,21 +578,7 @@ export default function LeadsPage() {
             body: JSON.stringify(extendedInsertPayload),
         });
         if (!response.ok) {
-            let message = "Failed to create lead.";
-            try {
-                const payload = (await response.json()) as {
-                    error?: string;
-                };
-                if (payload.error) {
-                    message = payload.error;
-                }
-            }
-            catch {
-                const text = await response.text();
-                if (text) {
-                    message = text;
-                }
-            }
+            const message = await readApiError(response, "Failed to create lead.");
             setFormError(message);
             setSubmitting(false);
             return;

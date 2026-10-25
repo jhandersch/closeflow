@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 
 import { useEffect, useState } from "react";
 import {
@@ -81,7 +82,7 @@ export function useForecastAI(
           const errorText = await res.text();
           console.error("FORECAST API ERROR:", errorText);
           throw new Error(
-            errorText || "Forecast API request failed",
+            toDisplayMessage(errorText, "Forecast API request failed"),
           );
         }
 

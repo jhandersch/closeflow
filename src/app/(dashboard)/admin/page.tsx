@@ -1,4 +1,5 @@
 "use client";
+import { readApiError } from "@/lib/apiError";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -114,24 +115,10 @@ export default function AdminPage() {
             ]);
 
             if (!overviewResponse.ok) {
-                let message =
-                    "Could not load admin overview";
-
-                try {
-                    const data =
-                        (await overviewResponse.json()) as {
-                            error?: string;
-                        };
-
-                    message =
-                        data.error || message;
-                } catch {
-                    const text =
-                        await overviewResponse.text();
-
-                    message =
-                        text || message;
-                }
+                const message = await readApiError(
+                    overviewResponse,
+                    "Could not load admin overview",
+                );
 
                 setError(message);
             } else {
@@ -143,24 +130,10 @@ export default function AdminPage() {
             setLoading(false);
 
             if (!usersResponse.ok) {
-                let message =
-                    "Could not load users";
-
-                try {
-                    const data =
-                        (await usersResponse.json()) as {
-                            error?: string;
-                        };
-
-                    message =
-                        data.error || message;
-                } catch {
-                    const text =
-                        await usersResponse.text();
-
-                    message =
-                        text || message;
-                }
+                const message = await readApiError(
+                    usersResponse,
+                    "Could not load users",
+                );
 
                 setUsersError(message);
             } else {

@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 
 import { useEffect, useMemo, useState } from "react";
@@ -259,11 +260,7 @@ export default function TrashPage() {
     } catch (error) {
       console.error("Restore lead error:", error);
 
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not restore lead"
-      );
+      toast.error(toDisplayMessage(error, "Could not restore lead"));
     } finally {
       setRestoringId(null);
     }
@@ -310,11 +307,7 @@ export default function TrashPage() {
     } catch (error) {
       console.error("Restore customer error:", error);
 
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not restore customer"
-      );
+      toast.error(toDisplayMessage(error, "Could not restore customer"));
     } finally {
       setRestoringCustomerKey(null);
     }
@@ -361,11 +354,7 @@ export default function TrashPage() {
     } catch (error) {
       console.error("Restore task error:", error);
 
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not restore task"
-      );
+      toast.error(toDisplayMessage(error, "Could not restore task"));
     } finally {
       setRestoringId(null);
     }
@@ -385,7 +374,7 @@ export default function TrashPage() {
       setCalendarEvents((current) => current.filter((event) => event.id !== eventId));
       toast.success("Calendar event restored");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not restore calendar event");
+      toast.error(toDisplayMessage(error, "Could not restore calendar event"));
     } finally {
       setRestoringId(null);
     }
@@ -431,11 +420,7 @@ export default function TrashPage() {
     } catch (error) {
       console.error("Empty trash error:", error);
 
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not empty trash"
-      );
+      toast.error(toDisplayMessage(error, "Could not empty trash"));
     } finally {
       setEmptying(false);
     }

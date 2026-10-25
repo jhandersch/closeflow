@@ -1,3 +1,25 @@
+function normalizeRawMessage(raw: string): string {
+  const text = raw.trim();
+  if (!text.startsWith("{")) {
+    return text;
+  }
+
+  try {
+    const parsed = JSON.parse(text) as { error?: unknown; message?: unknown };
+    const inner = parsed.error ?? parsed.message;
+    if (typeof inner === "string") {
+      return inner.trim();
+    }
+    if (typeof inner === "object" && inner !== null && typeof (inner as { message?: unknown }).message === "string") {
+      return (inner as { message: string }).message.trim();
+    }
+  } catch {
+    return text;
+  }
+
+  return "";
+}
+
 export function getUserFacingErrorMessage(
   error: unknown,
   fallback = "Something went wrong. Please try again.",
@@ -10,12 +32,16 @@ export function getUserFacingErrorMessage(
         ? (error as { message: string }).message
         : "";
 
-  const message = raw.trim();
+  const message = normalizeRawMessage(raw);
   if (!message) {
     return fallback;
   }
 
   const normalized = message.toLowerCase();
+
+  if (/row-level security|violates row-level/i.test(message)) {
+    return "You don't have permission to make this change. Viewers have read-only access.";
+  }
 
   if (/unauthorized|not authenticated|session expired|token expired|invalid login credentials/i.test(message)) {
     return "Please sign in again and try again.";

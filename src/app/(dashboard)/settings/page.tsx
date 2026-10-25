@@ -1,4 +1,5 @@
 "use client";
+import { readApiError } from "@/lib/apiError";
 import { appPrompt } from "@/lib/dialogs";
 
 import { useEffect, useState } from "react";
@@ -534,9 +535,7 @@ export default function SettingsPage() {
     });
 
     if (!response.ok) {
-      const text = await response.text();
-
-      toast.error(text || "Could not delete account");
+      toast.error(await readApiError(response, "Could not delete account"));
       setDeletingAccount(false);
       return;
     }
@@ -812,10 +811,8 @@ export default function SettingsPage() {
     );
 
     if (!response.ok) {
-      const text = await response.text();
-
       toast.error(
-        text || "Could not generate recovery codes"
+        await readApiError(response, "Could not generate recovery codes"),
       );
 
       setRecoveryBusy(false);
@@ -863,9 +860,7 @@ export default function SettingsPage() {
     );
 
     if (!response.ok) {
-      const text = await response.text();
-
-      toast.error(text || "Invalid recovery code");
+      toast.error(await readApiError(response, "Invalid recovery code"));
 
       setRecoveryBusy(false);
       return;

@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
@@ -151,7 +152,7 @@ export default function CostsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not save deal costs");
+      toast.error(toDisplayMessage(error, "Could not save deal costs"));
     } else {
       setPersonalDealCosts(
         costs.map((cost) => ({ ...cost, amount: String(cost.amount) }))

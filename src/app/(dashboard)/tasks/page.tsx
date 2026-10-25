@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
@@ -164,7 +165,7 @@ export default function TasksPage() {
             ]);
             if (taskError) {
                 console.error("Failed to load tasks:", taskError);
-                setTaskError(taskError.message);
+                setTaskError(toDisplayMessage(taskError, "Could not save task"));
             }
             if (leadError) {
                 console.error("Failed to load leads:", leadError);
@@ -232,7 +233,7 @@ export default function TasksPage() {
             .select()
             .single();
         if (error) {
-            setTaskError(error.message);
+            setTaskError(toDisplayMessage(error, "Could not save task"));
             setCreatingTask(false);
             return;
         }
@@ -329,7 +330,7 @@ export default function TasksPage() {
             .select()
             .single();
         if (error) {
-            setTaskError(error.message);
+            setTaskError(toDisplayMessage(error, "Could not update task"));
             return;
         }
         const updatedTask = {

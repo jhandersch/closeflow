@@ -1,4 +1,5 @@
 "use client";
+import { toDisplayMessage } from "@/lib/apiError";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -55,7 +56,7 @@ export default function AILeadSummary({
       if (!response.ok) {
         const errorText = await response.text();
         console.error("AI API ERROR:", errorText);
-        throw new Error(errorText);
+        throw new Error(toDisplayMessage(errorText, "AI is temporarily unavailable. Please try again."));
       }
 
       const data = await response.json();
@@ -97,7 +98,7 @@ export default function AILeadSummary({
       if (!response.ok) {
         const errorText = await response.text();
         console.error("FOLLOW UP AI ERROR:", errorText);
-        throw new Error(errorText);
+        throw new Error(toDisplayMessage(errorText, "AI is temporarily unavailable. Please try again."));
       }
 
       const data = await response.json();

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { readApiError, toDisplayMessage } from "@/lib/apiError";
 import AuthGuard from "@/components/AuthGuard";
 import InviteMemberModal from "@/components/team/InviteMemberModal";
 import MemberTable from "@/components/team/MemberTable";
@@ -46,26 +47,6 @@ export default function TeamPage() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-
-  const readApiError = async (
-    response: Response,
-    fallback: string,
-  ): Promise<string> => {
-    try {
-      const data = (await response.json()) as {
-        error?: string;
-      };
-
-      return data.error || fallback;
-    } catch {
-      try {
-        const text = await response.text();
-        return text || fallback;
-      } catch {
-        return fallback;
-      }
-    }
-  };
 
   const showActionError = (message: string) => {
     if (
@@ -170,7 +151,7 @@ export default function TeamPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || "Could not accept invitation.");
+        toast.error(toDisplayMessage(data, "Could not accept invitation."));
         return;
       }
 
@@ -220,7 +201,7 @@ export default function TeamPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          toast.error(data.error || "Could not accept invitation.");
+          toast.error(toDisplayMessage(data, "Could not accept invitation."));
           return;
         }
 

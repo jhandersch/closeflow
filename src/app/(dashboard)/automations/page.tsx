@@ -4,6 +4,7 @@ import { appConfirm } from "@/lib/dialogs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { readApiError } from "@/lib/apiError";
 import {
   Plus,
   Trash2,
@@ -188,23 +189,6 @@ export default function AutomationsPage() {
     }
 
     return headers;
-  };
-
-  const readApiError = async (
-    res: Response,
-    fallback: string
-  ) => {
-    try {
-      return (
-        ((
-          await res.json()
-        ) as {
-          error?: string;
-        }).error || fallback
-      );
-    } catch {
-      return (await res.text()) || fallback;
-    }
   };
 
   const showErr = (msg: string) => {
