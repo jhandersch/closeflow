@@ -26,11 +26,6 @@ type Integrations = {
   slack: boolean;
 };
 
-const LOCAL_STORAGE_KEYS = {
-  openai: "closeflow_openai_key",
-  webhook: "closeflow_webhook_key",
-};
-
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 const TIMEZONE_OPTIONS = [
@@ -158,8 +153,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [openAiKey, setOpenAiKey] = useState("");
-  const [webhookKey, setWebhookKey] = useState("");
 
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -333,13 +326,9 @@ export default function SettingsPage() {
       await syncMfaState();
       await loadRecoveryStatus();
 
-      setOpenAiKey(
-        window.localStorage.getItem(LOCAL_STORAGE_KEYS.openai) || ""
-      );
-
-      setWebhookKey(
-        window.localStorage.getItem(LOCAL_STORAGE_KEYS.webhook) || ""
-      );
+      // Remove keys stored by earlier versions of this page.
+      window.localStorage.removeItem("closeflow_openai_key");
+      window.localStorage.removeItem("closeflow_webhook_key");
 
       if (active) {
         setLoading(false);
@@ -452,32 +441,6 @@ export default function SettingsPage() {
     }
 
     setSavingPreferences(false);
-  };
-
-  const saveApiKeys = async () => {
-    window.localStorage.setItem(
-      LOCAL_STORAGE_KEYS.openai,
-      openAiKey.trim()
-    );
-
-    window.localStorage.setItem(
-      LOCAL_STORAGE_KEYS.webhook,
-      webhookKey.trim()
-    );
-
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        has_openai_key: Boolean(openAiKey.trim()),
-        has_webhook_key: Boolean(webhookKey.trim()),
-      },
-    });
-
-    if (error) {
-      toast.error(error.message || "Could not save API key flags");
-      return;
-    }
-
-    toast.success("API key settings saved");
   };
 
   const changePassword = async () => {
@@ -1128,52 +1091,6 @@ export default function SettingsPage() {
           {savingPreferences
             ? "Saving..."
             : "Save preferences"}
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">
-          API Keys
-        </h2>
-
-        <p className="mt-2 text-sm text-foreground/65">
-          Keys are stored locally in this browser for development use.
-          Use a secure backend vault in production.
-        </p>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="text-sm text-foreground/70">
-            OpenAI API key
-
-            <input
-              type="password"
-              value={openAiKey}
-              onChange={(event) =>
-                setOpenAiKey(event.target.value)
-              }
-              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            />
-          </label>
-
-          <label className="text-sm text-foreground/70">
-            Webhook secret
-
-            <input
-              type="password"
-              value={webhookKey}
-              onChange={(event) =>
-                setWebhookKey(event.target.value)
-              }
-              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            />
-          </label>
-        </div>
-
-        <button
-          onClick={() => void saveApiKeys()}
-          className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20"
-        >
-          Save API keys
         </button>
       </div>
 
