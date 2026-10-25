@@ -75,6 +75,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-fresh.ps1 -D
 - Die MFA-Recovery- und SCIM-Tabellen aus dem Auth-Befund wurden hier erstmals gegen ein echtes Cloud-Projekt wiederhergestellt (alle 26 auth-Tabellen ohne Abweichung).
 - Nicht getestet: Login mit einem wiederhergestellten Konto, App gegen das Testprojekt, Migrations-Ledger.
 
+## Backup 2026-10-25
+
+- `backup-20261025-213910` (nach den Live-Tests, Storage-Bucket leer) erstellt; `verify-supabase-backup.ps1` erfolgreich (5/5 Dateien, SHA-256). Nach Angabe des Nutzers auf den zweiten Stick kopiert und dort geprüft; der Stand `backup-20261020-173444` wurde entfernt. Die Prüfung auf dem zweiten Stick wurde nicht von mir gesehen.
+
 ## Offen
 
 - **Zweite Kopie:** Erledigt am 2026-10-22. `backup-20261020-173444` liegt auf einem zweiten verschlüsselten Stick (BitLocker To Go); `verify-supabase-backup.ps1` lief dort erfolgreich (alle 5 Dateien inkl. `public-privileges.sql`, SHA-256 stimmt). Noch offen: den zweiten Stick an einem anderen Ort lagern und den Wiederherstellungsschlüssel getrennt von den Sticks sichern.
