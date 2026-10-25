@@ -19,8 +19,8 @@ export default function CookieNotice() {
     }
     return (<div className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-3xl rounded-2xl border border-border-subtle bg-surface-1/95 p-4 shadow-2xl backdrop-blur-sm sm:inset-x-6">
       <p className="text-sm leading-6 text-foreground/85">
-        CloseFlow uses cookies and similar technologies to support sign-in,
-        security, and core product functionality. Learn more in our{" "}
+        CloseFlow only uses strictly necessary cookies for sign-in, security,
+        and core functionality. No tracking or advertising cookies. Learn more in our{" "}
         <Link href="/datenschutz" className="font-semibold text-cyan-300 hover:underline">
           Privacy Notice
         </Link>{" "}
@@ -33,10 +33,10 @@ export default function CookieNotice() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={acknowledge} className="cf-btn-primary">
-          accept all
+          OK
         </button>
         <Link href="/cookies" className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground/85 transition hover:bg-foreground/5">
-          Cookie settings
+          Details
         </Link>
       </div>
     </div>);

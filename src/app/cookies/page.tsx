@@ -11,22 +11,25 @@ export default function CookiesPage() {
         <LogoMark size={36} className="mb-5" />
         <h1 className="text-3xl font-semibold">Cookie-Hinweis</h1>
         <p className="mt-4 text-sm leading-7 text-foreground/70">
-          CloseFlow verwendet Cookies und vergleichbare Technologien fuer technische Bereitstellung, Sicherheit und Analyse.
+          CloseFlow verwendet ausschliesslich technisch notwendige Cookies und lokale Speicherung im Browser. Es werden keine Tracking-, Analyse- oder Marketing-Cookies und keine Drittanbieter-Skripte zu Werbezwecken eingesetzt.
         </p>
 
         <section className="mt-8 text-sm leading-7 text-foreground/85">
           <h2 className="text-lg font-semibold text-foreground">1. Notwendige Cookies</h2>
-          <p className="mt-2">Diese Cookies sind fuer Login, Session-Schutz und Kernfunktionen des Produkts erforderlich.</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>Supabase-Sitzung (<code>sb-…-auth-token</code>): haelt dich angemeldet und schuetzt die Sitzung.</li>
+            <li>Aktiver Workspace (<code>closeflow_active_workspace</code>, bis zu 12 Monate): merkt sich, welchen Workspace du zuletzt genutzt hast.</li>
+          </ul>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">2. Funktionale Cookies</h2>
-          <p className="mt-2">These cookies store language preferences and other convenience settings.</p>
+          <h2 className="text-lg font-semibold text-foreground">2. Lokale Speicherung (localStorage)</h2>
+          <p className="mt-2">Einstellungen wie Design, Sprache, Filter, Favoriten und der Hinweis, dass du diese Information gelesen hast. Diese Daten verlassen deinen Browser nicht.</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">3. Analyse und Verbesserung</h2>
-          <p className="mt-2">Wir koennen Nutzungsdaten pseudonymisiert auswerten, um Produktqualitaet und Stabilitaet zu verbessern.</p>
+          <h2 className="text-lg font-semibold text-foreground">3. Zahlungsabwicklung</h2>
+          <p className="mt-2">Beim Wechsel zur Zahlung leitet dich CloseFlow zu Stripe weiter. Dort gelten die Datenschutzhinweise und Cookies von Stripe.</p>
         </section>
 
         <div className="mt-8">
