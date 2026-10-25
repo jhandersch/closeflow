@@ -4,7 +4,7 @@ import { runLeadAutomation } from "@/lib/automation";
 import { runWorkflowAutomations, workflowEventForStatus } from "@/lib/workflowAutomations";
 import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
-import { rateLimit } from "@/lib/rateLimit";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 type RouteSupabase = Awaited<ReturnType<typeof getRouteUser>>["supabase"];
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
         },
       );
     }
-    const rateLimitResult = rateLimit(`leads:create:${user.id}`, {
+    const rateLimitResult = await checkRateLimit(`leads:create:${user.id}`, {
       limit: 30,
       windowMs: 60 * 1000,
     });

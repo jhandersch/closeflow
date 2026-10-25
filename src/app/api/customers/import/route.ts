@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { withWorkspaceImportLock } from "@/lib/import-lock";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { detectCsvDelimiter, parseCsvDocument } from "@/lib/csv";
 type ImportIssue = {
     row: number;
@@ -24,6 +25,8 @@ async function importCustomers(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`customers:import:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });

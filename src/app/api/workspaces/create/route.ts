@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, slugifyWorkspaceName } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function POST(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`workspace:create:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     let body: { name?: unknown };
     try {
         body = await request.json();

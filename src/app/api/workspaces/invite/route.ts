@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 const rolePattern = /^(owner|admin|member|viewer)$/i;
 
@@ -80,6 +81,14 @@ export async function POST(request: Request) {
 
   const token = crypto.randomUUID();
 
+  const limited = await checkRateLimit(`workspace:invite:${user.id}`, {
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+
+  if (!limited.success) {
+    return rateLimitResponse(limited);
+  }
   const expiresAt = new Date(
     Date.now() + 7 * 24 * 60 * 60 * 1000,
   ).toISOString();

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { createFeedbackToken, verifyFeedbackToken } from "@/lib/feedbackToken";
 import { createClient } from "@supabase/supabase-js";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
     if (!verifyFeedbackToken(workspaceId, feedbackToken, serviceRole)) {
         return NextResponse.json({ error: "Invalid feedback link" }, { status: 403 });
     }
+    const limited = await checkRateLimit(`feedback:submit:${workspaceId}:${getClientIp(request)}`, { limit: 5, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     if (typeof rating !== "number" || !Number.isFinite(rating) || rating < 1 || rating > 10) {
         return NextResponse.json({ error: "rating must be between 1 and 10" }, { status: 400 });
     }
