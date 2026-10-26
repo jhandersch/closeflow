@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loadWorkspaceForUser } from "@/lib/supabase/route";
+import {
+    loadWorkspaceForUser,
+    READ_ONLY_ERROR,
+    isReadOnlyRole,
+} from "@/lib/supabase/route";
 import { resolveWorkspacePlan } from "@/lib/workspaceCapacity";
 import { planDetails, type Plan } from "@/lib/planDetails";
 import { consumeWorkspaceUsage, type UsageBucket } from "@/lib/usageQuota";
@@ -152,7 +156,7 @@ export async function enforceAndTrackUsageLimit(
       }
 > {
     try {
-        const { workspace, error } = await loadWorkspaceForUser(
+        const { workspace, role, error } = await loadWorkspaceForUser(
             supabase,
             userId,
             preferredWorkspaceId,
@@ -165,6 +169,13 @@ export async function enforceAndTrackUsageLimit(
                 ok: false,
                 status: 403,
                 message: "A workspace is required to use this feature.",
+            };
+        }
+        if (bucket === "ai" && isReadOnlyRole(role)) {
+            return {
+                ok: false,
+                status: 403,
+                message: READ_ONLY_ERROR,
             };
         }
 

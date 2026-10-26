@@ -59,6 +59,7 @@ try {
   }
   const ua = crypto.randomUUID();
   const ub = crypto.randomUUID();
+  const uv = crypto.randomUUID();
   const wa = crypto.randomUUID();
   const wb = crypto.randomUUID();
 
@@ -68,6 +69,10 @@ try {
       [u, `closeflow-rls-${tag}-${u}@example.invalid`]
     );
   }
+  await c.query(
+    "insert into auth.users (id, instance_id, aud, role, email) values ($1,'00000000-0000-0000-0000-000000000000','authenticated','authenticated',$2)",
+    [uv, `closeflow-rls-viewer-${uv}@example.invalid`]
+  );
   for (const [w, u, n] of [[wa, ua, "A"], [wb, ub, "B"]]) {
     await c.query(
       "insert into public.workspaces (id, name, owner_id, plan) values ($1,$2,$3,'free')",
@@ -78,6 +83,10 @@ try {
       [w, u]
     );
   }
+  await c.query(
+    "insert into public.workspace_members (workspace_id, user_id, role) values ($1,$2,'viewer')",
+    [wa, uv]
+  );
 
   const { rows: tables } = await c.query(`
     select c.table_name from information_schema.columns c
@@ -195,6 +204,86 @@ try {
       `${t}: workspace A owner can insert own workspace row`
     );
   }
+
+  const viewerLead = await c.query(
+    "insert into public.leads (workspace_id,user_id,name,status) values ($1,$2,'CLOSEFLOW-RLS-VIEWER-LEAD','new') returning id",
+    [wa, ua]
+  );
+  refs.lead_id = viewerLead.rows[0].id;
+  const viewerWriteTargets = ["customers", "ai_conversations", "revenue_events", "usage"];
+  const viewerRows = new Map();
+  for (const t of viewerWriteTargets) {
+    const { names, vals } = makeInsert(insertSpecs.get(t), wa, ua);
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(",");
+    const inserted = await c.query(
+      `insert into public."${t}" (${names.join(",")}) values (${placeholders})${t === "usage" ? "" : " returning id"}`,
+      vals
+    );
+    viewerRows.set(
+      t,
+      t === "usage"
+        ? { workspace_id: wa, month: vals[names.indexOf('"month"')] }
+        : { id: inserted.rows[0].id }
+    );
+  }
+  await c.query("select set_config('request.jwt.claim.sub',$1,true)", [uv]);
+  await c.query("select set_config('request.jwt.claims',$1,true)", [
+    JSON.stringify({ sub: uv, role: "authenticated" }),
+  ]);
+  for (const t of [
+    "leads",
+    "tasks",
+    "activities",
+    "calendar_events",
+    ...viewerWriteTargets,
+  ]) {
+    const { names, vals } = makeInsert(insertSpecs.get(t), wa, uv);
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(",");
+    const ins = await attempt(
+      `insert into public."${t}" (${names.join(",")}) values (${placeholders})`,
+      vals
+    );
+    report(
+      ins.rows === 0 && (!ins.error || ins.error === "42501"),
+      `${t}: viewer cannot insert workspace row (${ins.error || "no-op"})`
+    );
+    if (viewerRows.has(t)) {
+      const key = viewerRows.get(t);
+      const where = Object.keys(key)
+        .map((column, i) => `"${column}"=$${i + 1}`)
+        .join(" and ");
+      const keyValues = Object.values(key);
+      const upd = await attempt(
+        `update public."${t}" set workspace_id=workspace_id where ${where}`,
+        keyValues
+      );
+      report(
+        upd.rows === 0 && (!upd.error || upd.error === "42501"),
+        `${t}: viewer cannot update workspace row (${upd.error || "no-op"})`
+      );
+      const del = await attempt(
+        `delete from public."${t}" where ${where}`,
+        keyValues
+      );
+      report(
+        del.rows === 0 && (!del.error || del.error === "42501"),
+        `${t}: viewer cannot delete workspace row (${del.error || "no-op"})`
+      );
+    }
+  }
+  const viewerAiQuota = await attempt(
+    "select * from public.consume_workspace_usage($1, to_char(now() at time zone 'UTC','YYYY-MM'), 'ai', $2)",
+    [wa, `CLOSEFLOW-VIEWER-AI-${crypto.randomUUID()}`]
+  );
+  report(
+    viewerAiQuota.rows === 0 && viewerAiQuota.error === "42501",
+    `usage RPC: viewer cannot reserve AI quota (${viewerAiQuota.error || "unexpected result"})`
+  );
+
+  await c.query("select set_config('request.jwt.claim.sub',$1,true)", [ua]);
+  await c.query("select set_config('request.jwt.claims',$1,true)", [
+    JSON.stringify({ sub: ua, role: "authenticated" }),
+  ]);
 
   const foreignWorkspaceDelete = await attempt(
     "delete from public.workspaces where id=$1",
