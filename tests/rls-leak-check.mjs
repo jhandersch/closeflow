@@ -155,17 +155,18 @@ try {
     totals[t] = Number((await c.query(`select count(*) n from public."${t}"`)).rows[0].n);
   }
 
-  const count = async (t, ws, role) => {
+  const count = async (t, ws) => {
     await c.query("savepoint x");
     try {
+      const scopedId = t === "workspaces" ? wa : t === "profiles" ? ua : null;
       const where = ws
         ? `where workspace_id is distinct from $1`
-        : t === "workspaces"
+        : scopedId
           ? `where id is distinct from $1`
           : "";
       const r = await c.query(
         `select count(*) n from public."${t}" ${where}`,
-        ws || t === "workspaces" ? [wa] : []
+        ws ? [wa] : scopedId ? [scopedId] : []
       );
       await c.query("release savepoint x");
       return Number(r.rows[0].n);
@@ -187,9 +188,8 @@ try {
     ]);
 
     for (const { t, ws } of tables) {
-      const n = await count(t, ws, role);
-      const ownProfile = t === "profiles" && role === "authenticated";
-      const ok = n === 0 || (typeof n === "string") || ownProfile;
+      const n = await count(t, ws);
+      const ok = n === 0 || n === "error:42501";
       report(ok, `${role} ${t}: foreign rows visible=${n} (total in table=${totals[t]})`);
     }
     await c.query("reset role");
