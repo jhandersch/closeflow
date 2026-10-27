@@ -33,7 +33,12 @@ export default function FilesPage() {
     try {
       const requestedWorkspace = window.localStorage.getItem("closeflow_active_workspace");
       const query = requestedWorkspace ? `?workspaceId=${encodeURIComponent(requestedWorkspace)}` : "";
-      const response = await fetch(`/api/files${query}`, { cache: "no-store" });
+      let response = await fetch(`/api/files${query}`, { cache: "no-store" });
+      if (response.status === 403 && requestedWorkspace) {
+        // Stored workspace is stale (membership removed); retry with the default workspace.
+        window.localStorage.removeItem("closeflow_active_workspace");
+        response = await fetch("/api/files", { cache: "no-store" });
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Could not load files.");
       setWorkspaceId(data.workspaceId);

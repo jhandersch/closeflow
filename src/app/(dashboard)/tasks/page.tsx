@@ -117,7 +117,20 @@ export default function TasksPage() {
         .limit(1)
         .maybeSingle();
 
-    return membership?.workspace_id || null;
+    if (membership?.workspace_id || !activeWorkspaceId) {
+        return membership?.workspace_id || null;
+    }
+
+    // The stored workspace may be stale (membership removed); fall back to any membership.
+    const { data: fallback } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    return fallback?.workspace_id || null;
 };
     /*
      * =========================

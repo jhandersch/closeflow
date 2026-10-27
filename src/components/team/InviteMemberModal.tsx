@@ -20,7 +20,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
     return (<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-foreground">Mitglied einladen</h2>
+          <h2 className="text-xl font-semibold text-foreground">Invite member</h2>
           <button type="button" onClick={onClose} className="text-sm text-foreground/55 hover:text-foreground">
             Close
           </button>
@@ -33,7 +33,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Rolle
+            Role
             <div className="mt-2">
               <RoleSelector value={role} onChange={setRole}/>
             </div>
@@ -53,7 +53,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
                 setSaving(false);
             }
         }} className="cf-btn-primary">
-              {saving ? "Is being invited..." : "Invite"}
+              {saving ? "Inviting..." : "Invite"}
             </button>
           </div>
         </div>
