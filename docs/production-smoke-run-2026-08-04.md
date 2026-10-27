@@ -2586,7 +2586,7 @@ Der Nutzer bestätigte die gewünschte UX: exakte Dubletten nach normalisiertem 
 Lokale Verifikation: `npm run test:local-lead-duplicates` **5/5 PASS** (zwei gleichzeitige manuelle RPC-Aufrufe, bestätigter Override, Viewer-Ablehnung am SECURITY-DEFINER-RPC, direkte INSERT-Sperre, parallele manuelle Erstellung/Import). Zusätzlich RLS-Matrix und All-Table-Leak-Check **ALL PASS**, kompakter Schema-Health-Check **0 Probleme**, Production-Build und Tenancy-Check **PASS**. Die lokalen Fixtures wurden vom Test entfernt. Supabase REST/Auth und die Next.js-Route wurden in dieser Runde nicht live auf dem lokalen Stack gestartet. Die Migration ist nur lokal angewandt; Production-Anwendung und Deployment stehen noch aus. Die Migration muss vor dem Code-Deploy in Production angewandt werden.
 
 ## Gesamtstatus: weiterhin NO-GO
-Offen: Kalendereintrag fuer das woechentliche Backup (Samstag gegen 22:00 Uhr); OAuth/PKCE und Einladungs-Mail-Zustellbarkeit ueber weitere Anbieter; Live-Modus-Stripe-Zustellung und echte Live-Zahlung; Preview- und Production-Rollout der race-sicheren Dublettenmigration; Route-Level- und umfassende Release-Smokes sowie das Monitoringfenster.
+Offen: Kalendereintrag fuer das woechentliche Backup (Samstag gegen 22:00 Uhr); OAuth/PKCE und Einladungs-Mail-Zustellbarkeit ueber weitere Anbieter; Live-Modus-Stripe-Zustellung und echte Live-Zahlung; das Monitoringfenster. (Dublettenmigration, Preview-/Route-Level-Smokes sind am 2026-10-27 erledigt, siehe „Aktueller Gesamtstatus“ am Ende.)
 
 ## CRM-Importe zeilenweise atomar (2026-10-18)
 
@@ -2642,36 +2642,39 @@ Lokale Verifikation dieser Runde:
 
 Aktualisierter Stand der genannten Release-Punkte:
 
-- **Race-sichere Dubletten:** lokal auf Datenbankebene bestanden; Migration und App-Code noch nicht in Preview oder Production ausgerollt. Vor dem App-Deploy die Migration nach freigegebenem Vorgehen anwenden und Schema-Health prüfen. Es gibt keinen Staging-Klon; ein frisches geprüftes Backup ist vor einer direkten Production-Migration Voraussetzung.
+- **Race-sichere Dubletten (Stand Rundenbeginn, inzwischen ausgerollt und live verifiziert, siehe unten):** lokal auf Datenbankebene bestanden; Migration und App-Code noch nicht in Preview oder Production ausgerollt. Vor dem App-Deploy die Migration nach freigegebenem Vorgehen anwenden und Schema-Health prüfen. Es gibt keinen Staging-Klon; ein frisches geprüftes Backup ist vor einer direkten Production-Migration Voraussetzung.
 - **AI:** die lokalen Usage-/Kosten- und Workflow-Tests bestehen. Ein früherer, ausdrücklich autorisierter echter AI-Erfolgstest belegt `/api/ai/email-generator` und seine Token-/Kostenbuchung; er belegt nicht alle AI-Routen. Weitere echte Provider-Aufrufe werden ohne separate Freigabe nicht ausgelöst.
 - **Zeitgesteuerte Automationen:** bereits konfiguriert als Vercel-Cron täglich um 06:00 UTC. Autorisierter Production-Aufruf, `lead.idle_7d`, `task.overdue` und Idempotenz wurden am 2026-10-15 mit markierten Fixtures bestanden. Dieser Punkt ist kein offener Implementierungsblocker.
 - **Stripe:** erfolgreicher Testmodus-Checkout und Testmodus-Webhook sind dokumentiert; Live-Schlüssel, Live-Preis-IDs, Live-Webhook und echte Live-Zahlung sind nicht verifiziert. Konfiguration und ein echter Betrag samt Erstattungsablauf erfordern Betreiberaktion und ausdrückliche Freigabe.
-- **Preview/Monitoring:** kein aktueller Preview-Smoke für diese uncommitteten Änderungen. Preview-URL und Bypass-Zugang fehlen; ein 24–48-Stunden-Monitoringfenster nach dem Release ist ebenfalls nicht belegt.
+- **Preview/Monitoring (Stand Rundenbeginn; Preview-Smoke inzwischen ALL PASS, Monitoring läuft):** kein aktueller Preview-Smoke für diese uncommitteten Änderungen. Preview-URL und Bypass-Zugang fehlen; ein 24–48-Stunden-Monitoringfenster nach dem Release ist ebenfalls nicht belegt.
 
-**Release bleibt NO-GO.** Produktionsmigration, Live-Zahlung, externe Provider-Aufrufe und Deploy wurden in dieser Runde nicht ausgeführt.
+**Release bleibt NO-GO.** Dieser Abschnitt zeigt den Stand zu Beginn der Runde; der aktuelle Stand steht in den folgenden Abschnitten vom selben Tag.
 
 ### Production-Deploy Duplikatschutz und Invite-Fix (2026-10-27)
 
-- Commit 576b2fb gepusht, Production-Deploy closeflow-e6mr6e9m1 Ready. Migration 10 war in Production bereits vorhanden (Definitionen identisch, Health-Check 0 problems).
-- 	ests/live-app-smoke.mjs gegen closeflow-green.vercel.app fand eine Rechteeskalation: Ein Admin konnte über create_workspace_invite_with_limit die Rolle owner einladen (die Migration 20261014170000 hatte den Fix aus Befund E überschrieben). Folgefehler: Seat-Limit beim Accept.
-- Fix: Migration 20261027020000_restrict_privileged_workspace_invites.sql (nur Owner dürfen owner/admin einladen), lokal getestet und mit Freigabe in Production angewendet (Funktions-MD5 identisch zu lokal, Grants unverändert).
+- Commit `576b2fb` gepusht, Production-Deploy `closeflow-e6mr6e9m1` Ready. Migration 10 war in Production bereits vorhanden (Definitionen identisch, Health-Check 0 problems).
+- `tests/live-app-smoke.mjs` gegen `closeflow-green.vercel.app` fand eine Rechteeskalation: Ein Admin konnte über `create_workspace_invite_with_limit` die Rolle `owner` einladen (die Migration `20261014170000` hatte den Fix aus Befund E überschrieben). Folgefehler: Seat-Limit beim Accept.
+- Fix: Migration `20261027020000_restrict_privileged_workspace_invites.sql` (nur Owner dürfen owner/admin einladen), lokal getestet und mit Freigabe in Production angewendet (Funktions-MD5 identisch zu lokal, Grants unverändert).
 - Erneuter Live-Smoke: **ALL PASS**, Cleanup 0 Workspaces/0 Benutzer. Ein früherer 429 beim Einladungsmail war ein Rate-Limit des Mail-Providers.
 
 ### Preview-Smoke (2026-10-27)
 
-- 	ests/preview-smoke.mjs gegen Preview closeflow-4wn04z6zt-jhanderschs-projects.vercel.app (Stand Commit 19af0bf): **12 PASS, ALL PASS** (Auth-Gates 401, Lead-/Kunden-Import inkl. paralleler Importe, Export, Cross-Tenant, Lock-Tabelle nicht lesbar). Cleanup: 0 Wegwerf-Benutzer. Das Bypass-Secret wurde nur als Umgebungsvariable genutzt und nicht gespeichert.
+- `tests/preview-smoke.mjs` gegen Preview `closeflow-4wn04z6zt-jhanderschs-projects.vercel.app` (Stand Commit `19af0bf`): **12 PASS, ALL PASS** (Auth-Gates 401, Lead-/Kunden-Import inkl. paralleler Importe, Export, Cross-Tenant, Lock-Tabelle nicht lesbar). Cleanup: 0 Wegwerf-Benutzer. Das Bypass-Secret wurde nur als Umgebungsvariable genutzt und nicht gespeichert; es wurde im Chat genannt und sollte rotiert werden.
 
 ### AI-Routen-Vertragstest (2026-10-27)
 
-- Neu: 
-pm run test:ai-routes (	ests/ai-route-contract.test.mjs, statisch, ohne Provider-Aufruf und ohne Kosten): **6/6 PASS**. Der Test entdeckt alle Routen unter src/app/api mit OpenAI-Aufruf und verlangt je Route Authentifizierung, Workspace-Aufloesung, AI-Quota (equireAiWorkspaceQuota oder enforceAndTrackUsageLimit) und Kosten-Telemetrie (createTrackedOpenAI* oder ecordAiUsageEvent). Ausgenommen ist nur /api/health (prueft nur, ob der Key gesetzt ist). Zusammen mit 	est:ai-cost (16/16) ist die Abdeckung der AI-Routen damit vertraglich gesichert; echte bezahlte Provider-Aufrufe bleiben nur fuer /api/ai/email-generator belegt.
+- Neu: `npm run test:ai-routes` (`tests/ai-route-contract.test.mjs`, statisch, ohne Provider-Aufruf und ohne Kosten): **6/6 PASS**. Der Test entdeckt alle Routen unter `src/app/api` mit OpenAI-Aufruf und verlangt je Route Authentifizierung, Workspace-Auflösung, AI-Quota (`requireAiWorkspaceQuota` oder `enforceAndTrackUsageLimit`) und Kosten-Telemetrie (`createTrackedOpenAI*` oder `recordAiUsageEvent`). Ausgenommen ist nur `/api/health` (prüft nur, ob der Key gesetzt ist). Zusammen mit `test:ai-cost` (16/16) ist die Abdeckung der AI-Routen vertraglich gesichert; echte bezahlte Provider-Aufrufe bleiben nur für `/api/ai/email-generator` belegt.
 
 ### Monitoring-Fenster (Start 2026-10-27 ca. 19:50 MEZ)
 
-- Letzte Production-Aenderungen: Code-Deploy closeflow-e6mr6e9m1 (Commit 576b2fb) und Migration 20261027020000 (Invite-Fix). Danach Live-Smoke und Preview-Smoke ALL PASS. Das Fenster beginnt nach diesem Stand und endet fruehestens am 2026-10-28 ca. 19:50 MEZ (24 h), regulaer am 2026-10-29 ca. 19:50 MEZ (48 h). Jede weitere Production-Aenderung setzt die Uhr zurueck.
-- Werkzeug: 
-pm run monitor:snapshot -- <Stunden> (	ests/monitoring-snapshot.mjs, nur lesend): Health, Login, Fehler-Events in udit_logs, uebrig gebliebene @example.invalid-Testnutzer, DB-Erreichbarkeit. Ergebnis ist 0 bei keinen Befunden, sonst 1.
-- Vercel-Runtime-Logs sind auf dem Hobby-Plan nicht fuer 24 h abfragbar; Fehlersignale kommen daher aus udit_logs und manueller Sicht im Vercel-Dashboard (Logs, Filter Error) sowie Supabase-Dashboard (Auth/API-Logs).
-- Basis-Snapshot (48 h Rueckblick, 19:50 MEZ): Health 200, Login 200, 0 Fehler-Events, 0 Test-Reste, DB erreichbar. **Befund: keine.**
-- Cron: /api/cron/automations taeglich 06:00 UTC; erster Lauf im Fenster am 2026-10-28 06:00 UTC, im Dashboard (Cron Jobs) zu pruefen.
-- Abschluss: Snapshot nach 24 h und nach 48 h ausfuehren, Ergebnis hier eintragen, dann P0/P1-Zaehlung und Sign-off in docs/release-acceptance-matrix.md.
+- Letzte Production-Änderungen: Code-Deploy `closeflow-e6mr6e9m1` (Commit `576b2fb`) und Migration `20261027020000` (Invite-Fix). Danach Live-Smoke und Preview-Smoke ALL PASS. Das Fenster endet frühestens am 2026-10-28 ca. 19:50 MEZ (24 h), regulär am 2026-10-29 ca. 19:50 MEZ (48 h). Jede weitere Production-Änderung setzt die Uhr zurück.
+- Werkzeug: `npm run monitor:snapshot -- <Stunden>` (`tests/monitoring-snapshot.mjs`, nur lesend): Health, Login, Fehler-Events in `audit_logs`, übrig gebliebene `@example.invalid`-Testnutzer, DB-Erreichbarkeit. Exit-Code 0 bei keinen Befunden, sonst 1.
+- Vercel-Runtime-Logs sind auf dem Hobby-Plan nicht für 24 h abfragbar; Fehlersignale kommen daher aus `audit_logs` und manueller Sicht im Vercel-Dashboard (Logs, Filter Error) sowie Supabase-Dashboard (Auth/API-Logs).
+- Basis-Snapshot (48 h Rückblick, 19:50 MEZ): Health 200, Login 200, 0 Fehler-Events, 0 Test-Reste, DB erreichbar. **Befund: keine.**
+- Cron: `/api/cron/automations` täglich 06:00 UTC; erster Lauf im Fenster am 2026-10-28 06:00 UTC, im Dashboard (Cron Jobs) zu prüfen.
+- Abschluss: Snapshot nach 24 h und nach 48 h ausführen, Ergebnis hier eintragen, dann P0/P1-Zählung und Sign-off in `docs/release-acceptance-matrix.md`.
+
+### Aktueller Gesamtstatus (2026-10-27, Abend): weiterhin NO-GO
+
+Erledigt: Duplikatschutz (Migration, Code, lokale und Live-Tests), Invite-Rechteeskalation behoben, Live-Smoke und Preview-Smoke ALL PASS, lokale Route-Integration 12/12, AI-Vertragstest 6/6, Backup/Restore getestet.
+Offen: Monitoring-Fenster (24–48 h) mit Sign-off; Stripe Live (Keys, Preis-IDs, Webhook, freigegebene Testzahlung samt Erstattung); Kalendereintrag für das wöchentliche Backup (Samstag ca. 22:00); OAuth/PKCE und Mail-Zustellbarkeit über weitere Anbieter.

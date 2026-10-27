@@ -52,26 +52,26 @@ Use this matrix for final production release decisions.
 
 Current decision record (2026-10-27):
 
-- Release version: closeflow@0.1.0; race-safe lead duplicate change pending deployment
+- Release version: closeflow@0.1.0 at commit 4fa501d (race-safe lead duplicate protection and invite privilege fix deployed)
 - Date/time: 2026-10-27
-- Environment: local code/build checks and local PostgreSQL only; no preview or production mutation in this round
+- Environment: local stack, one Preview deployment and Production (only marked throwaway fixtures); monitoring window started 2026-10-27 ca. 19:50 CET
 - Incident channel: pending assignment
 - Commander: pending assignment
 - Engineering approver: pending assignment
 - Product approver: pending assignment
 - Result: **NO-GO**
 - Notes:
-	- Passed 2026-10-27: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5).
-	- Not run: `npm run test:local-import-export`; local REST/Auth services and required loopback configuration were unavailable.
+	- Passed 2026-10-27: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:ai-routes` (6/6); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5); `npm run test:local-import-export` (12/12, local Supabase stack); live app smoke against closeflow-green.vercel.app (ALL PASS, after the invite fix); preview smoke (12/12); compact schema-health check (0 problems).
+	- Fixed 2026-10-27: the live smoke found that an admin could invite the owner role (privilege escalation); migration 20261027020000 is applied in Production and re-verified.
 	- Blocking: duplicate migration and matching app code are not deployed; production migration requires a verified fresh backup and the approved migration path.
 	- Blocking: no preview smoke for this change; current Preview URL and bypass configuration are unavailable.
-	- Blocking: Stripe Live configuration/payment and complete AI route coverage are not verified; no further paid calls or real charge were authorized in this round.
-	- Still required: target schema health, production core smoke, and an observed 24–48-hour monitoring window.
+	- Blocking: Stripe Live configuration/payment is not verified; it needs live keys, price IDs, the live webhook, an approved amount and a refund procedure. Real paid provider calls are evidenced only for /api/ai/email-generator; the other AI routes are covered by the static contract test.
+	- Blocking: observed 24–48-hour monitoring window (started 2026-10-27 ca. 19:50 CET; run `npm run monitor:snapshot -- 24` and `-- 48`) and the final sign-off.
 
 ## Remaining Steps to Move NO-GO -> GO
 
-1. Provide a staging clone or explicitly approve a direct Production exception. Before the migration, create and verify a fresh backup; apply the migration through the documented manual path and run the current schema-health check.
-2. Deploy the reviewed code to Preview and complete the authenticated duplicate/API and core-flow smoke tests. Apply code to Production only after separate explicit approval.
+1. DONE 2026-10-27: migrations applied to Production (direct exception, no staging clone; schema-health 0 problems).
+2. DONE 2026-10-27: code deployed, Preview smoke and live app smoke pass.
 3. Execute the remaining release smoke test in the approved target runtime using:
 	- `docs/production-smoke-run-2026-08-04.md`
 	Evidence requirement:
