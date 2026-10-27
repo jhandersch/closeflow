@@ -2665,3 +2665,13 @@ Aktualisierter Stand der genannten Release-Punkte:
 
 - Neu: 
 pm run test:ai-routes (	ests/ai-route-contract.test.mjs, statisch, ohne Provider-Aufruf und ohne Kosten): **6/6 PASS**. Der Test entdeckt alle Routen unter src/app/api mit OpenAI-Aufruf und verlangt je Route Authentifizierung, Workspace-Aufloesung, AI-Quota (equireAiWorkspaceQuota oder enforceAndTrackUsageLimit) und Kosten-Telemetrie (createTrackedOpenAI* oder ecordAiUsageEvent). Ausgenommen ist nur /api/health (prueft nur, ob der Key gesetzt ist). Zusammen mit 	est:ai-cost (16/16) ist die Abdeckung der AI-Routen damit vertraglich gesichert; echte bezahlte Provider-Aufrufe bleiben nur fuer /api/ai/email-generator belegt.
+
+### Monitoring-Fenster (Start 2026-10-27 ca. 19:50 MEZ)
+
+- Letzte Production-Aenderungen: Code-Deploy closeflow-e6mr6e9m1 (Commit 576b2fb) und Migration 20261027020000 (Invite-Fix). Danach Live-Smoke und Preview-Smoke ALL PASS. Das Fenster beginnt nach diesem Stand und endet fruehestens am 2026-10-28 ca. 19:50 MEZ (24 h), regulaer am 2026-10-29 ca. 19:50 MEZ (48 h). Jede weitere Production-Aenderung setzt die Uhr zurueck.
+- Werkzeug: 
+pm run monitor:snapshot -- <Stunden> (	ests/monitoring-snapshot.mjs, nur lesend): Health, Login, Fehler-Events in udit_logs, uebrig gebliebene @example.invalid-Testnutzer, DB-Erreichbarkeit. Ergebnis ist 0 bei keinen Befunden, sonst 1.
+- Vercel-Runtime-Logs sind auf dem Hobby-Plan nicht fuer 24 h abfragbar; Fehlersignale kommen daher aus udit_logs und manueller Sicht im Vercel-Dashboard (Logs, Filter Error) sowie Supabase-Dashboard (Auth/API-Logs).
+- Basis-Snapshot (48 h Rueckblick, 19:50 MEZ): Health 200, Login 200, 0 Fehler-Events, 0 Test-Reste, DB erreichbar. **Befund: keine.**
+- Cron: /api/cron/automations taeglich 06:00 UTC; erster Lauf im Fenster am 2026-10-28 06:00 UTC, im Dashboard (Cron Jobs) zu pruefen.
+- Abschluss: Snapshot nach 24 h und nach 48 h ausfuehren, Ergebnis hier eintragen, dann P0/P1-Zaehlung und Sign-off in docs/release-acceptance-matrix.md.
