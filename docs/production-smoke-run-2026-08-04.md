@@ -1050,20 +1050,20 @@ PASS: [x]
 Owner:
 
 - [ ] full access
-- [ ] workspace settings
-- [ ] invitations
+- [x] workspace settings (nur Owner; Admin/sales_manager/member/viewer blockiert, `owner_id`-Übernahme blockiert; `tests/local-permissions-matrix.mjs`)
+- [x] invitations (Owner alle Rollen, Admin nur nicht-privilegierte; direkte Invite-Inserts gesperrt; Live-Smoke)
 - [ ] admin features
 
 Admin:
 
-- [ ] allowed actions
-- [ ] restricted owner actions blocked
+- [x] allowed actions (Admin: Leads, Mitglieder ohne Admin-Rolle verwalten)
+- [x] restricted owner actions blocked (kein Self-Escalate, kein Owner vergeben/entfernen, keine Admin-Verwaltung)
 
 Member/User:
 
 - [ ] permitted pages accessible
-- [ ] admin pages blocked
-- [ ] API authorization enforced
+- [x] admin pages blocked (API 403)
+- [x] API authorization enforced
 
 PASS: [ ]
 
@@ -1071,12 +1071,12 @@ PASS: [ ]
 
 - [ ] workspace switch
 - [ ] dashboard updates
-- [ ] leads update
-- [ ] customers update
-- [ ] tasks update
-- [ ] calendar update
-- [ ] browser refresh after switch
-- [ ] no data leakage
+- [x] leads update (API, Cookie-Wechsel)
+- [x] customers update (Export)
+- [ ] tasks update (nur UI)
+- [x] calendar update (API 200 je Workspace)
+- [ ] browser refresh after switch (nur UI)
+- [x] no data leakage (fremder Workspace per Cookie/DB-Read leer)
 
 PASS: [ ]
 
@@ -2673,6 +2673,14 @@ Aktualisierter Stand der genannten Release-Punkte:
 - Basis-Snapshot (48 h Rückblick, 19:50 MEZ): Health 200, Login 200, 0 Fehler-Events, 0 Test-Reste, DB erreichbar. **Befund: keine.**
 - Cron: `/api/cron/automations` täglich 06:00 UTC; erster Lauf im Fenster am 2026-10-28 06:00 UTC, im Dashboard (Cron Jobs) zu prüfen.
 - Abschluss: Snapshot nach 24 h und nach 48 h ausführen, Ergebnis hier eintragen, dann P0/P1-Zählung und Sign-off in `docs/release-acceptance-matrix.md`.
+
+### Befund B22: direkte RLS-Schreibpfade (2026-10-27, 20:35 MEZ)
+
+- Befund (P1): Owner, Admin und `sales_manager` konnten `workspace_members`, `workspace_invites` und `workspaces` direkt per PostgREST ändern. Ein Admin konnte sich selbst zum Owner machen, Mitglieder hinzufügen, den Owner entfernen und Einladungen mit Rolle `owner` anlegen.
+- Fix: Migration `20261027030000_harden_workspace_management_rls.sql`, lokal getestet (vorher 7 Fehler, nachher 13/13 `test:local-permissions`) und mit Freigabe in Production angewendet. Policies und Funktions-MD5 identisch, `anon` ohne Execute.
+- Verifikation danach: Live-Smoke ALL PASS (0 Reste), Monitoring-Snapshot ohne Befunde, Schema-Health 0 Probleme (Soll-Liste auf die neuen Policies angepasst). Lokale Suites ALL PASS: import-export, onboarding-delete, delete-rpc, legacy-invite, stripe-routes, stripe-webhook, lead-duplicates.
+- Monitoring-Fenster: durch diese Production-Änderung **neu gestartet am 2026-10-27 ca. 20:40 MEZ**; 24 h frühestens 2026-10-28 ca. 20:40, 48 h 2026-10-29 ca. 20:40 MEZ.
+- B22/B23: serverseitige Punkte abgehakt. Offen bleiben die manuellen UI-Prüfungen; die PASS-Marker bleiben bis dahin leer.
 
 ### Aktueller Gesamtstatus (2026-10-27, Abend): weiterhin NO-GO
 

@@ -30,10 +30,10 @@ functions_expected(name) as (
 ),
 policies_expected(t, p) as (
   values ('profiles','profiles_self_select'),('workspaces','workspaces_member_select'),
-    ('workspaces','workspaces_manager_update'),('workspace_members','workspace_members_member_select'),
-    ('workspace_members','workspace_members_manager_insert'),('workspace_members','workspace_members_manager_update'),
+    ('workspaces','workspaces_owner_update'),('workspace_members','workspace_members_member_select'),
+    ('workspace_members','workspace_members_manager_update'),
     ('workspace_members','workspace_members_manager_delete'),('workspace_invites','workspace_invites_member_select'),
-    ('workspace_invites','workspace_invites_manager_insert'),('leads','leads_workspace_member_select'),
+    ('workspace_invites','workspace_invites_manager_delete'),('leads','leads_workspace_member_select'),
     ('leads','leads_workspace_member_insert'),('leads','leads_workspace_member_update'),
     ('leads','leads_workspace_member_delete'),('customers','customers_member_select'),
     ('customers','customers_member_insert'),('customers','customers_member_update'),('customers','customers_member_delete'),

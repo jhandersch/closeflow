@@ -33,6 +33,7 @@
     "test:rls-matrix": "node tests/rls-cross-tenant-matrix.mjs",
     "test:rls-leak": "node tests/rls-leak-check.mjs",
     "test:local-import-export": "node tests/local-import-export-integration.mjs",
+    "test:local-permissions": "node tests/local-permissions-matrix.mjs",
     "test:local-lead-duplicates": "node tests/local-lead-duplicate-rpc.mjs",
     "test:local-onboarding-delete": "node tests/local-onboarding-delete-integration.mjs",
     "test:local-import-limits": "node tests/local-import-limits-integration.mjs",
