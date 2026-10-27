@@ -118,14 +118,18 @@ try {
     assert.equal(alice.data.notes, "Zeile 1\nZeile 2");
   });
 
-  await check("manual exact duplicate warns but remains allowed", async () => {
+  await check("manual exact duplicate requires confirmation before override", async () => {
     const body = { name: "Manual Duplicate", company: "Import Test GmbH", status: "new", value: 1 };
     const first = await call(A, "POST", "/api/leads", body);
     assert.equal(first.status, 200, await first.text());
-    assert.notEqual(first.headers.get("x-closeflow-duplicate-lead"), "true");
-    const second = await call(A, "POST", "/api/leads", body);
-    assert.equal(second.status, 200, await second.text());
-    assert.equal(second.headers.get("x-closeflow-duplicate-lead"), "true");
+    const second = await call(A, "POST", "/api/leads", {
+      ...body,
+      name: " manual duplicate ",
+      company: " import test gmbh ",
+    });
+    const duplicate = await second.json();
+    assert.equal(second.status, 409, JSON.stringify(duplicate));
+    assert.equal(typeof duplicate.duplicateLeadId, "string");
     const duplicateRows = await admin
       .from("leads")
       .select("id")
@@ -133,7 +137,54 @@ try {
       .eq("name", body.name)
       .eq("company", body.company);
     assert.ifError(duplicateRows.error);
-    assert.equal(duplicateRows.data.length, 2);
+    assert.equal(duplicateRows.data.length, 1);
+    const confirmed = await call(A, "POST", "/api/leads", { ...body, allowDuplicate: true });
+    assert.equal(confirmed.status, 200, await confirmed.text());
+    const afterConfirmation = await admin
+      .from("leads")
+      .select("id")
+      .eq("workspace_id", A.workspaceId)
+      .eq("name", body.name)
+      .eq("company", body.company);
+    assert.ifError(afterConfirmation.error);
+    assert.equal(afterConfirmation.data.length, 2);
+  });
+
+  await check("concurrent manual creates serialize duplicate checks", async () => {
+    const body = { name: "Concurrent Manual", company: "Atomicity Test GmbH", status: "new", value: 1 };
+    const [first, second] = await Promise.all([
+      call(A, "POST", "/api/leads", body),
+      call(A, "POST", "/api/leads", body),
+    ]);
+    assert.deepEqual([first.status, second.status].sort(), [200, 409]);
+    const rows = await admin
+      .from("leads")
+      .select("id")
+      .eq("workspace_id", A.workspaceId)
+      .eq("name", body.name)
+      .eq("company", body.company);
+    assert.ifError(rows.error);
+    assert.equal(rows.data.length, 1);
+  });
+
+  await check("concurrent manual create and CSV import never create duplicate leads", async () => {
+    const name = "Concurrent Mixed";
+    const company = "Atomicity Test GmbH";
+    const manual = call(A, "POST", "/api/leads", { name, company, status: "new", value: 2 });
+    const imported = call(A, "POST", "/api/leads/import", {
+      csv: `name,company,status,value\r\n${name},${company},new,3`,
+    });
+    const [manualResponse, importResponse] = await Promise.all([manual, imported]);
+    assert.ok([200, 409].includes(manualResponse.status), `manual status ${manualResponse.status}`);
+    assert.equal(importResponse.status, 200, await importResponse.text());
+    const rows = await admin
+      .from("leads")
+      .select("id")
+      .eq("workspace_id", A.workspaceId)
+      .eq("name", name)
+      .eq("company", company);
+    assert.ifError(rows.error);
+    assert.equal(rows.data.length, 1);
   });
 
   await check("lead import A retry: no duplicate leads, no new activities", async () => {
@@ -152,7 +203,7 @@ try {
     const r = await call(B, "POST", "/api/leads/import", { csv });
     const j = await r.json();
     assert.equal(j.inserted, 2, JSON.stringify(j));
-    assert.equal((await counts(A)).leads.length, 4);
+    assert.equal((await counts(A)).leads.length, 6);
     assert.equal((await counts(B)).leads.length, 2);
   });
 

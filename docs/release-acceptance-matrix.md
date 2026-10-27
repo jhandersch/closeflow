@@ -50,38 +50,37 @@ Use this matrix for final production release decisions.
 
 ## Release Sign-Off Record
 
-Fill before release:
+Current decision record (2026-10-27):
 
-- Release version: closeflow@0.1.0 (workspace hardening milestone)
-- Date/time: 2026-08-04 (latest automated rerun)
-- Environment: linked Supabase project `itqzelpofshmzeajvmma` + local app runtime (`http://localhost:3000`)
+- Release version: closeflow@0.1.0; race-safe lead duplicate change pending deployment
+- Date/time: 2026-10-27
+- Environment: local code/build checks and local PostgreSQL only; no preview or production mutation in this round
 - Incident channel: pending assignment
 - Commander: pending assignment
 - Engineering approver: pending assignment
 - Product approver: pending assignment
-- Result: CONDITIONAL GO
+- Result: **NO-GO**
 - Notes:
-	- Passed (rerun 2026-08-04): `npm run verify:release`
-	- Passed (rerun 2026-08-04): `npm run test:cross-tenant:suite`
-	- Included in rerun: production build (`npm run build`)
-	- Included in rerun: tenancy guard (`npm run lint:tenancy`)
-	- Pending manual confirmation in target runtime: execute `supabase/schema-health-check.sql`
-	- Pending manual confirmation in target runtime: full UI smoke cycle (lead/task/calendar/pipeline)
-	- Pending manual confirmation in target runtime: monitoring window check for no P0/P1 regressions
+	- Passed 2026-10-27: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5).
+	- Not run: `npm run test:local-import-export`; local REST/Auth services and required loopback configuration were unavailable.
+	- Blocking: duplicate migration and matching app code are not deployed; production migration requires a verified fresh backup and the approved migration path.
+	- Blocking: no preview smoke for this change; current Preview URL and bypass configuration are unavailable.
+	- Blocking: Stripe Live configuration/payment and complete AI route coverage are not verified; no further paid calls or real charge were authorized in this round.
+	- Still required: target schema health, production core smoke, and an observed 24–48-hour monitoring window.
 
-## Remaining Steps to Move CONDITIONAL GO -> GO
+## Remaining Steps to Move NO-GO -> GO
 
-1. Run `supabase/schema-health-check.sql` in the production Supabase target and attach result screenshot/log.
-2. Execute full smoke test in production runtime using:
+1. Provide a staging clone or explicitly approve a direct Production exception. Before the migration, create and verify a fresh backup; apply the migration through the documented manual path and run the current schema-health check.
+2. Deploy the reviewed code to Preview and complete the authenticated duplicate/API and core-flow smoke tests. Apply code to Production only after separate explicit approval.
+3. Execute the remaining release smoke test in the approved target runtime using:
 	- `docs/production-smoke-run-2026-08-04.md`
-	- Release decision is based on `Layer A - Release Blocking Checks`.
-	- `Layer B - Product Maturity Coverage` is recommended and should be tracked, but is not blocking unless explicitly escalated by release commander.
 	Evidence requirement:
 	- PASS/FAIL for each section
 	- Notes for any deviation
 	- Timestamped tester and approver fields
-3. Observe 24-48h monitoring window with no unresolved P0/P1 signatures.
-4. Fill commander/approver fields and flip result to `GO`.
+4. Configure and verify Stripe Live only after the owner confirms the live amount and refund procedure; capture webhook delivery evidence.
+5. Observe a 24–48-hour monitoring window with no unresolved P0/P1 signatures.
+6. Fill commander/approver fields and change the result to `GO` only when every blocking gate is evidenced.
 
 ## Manual Evidence Artifacts
 

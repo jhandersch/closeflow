@@ -1,6 +1,6 @@
 # Backup und Restore (Supabase, manuell)
 
-Stand: 2026-10-19. Das Projekt läuft auf dem Supabase Free Plan ohne Provider-Backups. Dieses Verfahren ist daher die einzige Sicherung.
+Stand: 2026-10-27. Das Projekt läuft auf dem Supabase Free Plan ohne Provider-Backups. Dieses Verfahren ist daher die einzige Sicherung.
 
 ## Backup erstellen
 
@@ -28,7 +28,8 @@ Der vereinbarte Rhythmus ist wöchentlich sowie zusätzlich vor Datenbankmigrati
 2. Das Backup-Skript mit dem aktuellen Session-Pooler-Host und -Benutzer ausführen.
 3. Prüfen, dass der Lauf erfolgreich war; anschließend das Prüfsummen-Skript auf dem neuen Backup-Ordner ausführen.
 4. Eine zweite Kopie auf ein separates, verschlüsseltes Medium an einem anderen Ort kopieren und dort ebenfalls das Prüfsummen-Skript ausführen.
-5. Die zweite Kopie liegt seit 2026-10-22 auf einem zweiten verschlüsselten Stick (BitLocker To Go). Der wöchentliche Rhythmus ist noch nicht als Termin eingerichtet. Für die Auth-Daten keine unverschlüsselte Cloud-Kopie verwenden.
+5. Die zweite Kopie liegt auf einem zweiten verschlüsselten Stick (BitLocker To Go); laut Nutzer werden die Sticks getrennt gelagert und die Wiederherstellungsschlüssel separat aufbewahrt. Für die Auth-Daten keine unverschlüsselte Cloud-Kopie verwenden.
+6. Wöchentliches Backup am Samstag gegen 22:00 Uhr. Dieser Termin ist mit dem Nutzer abgestimmt, aber noch nicht in einem Kalender eingetragen.
 
 ## Nicht enthalten / harte Grenzen
 
@@ -81,7 +82,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\restore-supabase-fresh.ps1 -D
 
 ## Offen
 
-- **Zweite Kopie:** Erledigt am 2026-10-22. `backup-20261020-173444` liegt auf einem zweiten verschlüsselten Stick (BitLocker To Go); `verify-supabase-backup.ps1` lief dort erfolgreich (alle 5 Dateien inkl. `public-privileges.sql`, SHA-256 stimmt). Noch offen: den zweiten Stick an einem anderen Ort lagern und den Wiederherstellungsschlüssel getrennt von den Sticks sichern.
-- Wöchentlicher Rhythmus ist vereinbart, aber noch nicht als wiederkehrender Termin eingerichtet; ab echten Kundendaten verbindlich.
+- **Zweite Kopie und Schlüssel:** Erledigt laut Nutzer (2026-10-27): die verschlüsselten Sticks werden getrennt gelagert und die Wiederherstellungsschlüssel separat aufbewahrt. Frühere Prüfsummen-Evidenz zur zweiten Kopie steht oben.
+- Wöchentlicher Rhythmus: Samstag gegen 22:00 Uhr vereinbart. Der Kalendereintrag selbst ist noch nicht angelegt.
 - Aufräumen erledigt am 2026-10-22: Auf beiden Sticks liegt nur noch `backup-20261020-173444`. Bei jedem neuen Backup ältere Stände entfernen.
 - Bei Pro-Upgrade: Provider-Backups und Restore-Test über das Dashboard zusätzlich nutzen.

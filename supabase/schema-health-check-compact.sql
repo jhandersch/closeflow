@@ -25,7 +25,8 @@ columns_expected(t, c) as (
 functions_expected(name) as (
   values ('is_workspace_member'),('is_workspace_manager'),('can_access_workspace_file_folder'),
     ('soft_delete_lead_dependents'),('restore_lead_dependents'),('soft_delete_task'),
-    ('soft_delete_lead_tasks'),('restore_lead_tasks')
+    ('soft_delete_lead_tasks'),('restore_lead_tasks'),
+    ('prevent_duplicate_workspace_lead'),('create_lead_with_duplicate_check')
 ),
 policies_expected(t, p) as (
   values ('profiles','profiles_self_select'),('workspaces','workspaces_member_select'),
@@ -69,6 +70,17 @@ problems as (
     from functions_expected e
     left join pg_proc p on p.proname = e.name and p.pronamespace = 'public'::regnamespace
     where p.proname is null
+  union all
+  select 'trigger missing', 'leads.prevent_duplicate_workspace_lead'
+    where not exists (
+      select 1 from pg_trigger t
+      join pg_class c on c.oid = t.tgrelid
+      join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public'
+        and c.relname = 'leads'
+        and t.tgname = 'prevent_duplicate_workspace_lead'
+        and not t.tgisinternal
+    )
   union all
   select 'policy missing', e.t || '.' || e.p
     from policies_expected e

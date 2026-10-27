@@ -23,6 +23,9 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
     const [nextActionDate, setNextActionDate] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [duplicateConfirmationKey, setDuplicateConfirmationKey] = useState<
+        string | null
+    >(null);
     const resetForm = () => {
         setName("");
         setCompany("");
@@ -38,6 +41,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
         setNextAction("");
         setNextActionDate("");
         setError(null);
+        setDuplicateConfirmationKey(null);
     };
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -48,6 +52,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
         }
         try {
             setLoading(true);
+            const duplicateKey = `${name.trim().toLowerCase()}::${company.trim().toLowerCase()}`;
             const response = await fetch("/api/leads", {
                 method: "POST",
                 headers: {
@@ -56,6 +61,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 body: JSON.stringify({
                     name,
                     company,
+                    allowDuplicate: duplicateConfirmationKey === duplicateKey,
                     value: Number(value) || 0,
                     status,
                     source,
@@ -72,14 +78,26 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                     next_action_date: nextActionDate
                 })
             });
+            const result: {
+                duplicateLeadId?: unknown;
+                error?: unknown;
+            } = await response.json();
+            if (
+                response.status === 409 &&
+                typeof result.duplicateLeadId === "string"
+            ) {
+                setDuplicateConfirmationKey(duplicateKey);
+                setError("A lead with this name and company already exists. Click 'Create anyway' only if adding a separate lead is intentional.");
+                return;
+            }
             if (!response.ok) {
-                throw new Error("Could not create lead");
+                throw new Error(
+                    typeof result.error === "string"
+                        ? result.error
+                        : "Could not create lead",
+                );
             }
-            if (response.headers.get("x-closeflow-duplicate-lead") === "true") {
-                toast("A lead with this name and company already exists. This lead was still created.");
-            } else {
-                toast.success("Lead created");
-            }
+            toast.success("Lead created");
             resetForm();
             onCreated();
             onClose();
@@ -198,7 +216,11 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             </label>
 
 
-            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="John Smith" className="
+            <input value={name} onChange={(event) => {
+                setName(event.target.value);
+                setDuplicateConfirmationKey(null);
+                setError(null);
+            }} placeholder="John Smith" className="
                 w-full
                 rounded-2xl
                 border
@@ -230,7 +252,11 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             </label>
 
 
-            <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder="Firmenname" className="
+            <input value={company} onChange={(event) => {
+                setCompany(event.target.value);
+                setDuplicateConfirmationKey(null);
+                setError(null);
+            }} placeholder="Firmenname" className="
                 w-full
                 rounded-2xl
                 border
@@ -688,7 +714,9 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
           ">
           {loading
             ? "Erstelle..."
-            : "Create lead"}
+            : duplicateConfirmationKey === `${name.trim().toLowerCase()}::${company.trim().toLowerCase()}`
+              ? "Create anyway"
+              : "Create lead"}
         </button>
 
 

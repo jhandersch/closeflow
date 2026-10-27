@@ -228,7 +228,9 @@ with expected_functions(function_name) as (
     ('restore_lead_dependents'),
     ('soft_delete_task'),
     ('soft_delete_lead_tasks'),
-    ('restore_lead_tasks')
+    ('restore_lead_tasks'),
+    ('prevent_duplicate_workspace_lead'),
+    ('create_lead_with_duplicate_check')
 )
 select
   e.function_name,
@@ -238,6 +240,15 @@ left join pg_proc p
   on p.proname = e.function_name
  and p.pronamespace = 'public'::regnamespace
 order by e.function_name;
+
+select
+  'leads.prevent_duplicate_workspace_lead' as trigger_name,
+  case when t.tgname is null then 'missing' else 'ok' end as status
+from (values ('prevent_duplicate_workspace_lead')) expected(name)
+left join pg_trigger t
+  on t.tgname = expected.name
+ and t.tgrelid = 'public.leads'::regclass
+ and not t.tgisinternal;
 
 -- Workspace file storage must remain private and membership-scoped.
 select

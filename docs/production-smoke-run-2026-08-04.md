@@ -59,9 +59,9 @@ Isolation checked live: as Member, switching to own Free workspace shows only it
 - No business, Impressum or real legal data yet. `impressum` and `datenschutz` still contain placeholders and must be replaced and reviewed before launch.
 - Practical tests of Google login, registration mail, magic link and a full password-reset on the live domain (requires the WIP bypass).
 - Stripe Live: keys, price IDs, live webhook and a live payment test with refund.
-- Global duplicate lock for concurrent import and manual create.
+- Race-safe global duplicate prevention across imports and manual creation (local verification passed; production apply/deploy pending).
 - Direct Supabase signup is still possible; disable "Allow new users to sign up" while in WIP.
-- Backup follow-ups: off-site storage of the second stick, separate BitLocker recovery key, recurring reminder.
+- Backup follow-ups (2026-10-27): user confirmed the encrypted sticks are stored separately and recovery keys are stored separately. Weekly backup reminder agreed for Saturdays around 22:00; calendar entry not yet created.
 
 This document is intentionally split into two layers:
 
@@ -2579,8 +2579,14 @@ Der Preview-Lauf zeigte 2 FAILs (Checkout, Stale-Guard), weil Stripe-Variablen n
 
 Die Migrationen aus dem Deploy-Plan sind in Produktion angewendet.
 
+## Race-sichere Lead-Dubletten (2026-10-27, lokal PASS; Production offen)
+
+Der Nutzer bestätigte die gewünschte UX: exakte Dubletten nach normalisiertem Kontaktname und Firma werden standardmäßig blockiert; manuelle Erstellung darf nach expliziter Bestätigung weiterhin möglich sein. Migration `20261027010000_prevent_concurrent_lead_duplicates.sql` fügt einen transaktionsweiten Advisory Lock und Trigger hinzu, sodass gleichzeitige Writes aus CSV-Import, manueller Erstellung sowie anderen Lead-Schreibpfaden dieselbe Workspace-Identität nicht versehentlich doppelt anlegen. Die manuelle Route verwendet einen atomaren RPC; die UI bietet nach HTTP 409 eine ausdrückliche Schaltfläche „Create anyway“. Vorhandene historische Dubletten bleiben unverändert. Die lokalen Datenbanktests sind bestanden; das Production-Deployment wurde noch nicht durchgeführt. Migration muss vor dem Code-Deploy in Produktion angewandt werden.
+
+Lokale Verifikation: `npm run test:local-lead-duplicates` **5/5 PASS** (zwei gleichzeitige manuelle RPC-Aufrufe, bestätigter Override, Viewer-Ablehnung am SECURITY-DEFINER-RPC, direkte INSERT-Sperre, parallele manuelle Erstellung/Import). Zusätzlich RLS-Matrix und All-Table-Leak-Check **ALL PASS**, kompakter Schema-Health-Check **0 Probleme**, Production-Build und Tenancy-Check **PASS**. Die lokalen Fixtures wurden vom Test entfernt. Supabase REST/Auth und die Next.js-Route wurden in dieser Runde nicht live auf dem lokalen Stack gestartet. Die Migration ist nur lokal angewandt; Production-Anwendung und Deployment stehen noch aus. Die Migration muss vor dem Code-Deploy in Production angewandt werden.
+
 ## Gesamtstatus: weiterhin NO-GO
-Offen: Backup/Restore (USB-Stick); E-Mail-Bestaetigung, OAuth, Recovery und Einladungs-E-Mail (Domain); Live-Modus-Stripe-Zustellung und echte Live-Zahlung; eine harte globale Dublettensperre fuer gleichzeitiges Importieren und manuelles Erstellen.
+Offen: Kalendereintrag fuer das woechentliche Backup (Samstag gegen 22:00 Uhr); OAuth/PKCE und Einladungs-Mail-Zustellbarkeit ueber weitere Anbieter; Live-Modus-Stripe-Zustellung und echte Live-Zahlung; Preview- und Production-Rollout der race-sicheren Dublettenmigration; Route-Level- und umfassende Release-Smokes sowie das Monitoringfenster.
 
 ## CRM-Importe zeilenweise atomar (2026-10-18)
 
@@ -2623,3 +2629,23 @@ Production-Deploy `237c9b9` ist **Ready** und `closeflow-green.vercel.app` zeigt
 Stripe Live bleibt offen: Der zuletzt dokumentierte bezahlte Hosted Checkout und der zugestellte Webhook waren ausdruecklich im Stripe-Testmodus. Vercel zeigt die Stripe-Variablen als nicht exportierbare Secrets; ihr aktueller Inhalt wurde nicht offengelegt. Heute wurde keine Live-Zahlung und keine echte Live-Webhook-Zustellung ausgefuehrt. Vor einem Live-End-to-End-Test muss der Betreiber in Vercel den Live-Secret-Key, Live-Price-IDs und das Live-Webhook-Secret konfigurieren und dort den Modus bestaetigen. Eine echte Zahlung erfordert gesonderte Freigabe des Betrags und des anschliessenden Storno-/Erstattungsverfahrens.
 
 Der Preview-Smoke benoetigt hier nicht konfigurierte Preview-URL und Bypass-Zugang. Domain-gebundene Mail/OAuth-Flows und Backup/Restore bleiben offen. Der Gesamtstatus ist daher weiterhin **NO-GO**.
+
+## Release-Fortsetzung (2026-10-27)
+
+Lokale Verifikation dieser Runde:
+
+- `npm run verify:release`: **PASS** (Tenancy-Guard, Next.js-Produktionsbuild und TypeScript; 99 statische Seiten).
+- `npm run test:ai-cost`: **16/16 PASS**, einschließlich gemockter erfolgreicher Responses, Modellkosten und Fehler beim Usage-Audit.
+- `npm run test:workflow-automations`: **3/3 PASS**, einschließlich fehlgeschlagener Datenbankabfrage und idempotentem Claim.
+- `npm run test:local-lead-duplicates`: **5/5 PASS**, einschließlich manueller Konkurrenz, bestätigtem Override, Viewer-Ablehnung, direktem INSERT und Import-Race; Fixtures bereinigt.
+- `npm run test:local-import-export` lokal gegen Supabase-CLI-Stack (Postgres, Auth, REST, Storage) und Next-Dev-Server auf 127.0.0.1:3188: **ALL PASS (12/12)**, inkl. manuellem 409/Override und paralleler Duplikat-Erzeugung (manuell/manuell und manuell/CSV). Ursache des vorherigen Startproblems: fehlende Datei `C:\Users\janhe\.supabase\profile` (Inhalt `supabase`); nach Anlegen und `supabase stop`/`start` laufen alle Dienste. Ein einmaliger 500 direkt nach Schema-Reload war transient; drei Folgeläufe waren stabil. Die Test-Erwartung der Tenant-Isolation (A hat 6 Leads) wurde an die neuen Duplikat-Tests angepasst. Kein Zugriff auf Produktionsdaten.
+
+Aktualisierter Stand der genannten Release-Punkte:
+
+- **Race-sichere Dubletten:** lokal auf Datenbankebene bestanden; Migration und App-Code noch nicht in Preview oder Production ausgerollt. Vor dem App-Deploy die Migration nach freigegebenem Vorgehen anwenden und Schema-Health prüfen. Es gibt keinen Staging-Klon; ein frisches geprüftes Backup ist vor einer direkten Production-Migration Voraussetzung.
+- **AI:** die lokalen Usage-/Kosten- und Workflow-Tests bestehen. Ein früherer, ausdrücklich autorisierter echter AI-Erfolgstest belegt `/api/ai/email-generator` und seine Token-/Kostenbuchung; er belegt nicht alle AI-Routen. Weitere echte Provider-Aufrufe werden ohne separate Freigabe nicht ausgelöst.
+- **Zeitgesteuerte Automationen:** bereits konfiguriert als Vercel-Cron täglich um 06:00 UTC. Autorisierter Production-Aufruf, `lead.idle_7d`, `task.overdue` und Idempotenz wurden am 2026-10-15 mit markierten Fixtures bestanden. Dieser Punkt ist kein offener Implementierungsblocker.
+- **Stripe:** erfolgreicher Testmodus-Checkout und Testmodus-Webhook sind dokumentiert; Live-Schlüssel, Live-Preis-IDs, Live-Webhook und echte Live-Zahlung sind nicht verifiziert. Konfiguration und ein echter Betrag samt Erstattungsablauf erfordern Betreiberaktion und ausdrückliche Freigabe.
+- **Preview/Monitoring:** kein aktueller Preview-Smoke für diese uncommitteten Änderungen. Preview-URL und Bypass-Zugang fehlen; ein 24–48-Stunden-Monitoringfenster nach dem Release ist ebenfalls nicht belegt.
+
+**Release bleibt NO-GO.** Produktionsmigration, Live-Zahlung, externe Provider-Aufrufe und Deploy wurden in dieser Runde nicht ausgeführt.

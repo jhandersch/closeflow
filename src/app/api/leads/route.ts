@@ -20,6 +20,18 @@ type CustomerLead = {
   industry?: string | null;
   is_vip?: boolean | null;
 };
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+const LEAD_STATUSES = new Set(["new", "contacted", "proposal", "won", "lost"]);
+const isLeadRecord = (value: unknown): value is Lead =>
+  isRecord(value) &&
+  typeof value.id === "string" &&
+  typeof value.name === "string" &&
+  typeof value.company === "string" &&
+  typeof value.status === "string" &&
+  LEAD_STATUSES.has(value.status) &&
+  typeof value.created_at === "string" &&
+  typeof value.value === "number";
 const syncCustomerRecord = async (
   supabase: RouteSupabase,
   workspaceId: string,
@@ -158,7 +170,10 @@ export async function POST(req: Request) {
         },
       );
     }
-    const body = await req.json();
+    const body: unknown = await req.json();
+    if (!isRecord(body)) {
+      return NextResponse.json({ error: "A lead object is required" }, { status: 400 });
+    }
     if (typeof body.name !== "string" || !body.name.trim()) {
       return NextResponse.json({ error: "Contact name is required" }, { status: 400 });
     }
@@ -186,60 +201,76 @@ export async function POST(req: Request) {
     }
     const name = body.name.trim();
     const company = typeof body.company === "string" ? body.company.trim() : "";
-    const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, "\\$&");
-    const matchingLeads = () => supabase
-      .from("leads")
-      .select("id")
-      .eq("workspace_id", workspace.id)
-      .is("deleted_at", null)
-      .ilike("name", escapeLikePattern(name));
-    let duplicateLookup = company
-      ? await matchingLeads()
-        .ilike("company", escapeLikePattern(company))
-        .limit(1)
-        .maybeSingle()
-      : await matchingLeads()
-        .is("company", null)
-        .limit(1)
-        .maybeSingle();
-    if (!company && !duplicateLookup.error && !duplicateLookup.data) {
-      duplicateLookup = await matchingLeads()
-        .eq("company", "")
-        .limit(1)
-        .maybeSingle();
-    }
-    const { data: existingDuplicate, error: duplicateLookupError } = duplicateLookup;
-    if (duplicateLookupError) {
-      console.error("CHECK LEAD DUPLICATE ERROR:", duplicateLookupError);
-      return NextResponse.json(
-        { error: "Could not check for an existing lead." },
-        { status: 500 },
-      );
-    }
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        ...body,
-        name,
-        company,
-        workspace_id: workspace.id,
-        user_id: user.id,
-      })
-      .select()
-      .single();
-    if (error) {
-      console.error("POST LEAD ERROR:", error);
+    const { data: creationRows, error: creationError } = await supabase.rpc(
+      "create_lead_with_duplicate_check",
+      {
+        p_workspace_id: workspace.id,
+        p_user_id: user.id,
+        p_lead: { ...body, name, company },
+        p_allow_duplicate: body.allowDuplicate === true,
+      },
+    );
+    if (creationError) {
+      console.error("CREATE LEAD RPC ERROR:", creationError);
       return NextResponse.json(
         {
-          error: getUserFacingErrorMessage(error),
+          error: getUserFacingErrorMessage(creationError),
         },
         {
           status: 500,
         },
       );
     }
+    const firstCreation = Array.isArray(creationRows) ? creationRows[0] : null;
+    const creation = isRecord(firstCreation) ? firstCreation : null;
+    if (
+      !creation ||
+      typeof creation !== "object" ||
+      typeof creation.created !== "boolean"
+    ) {
+      console.error("CREATE LEAD RPC returned an invalid response.");
+      return NextResponse.json(
+        { error: "Lead could not be saved. Please try again." },
+        { status: 503 },
+      );
+    }
+    if (!creation.created) {
+      if (typeof creation.duplicate_id !== "string") {
+        console.error("CREATE LEAD RPC omitted the duplicate lead id.");
+        return NextResponse.json(
+          { error: "Could not verify the duplicate lead." },
+          { status: 503 },
+        );
+      }
+      return NextResponse.json(
+        {
+          error: "A lead with this name and company already exists.",
+          duplicateLeadId: creation.duplicate_id,
+        },
+        { status: 409 },
+      );
+    }
+    if (!isLeadRecord(creation.lead)) {
+      console.error("CREATE LEAD RPC omitted the created lead.");
+      return NextResponse.json(
+        { error: "Lead could not be loaded after creation." },
+        { status: 503 },
+      );
+    }
+    const data = creation.lead;
     if (data.status === "won" || data.status === "lost") {
-      const customerSyncError = await syncCustomerRecord(supabase, workspace.id, data);
+      const customerSyncError = await syncCustomerRecord(supabase, workspace.id, {
+        id: data.id,
+        name: data.name,
+        company: data.company,
+        status: data.status,
+        value: data.value,
+        notes: data.notes ?? null,
+        website: data.website,
+        address: data.address,
+        industry: data.industry,
+        is_vip: data.is_vip,
+      });
       if (customerSyncError) {
         console.error("SYNC NEW CUSTOMER RECORD ERROR:", customerSyncError);
         await supabase.from("leads").delete().eq("id", data.id).eq("workspace_id", workspace.id);
@@ -249,26 +280,12 @@ export async function POST(req: Request) {
         );
       }
     }
-    await supabase.from("activities").insert({
-      workspace_id: workspace.id,
-      lead_id: data.id,
-      user_id: user.id,
-      type: "created",
-      action: "lead_created",
-      title: "Lead created",
-      description: `${data.name} was added`,
-    });
     try {
-      await runWorkflowAutomations(supabase, user.id, workspace.id, data as Lead, "lead.created");
+      await runWorkflowAutomations(supabase, user.id, workspace.id, data, "lead.created");
     } catch (workflowError) {
       console.error("Workflow automation failed:", workflowError);
     }
-    return NextResponse.json(
-      data,
-      existingDuplicate
-        ? { headers: { "x-closeflow-duplicate-lead": "true" } }
-        : undefined,
-    );
+    return NextResponse.json(data);
   } catch (error) {
     console.error("POST CRASH:", error);
     return NextResponse.json(

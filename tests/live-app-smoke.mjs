@@ -218,14 +218,16 @@ try {
     assert.ifError(activities.error);
     assert.equal(activities.data.filter((activity) => activity.type === "created").length, 2);
   });
-  await check("manual exact duplicate warns but still creates the lead", async () => {
+  await check("manual exact duplicate requires explicit confirmation", async () => {
     const payload = { name: `${marker}-manual`, company: `${marker}-manual-company`, status: "new", value: 10 };
     const first = await call("/api/leads", O.aal2, payload, H);
     assert.equal(first.status, 200, await first.text());
-    assert.notEqual(first.headers.get("x-closeflow-duplicate-lead"), "true");
     const second = await call("/api/leads", O.aal2, payload, H);
-    assert.equal(second.status, 200, await second.text());
-    assert.equal(second.headers.get("x-closeflow-duplicate-lead"), "true");
+    const duplicate = await second.json();
+    assert.equal(second.status, 409, JSON.stringify(duplicate));
+    assert.equal(typeof duplicate.duplicateLeadId, "string");
+    const confirmed = await call("/api/leads", O.aal2, { ...payload, allowDuplicate: true }, H);
+    assert.equal(confirmed.status, 200, await confirmed.text());
     const leads = await admin.from("leads").select("id").eq("workspace_id", W).eq("name", payload.name).eq("company", payload.company);
     assert.ifError(leads.error);
     assert.equal(leads.data.length, 2);
