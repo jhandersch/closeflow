@@ -2649,3 +2649,10 @@ Aktualisierter Stand der genannten Release-Punkte:
 - **Preview/Monitoring:** kein aktueller Preview-Smoke für diese uncommitteten Änderungen. Preview-URL und Bypass-Zugang fehlen; ein 24–48-Stunden-Monitoringfenster nach dem Release ist ebenfalls nicht belegt.
 
 **Release bleibt NO-GO.** Produktionsmigration, Live-Zahlung, externe Provider-Aufrufe und Deploy wurden in dieser Runde nicht ausgeführt.
+
+### Production-Deploy Duplikatschutz und Invite-Fix (2026-10-27)
+
+- Commit 576b2fb gepusht, Production-Deploy closeflow-e6mr6e9m1 Ready. Migration 10 war in Production bereits vorhanden (Definitionen identisch, Health-Check 0 problems).
+- 	ests/live-app-smoke.mjs gegen closeflow-green.vercel.app fand eine Rechteeskalation: Ein Admin konnte über create_workspace_invite_with_limit die Rolle owner einladen (die Migration 20261014170000 hatte den Fix aus Befund E überschrieben). Folgefehler: Seat-Limit beim Accept.
+- Fix: Migration 20261027020000_restrict_privileged_workspace_invites.sql (nur Owner dürfen owner/admin einladen), lokal getestet und mit Freigabe in Production angewendet (Funktions-MD5 identisch zu lokal, Grants unverändert).
+- Erneuter Live-Smoke: **ALL PASS**, Cleanup 0 Workspaces/0 Benutzer. Ein früherer 429 beim Einladungsmail war ein Rate-Limit des Mail-Providers.
