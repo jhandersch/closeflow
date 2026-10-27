@@ -2660,3 +2660,8 @@ Aktualisierter Stand der genannten Release-Punkte:
 ### Preview-Smoke (2026-10-27)
 
 - 	ests/preview-smoke.mjs gegen Preview closeflow-4wn04z6zt-jhanderschs-projects.vercel.app (Stand Commit 19af0bf): **12 PASS, ALL PASS** (Auth-Gates 401, Lead-/Kunden-Import inkl. paralleler Importe, Export, Cross-Tenant, Lock-Tabelle nicht lesbar). Cleanup: 0 Wegwerf-Benutzer. Das Bypass-Secret wurde nur als Umgebungsvariable genutzt und nicht gespeichert.
+
+### AI-Routen-Vertragstest (2026-10-27)
+
+- Neu: 
+pm run test:ai-routes (	ests/ai-route-contract.test.mjs, statisch, ohne Provider-Aufruf und ohne Kosten): **6/6 PASS**. Der Test entdeckt alle Routen unter src/app/api mit OpenAI-Aufruf und verlangt je Route Authentifizierung, Workspace-Aufloesung, AI-Quota (equireAiWorkspaceQuota oder enforceAndTrackUsageLimit) und Kosten-Telemetrie (createTrackedOpenAI* oder ecordAiUsageEvent). Ausgenommen ist nur /api/health (prueft nur, ob der Key gesetzt ist). Zusammen mit 	est:ai-cost (16/16) ist die Abdeckung der AI-Routen damit vertraglich gesichert; echte bezahlte Provider-Aufrufe bleiben nur fuer /api/ai/email-generator belegt.

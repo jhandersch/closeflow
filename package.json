@@ -10,6 +10,7 @@
     "lint:tenancy": "node scripts/check-tenancy.mjs",
     "verify:release": "node scripts/verify-release.mjs",
     "test:ai-cost": "node --experimental-strip-types --test tests/ai-cost.test.mjs",
+    "test:ai-routes": "node --test tests/ai-route-contract.test.mjs",
     "test:csv": "node --experimental-strip-types --test tests/csv.test.mjs",
     "test:usage-quota": "node --experimental-strip-types --test tests/usage-quota.test.mjs",
     "test:workspace-auth": "node --experimental-strip-types --test tests/workspace-auth.test.mjs",
