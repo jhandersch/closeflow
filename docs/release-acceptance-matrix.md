@@ -50,23 +50,23 @@ Use this matrix for final production release decisions.
 
 ## Release Sign-Off Record
 
-Current decision record (2026-10-27):
+Current decision record (2026-10-28):
 
-- Release version: closeflow@0.1.0 at commit 4fa501d (race-safe lead duplicate protection and invite privilege fix deployed)
-- Date/time: 2026-10-27
-- Environment: local stack, one Preview deployment and Production (only marked throwaway fixtures); monitoring window started 2026-10-27 ca. 19:50 CET
+- Release version: closeflow@0.1.0 at commit 138aa64 (race-safe lead duplicates, invite and workspace-management RLS hardening, viewer read-only UI, stale-workspace fallback)
+- Date/time: 2026-10-28
+- Environment: local stack, one Preview deployment and Production (only marked throwaway fixtures); monitoring window restarted 2026-10-27 ca. 23:57 CET (Production deploy closeflow-6uhqzdime)
 - Incident channel: pending assignment
 - Commander: pending assignment
 - Engineering approver: pending assignment
 - Product approver: pending assignment
-- Result: **NO-GO**
+- Result: **NO-GO** (only the observation window, Stripe Live and the sign-off remain)
 - Notes:
-	- Passed 2026-10-27: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:ai-routes` (6/6); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5); `npm run test:local-import-export` (12/12, local Supabase stack); live app smoke against closeflow-green.vercel.app (ALL PASS, after the invite fix); preview smoke (12/12); compact schema-health check (0 problems).
-	- Fixed 2026-10-27: the live smoke found that an admin could invite the owner role (privilege escalation); migration 20261027020000 is applied in Production and re-verified.
-	- Blocking: duplicate migration and matching app code are not deployed; production migration requires a verified fresh backup and the approved migration path.
-	- Blocking: no preview smoke for this change; current Preview URL and bypass configuration are unavailable.
+	- Passed 2026-10-27/28: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:ai-routes` (6/6); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5); `npm run test:local-import-export` (12/12); `npm run test:local-permissions` (13/13); live app smoke against closeflow-green.vercel.app (ALL PASS after the last deploy); preview smoke (12/12); schema-health check (0 problems); browser UI run on Production for permissions, workspace switching, mobile, tasks, calendar and invitations.
+	- Fixed: invite privilege escalation (20261027020000); workspace management RLS (20261027030000); race-safe duplicate protection (migration 10); viewer read-only UI; stale workspace fallback; mixed locale and language.
+	- Done: duplicate migration and app code deployed; preview smoke passed.
 	- Blocking: Stripe Live configuration/payment is not verified; it needs live keys, price IDs, the live webhook, an approved amount and a refund procedure. Real paid provider calls are evidenced only for /api/ai/email-generator; the other AI routes are covered by the static contract test.
-	- Blocking: observed 24–48-hour monitoring window (started 2026-10-27 ca. 19:50 CET; run `npm run monitor:snapshot -- 24` and `-- 48`) and the final sign-off.
+	- Blocking: observed 24–48-hour monitoring window (restarted 2026-10-27 ca. 23:57 CET; run `npm run monitor:snapshot -- 24` and `-- 48`; the first cron run is 2026-10-28 06:00 UTC) and the final sign-off.
+	- Non-blocking, owner only: platform `/admin` check with a platform-admin account, Safari and real devices, OAuth/PKCE and mail deliverability across more providers, weekly backup calendar entry, Vercel bypass secret rotation, Backup/PITR and alerting (Supabase plan).
 
 ## Remaining Steps to Move NO-GO -> GO
 

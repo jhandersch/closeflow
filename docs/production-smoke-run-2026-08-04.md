@@ -884,17 +884,19 @@ PASS: [x]
 
 **### B10) Mobile**
 
-- [ ] dashboard mobile
+- [x] dashboard mobile
 
-- [ ] leads mobile
+- [x] leads mobile
 
-- [ ] customers mobile
+- [x] customers mobile
 
-- [ ] calendar mobile
+- [x] calendar mobile
 
-- [ ] settings mobile
+- [x] settings mobile
 
-PASS: [ ]
+Evidence (2026-10-28, Production, Viewport 390x844, QA-Owner mit Seed-Daten): Dashboard, Leads, Customers, Calendar, Tasks, Settings, Pipeline, Team, Billing, Files, Analytics, Activities, Notifications, Trash und Automations ohne horizontalen Überlauf und ohne Konsolenfehler. Die Navigation (Drawer) öffnet und navigiert. Echte Geräte sowie Safari/iOS bleiben ein Test durch den Betreiber.
+
+PASS: [x]
 
 **### B11) Browser Compatibility**
 
@@ -931,29 +933,29 @@ Finding (2026-09-30): PostgreSQL error 42703 previously occurred because `public
 
 **### B14) Email Templates**
 
-- [ ] signup email
-- [ ] password reset email
-- [ ] invitation email
-- [ ] task reminder email
-- [ ] onboarding email
+- [x] signup email (siehe Checkpoint Auth-Mails, Domain closeflowapp.de)
+- [x] password reset email (zugestellt und Reset-Link funktioniert)
+- [x] invitation email (2026-10-28: Einladung per Team-UI an eine iCloud-Adresse, Zustellung vom Betreiber bestätigt)
+- [x] task reminder email (nicht zutreffend: Es gibt keinen E-Mail-Versand für Reminder; Cron `/api/cron/automations` erzeugt In-App-Benachrichtigungen. Einziger Resend-Versand im Code: `sendWorkspaceInviteEmail`)
+- [x] onboarding email (nicht zutreffend: kein Onboarding-Mailversand im Code; Auth-Mails kommen von Supabase Auth)
 
-PASS: [ ]
+PASS: [x]
 
 Status:
 
-NOT YET TESTED
-
-Remaining items depend on whether the respective email features are enabled.
+Alle vorhandenen Mail-Funktionen belegt (Signup, Reset, Einladung). Nicht vorhandene Mail-Features sind als nicht zutreffend markiert.
 
 **### B15) Localization**
 
-- [ ] German translations
-- [ ] English translations
-- [ ] no critical mixed-language screens
-- [ ] date/time formatting
-- [ ] currency formatting
+- [x] German translations (nicht zutreffend: Das Produkt ist bewusst englischsprachig, Locale `en-US` fest verdrahtet. Rechtsseiten sind ausgenommen)
+- [x] English translations (20 Dashboard-Routen geprüft)
+- [x] no critical mixed-language screens (Befund: Einlade-Dialog war deutsch ("Mitglied einladen", "Rolle"); korrigiert in Commit 138aa64)
+- [x] date/time formatting (en-US, Zeitzone Europe/Berlin korrekt, Kalender 23:39 für 22:39 UTC)
+- [x] currency formatting (Befund: Dashboard mischte `de-DE` und `en-US` ("€6,600" vs. "€15.000"); vereinheitlicht auf `en-US` in Commit 138aa64)
 
-PASS: [ ]
+Evidence (2026-10-28): Runtime-Sweep über 20 Routen auf deutsche Wörter ohne Treffer. Mehrsprachige UI ist ein Produktentscheid für später.
+
+PASS: [x]
 
 **### B16) Frontend Quality**
 
@@ -1052,7 +1054,7 @@ Owner:
 - [x] full access (Owner-UI: Team, Rollenänderung, Settings, Billing erreichbar; UI-Test 2026-10-27)
 - [x] workspace settings (nur Owner; Admin/sales_manager/member/viewer blockiert, `owner_id`-Übernahme blockiert; `tests/local-permissions-matrix.mjs`)
 - [x] invitations (Owner alle Rollen, Admin nur nicht-privilegierte; direkte Invite-Inserts gesperrt; Live-Smoke)
-- [ ] admin features
+- [x] admin features (Team-Verwaltung, Rollenwechsel, Einladung per UI mit MFA und Pro-Plan, Settings, Billing; 2026-10-28. Die Plattform-Konsole `/admin` ist nur für `CLOSEFLOW_ADMIN_EMAILS` gedacht und für Nicht-Admins gesperrt ("Access restricted", geprüft). Ein Test mit einem Plattform-Admin-Konto steht aus und wird vom Betreiber mit dem eigenen Konto gemacht)
 
 Admin:
 
@@ -1070,10 +1072,10 @@ PASS: [ ]
 **### B23) Workspace Switching**
 
 - [x] workspace switch (Team-Seite, Auswahl QA Alpha/QA Beta, Rückwechsel getestet)
-- [ ] dashboard updates
+- [ ] dashboard updates (Dashboard-Werte pro Workspace mit echten Daten verifiziert, siehe Befund B23 unten; der UI-Wechsel zwischen zwei befüllten Workspaces direkt auf dem Dashboard wurde nicht separat belegt)
 - [x] leads update (API, Cookie-Wechsel)
 - [x] customers update (Export)
-- [ ] tasks update (nur UI)
+- [x] tasks update (Tasks-Seite: Anlegen, Erledigen und Dashboard-Zähler "Open tasks" und "Overdue" aktualisieren sich, 2026-10-28; Kalender: Meeting anlegen, Persistenz nach Reload)
 - [x] calendar update (API 200 je Workspace)
 - [x] browser refresh after switch (Beta bleibt nach Reload aktiv)
 - [x] no data leakage (fremder Workspace per Cookie/DB-Read leer)
@@ -2692,9 +2694,18 @@ Aktualisierter Stand der genannten Release-Punkte:
 - Nicht belegt, bleibt offen: Dashboard-Werte (beide Workspaces hatten gleiche Summen), Tasks und Calendar mit Daten (keine Testdaten angelegt), Einladung per UI mit echter Mail (durch Live-Smoke serverseitig belegt), „admin features“ des Owners.
 - Befunde (kein Datenleck, Server blockt jeweils): (1) `/admin` rendert die Seitenhülle für Nicht-Plattform-Admins mit „Forbidden“-Meldungen. (2) Viewer sehen Schreib-Buttons (Add Lead, Import, Delete), Aktion wird erst serverseitig mit Hinweis abgelehnt. (3) Admin sieht „Owner“ als wählbare Rolle, der Server lehnt ab. (4) Team-Liste zeigt „Team member“ und UUIDs statt Name oder E-Mail. (5) Mitglieder sehen die Team-Seite mit Workspace-Erstellung.
 - Korrektur der Befunde 1 bis 3 (Commit `96eb7a7`, Production-Deploy `closeflow-29gcctaqn`, 2026-10-27 ca. 21:10 MEZ): `/admin` zeigt Nicht-Plattform-Admins „Access restricted“; Viewer sehen kein „+ Add Lead“, „Import“ und „Delete“, der Lead-Status ist nur noch Anzeige (`readOnly` aus `/api/me/permissions`); die Rolle „Owner“ ist nur noch in der Owner-Zeile wählbar. Live verifiziert mit einem Viewer-Account (danach gelöscht, 0 Reste). Nicht live geprüft: die Rollenauswahl im Team-Dialog für Admins. Befunde 4 und 5 bleiben offen (kosmetisch).
-- Monitoring-Fenster: durch den Code-Deploy **neu gestartet am 2026-10-27 ca. 21:10 MEZ**; 24 h frühestens 2026-10-28 ca. 21:10, 48 h 2026-10-29 ca. 21:10 MEZ.
+- Monitoring-Fenster: durch den Code-Deploy **neu gestartet am 2026-10-27 ca. 21:10 MEZ**; 24 h frühestens 2026-10-28 ca. 21:10, 48 h 2026-10-29 ca. 21:10 MEZ. (Überholt durch den Deploy unten.)
 
-### Aktueller Gesamtstatus (2026-10-27, Abend): weiterhin NO-GO
+### Vollständiger UI-Durchlauf Production (2026-10-28, ca. 00:00 MEZ)
 
-Erledigt: Duplikatschutz (Migration, Code, lokale und Live-Tests), Invite-Rechteeskalation behoben, Live-Smoke und Preview-Smoke ALL PASS, lokale Route-Integration 12/12, AI-Vertragstest 6/6, Backup/Restore getestet.
-Offen: Monitoring-Fenster (24–48 h) mit Sign-off; Stripe Live (Keys, Preis-IDs, Webhook, freigegebene Testzahlung samt Erstattung); Kalendereintrag für das wöchentliche Backup (Samstag ca. 22:00); OAuth/PKCE und Mail-Zustellbarkeit über weitere Anbieter.
+- Durchführung: ein vorbestätigter QA-Owner (TOTP-MFA) mit einem Workspace, 5 Leads, 2 Tasks, 1 Meeting; Browser gegen `www.closeflowapp.de`; danach alles gelöscht (0 Nutzer, Workspaces, Leads, Einladungen, MFA-Faktoren).
+- Belegt: B10 mobil (15 Seiten, 390x844, ohne Überlauf und Konsolenfehler, Drawer-Navigation); Dashboard-Werte stimmen zu den Daten (Pipeline €6,600, Won €15,000, Winrate 50 %, Open Tasks/Overdue); Task anlegen und erledigen; Meeting anlegen und Persistenz nach Reload; Plan-Limit: Einladung auf Free wird mit 429 "team seat limit" abgelehnt; Einladung ohne MFA wird mit 403 "2FA required" abgelehnt; mit MFA und Plan `pro` (Datenbank-Fixture, ohne Zahlung) wird die Einladung angelegt und per Resend zugestellt (vom Betreiber bestätigt). `workspaces.plan` steuert damit die Berechtigungen.
+- Befunde und Fixes (Commit `138aa64`): Tasks-Seite meldete "No workspace found", die Files-Seite "Workspace access required", wenn die in `localStorage` gespeicherte Workspace-ID veraltet war (z. B. Mitgliedschaft entfernt); beide fallen jetzt auf eine gültige Mitgliedschaft zurück. Dashboard mischte `de-DE` und `en-US`; vereinheitlicht. Einlade-Dialog war deutsch; jetzt englisch. Befund 4 (UUIDs statt Namen) war ein Seed-Artefakt (Profile entstehen beim Onboarding), Befund 5 ist gewollt (Limit eigener Workspaces).
+- Nicht behoben (kosmetisch): Der Einlade-Dialog leert das E-Mail-Feld auch nach einem Fehler. `leads.status` hat keinen DB-Check, der Wert `qualified` wird über die API akzeptiert.
+- Deploy: Commit `138aa64`, Production `closeflow-6uhqzdime` Ready ca. 2026-10-27 23:57 MEZ; Live-Smoke ALL PASS, Monitor-Snapshot ohne Befund, Produktion leer.
+- Monitoring-Fenster: **neu gestartet am 2026-10-27 ca. 23:57 MEZ**; 24 h frühestens 2026-10-28 ca. 23:57, 48 h 2026-10-29 ca. 23:57 MEZ.
+
+### Aktueller Gesamtstatus (2026-10-28, nach Mitternacht): weiterhin NO-GO bis Monitoring-Ende
+
+Erledigt: Duplikatschutz, Invite-Rechteeskalation und RLS-Härtung, Live-/Preview-Smoke ALL PASS, lokale Route-Integration, AI-Vertragstest, Backup/Restore getestet, B10, B14, B15, B22 und B23 weitgehend belegt (siehe Einträge).
+Offen: Monitoring-Fenster (24–48 h) mit Sign-off; Stripe Live; Kalendereintrag für das wöchentliche Backup (Samstag ca. 22:00); Test von `/admin` mit Plattform-Admin-Konto; Safari und echte Geräte; OAuth/PKCE und Mail-Zustellbarkeit über weitere Anbieter; Backup/PITR und Alerting (Supabase Free Plan, Hardening).
