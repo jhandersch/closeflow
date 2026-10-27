@@ -2691,6 +2691,8 @@ Aktualisierter Stand der genannten Release-Punkte:
 - Owner (MFA): Rolle eines Admins ändern funktioniert, Billing („Plans & Subscription“) und Settings erreichbar, Owner-Zeile deaktiviert.
 - Nicht belegt, bleibt offen: Dashboard-Werte (beide Workspaces hatten gleiche Summen), Tasks und Calendar mit Daten (keine Testdaten angelegt), Einladung per UI mit echter Mail (durch Live-Smoke serverseitig belegt), „admin features“ des Owners.
 - Befunde (kein Datenleck, Server blockt jeweils): (1) `/admin` rendert die Seitenhülle für Nicht-Plattform-Admins mit „Forbidden“-Meldungen. (2) Viewer sehen Schreib-Buttons (Add Lead, Import, Delete), Aktion wird erst serverseitig mit Hinweis abgelehnt. (3) Admin sieht „Owner“ als wählbare Rolle, der Server lehnt ab. (4) Team-Liste zeigt „Team member“ und UUIDs statt Name oder E-Mail. (5) Mitglieder sehen die Team-Seite mit Workspace-Erstellung.
+- Korrektur der Befunde 1 bis 3 (Commit `96eb7a7`, Production-Deploy `closeflow-29gcctaqn`, 2026-10-27 ca. 21:10 MEZ): `/admin` zeigt Nicht-Plattform-Admins „Access restricted“; Viewer sehen kein „+ Add Lead“, „Import“ und „Delete“, der Lead-Status ist nur noch Anzeige (`readOnly` aus `/api/me/permissions`); die Rolle „Owner“ ist nur noch in der Owner-Zeile wählbar. Live verifiziert mit einem Viewer-Account (danach gelöscht, 0 Reste). Nicht live geprüft: die Rollenauswahl im Team-Dialog für Admins. Befunde 4 und 5 bleiben offen (kosmetisch).
+- Monitoring-Fenster: durch den Code-Deploy **neu gestartet am 2026-10-27 ca. 21:10 MEZ**; 24 h frühestens 2026-10-28 ca. 21:10, 48 h 2026-10-29 ca. 21:10 MEZ.
 
 ### Aktueller Gesamtstatus (2026-10-27, Abend): weiterhin NO-GO
 
