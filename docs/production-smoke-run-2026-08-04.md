@@ -2656,3 +2656,7 @@ Aktualisierter Stand der genannten Release-Punkte:
 - 	ests/live-app-smoke.mjs gegen closeflow-green.vercel.app fand eine Rechteeskalation: Ein Admin konnte über create_workspace_invite_with_limit die Rolle owner einladen (die Migration 20261014170000 hatte den Fix aus Befund E überschrieben). Folgefehler: Seat-Limit beim Accept.
 - Fix: Migration 20261027020000_restrict_privileged_workspace_invites.sql (nur Owner dürfen owner/admin einladen), lokal getestet und mit Freigabe in Production angewendet (Funktions-MD5 identisch zu lokal, Grants unverändert).
 - Erneuter Live-Smoke: **ALL PASS**, Cleanup 0 Workspaces/0 Benutzer. Ein früherer 429 beim Einladungsmail war ein Rate-Limit des Mail-Providers.
+
+### Preview-Smoke (2026-10-27)
+
+- 	ests/preview-smoke.mjs gegen Preview closeflow-4wn04z6zt-jhanderschs-projects.vercel.app (Stand Commit 19af0bf): **12 PASS, ALL PASS** (Auth-Gates 401, Lead-/Kunden-Import inkl. paralleler Importe, Export, Cross-Tenant, Lock-Tabelle nicht lesbar). Cleanup: 0 Wegwerf-Benutzer. Das Bypass-Secret wurde nur als Umgebungsvariable genutzt und nicht gespeichert.
