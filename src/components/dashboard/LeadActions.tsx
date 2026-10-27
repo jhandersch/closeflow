@@ -12,6 +12,7 @@ type LeadActionsProps = {
     email?: string | null;
     onLeadDeleted?: () => void;
     onStatusChanged?: (updatedLead: Lead) => void;
+    readOnly?: boolean;
 };
 const statuses: Array<{
     value: LeadStatus;
@@ -44,7 +45,7 @@ const statuses: Array<{
         color: "bg-red-500/20 text-red-300 border-red-400/30",
     },
 ];
-export default function LeadActions({ leadId, currentStatus, phone, email, onLeadDeleted, onStatusChanged, }: LeadActionsProps) {
+export default function LeadActions({ leadId, currentStatus, phone, email, onLeadDeleted, onStatusChanged, readOnly = false, }: LeadActionsProps) {
     const router = useRouter();
     const [openStatus, setOpenStatus] = useState(false);
     const { changeLeadStatus, deleteLead, } = useLeadActions();
@@ -120,7 +121,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
       </button>
 
       <div className="relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={() => setOpenStatus((prev) => !prev)} className={`
+        <button onClick={() => { if (!readOnly) setOpenStatus((prev) => !prev); }} disabled={readOnly} className={`
             rounded-lg
             border
             px-3
@@ -130,12 +131,12 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           `}>
           {current.en}
 
-          <span className="ml-2">
+          {readOnly ? null : (<span className="ml-2">
             ▾
-          </span>
+          </span>)}
         </button>
 
-        {openStatus && (<div className="
+        {openStatus && !readOnly && (<div className="
               absolute
               z-50
               mt-2
@@ -163,7 +164,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           </div>)}
       </div>
 
-            <button onClick={(e) => {
+            {readOnly ? null : (<button onClick={(e) => {
             e.stopPropagation();
             void handleDelete();
         }} className="
@@ -178,7 +179,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           hover:bg-red-500/20
         ">
         {"Delete"}
-      </button>
+      </button>)}
 
       <button onClick={(e) => {
             e.stopPropagation();

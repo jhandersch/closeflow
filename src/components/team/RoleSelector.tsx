@@ -16,7 +16,7 @@ const roleOptions: Array<{
 ];
 export default function RoleSelector({ value, onChange, disabled }: RoleSelectorProps) {
     return (<select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value as WorkspaceRole)} className="rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none focus:border-cyan-400 disabled:opacity-60">
-      {roleOptions.map((role) => (<option key={role.value} value={role.value}>
+      {roleOptions.filter((role) => role.value !== "owner" || value === "owner").map((role) => (<option key={role.value} value={role.value}>
           {role.label}
         </option>))}
     </select>);

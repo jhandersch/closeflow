@@ -18,6 +18,7 @@ type Permissions = {
     workspaceId: string | null;
     canManageWorkspace: boolean;
     canManageBilling: boolean;
+    readOnly: boolean;
 };
 
 const defaultPermissions: Permissions = {
@@ -27,6 +28,7 @@ const defaultPermissions: Permissions = {
     workspaceId: null,
     canManageWorkspace: false,
     canManageBilling: false,
+    readOnly: false,
 };
 
 export function usePermissions() {

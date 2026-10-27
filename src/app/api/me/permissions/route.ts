@@ -73,6 +73,7 @@ export async function GET(request: Request) {
             ),
             canManageWorkspace: false,
             canManageBilling: false,
+            readOnly: false,
         });
     }
 
@@ -129,5 +130,6 @@ export async function GET(request: Request) {
             role === "admin",
         canManageBilling:
             role === "owner",
+        readOnly: rawRole === "viewer",
     });
 }

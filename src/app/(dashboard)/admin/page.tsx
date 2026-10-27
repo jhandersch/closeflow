@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase/client";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type AdminOverview = {
     users: number;
@@ -35,6 +36,11 @@ type AdminUser = {
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 export default function AdminPage() {
+    const {
+        loading: permissionsLoading,
+        isPlatformAdmin,
+    } = usePermissions();
+
     const [overview, setOverview] =
         useState<AdminOverview | null>(null);
 
@@ -57,6 +63,10 @@ export default function AdminPage() {
         useState(DEFAULT_TIMEZONE);
 
     useEffect(() => {
+        if (permissionsLoading || !isPlatformAdmin) {
+            return;
+        }
+
         const load = async () => {
             setLoading(true);
             setUsersLoading(true);
@@ -149,7 +159,31 @@ export default function AdminPage() {
         };
 
         void load();
-    }, []);
+    }, [permissionsLoading, isPlatformAdmin]);
+
+    if (!permissionsLoading && !isPlatformAdmin) {
+        return (
+            <AuthGuard>
+                <section className="mx-auto max-w-6xl rounded-2xl border border-border-subtle bg-surface-1 p-8">
+                    <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
+                        Admin
+                    </p>
+
+                    <h1 className="mt-2 text-3xl font-bold text-foreground">
+                        Access restricted
+                    </h1>
+
+                    <p className="mt-3 max-w-2xl text-sm text-foreground/60">
+                        Only platform administrators can access this page.
+                    </p>
+
+                    <Link href="/" className="cf-btn-primary mt-6">
+                        Back to dashboard
+                    </Link>
+                </section>
+            </AuthGuard>
+        );
+    }
 
     return (
         <AuthGuard>

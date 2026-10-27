@@ -8,6 +8,7 @@ import LeadFilters from "@/components/dashboard/LeadFilters";
 import { supabase } from "@/lib/supabase/client";
 import { getHealthScore, getPriorityScore, getStaleDays } from "@/lib/scoring";
 import { useLeadsData } from "@/hooks/useLeadsData";
+import { usePermissions } from "@/hooks/usePermissions";
 import LeadPipeline from "@/components/dashboard/LeadPipeline";
 import HealthRing from "@/components/dashboard/HealthRing";
 import PriorityBadge from "@/components/dashboard/PriorityBadge";
@@ -175,6 +176,7 @@ const formatDateTime = (
 export default function LeadsPage() {
     const { leads, setLeads, loading, refreshing, error, refresh } =
     useLeadsData({ activityLimit: 0 });
+    const { readOnly } = usePermissions();
 
     const locale = "en-US";
     const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
@@ -628,9 +630,9 @@ export default function LeadsPage() {
             </div>
 
 
-            <button onClick={() => setShowForm(true)} className="cf-btn-primary">
+            {readOnly ? null : (<button onClick={() => setShowForm(true)} className="cf-btn-primary">
               {"+ Add Lead"}
-            </button>
+            </button>)}
 
             <button onClick={() => void downloadExport("csv")} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85">
               {"Export CSV"}
@@ -640,9 +642,9 @@ export default function LeadsPage() {
               {"Export Excel"}
             </button>
 
-            <button onClick={() => fileInputRef.current?.click()} disabled={importingCsv} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60">
+            {readOnly ? null : (<button onClick={() => fileInputRef.current?.click()} disabled={importingCsv} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60">
               {importingCsv ? ("Importing...") : ("Import File")}
-            </button>
+            </button>)}
 
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" className="hidden" onChange={(event) => {
             const file = event.target.files?.[0];
@@ -1285,7 +1287,7 @@ export default function LeadsPage() {
                     <div onClick={(event) => {
                         event.stopPropagation();
                     }} className="shrink-0">
-                      <LeadActions leadId={lead.id} currentStatus={lead.status} phone={lead.phone} email={lead.email} onLeadDeleted={() => {
+                      <LeadActions leadId={lead.id} readOnly={readOnly} currentStatus={lead.status} phone={lead.phone} email={lead.email} onLeadDeleted={() => {
                         if (leads.length === 1) {
                             setImportIssues([]);
                         }
