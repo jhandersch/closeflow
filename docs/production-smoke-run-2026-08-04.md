@@ -1049,7 +1049,7 @@ PASS: [x]
 
 Owner:
 
-- [ ] full access
+- [x] full access (Owner-UI: Team, Rollenänderung, Settings, Billing erreichbar; UI-Test 2026-10-27)
 - [x] workspace settings (nur Owner; Admin/sales_manager/member/viewer blockiert, `owner_id`-Übernahme blockiert; `tests/local-permissions-matrix.mjs`)
 - [x] invitations (Owner alle Rollen, Admin nur nicht-privilegierte; direkte Invite-Inserts gesperrt; Live-Smoke)
 - [ ] admin features
@@ -1061,7 +1061,7 @@ Admin:
 
 Member/User:
 
-- [ ] permitted pages accessible
+- [x] permitted pages accessible (Member-UI: Leads, Team, Tasks, Calendar, Settings)
 - [x] admin pages blocked (API 403)
 - [x] API authorization enforced
 
@@ -1069,13 +1069,13 @@ PASS: [ ]
 
 **### B23) Workspace Switching**
 
-- [ ] workspace switch
+- [x] workspace switch (Team-Seite, Auswahl QA Alpha/QA Beta, Rückwechsel getestet)
 - [ ] dashboard updates
 - [x] leads update (API, Cookie-Wechsel)
 - [x] customers update (Export)
 - [ ] tasks update (nur UI)
 - [x] calendar update (API 200 je Workspace)
-- [ ] browser refresh after switch (nur UI)
+- [x] browser refresh after switch (Beta bleibt nach Reload aktiv)
 - [x] no data leakage (fremder Workspace per Cookie/DB-Read leer)
 
 PASS: [ ]
@@ -2681,6 +2681,16 @@ Aktualisierter Stand der genannten Release-Punkte:
 - Verifikation danach: Live-Smoke ALL PASS (0 Reste), Monitoring-Snapshot ohne Befunde, Schema-Health 0 Probleme (Soll-Liste auf die neuen Policies angepasst). Lokale Suites ALL PASS: import-export, onboarding-delete, delete-rpc, legacy-invite, stripe-routes, stripe-webhook, lead-duplicates.
 - Monitoring-Fenster: durch diese Production-Änderung **neu gestartet am 2026-10-27 ca. 20:40 MEZ**; 24 h frühestens 2026-10-28 ca. 20:40, 48 h 2026-10-29 ca. 20:40 MEZ.
 - B22/B23: serverseitige Punkte abgehakt. Offen bleiben die manuellen UI-Prüfungen; die PASS-Marker bleiben bis dahin leer.
+
+### UI-Test B22/B23 in Production (2026-10-27, ca. 20:55 MEZ)
+
+- Durchführung: vier vorbestätigte Testaccounts (Owner und Admin mit TOTP-MFA, Member, Viewer) und zwei Workspaces (QA Alpha, QA Beta; Member in beiden) per Admin-API angelegt, im Browser gegen `www.closeflowapp.de` durchgeklickt, danach vollständig gelöscht (Verifikation: 0 Nutzer, MFA-Faktoren, Workspaces, Mitglieder, Leads). Das Monitoring-Fenster ist nicht betroffen, weil nur Testdaten geändert wurden.
+- Member: sieht nur Alpha-Leads, Wechsel auf Beta ersetzt Leads und Mitgliederliste, bleibt nach Reload auf Beta, Rückwechsel funktioniert, kein Alpha-Inhalt in Beta; Billing „Access restricted“; `/api/admin/users` 403.
+- Viewer: Schreibversuch im UI zeigt „Viewers have read-only access to this workspace“, API 403, kein Lead angelegt.
+- Admin (MFA): Rolle eines Mitglieds ändern funktioniert („Role updated“); Owner-Beförderung wird vom Server mit 403 abgelehnt, Mitgliedschaften unverändert; Owner- und eigene Zeile sind deaktiviert.
+- Owner (MFA): Rolle eines Admins ändern funktioniert, Billing („Plans & Subscription“) und Settings erreichbar, Owner-Zeile deaktiviert.
+- Nicht belegt, bleibt offen: Dashboard-Werte (beide Workspaces hatten gleiche Summen), Tasks und Calendar mit Daten (keine Testdaten angelegt), Einladung per UI mit echter Mail (durch Live-Smoke serverseitig belegt), „admin features“ des Owners.
+- Befunde (kein Datenleck, Server blockt jeweils): (1) `/admin` rendert die Seitenhülle für Nicht-Plattform-Admins mit „Forbidden“-Meldungen. (2) Viewer sehen Schreib-Buttons (Add Lead, Import, Delete), Aktion wird erst serverseitig mit Hinweis abgelehnt. (3) Admin sieht „Owner“ als wählbare Rolle, der Server lehnt ab. (4) Team-Liste zeigt „Team member“ und UUIDs statt Name oder E-Mail. (5) Mitglieder sehen die Team-Seite mit Workspace-Erstellung.
 
 ### Aktueller Gesamtstatus (2026-10-27, Abend): weiterhin NO-GO
 
