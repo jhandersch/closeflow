@@ -196,7 +196,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           text-xs
           text-cyan-300
         ">
-        {translateText("Open")}
+        {translateText("Open lead")}
       </button>
     </div>);
 }

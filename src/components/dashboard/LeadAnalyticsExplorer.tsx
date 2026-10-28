@@ -157,7 +157,7 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
               {filteredLeads.map(({ lead, score, staleDays, personalCosts, netValue }) => (
                 <tr key={lead.id} role="button" tabIndex={0} aria-selected={selectedId === lead.id} onClick={() => setSelectedId(lead.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(lead.id); } }} className={`cursor-pointer border-t border-border-subtle text-foreground/75 hover:bg-foreground/[0.03] ${selectedId === lead.id ? "bg-cyan-500/[0.07]" : ""}`}>
                   <td className="px-4 py-3"><span className="font-medium text-foreground">{lead.name}</span><span className="mt-0.5 block text-xs text-foreground/50">{lead.company || translateText("No company")}</span></td>
-                  <td className="px-4 py-3">{statusLabel[lead.status]}</td>
+                  <td className="px-4 py-3">{translateText(statusLabel[lead.status], language)}</td>
                   <td className="px-4 py-3">{money(netValue)}{personalCosts > 0 ? <span className="mt-0.5 block text-xs text-foreground/45">{translateText("gross")}{" "}{money(Number(lead.value || 0))}</span> : null}</td>
                   <td className="px-4 py-3">{score.probability}%</td>
                   <td className="px-4 py-3">{score.health}%</td>
@@ -172,7 +172,7 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
         {selected ? (
           <div className="rounded-xl border border-border-subtle bg-surface-2/40 p-5">
             <div className="flex items-start justify-between gap-3">
-              <div><p className="text-xs uppercase tracking-wide text-cyan-300">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Selected customer") : translateText("Selected lead")}</p><h3 className="mt-1 text-lg font-semibold text-foreground">{selected.lead.name}</h3><p className="text-sm text-foreground/55">{selected.lead.company || translateText("No company")} · {statusLabel[selected.lead.status]}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-cyan-300">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Selected customer") : translateText("Selected lead")}</p><h3 className="mt-1 text-lg font-semibold text-foreground">{selected.lead.name}</h3><p className="text-sm text-foreground/55">{selected.lead.company || translateText("No company")} · {translateText(statusLabel[selected.lead.status], language)}</p></div>
               <Link href={selected.lead.status === "won" || selected.lead.status === "lost" ? `/customers/${encodeURIComponent(selected.lead.company?.trim() ? selected.lead.company.trim().toLowerCase() : `private:${selected.lead.id}`)}` : `/leads/${selected.lead.id}`} className="shrink-0 rounded-lg border border-border-subtle px-3 py-2 text-xs text-foreground/75 hover:bg-foreground/5">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Open customer") : translateText("Open lead")}</Link>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">

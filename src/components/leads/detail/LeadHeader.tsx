@@ -120,7 +120,7 @@ text-sm
 font-medium
 text-green-300
 ">
-    {lead.status.toUpperCase()}
+    {translateText(lead.status)}
     </span>
 
 
