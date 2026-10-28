@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { getIntlLocale } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { usePriorityAI } from "@/hooks/usePriorityAI";
@@ -301,7 +302,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
 
                   <span className="font-semibold text-purple-400">
 
-                    €{lead.value.toLocaleString("en-US")}
+                    €{lead.value.toLocaleString(getIntlLocale())}
 
                   </span>
 

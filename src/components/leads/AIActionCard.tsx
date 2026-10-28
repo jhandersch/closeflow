@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 type Props = {
@@ -47,8 +49,7 @@ export default function AIActionCard({ leadId, action, description, }: Props) {
       ">
 
       <p className="text-xs uppercase tracking-widest text-cyan-400">
-        AI Recommended Action
-      </p>
+        {translateText("AI Recommended Action")}</p>
 
 
       <h3 className="mt-2 text-xl font-bold text-foreground">
@@ -63,10 +64,10 @@ export default function AIActionCard({ leadId, action, description, }: Props) {
 
       <button disabled={loading || done} onClick={completeAction}       className="cf-btn-primary mt-4">
               {loading
-            ? "Saving..."
+            ? translateText("Saving...")
             : done
-                ? "Completed"
-                : "Mark completed"}
+                ? translateText("Completed")
+                : translateText("Mark completed")}
 
       </button>
 

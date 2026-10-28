@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 
 const MAX_TEXT_LENGTH = 12_000;
 const ALLOWED_TONES = new Set([
@@ -34,6 +35,8 @@ export async function POST(request: Request) {
     }
 
     const text = typeof body.text === "string" ? body.text.trim() : "";
+    const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
+    const responseLanguage = language === "de" ? "German" : "English";
     const tone = typeof body.tone === "string" ? body.tone.trim() : "professional";
 
     if (!text) {
@@ -78,7 +81,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `Rewrite the email text in a ${tone} tone. Return JSON only with a single key called text.`,
+                    content: `Rewrite the email text in a ${tone} tone in ${responseLanguage}. Return JSON only with a single key called text.`,
                 },
                 {
                     role: "user",

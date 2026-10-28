@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 export function parseCsvDocument(csv: string, delimiter: "," | ";"): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -37,7 +38,7 @@ export function parseCsvDocument(csv: string, delimiter: "," | ";"): string[][] 
   }
 
   if (inQuotes) {
-    throw new Error("CSV contains an unterminated quoted field.");
+    throw new Error(translateText("CSV contains an unterminated quoted field."));
   }
 
   if (current !== "" || row.length > 0) {

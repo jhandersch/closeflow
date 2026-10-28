@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import { X, Send, Mail } from "lucide-react";
@@ -29,14 +31,14 @@ export function EmailComposeModal({
     const trimmedBody = body.trim();
 
     if (!trimmedTo || !trimmedSubject || !trimmedBody) {
-      toast.error("Fill in all fields before sending.");
+      toast.error(translateText("Fill in all fields before sending."));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(trimmedTo)) {
-      toast.error("Enter a valid email address.");
+      toast.error(translateText("Enter a valid email address."));
       return;
     }
 
@@ -78,7 +80,7 @@ export function EmailComposeModal({
       onSent?.();
       onClose();
     } catch {
-      toast.error("Failed to log email.");
+      toast.error(translateText("Failed to log email."));
     } finally {
       setSending(false);
     }
@@ -90,7 +92,7 @@ export function EmailComposeModal({
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-cyan-300">
             <Mail size={18} />
-            <span className="text-sm font-semibold">Compose email</span>
+            <span className="text-sm font-semibold">{translateText("Compose email")}</span>
           </div>
 
           <button
@@ -105,41 +107,38 @@ export function EmailComposeModal({
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">
-              To
-            </label>
+              {translateText("To")}</label>
 
             <input
               type="email"
               value={to}
               onChange={(event) => setTo(event.target.value)}
-              placeholder="contact@example.com"
+              placeholder={translateText("contact@example.com")}
               className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-foreground/35 focus:border-cyan-500/50"
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">
-              Subject
-            </label>
+              {translateText("Subject")}</label>
 
             <input
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              placeholder="Following up on our conversation"
+              placeholder={translateText("Following up on our conversation")}
               className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-foreground/35 focus:border-cyan-500/50"
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">
-              Message
-            </label>
+              {translateText("Message")}</label>
 
             <textarea
               value={body}
               onChange={(event) => setBody(event.target.value)}
               rows={6}
-              placeholder="Write your email here..."
+              placeholder={translateText("Write your email here...")}
               className="w-full resize-none rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-foreground/35 focus:border-cyan-500/50"
             />
           </div>
@@ -151,8 +150,7 @@ export function EmailComposeModal({
             onClick={onClose}
             className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/65 transition hover:bg-foreground/5"
           >
-            Cancel
-          </button>
+            {translateText("Cancel")}</button>
 
           <button
             type="button"
@@ -161,7 +159,7 @@ export function EmailComposeModal({
             className="cf-btn-primary"
           >
             <Send size={14} />
-            {sending ? "Logging..." : "Send and log"}
+            {sending ? translateText("Logging...") : translateText("Send and log")}
           </button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type PriorityBadgeProps = {
     score: number;
 };
@@ -22,7 +23,6 @@ export default function PriorityBadge({ score, }: PriorityBadgeProps) {
       </p>
 
       <p className="text-xs text-foreground/55">
-        Priority
-      </p>
+        {translateText("Priority")}</p>
     </div>);
 }

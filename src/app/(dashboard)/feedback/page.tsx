@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
@@ -43,7 +45,7 @@ const npsCategory = (rating: number) => {
 
 const isValidTimeZone = (value: string) => {
   try {
-    Intl.DateTimeFormat("en-US", {
+    Intl.DateTimeFormat(getIntlLocale(), {
       timeZone: value,
     });
 
@@ -88,7 +90,7 @@ const relativeTime = (
   );
 
   if (submittedDate === today) {
-    return "today";
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(0, "day");
   }
 
   const [year, month, day] = today
@@ -117,10 +119,10 @@ const relativeTime = (
   );
 
   if (days === 1) {
-    return "yesterday";
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-1, "day");
   }
 
-  return `${Math.max(0, days)}d ago`;
+  return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-Math.max(0, days), "day");
 };
 
 export default function FeedbackInboxPage() {
@@ -249,23 +251,19 @@ export default function FeedbackInboxPage() {
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Feedback
-          </p>
+            {translateText("Feedback")}</p>
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Customer Feedback Inbox
-          </h1>
+            {translateText("Customer Feedback Inbox")}</h1>
 
           <p className="mt-1 text-sm text-foreground/60">
-            Collect and review feedback from your customers.
-          </p>
+            {translateText("Collect and review feedback from your customers.")}</p>
         </div>
 
         {feedbackUrl ? (
           <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/8 px-5 py-4">
             <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">
-              Your feedback link
-            </p>
+              {translateText("Your feedback link")}</p>
 
             <p className="mt-1 break-all font-mono text-sm text-foreground/85">
               {feedbackUrl}
@@ -274,13 +272,12 @@ export default function FeedbackInboxPage() {
             <button
               onClick={() => {
                 void copyTextToClipboard(feedbackUrl)
-                  .then(() => toast.success("Link copied"))
-                  .catch(() => toast.error("Could not copy the link. Please copy it manually."));
+                  .then(() => toast.success(translateText("Link copied")))
+                  .catch(() => toast.error(translateText("Could not copy the link. Please copy it manually.")));
               }}
               className="mt-2 rounded-lg border border-cyan-500/30 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/15"
             >
-              Copy link
-            </button>
+              {translateText("Copy link")}</button>
           </div>
         ) : null}
 
@@ -288,8 +285,7 @@ export default function FeedbackInboxPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
               <p className="text-xs text-foreground/55">
-                Total responses
-              </p>
+                {translateText("Total responses")}</p>
 
               <p className="mt-2 text-2xl font-bold text-foreground">
                 {items.length}
@@ -298,8 +294,7 @@ export default function FeedbackInboxPage() {
 
             <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
               <p className="text-xs text-foreground/55">
-                Avg rating
-              </p>
+                {translateText("Avg rating")}</p>
 
               <p className="mt-2 text-2xl font-bold text-foreground">
                 {avgRating}/10
@@ -308,8 +303,7 @@ export default function FeedbackInboxPage() {
 
             <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
               <p className="text-xs text-foreground/55">
-                NPS Score
-              </p>
+                {translateText("NPS Score")}</p>
 
               <p
                 className={`mt-2 text-2xl font-bold ${
@@ -331,14 +325,12 @@ export default function FeedbackInboxPage() {
 
         {loading ? (
           <p className="text-sm text-foreground/60">
-            Loading feedback...
-          </p>
+            {translateText("Loading feedback...")}</p>
         ) : null}
 
         {!loading && items.length === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-10 text-center text-sm text-foreground/50">
-            No feedback received yet. Share your feedback link with customers to get started.
-          </div>
+            {translateText("No feedback received yet. Share your feedback link with customers to get started.")}</div>
         ) : null}
 
         <div className="space-y-3">

@@ -1,8 +1,12 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AuthGuard from "@/components/AuthGuard";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 
 type ProfilePayload = {
   full_name: string;
@@ -24,7 +28,7 @@ const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 function isValidTimeZone(timeZone: string): boolean {
   try {
-    new Intl.DateTimeFormat("en-US", {
+    new Intl.DateTimeFormat(getIntlLocale(), {
       timeZone,
     }).format();
 
@@ -35,6 +39,7 @@ function isValidTimeZone(timeZone: string): boolean {
 }
 
 export default function ProfileSettingsPage() {
+  const { language: appLanguage, setLanguage: setAppLanguage } = useAppPreferences();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -44,7 +49,7 @@ export default function ProfileSettingsPage() {
     company_name: "",
     phone: "",
     timezone: DEFAULT_TIMEZONE,
-    language: "en",
+    language: appLanguage,
   });
 
   useEffect(() => {
@@ -55,7 +60,7 @@ export default function ProfileSettingsPage() {
         });
 
         if (!response.ok) {
-          throw new Error("Could not load profile.");
+          throw new Error(translateText("Could not load profile."));
         }
 
         const data = await response.json();
@@ -71,10 +76,10 @@ export default function ProfileSettingsPage() {
           company_name: data.company || data.company_name || "",
           phone: data.phone || "",
           timezone: storedTimezone,
-          language: "en",
+          language: normalizeLanguage(data.language),
         });
       } catch {
-        toast.error("Could not load profile.");
+        toast.error(translateText("Could not load profile."));
       } finally {
         setLoading(false);
       }
@@ -99,7 +104,7 @@ export default function ProfileSettingsPage() {
     try {
       const payload: ProfilePayload = {
         ...profile,
-        language: "en",
+        language: profile.language,
         timezone: isValidTimeZone(profile.timezone)
           ? profile.timezone
           : DEFAULT_TIMEZONE,
@@ -124,8 +129,9 @@ export default function ProfileSettingsPage() {
       }
 
       setProfile(payload);
+      setAppLanguage(normalizeLanguage(payload.language));
 
-      toast.success("Profile saved");
+      toast.success(translateText("Profile saved"));
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -140,7 +146,7 @@ export default function ProfileSettingsPage() {
   if (loading) {
     return (
       <AuthGuard>
-        <div className="text-foreground">Loading profile...</div>
+        <div className="text-foreground">{translateText("Loading profile...")}</div>
       </AuthGuard>
     );
   }
@@ -150,23 +156,18 @@ export default function ProfileSettingsPage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Profile
-          </p>
+            {translateText("Profile")}</p>
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Manage your personal details
-          </h1>
+            {translateText("Manage your personal details")}</h1>
 
           <p className="mt-2 text-sm text-foreground/65">
-            Manage your profile, company details, and preferences.
-          </p>
+            {translateText("Manage your profile, company details, and preferences.")}</p>
         </div>
 
         <div className="space-y-6 rounded-2xl border border-border-subtle bg-surface-1 p-6">
           <label className="block text-sm text-foreground/70">
-            Name
-
-            <input
+            {translateText("Name")}<input
               value={profile.full_name}
               onChange={(event) =>
                 updateField("full_name", event.target.value)
@@ -177,24 +178,20 @@ export default function ProfileSettingsPage() {
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Avatar URL
-
-            <input
+            {translateText("Avatar URL")}<input
               value={profile.avatar_url}
               onChange={(event) =>
                 updateField("avatar_url", event.target.value)
               }
               type="url"
               autoComplete="url"
-              placeholder="https://..."
+              placeholder={translateText("https://...")}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             />
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Company
-
-            <input
+            {translateText("Company")}<input
               value={profile.company_name}
               onChange={(event) =>
                 updateField("company_name", event.target.value)
@@ -205,9 +202,7 @@ export default function ProfileSettingsPage() {
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Phone
-
-            <input
+            {translateText("Phone")}<input
               value={profile.phone}
               onChange={(event) =>
                 updateField("phone", event.target.value)
@@ -219,9 +214,7 @@ export default function ProfileSettingsPage() {
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Timezone
-
-            <select
+            {translateText("Timezone")}<select
               value={profile.timezone}
               onChange={(event) =>
                 updateField("timezone", event.target.value)
@@ -238,8 +231,7 @@ export default function ProfileSettingsPage() {
 
           <div className="flex items-center justify-between gap-4 pt-2">
             <p className="text-xs text-foreground/50">
-              Your profile preferences are saved to your CloseFlow account.
-            </p>
+              {translateText("Your profile preferences are saved to your CloseFlow account.")}</p>
 
             <button
               type="button"
@@ -247,7 +239,7 @@ export default function ProfileSettingsPage() {
               disabled={saving}
               className="cf-btn-primary"
             >
-              {saving ? "Saving..." : "Save profile"}
+              {saving ? translateText("Saving...") : translateText("Save profile")}
             </button>
           </div>
         </div>

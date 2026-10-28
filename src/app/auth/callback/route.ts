@@ -41,7 +41,7 @@ async function syncProfile(supabase: any, user: any) {
         avatar_url: metadata.avatar_url ||
             metadata.picture ||
             "",
-        language: "en",
+        language: metadata.language === "en" ? "en" : "de",
         role: "owner",
     });
 }

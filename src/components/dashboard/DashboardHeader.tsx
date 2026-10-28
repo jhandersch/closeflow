@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getIntlLocale } from "@/lib/i18n";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -17,7 +19,7 @@ type DashboardHeaderProps = {
 
 const isValidTimeZone = (value: string) => {
   try {
-    Intl.DateTimeFormat("en-US", {
+    Intl.DateTimeFormat(getIntlLocale(), {
       timeZone: value,
     });
 
@@ -52,10 +54,10 @@ export default function DashboardHeader({
   const [timezone, setTimezone] =
     useState(DEFAULT_TIMEZONE);
 
-  const locale = "en-US";
+  const locale = getIntlLocale();
 
   const hour = Number(
-    new Intl.DateTimeFormat("en-US", {
+    new Intl.DateTimeFormat(getIntlLocale(), {
       timeZone: timezone,
       hour: "numeric",
       hourCycle: "h23",

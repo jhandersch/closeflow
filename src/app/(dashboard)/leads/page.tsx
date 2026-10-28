@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { readApiError } from "@/lib/apiError";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -85,7 +87,7 @@ const getTimezoneOffsetMs = (
     date: Date,
     timeZone: string,
 ) => {
-    const parts = new Intl.DateTimeFormat("en-US", {
+    const parts = new Intl.DateTimeFormat(getIntlLocale(), {
         timeZone,
         year: "numeric",
         month: "2-digit",
@@ -166,7 +168,7 @@ const formatDateTime = (
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone,
@@ -178,7 +180,7 @@ export default function LeadsPage() {
     useLeadsData({ activityLimit: 0 });
     const { readOnly } = usePermissions();
 
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
     const todayKey = getDateKey(new Date(), timezone);
     const router = useRouter();
@@ -439,7 +441,7 @@ export default function LeadsPage() {
                         const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
                         const firstSheet = workbook.SheetNames[0];
                         if (!firstSheet) {
-                            throw new Error("Import failed: workbook has no sheets.");
+                            throw new Error(translateText("Import failed: workbook has no sheets."));
                         }
                         return XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet]);
                     };
@@ -606,9 +608,9 @@ export default function LeadsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{"Leads"}</p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{"Manage opportunities and follow-ups"}</h1>
-            <p className="mt-2 text-sm text-foreground/65">{"Search, filter, sort, and follow up on the right opportunities."}</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{translateText("Leads")}</p>
+            <h1 className="mt-2 text-3xl font-bold text-foreground">{translateText("Manage opportunities and follow-ups")}</h1>
+            <p className="mt-2 text-sm text-foreground/65">{translateText("Search, filter, sort, and follow up on the right opportunities.")}</p>
           </div>
 
           <div className="flex gap-3">
@@ -618,32 +620,31 @@ export default function LeadsPage() {
               <button onClick={() => setView("list")} className={`px-4 py-2 rounded-lg text-sm ${view === "list"
             ? "bg-foreground text-background"
             : "text-foreground/65"}`}>
-                {"List"}
+                {translateText("List")}
               </button>
 
               <button onClick={() => setView("pipeline")} className={`px-4 py-2 rounded-lg text-sm ${view === "pipeline"
             ? "bg-foreground text-background"
             : "text-foreground/65"}`}>
-                Pipeline
-              </button>
+                {translateText("Pipeline")}</button>
 
             </div>
 
 
             {readOnly ? null : (<button onClick={() => setShowForm(true)} className="cf-btn-primary">
-              {"+ Add Lead"}
+              {translateText("+ Add Lead")}
             </button>)}
 
             <button onClick={() => void downloadExport("csv")} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85">
-              {"Export CSV"}
+              {translateText("Export CSV")}
             </button>
 
             <button onClick={() => void downloadExport("xlsx")} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85">
-              {"Export Excel"}
+              {translateText("Export Excel")}
             </button>
 
             {readOnly ? null : (<button onClick={() => fileInputRef.current?.click()} disabled={importingCsv} className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 font-medium text-foreground/85 disabled:opacity-60">
-              {importingCsv ? ("Importing...") : ("Import File")}
+              {importingCsv ? (translateText("Importing...")) : (translateText("Import File"))}
             </button>)}
 
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" className="hidden" onChange={(event) => {
@@ -655,20 +656,19 @@ export default function LeadsPage() {
         }}/>
 
             {importIssues.length ? (<button onClick={downloadImportIssuesReport} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 font-medium text-amber-200">
-                {"Download Import Issues"}
+                {translateText("Download Import Issues")}
               </button>) : null}
 
           </div>
 
           <details className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
             <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
-              Spreadsheet import format
-              <span className="ml-2 text-xs font-normal text-foreground/50">View required columns and examples</span>
+              {translateText("Spreadsheet import format")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
             </summary>
             <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
               <Image
                 src="/lead-import-guide.png"
-                alt="Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format."
+                alt={translateText("Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format.")}
                 width={1600}
                 height={900}
                 className="h-auto w-full"
@@ -676,21 +676,20 @@ export default function LeadsPage() {
               />
             </div>
             <a href="/lead-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
-              Download PNG guide
-            </a>
+              {translateText("Download PNG guide")}</a>
           </details>
           
         </div>
 
         {error ? (<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-            <span>{"We couldn’t load your leads."} {error}</span>
+            <span>{translateText("We couldn’t load your leads.")} {error}</span>
             <button
               type="button"
               onClick={() => void refresh()}
               disabled={refreshing}
               className="rounded-xl border border-rose-200/30 px-4 py-2 font-medium text-rose-100 transition hover:bg-rose-100/10 disabled:cursor-wait disabled:opacity-60"
             >
-              {refreshing ? "Retrying..." : "Retry"}
+              {refreshing ? translateText("Retrying...") : translateText("Retry")}
             </button>
           </div>) : null}
 
@@ -699,14 +698,14 @@ export default function LeadsPage() {
         <div className="grid gap-4 md:grid-cols-4">
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{"Total Leads"}</p>
+            <p className="text-sm text-foreground/65">{translateText("Total Leads")}</p>
             <p className="mt-2 text-3xl font-bold text-foreground">
               {filteredLeads.length}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{"Pipeline Value"}</p>
+            <p className="text-sm text-foreground/65">{translateText("Pipeline Value")}</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">
               €
               {filteredLeads
@@ -716,14 +715,14 @@ export default function LeadsPage() {
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{"Average Health"}</p>
+            <p className="text-sm text-foreground/65">{translateText("Average Health")}</p>
             <p className="mt-2 text-3xl font-bold text-cyan-400">
               {Math.round(filteredLeads.reduce((sum, lead) => sum + getHealthScore(lead), 0) / Math.max(filteredLeads.length, 1))}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-            <p className="text-sm text-foreground/65">{"Forecast Revenue"}</p>
+            <p className="text-sm text-foreground/65">{translateText("Forecast Revenue")}</p>
 
             <p className="mt-2 text-3xl font-bold text-purple-400">
               €
@@ -748,33 +747,33 @@ export default function LeadsPage() {
             {formError ? <p className="mb-3 text-sm text-rose-300">{formError}</p> : null}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={name} onChange={(event) => setName(event.target.value)} placeholder={translateText("Name")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder={"Company"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <input value={value} onChange={(event) => setValue(event.target.value)} placeholder={"Value"} type="number" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value as LeadStatus)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none">
-                <option value="new">{"New"}</option>
-                <option value="contacted">{"Contacted"}</option>
-                <option value="proposal">{"Proposal"}</option>
-                <option value="won">{"Won"}</option>
-                <option value="lost">{"Lost"}</option>
+                <option value="new">{translateText("New")}</option>
+                <option value="contacted">{translateText("Contacted")}</option>
+                <option value="proposal">{translateText("Proposal")}</option>
+                <option value="won">{translateText("Won")}</option>
+                <option value="lost">{translateText("Lost")}</option>
               </select>
 
               <select value={leadSource} onChange={(event) => setLeadSource(event.target.value as LeadSource)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none">
-                <option value="website">{"Website"}</option>
-                <option value="recommendation">{"Recommendation"}</option>
-                <option value="phone">{"Phone"}</option>
-                <option value="advertising">{"Advertising"}</option>
-                <option value="other">{"Other"}</option>
+                <option value="website">{translateText("Website")}</option>
+                <option value="recommendation">{translateText("Recommendation")}</option>
+                <option value="phone">{translateText("Phone")}</option>
+                <option value="advertising">{translateText("Advertising")}</option>
+                <option value="other">{translateText("Other")}</option>
               </select>
 
-              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" type="email" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder={translateText("Email")} type="email" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder={translateText("Phone")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="Website" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder={translateText("Website")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={"Tags (comma separated)"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
@@ -788,14 +787,14 @@ export default function LeadsPage() {
 
             <div className="mt-4 flex flex-wrap gap-3">
               <button onClick={() => void createLead()} disabled={submitting} className="rounded-xl bg-foreground px-4 py-2 font-medium text-background disabled:opacity-60">
-                {submitting ? ("Creating...") : ("Create lead")}
+                {submitting ? (translateText("Creating...")) : (translateText("Create lead"))}
               </button>
 
               <button onClick={() => {
                 setShowForm(false);
                 setFormError(null);
             }} className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground/80">
-                {"Cancel"}
+                {translateText("Cancel")}
               </button>
             </div>
           </div>) : null}
@@ -861,7 +860,7 @@ export default function LeadsPage() {
                 font-semibold
                 text-foreground
               ">
-                {"No leads found"}
+                {translateText("No leads found")}
               </h3>
 
               <p className="
@@ -869,12 +868,12 @@ export default function LeadsPage() {
                 text-sm
                 text-foreground/65
               ">
-                {"Create your first opportunity and start building your pipeline."}
+                {translateText("Create your first opportunity and start building your pipeline.")}
               </p>
 
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <button onClick={() => setShowForm(true)} className="rounded-xl bg-foreground px-5 py-2 font-medium text-background">
-                  {"Create First Lead"}
+                  {translateText("Create First Lead")}
                 </button>
 
                 <button onClick={async () => {
@@ -913,9 +912,9 @@ export default function LeadsPage() {
             }} disabled={demoLoading} className="rounded-xl border border-border-subtle bg-surface-2/70 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5 disabled:opacity-60">
                   {demoLoading
                 ?
-                    "Loading demo data..."
+                    translateText("Loading demo data...")
                 :
-                    "Load Demo Data"}
+                    translateText("Load Demo Data")}
                 </button>
               </div>
 
@@ -942,7 +941,7 @@ export default function LeadsPage() {
                 font-semibold
                 text-foreground
               ">
-                {"No leads found"}
+                {translateText("No leads found")}
               </h3>
 
               <p className="
@@ -950,7 +949,7 @@ export default function LeadsPage() {
                 text-sm
                 text-foreground/65
               ">
-                {"No leads match your current search or filters."}
+                {translateText("No leads match your current search or filters.")}
               </p>
 
               <button onClick={() => {
@@ -974,17 +973,16 @@ export default function LeadsPage() {
                   transition
                   hover:bg-foreground/5
                 ">
-                {"Clear filters"}
+                {translateText("Clear filters")}
               </button>
             </div>)) : (view === "list" ? (<div className="space-y-3">
             {filteredLeads.length > LEADS_PER_PAGE ? (
               <nav
-                aria-label="Lead list pagination"
+                aria-label={translateText("Lead list pagination")}
                 className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <p className="text-sm text-foreground/65" aria-live="polite">
-                  Showing {firstVisibleLead}–{lastVisibleLead} of {filteredLeads.length} leads
-                </p>
+                  {translateText("Showing")}{firstVisibleLead}–{lastVisibleLead} {" "}{translateText("of")}{" "}{filteredLeads.length} {translateText("leads")}</p>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -992,10 +990,9 @@ export default function LeadsPage() {
                     disabled={visiblePage === 1}
                     className="rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground/80 transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Previous
-                  </button>
+                    {translateText("Previous")}</button>
                   <span className="min-w-24 text-center text-sm text-foreground/65" aria-current="page">
-                    Page {visiblePage} of {totalPages}
+                    {translateText("Page")}{visiblePage} {" "}{translateText("of")}{" "}{totalPages}
                   </span>
                   <button
                     type="button"
@@ -1003,8 +1000,7 @@ export default function LeadsPage() {
                     disabled={visiblePage === totalPages}
                     className="rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground/80 transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Next
-                  </button>
+                    {translateText("Next")}</button>
                 </div>
               </nav>
             ) : null}
@@ -1105,7 +1101,7 @@ export default function LeadsPage() {
                     <div className="flex shrink-0 items-center gap-3">
                       <div className="text-right">
                         <p className="text-xs text-foreground/45">
-                          {"Deal value"}
+                          {translateText("Deal value")}
                         </p>
 
                         <p className="mt-0.5 text-base font-bold text-foreground">
@@ -1136,8 +1132,7 @@ export default function LeadsPage() {
                     {/* PRIORITY */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        Priority
-                      </p>
+                        {translateText("Priority")}</p>
 
                       <div className="mt-2">
                         <PriorityBadge score={priority}/>
@@ -1147,8 +1142,7 @@ export default function LeadsPage() {
                     {/* HEALTH */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        Health
-                      </p>
+                        {translateText("Health")}</p>
 
                       <div className="mt-1">
                         <HealthRing value={health}/>
@@ -1158,7 +1152,7 @@ export default function LeadsPage() {
                     {/* PROBABILITY */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        {"Close chance"}
+                        {translateText("Close chance")}
                       </p>
 
                       <div className="mt-2 flex items-end gap-2">
@@ -1177,17 +1171,17 @@ export default function LeadsPage() {
                       p-3
                     ">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-purple-300/70">
-                        {"AI signal"}
+                        {translateText("AI signal")}
                       </p>
 
                       <p className="mt-2 text-sm font-semibold text-foreground">
                         {staleDays > 14
-                        ? ("Needs attention")
+                        ? (translateText("Needs attention"))
                         : probability > 80
-                            ? ("Strong closing signal")
+                            ? (translateText("Strong closing signal"))
                             : probability > 60
-                                ? ("Positive momentum")
-                                : ("Nurturing required")}
+                                ? (translateText("Positive momentum"))
+                                : (translateText("Nurturing required"))}
                       </p>
                     </div>
                   </div>
@@ -1209,12 +1203,12 @@ export default function LeadsPage() {
                   ">
                     <div className="min-w-0">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        {"Next action"}
+                        {translateText("Next action")}
                       </p>
 
                       <p className="mt-1 truncate text-sm font-medium text-foreground">
                         {lead.next_action ||
-                        ("No action planned")}
+                        (translateText("No action planned"))}
                       </p>
                     </div>
 
@@ -1240,7 +1234,7 @@ export default function LeadsPage() {
                         : "bg-emerald-500/10 text-emerald-400"
                 }`}
             >
-                Due{" "}
+                {translateText("Due")}{" "}
                 {formatDateTime(
                     lead.next_action_date,
                     timezone,
@@ -1250,8 +1244,7 @@ export default function LeadsPage() {
     })()
 ) : (
     <span className="shrink-0 text-xs text-foreground/35">
-        No date
-    </span>
+        {translateText("No date")}</span>
 )}
                   </div>
 
@@ -1268,7 +1261,7 @@ export default function LeadsPage() {
                     {/* LAST ACTIVITY */}
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-foreground/45">
-                        {"Last activity"}
+                        {translateText("Last activity")}
                       </span>
 
                       <span className={staleDays > 14
@@ -1277,7 +1270,7 @@ export default function LeadsPage() {
                             ? "font-semibold text-yellow-400"
                             : "font-semibold text-emerald-400"}>
                         {staleDays === 0
-                        ? ("Today")
+                        ? (translateText("Today"))
                         :
                             `${staleDays} days ago`}
                       </span>

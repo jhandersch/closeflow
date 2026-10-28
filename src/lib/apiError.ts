@@ -1,4 +1,5 @@
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { translateText } from "@/lib/i18n";
 
 const MAX_MESSAGE_LENGTH = 200;
 
@@ -64,18 +65,18 @@ export function toDisplayMessage(
   message = message.trim();
 
   if (!message || message.length > MAX_MESSAGE_LENGTH) {
-    return fallback;
+    return translateText(fallback);
   }
 
   if (/two-factor authentication required/i.test(message)) {
-    return TWO_FACTOR_MESSAGE;
+    return translateText(TWO_FACTOR_MESSAGE);
   }
 
   if (/row-level security|violates row-level|permission denied/i.test(message)) {
-    return getUserFacingErrorMessage(message, fallback);
+    return translateText(getUserFacingErrorMessage(message, fallback));
   }
 
-  return message;
+  return translateText(message);
 }
 
 /**

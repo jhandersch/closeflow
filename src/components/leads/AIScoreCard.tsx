@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type AIScoreCardProps = {
     score: number;
@@ -47,8 +49,7 @@ export default function AIScoreCard({ score, health, probability, risk, recommen
 
 
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-          AI
-        </div>
+          {translateText("AI")}</div>
 
       </div>
 

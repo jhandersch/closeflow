@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type AIInsightCardProps = {
     insight: {
@@ -23,8 +25,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
         <div className="flex gap-4">
 
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-            AI
-          </div>
+            {translateText("AI")}</div>
 
 
           <div>
@@ -50,7 +51,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
 
         <div className={`rounded-full border px-4 py-2 text-sm font-semibold ${confidenceColor}`}>
-          {insight.confidence} {t("ai.confidenceLabel", "confidence")}
+          {translateText(insight.confidence)} {t("ai.confidenceLabel", "confidence")}
         </div>
 
 

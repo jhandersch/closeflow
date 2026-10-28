@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import type { RevenueForecastInsight } from "@/types";
 type Props = {
     insight: RevenueForecastInsight | null;
@@ -9,23 +10,18 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
         return (<section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border-subtle bg-surface-2 text-amber-300">
-            AI
-          </div>
+            {translateText("AI")}</div>
 
           <div>
             <h3 className="font-semibold text-amber-200">
-              AI request limit reached
-            </h3>
+              {translateText("AI request limit reached")}</h3>
 
             <p className="mt-1 text-sm text-amber-200/70">
               {error}
             </p>
 
             <p className="mt-3 text-sm text-foreground/60">
-              The AI analysis will be available again when
-              your monthly AI request limit resets or your
-              workspace plan is upgraded.
-            </p>
+              {translateText("The AI analysis will be available again when your monthly AI request limit resets or your workspace plan is upgraded.")}</p>
           </div>
         </div>
       </section>);
@@ -71,15 +67,14 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           p-6
         ">
         <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">
-          AI Revenue Intelligence
-        </p>
+          {translateText("AI Revenue Intelligence")}</p>
 
         <h2 className="mt-2 text-xl font-semibold text-foreground">
-          {"Forecast is being analyzed"}
+          {translateText("Forecast is being analyzed")}
         </h2>
 
         <p className="mt-2 text-sm text-foreground/60">
-          {"The AI analysis is being prepared."}
+          {translateText("The AI analysis is being prepared.")}
         </p>
       </section>);
     }
@@ -91,7 +86,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
             : insight.health === "Warning"
                 ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
                 : "text-red-400 bg-red-500/10 border-red-500/20";
-    const healthLabel = insight.health;
+    const healthLabel = translateText(insight.health);
     return (<section className="
         rounded-2xl
         border
@@ -116,8 +111,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
               tracking-[0.2em]
               text-cyan-400
             ">
-            AI Revenue Intelligence
-          </p>
+            {translateText("AI Revenue Intelligence")}</p>
 
           <h2 className="
               mt-2
@@ -154,7 +148,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
               text-cyan-300
             ">
             {confidence}%{" "}
-            {"confidence"}
+            {translateText("confidence")}
           </div>
         </div>
       </div>
@@ -200,7 +194,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           p-4
         ">
         <p className="text-sm font-semibold text-cyan-300">
-          {"Pipeline Analysis"}
+          {translateText("Pipeline Analysis")}
         </p>
 
         <p className="
@@ -210,7 +204,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
             text-foreground
           ">
           {insight.pipelineComment ||
-            ("No additional pipeline assessment available.")}
+            (translateText("No additional pipeline assessment available."))}
         </p>
       </div>
 
@@ -225,7 +219,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           p-4
         ">
         <p className="text-sm font-semibold text-foreground">
-          {"Recommended Actions"}
+          {translateText("Recommended Actions")}
         </p>
 
         <ul className="mt-3 space-y-2">
@@ -241,7 +235,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
                 ">
                 → {item}
               </li>))) : (<li className="text-sm text-foreground/60">
-              {"No recommendations available."}
+              {translateText("No recommendations available.")}
             </li>)}
         </ul>
       </div>
@@ -253,7 +247,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           text-sm
           text-foreground/60
         ">
-        {"Single deal concentration risk:"}
+        {translateText("Single deal concentration risk:")}
 
         <span className="
             ml-2

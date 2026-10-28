@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type ScoreReason = {
     icon: string;
     text: string;
@@ -20,8 +21,7 @@ export default function AIScoreExplanation({ reasons, }: AIScoreExplanationProps
         tracking-widest
         text-cyan-400
       ">
-        AI Score Explanation
-      </p>
+        {translateText("AI Score Explanation")}</p>
 
 
       <h2 className="
@@ -30,8 +30,7 @@ export default function AIScoreExplanation({ reasons, }: AIScoreExplanationProps
         font-bold
         text-foreground
       ">
-        Why this score?
-      </h2>
+        {translateText("Why this score?")}</h2>
 
 
       <div className="

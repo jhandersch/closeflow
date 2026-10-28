@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import ActivityIcon from "@/components/ActivityIcon";
 
@@ -29,34 +31,34 @@ function getActivityTitle(activity: {
 
     switch (activity.type) {
         case "customer_updated":
-            return "Customer updated";
+            return translateText("Customer updated");
         case "meeting_created":
-            return "Meeting created";
+            return translateText("Meeting created");
         case "meeting_updated":
-            return "Meeting updated";
+            return translateText("Meeting updated");
         case "meeting_completed":
-            return "Meeting completed";
+            return translateText("Meeting completed");
         case "meeting_deleted":
-            return "Meeting deleted";
+            return translateText("Meeting deleted");
     }
 
     if (normalized === "meeting created") {
-        return "Meeting created";
+        return translateText("Meeting created");
     }
 
     if (normalized === "meeting updated") {
-        return "Meeting updated";
+        return translateText("Meeting updated");
     }
 
     if (normalized === "meeting completed") {
-        return "Meeting completed";
+        return translateText("Meeting completed");
     }
 
     if (normalized === "meeting deleted") {
-        return "Meeting deleted";
+        return translateText("Meeting deleted");
     }
 
-    return raw || "Activity";
+    return translateText(raw || "Activity");
 }
 
 function formatActivityDate(
@@ -69,7 +71,7 @@ function formatActivityDate(
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         day: "2-digit",
         month: "short",
         hour: "2-digit",
@@ -91,12 +93,10 @@ export default function ActivityFeed({
             <div className="flex items-center justify-between">
                 <div>
                     <p className="cf-label">
-                        Activity timeline
-                    </p>
+                        {translateText("Activity timeline")}</p>
 
                     <h2 className="cf-title text-lg font-semibold text-foreground">
-                        Customer journey
-                    </h2>
+                        {translateText("Customer journey")}</h2>
                 </div>
             </div>
 
@@ -154,8 +154,7 @@ export default function ActivityFeed({
                         text-sm
                         text-foreground/55
                     ">
-                        No activity yet. Create a lead to start tracking sales momentum.
-                    </div>
+                        {translateText("No activity yet. Create a lead to start tracking sales momentum.")}</div>
                 )}
             </div>
         </section>

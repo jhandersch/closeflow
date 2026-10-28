@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { toDisplayMessage } from "@/lib/apiError";
 
 import { useEffect, useState } from "react";
@@ -137,12 +139,12 @@ export default function CostsPage() {
           cost.amount < 0
       )
     ) {
-      toast.error("Choose a lead and enter a cost name and valid amount for each item");
+      toast.error(translateText("Choose a lead and enter a cost name and valid amount for each item"));
       return;
     }
 
     if (costs.length > 100) {
-      toast.error("You can add up to 100 cost items");
+      toast.error(translateText("You can add up to 100 cost items"));
       return;
     }
 
@@ -157,7 +159,7 @@ export default function CostsPage() {
       setPersonalDealCosts(
         costs.map((cost) => ({ ...cost, amount: String(cost.amount) }))
       );
-      toast.success("Deal costs saved");
+      toast.success(translateText("Deal costs saved"));
     }
     setSavingDealCosts(false);
   };
@@ -181,14 +183,11 @@ export default function CostsPage() {
       <div className="space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Costs
-          </p>
+            {translateText("Costs")}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Deal Costs & Expenses
-          </h1>
+            {translateText("Deal Costs & Expenses")}</h1>
           <p className="mt-2 text-sm text-foreground/65">
-            Track individual costs associated with your deals to project realistic net revenue.
-          </p>
+            {translateText("Track individual costs associated with your deals to project realistic net revenue.")}</p>
         </div>
 
         {loading ? (
@@ -199,40 +198,36 @@ export default function CostsPage() {
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">My deal costs</h2>
+                <h2 className="text-xl font-semibold text-foreground">{translateText("My deal costs")}</h2>
                 <p className="mt-1 text-sm text-foreground/65">
-                  Select a lead once, then add all costs that apply to that deal.
-                </p>
+                  {translateText("Select a lead once, then add all costs that apply to that deal.")}</p>
               </div>
               {personalDealCosts.length > 0 && (
                 <div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-3.5 py-1.5 text-xs text-foreground/75 sm:mt-0">
-                  Total recorded costs across deals:{" "}
+                  {translateText("Total recorded costs across deals:")}{" "}
                   <span className="font-semibold text-foreground">
-                    €{totalAllCosts.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    €{totalAllCosts.toLocaleString(getIntlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}
             </div>
 
             <p className="mt-2 text-xs text-foreground/55">
-              Costs are cleared automatically when a deal is marked won or lost.
-            </p>
+              {translateText("Costs are cleared automatically when a deal is marked won or lost.")}</p>
 
             {openLeads.length === 0 ? (
               <p className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4 text-sm text-foreground/65">
-                No open leads available. Create or reopen a lead to add deal costs.
-              </p>
+                {translateText("No open leads available. Create or reopen a lead to add deal costs.")}</p>
             ) : null}
 
             <label className="mt-5 block max-w-xl text-sm text-foreground/70">
-              Lead
-              <select
-                aria-label="Select lead"
+              {translateText("Lead")}<select
+                aria-label={translateText("Select lead")}
                 value={selectedCostLeadId}
                 onChange={(event) => setSelectedCostLeadId(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
               >
-                <option value="">Select a lead</option>
+                <option value="">{translateText("Select a lead")}</option>
                 {openLeads.map((lead) => (
                   <option key={lead.id} value={lead.id}>
                     {lead.name}
@@ -249,7 +244,7 @@ export default function CostsPage() {
                   className="grid gap-3 sm:grid-cols-[1fr_200px_auto]"
                 >
                   <input
-                    aria-label="Cost name"
+                    aria-label={translateText("Cost name")}
                     value={cost.name}
                     onChange={(event) =>
                       setPersonalDealCosts((items) =>
@@ -258,11 +253,11 @@ export default function CostsPage() {
                         )
                       )
                     }
-                    placeholder="e.g. Onboarding"
+                    placeholder={translateText("e.g. Onboarding")}
                     className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
                   />
                   <input
-                    aria-label="Cost in euros"
+                    aria-label={translateText("Cost in euros")}
                     type="number"
                     min="0"
                     step="0.01"
@@ -285,15 +280,13 @@ export default function CostsPage() {
                     }
                     className="rounded-xl border border-border-subtle px-4 py-3 text-sm text-foreground/75 hover:bg-foreground/5"
                   >
-                    Remove
-                  </button>
+                    {translateText("Remove")}</button>
                 </div>
               ))}
 
               {selectedCostLeadId && currentLeadCosts.length === 0 ? (
                 <p className="text-sm text-foreground/55">
-                  No costs added for this lead yet.
-                </p>
+                  {translateText("No costs added for this lead yet.")}</p>
               ) : null}
             </div>
 
@@ -317,8 +310,7 @@ export default function CostsPage() {
                 disabled={personalDealCosts.length >= 100 || !selectedCostLeadId}
                 className="rounded-xl border border-border-subtle px-4 py-3 text-sm text-foreground hover:bg-foreground/5 disabled:opacity-50"
               >
-                Add cost for this lead
-              </button>
+                {translateText("Add cost for this lead")}</button>
 
               <button
                 type="button"
@@ -326,14 +318,13 @@ export default function CostsPage() {
                 disabled={savingDealCosts}
                 className="rounded-xl bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-50"
               >
-                {savingDealCosts ? "Saving..." : "Save deal costs"}
+                {savingDealCosts ? translateText("Saving...") : translateText("Save deal costs")}
               </button>
             </div>
 
             {selectedCostLeadId ? (
               <p className="mt-3 text-xs text-foreground/55">
-                Selected lead total: €
-                {selectedLeadTotal.toLocaleString("en-US", {
+                {translateText("Selected lead total: €")}{selectedLeadTotal.toLocaleString(getIntlLocale(), {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

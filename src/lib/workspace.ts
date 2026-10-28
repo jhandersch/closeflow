@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export type UserWorkspace = {
@@ -26,7 +27,7 @@ export async function getUserWorkspace(
     }
 
     if (!memberships || memberships.length === 0) {
-        throw new Error("No workspace found");
+        throw new Error(translateText("No workspace found"));
     }
 
     const preferredMembership = preferredWorkspaceId

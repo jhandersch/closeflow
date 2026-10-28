@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import type { ForecastSummary } from "@/types/forecast";
 
 type RevenueForecastInsight = {
@@ -33,6 +34,7 @@ export function useRevenueForecastAI(
   forecast: ForecastSummary,
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [insight, setInsight] =
     useState<RevenueForecastInsight | null>(null);
 
@@ -65,7 +67,7 @@ export function useRevenueForecastAI(
             body: JSON.stringify({
               leads: leads.slice(0, 20),
               forecast,
-              language: "en",
+              language,
             }),
           },
         );
@@ -155,6 +157,7 @@ export function useRevenueForecastAI(
     forecast.averageHealth,
     forecast.averageProbability,
     forecast.activeDeals,
+    language,
   ]);
 
   return {

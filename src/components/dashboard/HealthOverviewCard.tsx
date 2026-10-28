@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type HealthOverviewCardProps = {
     healthyCount: number;
     watchlistCount: number;
@@ -25,17 +26,14 @@ export default function HealthOverviewCard({ healthyCount, watchlistCount, atRis
         <div>
 
           <p className="text-sm text-foreground/65">
-            Health Overview
-          </p>
+            {translateText("Health Overview")}</p>
 
 
           <h2 className="text-lg font-semibold text-foreground">
-            AI-powered deal health monitoring
-          </h2>
+            {translateText("AI-powered deal health monitoring")}</h2>
 
           <p className="mt-1 text-xs text-foreground/50">
-            Based on active pipeline deals only (excludes won/lost)
-          </p>
+            {translateText("Based on active pipeline deals only (excludes won/lost)")}</p>
 
         </div>
 
@@ -53,9 +51,7 @@ export default function HealthOverviewCard({ healthyCount, watchlistCount, atRis
           text-cyan-300
           ">
 
-          {healthPercentage}% of active deals healthy
-
-        </div>
+          {healthPercentage}{translateText("% of active deals healthy")}</div>
 
 
       </div>
@@ -109,8 +105,7 @@ export default function HealthOverviewCard({ healthyCount, watchlistCount, atRis
         ">
 
           <span className="text-emerald-300">
-            Healthy Deals
-          </span>
+            {translateText("Healthy Deals")}</span>
 
           <span className="font-semibold text-foreground">
             {healthyCount}
@@ -133,8 +128,7 @@ export default function HealthOverviewCard({ healthyCount, watchlistCount, atRis
         ">
 
           <span className="text-amber-300">
-            Watchlist
-          </span>
+            {translateText("Watchlist")}</span>
 
           <span className="font-semibold text-foreground">
             {watchlistCount}
@@ -158,8 +152,7 @@ export default function HealthOverviewCard({ healthyCount, watchlistCount, atRis
         ">
 
           <span className="text-rose-300">
-            At Risk
-          </span>
+            {translateText("At Risk")}</span>
 
 
           <span className="font-semibold text-foreground">

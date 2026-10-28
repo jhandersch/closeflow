@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import {
   denyReadOnlyWrite,
@@ -703,7 +704,7 @@ export async function DELETE(request: Request) {
     userId: user.id,
     leadId: data.lead_id,
     type: "meeting_deleted",
-    title: "Meeting deleted",
+    title: translateText("Meeting deleted"),
     description: data.title,
     metadata: {
       event_id: data.id,

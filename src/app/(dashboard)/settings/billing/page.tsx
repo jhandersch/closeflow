@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -31,7 +33,7 @@ function formatDate(value: string, timeZone: string) {
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeZone,
     }).format(date);
@@ -88,7 +90,7 @@ export default function BillingPage() {
                     : DEFAULT_TIMEZONE;
 
             try {
-                new Intl.DateTimeFormat("en-US", {
+                new Intl.DateTimeFormat(getIntlLocale(), {
                     timeZone: savedTimezone,
                 });
 
@@ -122,7 +124,7 @@ export default function BillingPage() {
 
         if (checkoutSuccess) {
             toast.success(
-                "Checkout complete. Your subscription details are refreshing.",
+                translateText("Checkout complete. Your subscription details are refreshing."),
             );
         } else {
             toast("Checkout canceled. No subscription changes were made.");
@@ -209,7 +211,7 @@ export default function BillingPage() {
     ) => {
         if (!canManageBilling) {
             toast.error(
-                "Only the workspace owner can manage billing.",
+                translateText("Only the workspace owner can manage billing."),
             );
             return;
         }
@@ -262,7 +264,7 @@ export default function BillingPage() {
                         )
                 ) {
                     toast.error(
-                        "2FA required before plan upgrades. Open Settings → Security.",
+                        translateText("2FA required before plan upgrades. Open Settings → Security."),
                     );
                 } else {
                     toast.error(message);
@@ -282,7 +284,7 @@ export default function BillingPage() {
             window.location.assign(data.checkoutUrl);
         } catch {
             toast.error(
-                "Could not start checkout.",
+                translateText("Could not start checkout."),
             );
         } finally {
             setActionLoading(null);
@@ -294,7 +296,7 @@ export default function BillingPage() {
     ) => {
         if (!canManageBilling) {
             toast.error(
-                "Only the workspace owner can manage billing.",
+                translateText("Only the workspace owner can manage billing."),
             );
             return;
         }
@@ -345,7 +347,7 @@ export default function BillingPage() {
                         )
                 ) {
                     toast.error(
-                        "2FA required before plan changes. Open Settings → Security.",
+                        translateText("2FA required before plan changes. Open Settings → Security."),
                     );
                 } else {
                     toast.error(message);
@@ -365,7 +367,7 @@ export default function BillingPage() {
             await loadBilling();
         } catch {
             toast.error(
-                "Could not change subscription plan.",
+                translateText("Could not change subscription plan."),
             );
         } finally {
             setActionLoading(null);
@@ -375,7 +377,7 @@ export default function BillingPage() {
     const openPortal = async () => {
         if (!canManageBilling) {
             toast.error(
-                "Only the workspace owner can manage billing.",
+                translateText("Only the workspace owner can manage billing."),
             );
             return;
         }
@@ -423,7 +425,7 @@ export default function BillingPage() {
                         )
                 ) {
                     toast.error(
-                        "2FA required before billing changes. Open Settings → Security.",
+                        translateText("2FA required before billing changes. Open Settings → Security."),
                     );
                 } else {
                     toast.error(message);
@@ -434,7 +436,7 @@ export default function BillingPage() {
 
             if (!data.portalUrl) {
                 toast.error(
-                    "Stripe billing portal is not configured.",
+                    translateText("Stripe billing portal is not configured."),
                 );
                 return;
             }
@@ -443,7 +445,7 @@ export default function BillingPage() {
                 data.portalUrl;
         } catch {
             toast.error(
-                "Could not open billing portal.",
+                translateText("Could not open billing portal."),
             );
         } finally {
             setActionLoading(null);
@@ -461,50 +463,39 @@ export default function BillingPage() {
                 <div className="mx-auto max-w-5xl">
                     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-8">
                         <p className="text-sm text-foreground/60">
-                            Checking billing permissions...
-                        </p>
+                            {translateText("Checking billing permissions...")}</p>
                     </section>
                 </div>
             ) : !canManageBilling ? (
                 <div className="mx-auto max-w-5xl">
                     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-8">
                         <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                            Billing
-                        </p>
+                            {translateText("Billing")}</p>
 
                         <h1 className="mt-2 text-3xl font-bold text-foreground">
-                            Access restricted
-                        </h1>
+                            {translateText("Access restricted")}</h1>
 
                         <p className="mt-3 max-w-2xl text-sm text-foreground/60">
-                            Only the workspace owner can access and manage
-                            billing.
-                        </p>
+                            {translateText("Only the workspace owner can access and manage billing.")}</p>
 
                         <Link
                             href="/"
                             className="cf-btn-primary mt-6"
                         >
-                            Back to dashboard
-                        </Link>
+                            {translateText("Back to dashboard")}</Link>
                     </section>
                 </div>
             ) : (
                 <div className="mx-auto max-w-5xl space-y-8">
                     <div>
                         <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                            Billing
-                        </p>
+                            {translateText("Billing")}</p>
 
                         <h1 className="mt-2 text-3xl font-bold text-foreground">
-                            Plans & Subscription
-                        </h1>
+                            {translateText("Plans & Subscription")}</h1>
 
                         <p className="mt-2 max-w-2xl text-sm text-foreground/60">
-                            Choose the plan that fits your workspace.
-                            Subscription changes are handled securely
-                            through Stripe.
-                        </p>
+                            {translateText("Choose the plan that fits your workspace. Subscription changes are handled securely through Stripe.")}</p>
                     </div>
 
                     {billingLoading ? (
@@ -516,8 +507,7 @@ export default function BillingPage() {
                             </div>
 
                             <p className="mt-5 text-sm text-foreground/50">
-                                Loading billing information...
-                            </p>
+                                {translateText("Loading billing information...")}</p>
                         </section>
                     ) : (
                         <>
@@ -525,22 +515,21 @@ export default function BillingPage() {
                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-sm text-foreground/60">
-                                            Current plan
-                                        </p>
+                                            {translateText("Current plan")}</p>
 
                                         <p className="mt-1 text-2xl font-semibold text-foreground">
                                             {currentPlan?.toUpperCase() || "—"}
                                         </p>
 
                                         <p className="mt-1 text-sm text-foreground/60">
-                                            Status:{" "}
+                                            {translateText("Status:")}{" "}
                                             {billing?.status ||
-                                                "inactive"}
+                                                translateText("inactive")}
                                         </p>
 
                                         {billing?.current_period_end && (
                                             <p className="mt-1 text-sm text-foreground/60">
-                                                Current period ends on{" "}
+                                                {translateText("Current period ends on")}{" "}
                                                 {formatDate(
                                                     billing.current_period_end,
                                                     timezone,
@@ -563,8 +552,8 @@ export default function BillingPage() {
                                         >
                                             {actionLoading ===
                                             "portal"
-                                                ? "Opening..."
-                                                : "Manage subscription"}
+                                                ? translateText("Opening...")
+                                                : translateText("Manage subscription")}
                                         </button>
                                     )}
                                 </div>
@@ -613,7 +602,7 @@ export default function BillingPage() {
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
                                                     <h2 className="text-xl font-semibold text-foreground">
-                                                        {plan.name}
+                                                        {translateText(plan.name)}
                                                     </h2>
 
                                                     <p className="mt-2 text-3xl font-bold text-foreground">
@@ -622,21 +611,19 @@ export default function BillingPage() {
                                                         {!isFree && (
                                                             <span className="text-sm font-normal text-foreground/50">
                                                                 {" "}
-                                                                / month per workspace
-                                                            </span>
+                                                                {translateText("/ month per workspace")}</span>
                                                         )}
                                                     </p>
                                                 </div>
 
                                                 {isCurrent && (
                                                     <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
-                                                        Current
-                                                    </span>
+                                                        {translateText("Current")}</span>
                                                 )}
                                             </div>
 
                                             <p className="mt-4 min-h-10 text-sm text-foreground/60">
-                                                {plan.description}
+                                                {translateText(plan.description)}
                                             </p>
 
                                             <ul className="mt-6 space-y-3 text-sm text-foreground/75">
@@ -652,7 +639,7 @@ export default function BillingPage() {
 
                                                             <span>
                                                                 {
-                                                                    feature
+                                                                    translateText(feature)
                                                                 }
                                                             </span>
                                                         </li>
@@ -667,8 +654,7 @@ export default function BillingPage() {
                                                         disabled
                                                         className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground/50"
                                                     >
-                                                        Current plan
-                                                    </button>
+                                                        {translateText("Current plan")}</button>
                                                 ) : isFree ? (
                                                     <button
                                                         type="button"
@@ -683,8 +669,7 @@ export default function BillingPage() {
                                                         }
                                                         className="flex h-10 w-full items-center justify-center rounded-xl border border-border-subtle px-4 font-semibold text-foreground transition hover:bg-foreground/5 disabled:opacity-50"
                                                     >
-                                                        Manage subscription
-                                                    </button>
+                                                        {translateText("Manage subscription")}</button>
                                                 ) : currentPlan ===
                                                   "free" ? (
                                                     <button
@@ -709,8 +694,8 @@ export default function BillingPage() {
                                                     >
                                                         {actionLoading ===
                                                         plan.id
-                                                            ? "Starting checkout..."
-                                                            : `Upgrade to ${plan.name}`}
+                                                            ? translateText("Starting checkout...")
+                                                            : translateText(`Upgrade to ${plan.name}`)}
                                                     </button>
                                                 ) : (
                                                     <button
@@ -735,8 +720,8 @@ export default function BillingPage() {
                                                     >
                                                         {actionLoading ===
                                                         plan.id
-                                                            ? "Changing plan..."
-                                                            : `Switch to ${plan.name}`}
+                                                            ? translateText("Changing plan...")
+                                                            : translateText(`Switch to ${plan.name}`)}
                                                     </button>
                                                 )}
                                             </div>
@@ -747,15 +732,10 @@ export default function BillingPage() {
 
                             <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                                 <h2 className="text-lg font-semibold text-foreground">
-                                    Billing management
-                                </h2>
+                                    {translateText("Billing management")}</h2>
 
                                 <p className="mt-2 text-sm text-foreground/60">
-                                    Manage payment methods, invoices,
-                                    billing information, plan changes,
-                                    and cancellation securely through
-                                    Stripe.
-                                </p>
+                                    {translateText("Manage payment methods, invoices, billing information, plan changes, and cancellation securely through Stripe.")}</p>
 
                                 {currentPlan !== "free" && (
                                     <button
@@ -770,20 +750,18 @@ export default function BillingPage() {
                                     >
                                         {actionLoading ===
                                         "portal"
-                                            ? "Opening..."
-                                            : "Open Stripe Billing Portal"}
+                                            ? translateText("Opening...")
+                                            : translateText("Open Stripe Billing Portal")}
                                     </button>
                                 )}
 
                                 <p className="mt-4 text-xs text-foreground/50">
-                                    Sensitive billing actions may require
-                                    2FA.{" "}
+                                    {translateText("Sensitive billing actions may require 2FA.")}{" "}
                                     <Link
                                         href="/settings#security"
                                         className="text-cyan-300 hover:underline"
                                     >
-                                        Open Security
-                                    </Link>
+                                        {translateText("Open Security")}</Link>
                                 </p>
                             </section>
 
@@ -795,8 +773,7 @@ export default function BillingPage() {
                                 disabled={billingLoading}
                                 className="text-sm text-foreground/50 hover:text-foreground/80 disabled:opacity-50"
                             >
-                                Refresh billing status
-                            </button>
+                                {translateText("Refresh billing status")}</button>
                         </>
                     )}
                 </div>

@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { appConfirm } from "@/lib/dialogs";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -30,7 +32,7 @@ export default function LeadDetailPage() {
             params.id
         :
             "";
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const [timezone, setTimezone] = useState("Europe/Berlin");
     useEffect(() => {
         const loadTimezone = async () => {
@@ -125,9 +127,7 @@ bg-surface-1
 p-8
 ">
 
-Loading...
-
-        </div>);
+{translateText("Loading...")}</div>);
     }
     if (!lead) {
         return (<div className="
@@ -141,7 +141,7 @@ text-center
 
         <h1 className="text-xl font-semibold">
 
-            {"Lead not found"}
+            {translateText("Lead not found")}
 
         </h1>
 
@@ -151,17 +151,17 @@ text-center
     async function handleDelete() {
         if (!lead)
             return;
-        const ok = await appConfirm("Delete lead?");
+        const ok = await appConfirm(translateText("Delete lead?"));
         if (!ok)
             return;
         try {
             await deleteLead(lead.id);
-            toast.success("Lead deleted");
+            toast.success(translateText("Lead deleted"));
             router.push("/leads");
         }
         catch (error) {
             console.error(error);
-            toast.error("Could not delete lead");
+            toast.error(translateText("Could not delete lead"));
         }
     }
     return (<div className="

@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
 import type { Lead } from "@/types";
@@ -22,7 +23,7 @@ export default function FollowUpList({ leads }: FollowUpListProps) {
         .sort((a, b) => b.priority - a.priority)
         .slice(0, 4);
     if (reminders.length === 0) {
-        return <p className="text-sm text-foreground/55">No follow-up reminders right now.</p>;
+        return <p className="text-sm text-foreground/55">{translateText("No follow-up reminders right now.")}</p>;
     }
     return (<div className="space-y-3">
       {reminders.map((lead) => (<div key={lead.id} className="rounded-xl border border-border-subtle bg-surface-2/70 p-3">
@@ -32,12 +33,11 @@ export default function FollowUpList({ leads }: FollowUpListProps) {
               <p className="text-xs text-foreground/55">{leadCompany(lead)}</p>
             </div>
             <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs text-amber-300">
-              {lead.days}d idle
-            </span>
+              {lead.days}{translateText("d idle")}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-foreground/65">
-            <span>Priority {lead.priority}/100</span>
-            <span>Health {lead.health}/100</span>
+            <span>{translateText("Priority")}{" "}{lead.priority}/100</span>
+            <span>{translateText("Health")}{" "}{lead.health}/100</span>
           </div>
         </div>))}
     </div>);

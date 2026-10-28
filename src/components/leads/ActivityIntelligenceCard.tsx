@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 type Props = {
     insight: {
         health: string;
@@ -48,8 +50,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             tracking-widest
             text-cyan-400
           ">
-            Activity Intelligence
-          </p>
+            {translateText("Activity Intelligence")}</p>
 
 
           <h2 className="
@@ -58,8 +59,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-foreground
           ">
-            Sales Activity Analysis
-          </h2>
+            {translateText("Sales Activity Analysis")}</h2>
 
         </div>
 
@@ -87,8 +87,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
         ">
 
           <p className="text-sm text-foreground/55">
-            Health
-          </p>
+            {translateText("Health")}</p>
 
           <p className="
             mt-2
@@ -96,7 +95,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-emerald-400
           ">
-            {insight.health}
+            {translateText(insight.health)}
           </p>
 
         </div>
@@ -110,8 +109,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
         ">
 
           <p className="text-sm text-foreground/55">
-            Risk
-          </p>
+            {translateText("Risk")}</p>
 
           <p className="
             mt-2
@@ -119,7 +117,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-yellow-400
           ">
-            {insight.risk}
+            {translateText(insight.risk)}
           </p>
 
         </div>
@@ -139,8 +137,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
       ">
 
         <p className="text-sm text-foreground/55">
-          AI Summary
-        </p>
+          {translateText("AI Summary")}</p>
 
 
         <p className="
@@ -168,8 +165,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
           text-sm
           text-cyan-300
         ">
-          Recommended Action
-        </p>
+          {translateText("Recommended Action")}</p>
 
 
         <p className="
@@ -191,9 +187,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
         text-foreground/65
       ">
 
-        AI Confidence:
-
-        <span className="
+        {translateText("AI Confidence:")}<span className="
           ml-2
           font-bold
           text-cyan-400

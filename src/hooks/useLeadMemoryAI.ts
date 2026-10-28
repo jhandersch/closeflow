@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { translateText } from "@/lib/i18n";
 
 type LeadMemory = {
   summary: string;
@@ -14,6 +16,7 @@ export function useLeadMemoryAI(
   activities: any[],
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [memory, setMemory] = useState<LeadMemory | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +37,7 @@ export function useLeadMemoryAI(
           body: JSON.stringify({
             lead,
             activities,
-            language: "en",
+            language,
           }),
         });
 
@@ -44,9 +47,9 @@ export function useLeadMemoryAI(
         console.error(error);
 
         setMemory({
-          summary: "Unable to analyze this lead.",
-          risk: "Unknown",
-          nextAction: "Review the lead manually.",
+          summary: translateText("Unable to analyze this lead."),
+          risk: translateText("Unknown"),
+          nextAction: translateText("Review the lead manually."),
           confidence: 0,
         });
       } finally {
@@ -55,7 +58,7 @@ export function useLeadMemoryAI(
     }
 
     void generateMemory();
-  }, [activities, lead]);
+  }, [activities, lead, language]);
 
   return {
     memory,

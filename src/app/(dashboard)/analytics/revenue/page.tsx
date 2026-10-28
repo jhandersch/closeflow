@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
@@ -11,7 +13,7 @@ import { useLeadsData } from "@/hooks/useLeadsData";
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 export default function RevenueAnalyticsPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const [timezone, setTimezone] =
         useState(DEFAULT_TIMEZONE);
     const [workspaceId, setWorkspaceId] =
@@ -198,8 +200,7 @@ export default function RevenueAnalyticsPage() {
         return (
             <AuthGuard>
                 <div className="text-foreground">
-                    Loading revenue analytics...
-                </div>
+                    {translateText("Loading revenue analytics...")}</div>
             </AuthGuard>
         );
     }
@@ -209,12 +210,10 @@ export default function RevenueAnalyticsPage() {
             <div className="space-y-6">
                 <div>
                     <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        Analytics
-                    </p>
+                        {translateText("Analytics")}</p>
 
                     <h1 className="mt-2 text-3xl font-bold text-foreground">
-                        Revenue over time
-                    </h1>
+                        {translateText("Revenue over time")}</h1>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

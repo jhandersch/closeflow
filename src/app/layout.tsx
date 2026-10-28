@@ -1,6 +1,7 @@
+import { translateText } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
-import { AppPreferencesProvider } from "@/components/AppPreferencesProvider";
+import { AppPreferencesProvider, LocalizedContent } from "@/components/AppPreferencesProvider";
 import ToastProvider from "@/components/ToastProvider";
 import AppDialogProvider from "@/components/AppDialogProvider";
 import CookieNotice from "@/components/CookieNotice";
@@ -17,7 +18,7 @@ const geistMono = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "CloseFlow | AI-powered CRM",
+  title: translateText("CloseFlow | AI-powered CRM"),
   description: "A polished AI-powered CRM experience for modern revenue teams.",
 };
 
@@ -58,8 +59,10 @@ export default function RootLayout({
         <AppPreferencesProvider>
           <AppDialogProvider>
             <ToastProvider />
-            {children}
-            <CookieNotice />
+            <LocalizedContent>
+              {children}
+              <CookieNotice />
+            </LocalizedContent>
           </AppDialogProvider>
         </AppPreferencesProvider>
       </body>

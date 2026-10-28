@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import {
   createContext,
@@ -6,24 +8,26 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { getDictionary, translateKey } from "@/lib/i18n";
+import { AppLanguage, getDictionary, normalizeLanguage, setActiveLanguage, translateKey } from "@/lib/i18n";
 
 type ThemeOption = "dark" | "light";
 
 type AppPreferencesContextValue = {
   theme: ThemeOption;
+  language: AppLanguage;
   hydrated: boolean;
   setTheme: (theme: ThemeOption) => void;
+  setLanguage: (language: AppLanguage) => void;
   t: (key: string, fallback?: string) => string;
 };
 
 const STORAGE_KEYS = {
   theme: "closeflow_theme",
+  language: "closeflow_language",
 };
-
-const dictionary = getDictionary("en");
 
 const AppPreferencesContext =
   createContext<AppPreferencesContextValue | null>(null);
@@ -36,8 +40,23 @@ export function AppPreferencesProvider({
   const [theme, setThemeState] =
     useState<ThemeOption>("dark");
 
+  const [language, setLanguageState] = useState<AppLanguage>("en");
+
   const [hydrated, setHydrated] =
     useState(false);
+  const languageChangedByUser = useRef(false);
+
+  useEffect(() => {
+    document.title = language === "de"
+      ? "CloseFlow | KI-gestütztes CRM"
+      : "CloseFlow | AI-powered CRM";
+    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (description) {
+      description.content = language === "de"
+        ? "Ein übersichtliches KI-gestütztes CRM für moderne Vertriebsteams."
+        : "A polished AI-powered CRM experience for modern revenue teams.";
+    }
+  }, [language]);
 
   useEffect(() => {
     const savedTheme =
@@ -61,10 +80,27 @@ export function AppPreferencesProvider({
       );
     }
 
-    document.documentElement.setAttribute(
-      "lang",
-      "en",
+    const savedLanguage = normalizeLanguage(
+      window.localStorage.getItem(STORAGE_KEYS.language),
     );
+    setActiveLanguage(savedLanguage);
+    setLanguageState(savedLanguage);
+    document.documentElement.setAttribute("lang", savedLanguage);
+
+    // The account profile is authoritative across devices. Local storage keeps
+    // the selected language available before this request completes.
+    void fetch("/api/profile", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const profile = (await response.json()) as { language?: unknown };
+        if (languageChangedByUser.current) return;
+        const profileLanguage = normalizeLanguage(profile.language);
+        setActiveLanguage(profileLanguage);
+        setLanguageState(profileLanguage);
+        window.localStorage.setItem(STORAGE_KEYS.language, profileLanguage);
+        document.documentElement.setAttribute("lang", profileLanguage);
+      })
+      .catch(() => undefined);
 
     setHydrated(true);
   }, []);
@@ -86,23 +122,33 @@ export function AppPreferencesProvider({
     [],
   );
 
+  const setLanguage = useCallback((nextLanguage: AppLanguage) => {
+    languageChangedByUser.current = true;
+    setActiveLanguage(nextLanguage);
+    setLanguageState(nextLanguage);
+    document.documentElement.setAttribute("lang", nextLanguage);
+    window.localStorage.setItem(STORAGE_KEYS.language, nextLanguage);
+  }, []);
+
   const value =
     useMemo<AppPreferencesContextValue>(
       () => ({
         theme,
+        language,
         hydrated,
         setTheme,
+        setLanguage,
         t: (
           key: string,
           fallback?: string,
         ) =>
           translateKey(
-            dictionary,
+            getDictionary(language),
             key,
             fallback,
           ),
       }),
-      [hydrated, theme, setTheme],
+      [hydrated, language, theme, setLanguage, setTheme],
     );
 
   return (
@@ -114,6 +160,11 @@ export function AppPreferencesProvider({
   );
 }
 
+export function LocalizedContent({ children }: { children: React.ReactNode }) {
+  const { language } = useAppPreferences();
+  return <div key={language} className="contents">{children}</div>;
+}
+
 export const useAppPreferences = () => {
   const context = useContext(
     AppPreferencesContext,
@@ -121,7 +172,7 @@ export const useAppPreferences = () => {
 
   if (!context) {
     throw new Error(
-      "useAppPreferences must be used within AppPreferencesProvider",
+      translateText("useAppPreferences must be used within AppPreferencesProvider"),
     );
   }
 

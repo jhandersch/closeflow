@@ -1,3 +1,4 @@
+import { getIntlLocale, translateText  } from "@/lib/i18n";
 import type { Lead } from "@/types";
 type Props = {
     lead: Lead;
@@ -19,28 +20,25 @@ p-5
 ">
 
     <h2 className="text-lg font-semibold">
-    {"Contact"}
+    {translateText("Contact")}
     </h2>
 
 
     <div className="mt-3 space-y-2 text-sm text-foreground/80">
 
     <p>
-Name:
-    {" "}
+{translateText("Name:")}{" "}
     {lead.name}
     </p>
 
     <p>
-Email:
-    {" "}
+{translateText("Email:")}{" "}
     {lead.email || "—"}
     </p>
 
 
     <p>
-Phone:
-    {" "}
+{translateText("Phone:")}{" "}
     {lead.phone || "—"}
     </p>
 
@@ -62,22 +60,20 @@ p-5
 
 
     <h2 className="text-lg font-semibold">
-    {"Deal"}
+    {translateText("Deal")}
     </h2>
 
 
     <div className="mt-3 space-y-2 text-sm">
 
     <p>
-Value:
-    {" "}
-EUR {(lead.value ?? 0).toLocaleString("en-US")}
+{translateText("Value:")}{" "}
+{translateText("EUR")}{(lead.value ?? 0).toLocaleString(getIntlLocale())}
     </p>
 
 
     <p>
-Status:
-    {" "}
+{translateText("Status:")}{" "}
     {lead.status}
     </p>
 

@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { toDisplayMessage } from "@/lib/apiError";
 import { useEffect, useMemo, useState } from "react";
 import { DragDropContext, Draggable, Droppable, type DropResult, } from "@hello-pangea/dnd";
@@ -151,20 +153,18 @@ export default function PipelinePage() {
           <div>
 
               <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Pipeline
-          </p>
+            {translateText("Pipeline")}</p>
 
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Deal stages and progress
-          </h1>
+            {translateText("Deal stages and progress")}</h1>
 
 
-          <p className="mt-2 text-sm text-foreground/60">Open leads and completed deals at a glance.</p>
+          <p className="mt-2 text-sm text-foreground/60">{translateText("Open leads and completed deals at a glance.")}</p>
           </div>
         <div className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-3">
-          <p className="text-xs uppercase tracking-wide text-foreground/50">Total value</p>
-          <p className="mt-1 text-lg font-semibold text-foreground">€{totalValue.toLocaleString("en-US")}</p>
+          <p className="text-xs uppercase tracking-wide text-foreground/50">{translateText("Total value")}</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">€{totalValue.toLocaleString(getIntlLocale())}</p>
         </div>
         </div>
 
@@ -173,8 +173,7 @@ export default function PipelinePage() {
 
 
         {loading ? (<p className="text-foreground/65">
-              Loading pipeline...
-            </p>) : (<DragDropContext onDragEnd={handleDragEnd}>
+              {translateText("Loading pipeline...")}</p>) : (<DragDropContext onDragEnd={handleDragEnd}>
 
 
               <div className="overflow-x-auto pb-3">
@@ -209,8 +208,7 @@ export default function PipelinePage() {
                             </div>
 
                             <p className="-mt-2 mb-4 px-1 text-xs text-foreground/50">
-                              €{columns[stage.key].reduce((sum, lead) => sum + Number(lead.value || 0), 0).toLocaleString("en-US")} total value
-                            </p>
+                              €{columns[stage.key].reduce((sum, lead) => sum + Number(lead.value || 0), 0).toLocaleString(getIntlLocale())} {translateText("total value")}</p>
 
 
 
@@ -228,7 +226,7 @@ export default function PipelinePage() {
                                             <p className="font-semibold text-foreground">
 
                                               {lead.name ||
-                                "Unnamed lead"}
+                                translateText("Unnamed lead")}
 
                                             </p>
 
@@ -237,17 +235,17 @@ export default function PipelinePage() {
                                             <p className="mt-1 text-xs text-foreground/55">
 
                                               {lead.company ||
-                                "No company"}
+                                translateText("No company")}
 
                                             </p>
 
 
 
-                                            <p className={`mt-3 inline-flex rounded-lg border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>€{Number(lead.value || 0).toLocaleString("en-US")}</p>
+                                            <p className={`mt-3 inline-flex rounded-lg border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>€{Number(lead.value || 0).toLocaleString(getIntlLocale())}</p>
 
                                             {lead.next_action || lead.status === "won" || lead.status === "lost" ? (
                                               <div className="mt-3 rounded-lg border border-border-subtle/70 bg-surface-1/60 px-3 py-2">
-                                                <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45">Next action</p>
+                                                <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45">{translateText("Next action")}</p>
                                                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/75">{getVisibleLeadNextAction(lead.status, lead.next_action)}</p>
                                               </div>
                                             ) : null}
@@ -259,7 +257,7 @@ export default function PipelinePage() {
                                     </Draggable>))}
 
                               {columns[stage.key].length === 0 ? (
-                                <p className="rounded-xl border border-dashed border-border-subtle px-3 py-8 text-center text-xs text-foreground/40">No deals in this stage</p>
+                                <p className="rounded-xl border border-dashed border-border-subtle px-3 py-8 text-center text-xs text-foreground/40">{translateText("No deals in this stage")}</p>
                               ) : null}
 
 

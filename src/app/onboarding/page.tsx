@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -133,7 +135,7 @@ export default function OnboardingPage() {
         try {
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             if (sessionError) throw sessionError;
-            if (!session?.access_token) throw new Error("Please sign in again to finish setting up your workspace.");
+            if (!session?.access_token) throw new Error(translateText("Please sign in again to finish setting up your workspace."));
 
             const response = await fetch("/api/onboarding", {
                 method: "POST",
@@ -171,7 +173,7 @@ export default function OnboardingPage() {
     if (loading || !draftReady) {
         return (
             <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-                <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8" aria-label="Loading onboarding">
+                <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-8" aria-label={translateText("Loading onboarding")}>
                     <div className="h-3 w-24 animate-pulse rounded-full bg-cyan-500/30" />
                     <div className="mt-6 space-y-3">
                         <div className="h-4 w-full animate-pulse rounded-full bg-foreground/10" />
@@ -189,15 +191,14 @@ export default function OnboardingPage() {
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
                             <LogoMark size={36} className="mb-4" />
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">CloseFlow setup</p>
-                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Make your workspace yours</h1>
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">{translateText("CloseFlow setup")}</p>
+                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{translateText("Make your workspace yours")}</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">
-                                A couple of details, then choose whether to add your first lead or explore a ready-made workspace.
-                            </p>
+                                {translateText("A couple of details, then choose whether to add your first lead or explore a ready-made workspace.")}</p>
                         </div>
                         <div className="w-full md:max-w-xs" aria-label={`Step ${step + 1} of ${steps.length}`}>
                             <div className="flex justify-between text-sm text-foreground/65">
-                                <span>{steps[step]}</span><span>Step {step + 1} of {steps.length}</span>
+                                <span>{steps[step]}</span><span>{translateText("Step")}{" "}{step + 1} {" "}{translateText("of")}{" "}{steps.length}</span>
                             </div>
                             <div className="mt-3 h-2 rounded-full bg-foreground/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
                                 <div className="h-2 rounded-full bg-cyan-400 transition-all" style={{ width: `${progress}%` }} />
@@ -215,100 +216,99 @@ export default function OnboardingPage() {
                             <div className="space-y-6">
                                 <div>
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Building2 className="h-5 w-5" /></div>
-                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">Your workspace</h2>
-                                    <p className="mt-2 text-sm leading-6 text-foreground/65">These details help organize your CRM. You can update them later in Settings.</p>
+                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("Your workspace")}</h2>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("These details help organize your CRM. You can update them later in Settings.")}</p>
                                 </div>
                                 <label className="block text-sm">
-                                    <span className="mb-2 block font-medium">Company or workspace name <span className="text-cyan-300">*</span></span>
-                                    <input autoFocus value={companyName} onChange={(event) => setCompanyName(event.target.value)} maxLength={80} autoComplete="organization" placeholder="e.g. Northstar Studio" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none transition focus:border-cyan-400/60" />
+                                    <span className="mb-2 block font-medium">{translateText("Company or workspace name")}{" "}<span className="text-cyan-300">*</span></span>
+                                    <input autoFocus value={companyName} onChange={(event) => setCompanyName(event.target.value)} maxLength={80} autoComplete="organization" placeholder={translateText("e.g. Northstar Studio")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none transition focus:border-cyan-400/60" />
                                 </label>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <label className="block text-sm">
-                                        <span className="mb-2 block font-medium">Industry <span className="text-foreground/40">(optional)</span></span>
+                                        <span className="mb-2 block font-medium">{translateText("Industry")}{" "}<span className="text-foreground/40">{translateText("(optional)")}</span></span>
                                         <select value={industry} onChange={(event) => setIndustry(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
-                                            <option value="">Choose an industry</option>
-                                            <option value="Technology">Technology</option><option value="Consulting">Consulting</option><option value="Marketing">Marketing</option><option value="Finance">Finance</option><option value="Real estate">Real estate</option><option value="Healthcare">Healthcare</option><option value="Education">Education</option><option value="Other">Other</option>
+                                            <option value="">{translateText("Choose an industry")}</option>
+                                            <option value="Technology">{translateText("Technology")}</option><option value="Consulting">{translateText("Consulting")}</option><option value="Marketing">{translateText("Marketing")}</option><option value="Finance">{translateText("Finance")}</option><option value="Real estate">{translateText("Real estate")}</option><option value="Healthcare">{translateText("Healthcare")}</option><option value="Education">{translateText("Education")}</option><option value="Other">{translateText("Other")}</option>
                                         </select>
                                     </label>
                                     <label className="block text-sm">
-                                        <span className="mb-2 block font-medium">Team size</span>
+                                        <span className="mb-2 block font-medium">{translateText("Team size")}</span>
                                         <select value={teamSize} onChange={(event) => setTeamSize(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
-                                            <option value="">Select team size</option><option value="1">Just me</option><option value="2">2 people</option><option value="3">3 people</option><option value="4">4 people</option><option value="5">5 people</option><option value="6">6–10 people</option><option value="20">11–20 people</option>
+                                            <option value="">{translateText("Select team size")}</option><option value="1">{translateText("Just me")}</option><option value="2">{translateText("2 people")}</option><option value="3">{translateText("3 people")}</option><option value="4">{translateText("4 people")}</option><option value="5">{translateText("5 people")}</option><option value="6">{translateText("6–10 people")}</option><option value="20">{translateText("11–20 people")}</option>
                                         </select>
-                                        <span className="mt-2 block text-xs leading-5 text-foreground/50">This is workspace context. It does not select or change your subscription.</span>
+                                        <span className="mt-2 block text-xs leading-5 text-foreground/50">{translateText("This is workspace context. It does not select or change your subscription.")}</span>
                                     </label>
                                 </div>
                                 <div className="rounded-2xl border border-border-subtle bg-surface-2/70 p-4 text-sm leading-6 text-foreground/65">
-                                    Your workspace starts on Free: one team member, up to 50 active leads, 10 AI requests and 5 exports per month. You can compare plans any time.
-                                    <Link href="/pricing" className="ml-1 font-medium text-cyan-300 underline decoration-cyan-300/30 underline-offset-4 hover:text-cyan-200">Compare plans</Link>
+                                    {translateText("Your workspace starts on Free: one team member, up to 50 active leads, 10 AI requests and 5 exports per month. You can compare plans any time.")}<Link href="/pricing" className="ml-1 font-medium text-cyan-300 underline decoration-cyan-300/30 underline-offset-4 hover:text-cyan-200">{translateText("Compare plans")}</Link>
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-6">
                                 <div>
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Sparkles className="h-5 w-5" /></div>
-                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">How would you like to start?</h2>
-                                    <p className="mt-2 text-sm leading-6 text-foreground/65">Choose a useful first step. You can change everything once you are inside CloseFlow.</p>
+                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("How would you like to start?")}</h2>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("Choose a useful first step. You can change everything once you are inside CloseFlow.")}</p>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <button type="button" aria-pressed={quickStartMode === "lead"} onClick={() => setQuickStartMode("lead")} className={`rounded-2xl border p-5 text-left transition ${quickStartMode === "lead" ? "border-cyan-400/50 bg-cyan-500/10" : "border-border-subtle bg-surface-2 hover:border-foreground/20"}`}>
                                         <div className="flex items-center justify-between"><Users className="h-5 w-5 text-cyan-300" />{quickStartMode === "lead" && <Check className="h-4 w-4 text-cyan-300" />}</div>
-                                        <p className="mt-4 font-semibold">Add my first lead</p><p className="mt-1 text-xs leading-5 text-foreground/60">Start with a real opportunity in your pipeline.</p>
+                                        <p className="mt-4 font-semibold">{translateText("Add my first lead")}</p><p className="mt-1 text-xs leading-5 text-foreground/60">{translateText("Start with a real opportunity in your pipeline.")}</p>
                                     </button>
                                     <button type="button" aria-pressed={quickStartMode === "demo"} onClick={() => setQuickStartMode("demo")} className={`rounded-2xl border p-5 text-left transition ${quickStartMode === "demo" ? "border-cyan-400/50 bg-cyan-500/10" : "border-border-subtle bg-surface-2 hover:border-foreground/20"}`}>
                                         <div className="flex items-center justify-between"><KanbanSquare className="h-5 w-5 text-cyan-300" />{quickStartMode === "demo" && <Check className="h-4 w-4 text-cyan-300" />}</div>
-                                        <p className="mt-4 font-semibold">Explore demo data</p><p className="mt-1 text-xs leading-5 text-foreground/60">See an example pipeline, tasks and activities.</p>
+                                        <p className="mt-4 font-semibold">{translateText("Explore demo data")}</p><p className="mt-1 text-xs leading-5 text-foreground/60">{translateText("See an example pipeline, tasks and activities.")}</p>
                                     </button>
                                 </div>
                                 {quickStartMode === "lead" ? (
                                     <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-2/60 p-5">
-                                        <div><h3 className="font-medium">First lead details</h3><p className="mt-1 text-xs text-foreground/55">You can add more details and activities later.</p></div>
+                                        <div><h3 className="font-medium">{translateText("First lead details")}</h3><p className="mt-1 text-xs text-foreground/55">{translateText("You can add more details and activities later.")}</p></div>
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            <label className="text-sm"><span className="mb-2 block">Contact name <span className="text-cyan-300">*</span></span><input autoFocus value={leadName} onChange={(event) => setLeadName(event.target.value)} maxLength={120} autoComplete="name" placeholder="Jordan Lee" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
-                                            <label className="text-sm"><span className="mb-2 block">Company <span className="text-cyan-300">*</span></span><input value={leadCompany} onChange={(event) => setLeadCompany(event.target.value)} maxLength={120} autoComplete="organization" placeholder="Northstar" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">{translateText("Contact name")}{" "}<span className="text-cyan-300">*</span></span><input autoFocus value={leadName} onChange={(event) => setLeadName(event.target.value)} maxLength={120} autoComplete="name" placeholder={translateText("Jordan Lee")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">{translateText("Company")}{" "}<span className="text-cyan-300">*</span></span><input value={leadCompany} onChange={(event) => setLeadCompany(event.target.value)} maxLength={120} autoComplete="organization" placeholder={translateText("Northstar")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                         </div>
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            <label className="text-sm"><span className="mb-2 block">Estimated deal value <span className="text-foreground/40">(optional)</span></span><input type="number" min="0" step="0.01" inputMode="decimal" value={leadValue} onChange={(event) => setLeadValue(event.target.value)} placeholder="12000" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
-                                            <label className="text-sm"><span className="mb-2 block">Pipeline stage</span><select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60"><option value="new">New</option><option value="contacted">Contacted</option><option value="proposal">Proposal</option><option value="won">Won</option></select></label>
+                                            <label className="text-sm"><span className="mb-2 block">{translateText("Estimated deal value")}{" "}<span className="text-foreground/40">{translateText("(optional)")}</span></span><input type="number" min="0" step="0.01" inputMode="decimal" value={leadValue} onChange={(event) => setLeadValue(event.target.value)} placeholder="12000" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">{translateText("Pipeline stage")}</span><select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60"><option value="new">{translateText("New")}</option><option value="contacted">{translateText("Contacted")}</option><option value="proposal">{translateText("Proposal")}</option><option value="won">{translateText("Won")}</option></select></label>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-6 text-foreground/75">We will add sample leads, activities and tasks to this new workspace so you can explore the dashboard right away.</div>
+                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-6 text-foreground/75">{translateText("We will add sample leads, activities and tasks to this new workspace so you can explore the dashboard right away.")}</div>
                                 )}
                             </div>
                         )}
 
                         {error && <div role="alert" className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>}
                         <div className="mt-8 flex items-center justify-between gap-3 border-t border-border-subtle pt-5">
-                            <button type="button" onClick={() => { setError(null); setStep(0); }} disabled={step === 0 || saving} className="rounded-2xl border border-border-subtle px-4 py-2.5 text-sm font-medium transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40">Back</button>
+                            <button type="button" onClick={() => { setError(null); setStep(0); }} disabled={step === 0 || saving} className="rounded-2xl border border-border-subtle px-4 py-2.5 text-sm font-medium transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40">{translateText("Back")}</button>
                             {step === 0 ? (
-                                <button type="button" onClick={() => { setError(null); setStep(1); }} disabled={!canContinue || saving} className="cf-btn-primary">Continue <ArrowRight className="h-4 w-4" /></button>
+                                <button type="button" onClick={() => { setError(null); setStep(1); }} disabled={!canContinue || saving} className="cf-btn-primary">{translateText("Continue")}{" "}<ArrowRight className="h-4 w-4" /></button>
                             ) : (
-                                <button type="button" onClick={() => void handleFinish()} disabled={!canContinue || saving} className="cf-btn-primary">{saving ? "Setting up…" : "Create my workspace"}{!saving && <ArrowRight className="h-4 w-4" />}</button>
+                                <button type="button" onClick={() => void handleFinish()} disabled={!canContinue || saving} className="cf-btn-primary">{saving ? translateText("Setting up…") : translateText("Create my workspace")}{!saving && <ArrowRight className="h-4 w-4" />}</button>
                             )}
                         </div>
-                        <p className="mt-3 text-right text-xs text-foreground/45">Your progress is saved on this device.</p>
+                        <p className="mt-3 text-right text-xs text-foreground/45">{translateText("Your progress is saved on this device.")}</p>
                     </section>
 
                     <aside className="space-y-4">
                         <section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Included in CloseFlow</p>
-                            <h2 className="mt-2 text-lg font-semibold">A clear view of every opportunity</h2>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{translateText("Included in CloseFlow")}</p>
+                            <h2 className="mt-2 text-lg font-semibold">{translateText("A clear view of every opportunity")}</h2>
                             <ul className="mt-5 space-y-4 text-sm text-foreground/70">
-                                <li className="flex gap-3"><KanbanSquare className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Leads and pipeline</strong><br />Keep contacts, deal stages and customers together.</span></li>
-                                <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Tasks and activities</strong><br />Track follow-ups and keep your next action visible.</span></li>
-                                <li className="flex gap-3"><BarChart3 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">Analytics and forecasts</strong><br />Understand pipeline progress and expected revenue.</span></li>
-                                <li className="flex gap-3"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">AI deal insights</strong><br />Get help prioritizing opportunities and next steps.</span></li>
+                                <li className="flex gap-3"><KanbanSquare className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">{translateText("Leads and pipeline")}</strong><br />{translateText("Keep contacts, deal stages and customers together.")}</span></li>
+                                <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">{translateText("Tasks and activities")}</strong><br />{translateText("Track follow-ups and keep your next action visible.")}</span></li>
+                                <li className="flex gap-3"><BarChart3 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">{translateText("Analytics and forecasts")}</strong><br />{translateText("Understand pipeline progress and expected revenue.")}</span></li>
+                                <li className="flex gap-3"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" /><span><strong className="text-foreground">{translateText("AI deal insights")}</strong><br />{translateText("Get help prioritizing opportunities and next steps.")}</span></li>
                             </ul>
                         </section>
                         <section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
-                            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300"><CircleDollarSign className="h-5 w-5" /></div><div><h2 className="font-semibold">Start free</h2><p className="text-sm text-foreground/55">No payment details needed</p></div></div>
-                            <p className="mt-4 text-sm leading-6 text-foreground/65">Free includes one member, 50 active leads, 10 AI requests and 5 exports each month.</p>
-                            <Link href="/pricing" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-cyan-300 hover:text-cyan-200">View all plans <ArrowRight className="h-4 w-4" /></Link>
+                            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300"><CircleDollarSign className="h-5 w-5" /></div><div><h2 className="font-semibold">{translateText("Start free")}</h2><p className="text-sm text-foreground/55">{translateText("No payment details needed")}</p></div></div>
+                            <p className="mt-4 text-sm leading-6 text-foreground/65">{translateText("Free includes one member, 50 active leads, 10 AI requests and 5 exports each month.")}</p>
+                            <Link href="/pricing" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-cyan-300 hover:text-cyan-200">{translateText("View all plans")}{" "}<ArrowRight className="h-4 w-4" /></Link>
                         </section>
                     </aside>
                 </div>
-                <footer className="mx-auto mt-6 max-w-6xl text-center text-xs text-foreground/40">Already started? Your setup draft stays on this device until you finish.</footer>
+                <footer className="mx-auto mt-6 max-w-6xl text-center text-xs text-foreground/40">{translateText("Already started? Your setup draft stays on this device until you finish.")}</footer>
             </div>
         </main>
     );

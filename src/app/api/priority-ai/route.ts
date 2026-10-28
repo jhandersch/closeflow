@@ -1,18 +1,24 @@
+import { translateText } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 
 export async function POST(request: NextRequest) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
+    let language = normalizeLanguage(undefined);
   try {
     const { user, error } = await getRouteUser(request);
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { leads } = await request.json();
+    const payload = await request.json();
+    const { leads } = payload;
+    language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
+    const responseLanguage = language === "de" ? "German" : "English";
     const leadsWithCosts = Array.isArray(leads)
       ? leads.map((lead: any) => ({
           ...lead,
@@ -32,13 +38,14 @@ export async function POST(request: NextRequest) {
      */
     if (!apiKey) {
       return NextResponse.json({
-        headline: "Priority analysis ready",
-        explanation:
-          "The most important deals are prioritized using value, pipeline stage, activity and close probability.",
-        nextAction:
-          "Start with high-value deals in advanced stages.",
-        priorityReason:
-          "High-value opportunities with strong closing potential should be handled first.",
+        headline: language === "de" ? "Priorisierung abgeschlossen" : "Priority analysis ready",
+        explanation: language === "de"
+          ? "Die wichtigsten Abschlüsse werden anhand von Wert, Pipeline-Phase, Aktivität und Abschlusswahrscheinlichkeit priorisiert."
+          : "The most important deals are prioritized using value, pipeline stage, activity and close probability.",
+        nextAction: language === "de" ? "Beginne mit hochwertigen Abschlüssen in fortgeschrittenen Phasen." : "Start with high-value deals in advanced stages.",
+        priorityReason: language === "de"
+          ? "Verkaufschancen mit hohem Wert und guter Abschlusschance sollten zuerst bearbeitet werden."
+          : "High-value opportunities with strong closing potential should be handled first.",
         riskLevel: "Medium",
       });
     }
@@ -120,7 +127,7 @@ Examples:
 
 Language:
 
-English
+${responseLanguage}
 
 Return ONLY valid JSON:
 
@@ -168,7 +175,7 @@ Keep answers concise.
       result?.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("No AI response");
+      throw new Error(translateText("No AI response"));
     }
 
     const parsed = JSON.parse(content);

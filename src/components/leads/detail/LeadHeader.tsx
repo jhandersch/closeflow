@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import Link from "next/link";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
 import type { Lead } from "@/types";
@@ -46,11 +48,9 @@ mt-2
 text-sm
 text-foreground/65
 ">
-Deal:
-    {" "}
-EUR
-    {" "}
-    {(lead.value ?? 0).toLocaleString("en-US")}
+{translateText("Deal:")}{" "}
+{translateText("EUR")}{" "}
+    {(lead.value ?? 0).toLocaleString(getIntlLocale())}
     </p>
 
 
@@ -75,7 +75,7 @@ py-2
 text-sm
 font-semibold
 ">
-    {"Edit"}
+    {translateText("Edit")}
     </a>
 
 
@@ -91,8 +91,7 @@ text-sm
 font-semibold
 text-cyan-300
 ">
-AI
-        </Link>)}
+{translateText("AI")}</Link>)}
 
 
 
@@ -107,7 +106,7 @@ text-sm
 font-semibold
 text-rose-300
 ">
-    {"Delete"}
+    {translateText("Delete")}
     </button>
 
 

@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import {
@@ -117,7 +119,7 @@ export default function TaskBoard({
                     onChange={(event) =>
                         setEditTitle(event.target.value)
                     }
-                    placeholder="Task title"
+                    placeholder={translateText("Task title")}
                     className="w-full rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none"
                 />
 
@@ -132,17 +134,13 @@ export default function TaskBoard({
                         className="w-full rounded-lg border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none"
                     >
                         <option value="low">
-                            Low
-                        </option>
+                            {translateText("Low")}</option>
                         <option value="medium">
-                            Medium
-                        </option>
+                            {translateText("Medium")}</option>
                         <option value="high">
-                            High
-                        </option>
+                            {translateText("High")}</option>
                         <option value="urgent">
-                            Urgent
-                        </option>
+                            {translateText("Urgent")}</option>
                     </select>
 
                     <input
@@ -165,8 +163,8 @@ export default function TaskBoard({
                         className="rounded-lg bg-foreground px-3 py-1 text-xs font-semibold text-background disabled:opacity-60"
                     >
                         {savingTaskId === task.id
-                            ? "Saving..."
-                            : "Save"}
+                            ? translateText("Saving...")
+                            : translateText("Save")}
                     </button>
 
                     <button
@@ -175,8 +173,7 @@ export default function TaskBoard({
                         onClick={cancelEditing}
                         className="rounded-lg border border-border-subtle px-3 py-1 text-xs font-semibold text-foreground/70 disabled:opacity-60"
                     >
-                        Cancel
-                    </button>
+                        {translateText("Cancel")}</button>
                 </div>
             </div>
         );
@@ -186,14 +183,12 @@ export default function TaskBoard({
         <div className="grid gap-4 md:grid-cols-2">
             <section className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
                 <h2 className="text-lg font-semibold text-foreground">
-                    Open tasks
-                </h2>
+                    {translateText("Open tasks")}</h2>
 
                 <div className="mt-4 space-y-3">
                     {open.length === 0 ? (
                         <p className="text-sm text-foreground/55">
-                            No open tasks.
-                        </p>
+                            {translateText("No open tasks.")}</p>
                     ) : (
                         open.map((task) => (
                             <div
@@ -208,8 +203,7 @@ export default function TaskBoard({
                                     {translatePriority(
                                         task.priority as TaskPriority,
                                     )}{" "}
-                                    priority
-                                </p>
+                                    {translateText("priority")}</p>
 
                                 <p className="mt-1 text-xs text-foreground/55">
                                     {task.due_date
@@ -217,7 +211,7 @@ export default function TaskBoard({
                                               task.due_date,
                                               locale,
                                           )}`
-                                        : "No due date"}
+                                        : translateText("No due date")}
                                 </p>
 
                                 <p className="mt-1 text-[11px] text-foreground/35">
@@ -234,8 +228,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300"
                                     >
-                                        Complete
-                                    </button>
+                                        {translateText("Complete")}</button>
 
                                     <button
                                         type="button"
@@ -244,8 +237,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300"
                                     >
-                                        Edit
-                                    </button>
+                                        {translateText("Edit")}</button>
 
                                     <button
                                         type="button"
@@ -254,8 +246,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300"
                                     >
-                                        Delete
-                                    </button>
+                                        {translateText("Delete")}</button>
                                 </div>
                             </div>
                         ))
@@ -265,14 +256,12 @@ export default function TaskBoard({
 
             <section className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
                 <h2 className="text-lg font-semibold text-foreground">
-                    Completed tasks
-                </h2>
+                    {translateText("Completed tasks")}</h2>
 
                 <div className="mt-4 space-y-3">
                     {completed.length === 0 ? (
                         <p className="text-sm text-foreground/55">
-                            No completed tasks.
-                        </p>
+                            {translateText("No completed tasks.")}</p>
                     ) : (
                         completed.map((task) => (
                             <div
@@ -291,12 +280,11 @@ export default function TaskBoard({
                                     {translatePriority(
                                         task.priority as TaskPriority,
                                     )}{" "}
-                                    priority
-                                </p>
+                                    {translateText("priority")}</p>
 
                                 {task.due_date ? (
                                     <p className="mt-1 text-xs text-foreground/55">
-                                        Due:{" "}
+                                        {translateText("Due:")}{" "}
                                         {formatDateOnly(
                                             task.due_date,
                                             locale,
@@ -318,8 +306,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300"
                                     >
-                                        Reopen
-                                    </button>
+                                        {translateText("Reopen")}</button>
 
                                     <button
                                         type="button"
@@ -328,8 +315,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300"
                                     >
-                                        Edit
-                                    </button>
+                                        {translateText("Edit")}</button>
 
                                     <button
                                         type="button"
@@ -338,8 +324,7 @@ export default function TaskBoard({
                                         }
                                         className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300"
                                     >
-                                        Delete
-                                    </button>
+                                        {translateText("Delete")}</button>
                                 </div>
                             </div>
                         ))

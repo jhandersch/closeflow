@@ -1,8 +1,10 @@
+import { translateText } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 type InsightResponse = {
     headline: string;
     detail: string;
@@ -12,12 +14,15 @@ type InsightResponse = {
 export async function POST(request: NextRequest) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
+    let language = normalizeLanguage(undefined);
     try {
         const { user, error } = await getRouteUser(request);
         if (error || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const payload = await request.json();
+        language = normalizeLanguage(payload?.language ?? user.user_metadata?.language);
+        const responseLanguage = language === "de" ? "German" : "English";
         const leadsWithCosts = Array.isArray(payload?.leads)
             ? payload.leads.map((lead: any) => ({
                 ...lead,
@@ -131,13 +136,24 @@ export async function POST(request: NextRequest) {
                     : "Medium",
             };
         }
+        const localizedFallback: InsightResponse = language === "de"
+            ? activeDeals === 0
+                ? { headline: "Keine aktiven Verkaufschancen.", detail: "Deine Pipeline enthält derzeit keine offenen Abschlüsse.", actions: ["Erstelle neue Leads.", "Lege klare nächste Schritte für neue Verkaufschancen fest."], confidence: fallback.confidence }
+                : atRiskDeals > 0 || revenueAtRisk > 0
+                    ? { headline: "Mehrere Verkaufschancen erfordern Aufmerksamkeit.", detail: `${atRiskDeals} aktive Verkaufschance(n) weisen ein erhöhtes Risiko auf.`, actions: [`Prüfe die ${atRiskDeals} gefährdeten Abschlüsse.`, "Lege konkrete nächste Schritte fest.", "Priorisiere gefährdete Abschlüsse mit hohem Umsatzpotenzial."], confidence: fallback.confidence }
+                    : nextActionCoverage < 50
+                        ? { headline: "Deine Pipeline braucht klarere nächste Schritte.", detail: `Nur ${nextActionCoverage}% der aktiven Abschlüsse haben derzeit eine festgelegte nächste Maßnahme. Die Pipeline ist stabil, aber fehlende Follow-ups erhöhen das Risiko von Inaktivität.`, actions: ["Lege nächste Schritte für Abschlüsse ohne Follow-up fest.", "Priorisiere aktive Abschlüsse mit hohem Umsatzpotenzial.", proposalLeads > 0 ? "Fasse bei Abschlüssen in der Angebotsphase nach." : "Halte aktive Verkaufschancen in Bewegung."], confidence: fallback.confidence }
+                        : proposalLeads > 0
+                            ? { headline: "Bei Verkaufschancen mit Angebot ist ein Follow-up nötig.", detail: `${proposalLeads} aktive Verkaufschance(n) befinden sich bei einem Pipeline-Wert von ${pipelineValue.toLocaleString("de-DE")} € in der Angebotsphase.`, actions: ["Fasse bei Verkaufschancen mit Angebot nach.", "Lege den nächsten konkreten Schritt zum Abschluss fest.", "Behalte den Fortschritt der Angebote im Blick."], confidence: fallback.confidence }
+                            : { headline: "Die Pipeline entwickelt sich stabil.", detail: `Deine Pipeline umfasst ${activeDeals} aktive Abschlüsse im Wert von ${pipelineValue.toLocaleString("de-DE")} €, mit einem durchschnittlichen Status von ${averageHealth}% und einer Abschlusswahrscheinlichkeit von ${averageProbability}%.`, actions: ["Führe aktive Verkaufschancen zur nächsten Phase.", "Lege klare nächste Schritte für wichtige Abschlüsse fest."], confidence: fallback.confidence }
+            : fallback;
         /*
          * =========================
          * NO OPENAI KEY
          * =========================
          */
         if (!apiKey) {
-            return NextResponse.json(fallback);
+            return NextResponse.json(localizedFallback);
         }
         /*
          * =========================
@@ -225,7 +241,7 @@ Medium
 Low
 
 Language:
-${"English"}
+${responseLanguage}
 `,
                     },
                     {
@@ -253,7 +269,7 @@ ${"English"}
         const data = await response.json();
         const content = data?.choices?.[0]?.message?.content;
         if (!content) {
-            throw new Error("No AI response");
+            throw new Error(translateText("No AI response"));
         }
         const parsed = JSON.parse(content);
         /*
@@ -274,7 +290,7 @@ ${"English"}
                 .filter((action: unknown) => typeof action ===
                 "string")
                 .slice(0, 3)
-            : fallback.actions;
+            : localizedFallback.actions;
         /*
          * Safety check:
          * If there are no at-risk deals,
@@ -293,11 +309,11 @@ ${"English"}
         if (!parsed?.headline ||
             !parsed?.detail ||
             safeActions.length === 0) {
-            return NextResponse.json(fallback);
+            return NextResponse.json(localizedFallback);
         }
         return NextResponse.json({
-            headline: String(parsed.headline),
-            detail: String(parsed.detail),
+            headline: String(parsed.headline || localizedFallback.headline),
+            detail: String(parsed.detail || localizedFallback.detail),
             actions: safeActions,
             confidence,
         });
@@ -308,12 +324,9 @@ ${"English"}
          * Minimal safe fallback
          */
         return NextResponse.json({
-            headline: "Pipeline analysis available",
-            detail: "Your current CRM data has been analyzed.",
-            actions: [
-                "Review your most important active opportunities.",
-                "Define clear next steps.",
-            ],
+            headline: language === "de" ? "Pipelineanalyse verfügbar" : "Pipeline analysis available",
+            detail: language === "de" ? "Deine aktuellen CRM-Daten wurden analysiert." : "Your current CRM data has been analyzed.",
+            actions: language === "de" ? ["Prüfe deine wichtigsten aktiven Verkaufschancen.", "Lege klare nächste Schritte fest."] : ["Review your most important active opportunities.", "Define clear next steps."],
             confidence: "Medium",
         });
     }

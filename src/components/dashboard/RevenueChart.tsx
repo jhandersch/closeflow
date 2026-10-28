@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 type RevenueChartProps = {
     data: Array<{
@@ -9,8 +11,8 @@ type RevenueChartProps = {
 export default function RevenueChart({ data }: RevenueChartProps) {
     return (<section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="mb-4">
-        <p className="text-sm uppercase tracking-widest text-cyan-400">Revenue · last 6 months</p>
-        <h2 className="mt-2 text-lg font-semibold text-foreground">Monthly revenue</h2>
+        <p className="text-sm uppercase tracking-widest text-cyan-400">{translateText("Revenue · last 6 months")}</p>
+        <h2 className="mt-2 text-lg font-semibold text-foreground">{translateText("Monthly revenue")}</h2>
       </div>
 
       <div className="h-72">
@@ -18,13 +20,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           <BarChart data={data}>
             <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="rgba(148,163,184,0.12)" />
             <XAxis dataKey="month" tick={{ fill: "var(--chart-muted)", fontSize: 12 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fill: "var(--chart-muted)", fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(value) => `€${Number(value).toLocaleString("en-US")}`} width={76} />
+            <YAxis tick={{ fill: "var(--chart-muted)", fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(value) => `€${Number(value).toLocaleString(getIntlLocale())}`} width={76} />
             <Tooltip
               cursor={{ fill: "rgba(34, 211, 238, 0.08)" }}
               contentStyle={{ background: "var(--surface-1)", border: "1px solid var(--border-subtle)", borderRadius: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.35)" }}
               labelStyle={{ color: "var(--foreground)", fontWeight: 600, marginBottom: 4 }}
               itemStyle={{ color: "var(--chart-accent-text)" }}
-              formatter={(value) => [`€${Number(value).toLocaleString("en-US")}`, "Revenue"]}
+              formatter={(value) => [`€${Number(value).toLocaleString(getIntlLocale())}`, "Revenue"]}
             />
             <Bar dataKey="value" name="Revenue" fill="#22d3ee" radius={[6, 6, 0, 0]} maxBarSize={44} activeBar={{ fill: "#67e8f9", stroke: "#a5f3fc", strokeWidth: 1 }} />
           </BarChart>

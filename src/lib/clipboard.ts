@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 /** Copy text while preserving the browser's permission decision. */
 export async function copyTextToClipboard(text: string): Promise<void> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -6,7 +7,7 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   }
 
   if (typeof document === "undefined" || !document.body) {
-    throw new Error("Clipboard access is unavailable in this environment.");
+    throw new Error(translateText("Clipboard access is unavailable in this environment."));
   }
 
   const field = document.createElement("textarea");
@@ -21,7 +22,7 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   try {
     field.select();
     if (!document.execCommand("copy")) {
-      throw new Error("The browser could not copy the text.");
+      throw new Error(translateText("The browser could not copy the text."));
     }
   } finally {
     field.remove();

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 
 const MAX_INPUT_LENGTH = 16_000;
 const MAX_LEADS = 100;
@@ -25,6 +26,8 @@ export async function POST(req: Request) {
   if (!isRecord(body) || !Array.isArray(body.leads)) {
     return NextResponse.json({ error: "A forecast and leads array are required." }, { status: 400 });
   }
+  const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
+  const responseLanguage = language === "de" ? "German" : "English";
 
   const { pipelineValue, weightedRevenue, revenueAtRisk, pipelineCoverage, leads } = body;
   if (leads.length > MAX_LEADS) {
@@ -125,7 +128,7 @@ Return ONLY valid JSON:
   "recommendation": "specific next action"
 }
 
-All text must be written in English.
+All text must be written in ${responseLanguage}.
 
 Keep answers concise.
 `;
@@ -153,7 +156,7 @@ You are an expert B2B revenue forecasting analyst inside a CRM.
 
 Your goal is to help sales teams understand future revenue and improve decisions.
 
-Always return valid JSON only and write all text values in English.
+Always return valid JSON only and write all text values in ${responseLanguage}.
 `,
           },
           {

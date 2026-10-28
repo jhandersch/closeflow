@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { appConfirm } from "@/lib/dialogs";
 
@@ -65,7 +67,7 @@ const isValidTimezone = (
     timezone: string,
 ): boolean => {
     try {
-        new Intl.DateTimeFormat("en-US", {
+        new Intl.DateTimeFormat(getIntlLocale(), {
             timeZone: timezone,
         }).format();
 
@@ -80,7 +82,7 @@ const getTimezoneParts = (
     timezone: string,
 ) => {
     const formatter = new Intl.DateTimeFormat(
-        "en-US",
+        getIntlLocale(),
         {
             timeZone: timezone,
             year: "numeric",
@@ -243,7 +245,7 @@ const formatTime = (
     const date = new Date(iso);
 
     const hourString =
-        new Intl.DateTimeFormat("en-US", {
+        new Intl.DateTimeFormat(getIntlLocale(), {
             timeZone: timezone,
             hour: "2-digit",
             minute: "2-digit",
@@ -251,7 +253,7 @@ const formatTime = (
         }).format(date);
 
     if (hourString === "00:00") {
-        return "All day";
+        return translateText("All day");
     }
 
     return date.toLocaleTimeString(
@@ -315,7 +317,7 @@ const groupByDate = (
 };
 
 export default function CalendarPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
 
     const [events, setEvents] = useState<
         CalendarEvent[]
@@ -437,7 +439,7 @@ export default function CalendarPage() {
         } catch (error) {
             console.error(error);
             toast.error(
-                "Could not load calendar.",
+                translateText("Could not load calendar."),
             );
         }
 
@@ -461,13 +463,13 @@ export default function CalendarPage() {
 
     const createMeeting = async () => {
         if (!newTitle.trim()) {
-            toast.error("Title missing.");
+            toast.error(translateText("Title missing."));
             return;
         }
 
         if (!newDate) {
             toast.error(
-                "Date and time missing.",
+                translateText("Date and time missing."),
             );
             return;
         }
@@ -498,7 +500,7 @@ export default function CalendarPage() {
 
         if (response.ok) {
             toast.success(
-                "Meeting created.",
+                translateText("Meeting created."),
             );
 
             setShowNew(false);
@@ -539,13 +541,13 @@ export default function CalendarPage() {
         if (!editingEvent) return;
 
         if (!newTitle.trim()) {
-            toast.error("Title missing.");
+            toast.error(translateText("Title missing."));
             return;
         }
 
         if (!newDate) {
             toast.error(
-                "Date and time missing.",
+                translateText("Date and time missing."),
             );
             return;
         }
@@ -577,14 +579,14 @@ export default function CalendarPage() {
 
         if (response.ok) {
             toast.success(
-                "Meeting updated.",
+                translateText("Meeting updated."),
             );
 
             setEditingEvent(null);
             resetForm();
             await load();
         } else {
-            toast.error("Save failed.");
+            toast.error(translateText("Save failed."));
         }
 
         setSavingEdit(false);
@@ -595,7 +597,7 @@ export default function CalendarPage() {
     ) => {
         const confirmed =
             await appConfirm(
-                "Delete meeting?",
+                translateText("Delete meeting?"),
             );
 
         if (!confirmed) return;
@@ -613,7 +615,7 @@ export default function CalendarPage() {
 
         if (response.ok) {
             toast.success(
-                "Meeting deleted.",
+                translateText("Meeting deleted."),
             );
 
             setEvents((prev) =>
@@ -673,16 +675,16 @@ export default function CalendarPage() {
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                            {"Calendar"}
+                            {translateText("Calendar")}
                         </p>
 
                         <h1 className="mt-2 text-3xl font-bold text-foreground">
-                            {"Meetings and follow-ups"}
+                            {translateText("Meetings and follow-ups")}
                         </h1>
 
                         <p className="mt-1 text-sm text-foreground/60">
                             {events.length}{" "}
-                            {"scheduled meetings"}
+                            {translateText("scheduled meetings")}
                         </p>
 
                         <p className="mt-1 text-xs text-foreground/45">
@@ -701,7 +703,7 @@ export default function CalendarPage() {
                         className="cf-btn-primary"
                     >
                         <Plus size={15} />
-                        {"New Meeting"}
+                        {translateText("New Meeting")}
                     </button>
                 </div>
 
@@ -712,8 +714,8 @@ export default function CalendarPage() {
                             <div className="mb-5 flex justify-between">
                                 <h2 className="font-semibold text-foreground">
                                     {editingEvent
-                                        ? "Edit meeting"
-                                        : "Create meeting"}
+                                        ? translateText("Edit meeting")
+                                        : translateText("Create meeting")}
                                 </h2>
 
                                 <button
@@ -740,14 +742,13 @@ export default function CalendarPage() {
                                                 .value,
                                         )
                                     }
-                                    placeholder="Title"
+                                    placeholder={translateText("Title")}
                                     className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-foreground"
                                 />
 
                                 <label className="block">
                                     <span className="mb-1 block text-xs text-foreground/55">
-                                        Date & Time
-                                    </span>
+                                        {translateText("Date & Time")}</span>
 
                                     <input
                                         type="datetime-local"
@@ -767,7 +768,7 @@ export default function CalendarPage() {
                                     />
 
                                     <span className="mt-1 block text-xs text-foreground/45">
-                                        Time zone:{" "}
+                                        {translateText("Time zone:")}{" "}
                                         {
                                             timezone
                                         }
@@ -785,7 +786,7 @@ export default function CalendarPage() {
                                                 .value,
                                         )
                                     }
-                                    placeholder="Description"
+                                    placeholder={translateText("Description")}
                                     rows={3}
                                     className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-foreground"
                                 />
@@ -801,7 +802,7 @@ export default function CalendarPage() {
                                     }}
                                     className="rounded-xl border border-border-subtle px-4 py-2 text-foreground/75"
                                 >
-                                    {"Cancel"}
+                                    {translateText("Cancel")}
                                 </button>
 
                                 <button
@@ -819,7 +820,7 @@ export default function CalendarPage() {
                                     {creating ||
                                     savingEdit
                                         ? "..."
-                                        : "Save"}
+                                        : translateText("Save")}
                                 </button>
                             </div>
                         </div>
@@ -828,7 +829,7 @@ export default function CalendarPage() {
 
                 {loading && (
                     <p className="text-sm text-foreground/60">
-                        {"Loading calendar..."}
+                        {translateText("Loading calendar...")}
                     </p>
                 )}
 
@@ -942,7 +943,7 @@ export default function CalendarPage() {
                                                                 }
                                                                 className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300"
                                                             >
-                                                                {"Edit"}
+                                                                {translateText("Edit")}
                                                             </button>
 
                                                             <button
@@ -960,7 +961,7 @@ export default function CalendarPage() {
                                                                     }
                                                                 />
 
-                                                                {"Delete"}
+                                                                {translateText("Delete")}
                                                             </button>
 
                                                             {event.leadId && (
@@ -968,7 +969,7 @@ export default function CalendarPage() {
                                                                     href={`/leads/${event.leadId}`}
                                                                     className="text-xs underline"
                                                                 >
-                                                                    {"Lead"}
+                                                                    {translateText("Lead")}
                                                                 </Link>
                                                             )}
                                                         </div>

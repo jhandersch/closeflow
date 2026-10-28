@@ -1,4 +1,7 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
+
 
 import { useMemo, useState } from "react";
 import ActivityIcon from "@/components/ActivityIcon";
@@ -31,8 +34,9 @@ const formatActivityTimestamp = (
 export default function ActivityTimeline({
     activities,
     timeZone,
-    locale = "en-US",
+    locale = getIntlLocale(),
 }: ActivityTimelineProps) {
+    const { language } = useAppPreferences();
     const [filter, setFilter] = useState<
         "all" | "calls" | "emails" | "changes" | "ai"
     >("all");
@@ -137,33 +141,33 @@ export default function ActivityTimeline({
     ) => {
         switch (type) {
             case "status_changed":
-                return "Status Change";
+                return translateText("Status Change");
             case "note_added":
-                return "Note";
+                return translateText("Note");
             case "email_sent":
-                return "Email";
+                return translateText("Email");
             case "call_completed":
-                return "Call";
+                return translateText("Call");
             case "task_created":
-                return "Task Created";
+                return translateText("Task Created");
             case "task_completed":
-                return "Task Completed";
+                return translateText("Task Completed");
             case "meeting_created":
-                return "Meeting Created";
+                return translateText("Meeting Created");
             case "meeting_updated":
-                return "Meeting Updated";
+                return translateText("Meeting Updated");
             case "meeting_completed":
-                return "Meeting Completed";
+                return translateText("Meeting Completed");
             case "meeting_deleted":
-                return "Meeting Deleted";
+                return translateText("Meeting Deleted");
             case "created":
-                return "Created";
+                return translateText("Created");
             case "customer_updated":
-                return "Customer Updated";
+                return translateText("Customer Updated");
             case "ai":
-                return "AI";
+                return translateText("AI");
             default:
-                return "Event";
+                return translateText("Event");
         }
     };
 
@@ -179,7 +183,7 @@ export default function ActivityTimeline({
             event === "task_completed" ||
             event === "task_reopened"
         ) {
-            return "Task";
+            return translateText("Task");
         }
 
         if (
@@ -188,7 +192,7 @@ export default function ActivityTimeline({
             event === "meeting_completed" ||
             event === "meeting_deleted"
         ) {
-            return "Meeting";
+            return translateText("Meeting");
         }
 
         return getTypeLabel(activity.type);
@@ -210,7 +214,7 @@ export default function ActivityTimeline({
                 normalized as keyof typeof statusMap
             ];
 
-        return statusEntry || status;
+        return statusEntry ? translateText(statusEntry) : status;
     };
 
     const getLocalizedAction = (action: string) => {
@@ -229,77 +233,77 @@ export default function ActivityTimeline({
             const newStatus =
                 getStatusLabel(statusMatch[2]);
 
-            return `Status changed from ${oldStatus} to ${newStatus}`;
+            return language === "de" ? `Status geändert von ${oldStatus} zu ${newStatus}` : `Status changed from ${oldStatus} to ${newStatus}`;
         }
 
         if (
             normalized === "lead_created" ||
             normalized === "lead created"
         ) {
-            return "Lead created";
+            return translateText("Lead created");
         }
 
         const taskCreatedMatch =
             action.match(/^task created:\s*(.+)$/i);
 
         if (taskCreatedMatch) {
-            return `Task created: ${taskCreatedMatch[1]}`;
+            return language === "de" ? `Aufgabe erstellt: ${taskCreatedMatch[1]}` : `Task created: ${taskCreatedMatch[1]}`;
         }
 
         const taskUpdatedMatch =
             action.match(/^task updated:\s*(.+)$/i);
 
         if (taskUpdatedMatch) {
-            return `Task updated: ${taskUpdatedMatch[1]}`;
+            return language === "de" ? `Aufgabe aktualisiert: ${taskUpdatedMatch[1]}` : `Task updated: ${taskUpdatedMatch[1]}`;
         }
 
         const taskDeletedMatch =
             action.match(/^task deleted:\s*(.+)$/i);
 
         if (taskDeletedMatch) {
-            return `Task deleted: ${taskDeletedMatch[1]}`;
+            return language === "de" ? `Aufgabe gelöscht: ${taskDeletedMatch[1]}` : `Task deleted: ${taskDeletedMatch[1]}`;
         }
 
         const meetingCreatedMatch =
             action.match(/^meeting created:\s*(.+)$/i);
 
         if (meetingCreatedMatch) {
-            return `Meeting created: ${meetingCreatedMatch[1]}`;
+            return language === "de" ? `Termin erstellt: ${meetingCreatedMatch[1]}` : `Meeting created: ${meetingCreatedMatch[1]}`;
         }
 
         const meetingUpdatedMatch =
             action.match(/^meeting updated:\s*(.+)$/i);
 
         if (meetingUpdatedMatch) {
-            return `Meeting updated: ${meetingUpdatedMatch[1]}`;
+            return language === "de" ? `Termin aktualisiert: ${meetingUpdatedMatch[1]}` : `Meeting updated: ${meetingUpdatedMatch[1]}`;
         }
 
         const meetingCompletedMatch =
             action.match(/^meeting completed:\s*(.+)$/i);
 
         if (meetingCompletedMatch) {
-            return `Meeting completed: ${meetingCompletedMatch[1]}`;
+            return language === "de" ? `Termin abgeschlossen: ${meetingCompletedMatch[1]}` : `Meeting completed: ${meetingCompletedMatch[1]}`;
         }
 
         const meetingDeletedMatch =
             action.match(/^meeting deleted:\s*(.+)$/i);
 
         if (meetingDeletedMatch) {
-            return `Meeting deleted: ${meetingDeletedMatch[1]}`;
+            return language === "de" ? `Termin gelöscht: ${meetingDeletedMatch[1]}` : `Meeting deleted: ${meetingDeletedMatch[1]}`;
         }
 
         if (
             normalized ===
             "automation created task"
         ) {
-            return "Automation created task";
+            return translateText("Automation created task");
         }
 
         const followUpMatch =
             action.match(/^follow up:\s*(.+)$/i);
 
         if (followUpMatch) {
-            return `Follow up: ${followUpMatch[1]}`;
+            return language === "de" ? `Nachfassen: ${followUpMatch[1]}` : `Follow up: ${followUpMatch[1]}`;
         }
 
         const proposalFollowUpMatch =
@@ -308,7 +312,7 @@ export default function ActivityTimeline({
             );
 
         if (proposalFollowUpMatch) {
-            return `Follow up proposal: ${proposalFollowUpMatch[1]}`;
+            return language === "de" ? `Angebot nachfassen: ${proposalFollowUpMatch[1]}` : `Follow up proposal: ${proposalFollowUpMatch[1]}`;
         }
 
         const welcomeMatch =
@@ -317,7 +321,7 @@ export default function ActivityTimeline({
             );
 
         if (welcomeMatch) {
-            return `Welcome customer: ${welcomeMatch[1]}`;
+            return language === "de" ? `Kunde begrüßen: ${welcomeMatch[1]}` : `Welcome customer: ${welcomeMatch[1]}`;
         }
 
         const onboardingMatch =
@@ -326,7 +330,7 @@ export default function ActivityTimeline({
             );
 
         if (onboardingMatch) {
-            return `Schedule onboarding meeting: ${onboardingMatch[1]}`;
+            return language === "de" ? `Einführungstermin planen: ${onboardingMatch[1]}` : `Schedule onboarding meeting: ${onboardingMatch[1]}`;
         }
 
         const checkInMatch =
@@ -335,7 +339,7 @@ export default function ActivityTimeline({
             );
 
         if (checkInMatch) {
-            return `First customer check-in: ${checkInMatch[1]}`;
+            return language === "de" ? `Erster Kunden-Check-in: ${checkInMatch[1]}` : `First customer check-in: ${checkInMatch[1]}`;
         }
 
         const reactivationMatch =
@@ -344,7 +348,7 @@ export default function ActivityTimeline({
             );
 
         if (reactivationMatch) {
-            return `Reactivation follow up: ${reactivationMatch[1]}`;
+            return language === "de" ? `Erneute Kontaktaufnahme: ${reactivationMatch[1]}` : `Reactivation follow up: ${reactivationMatch[1]}`;
         }
 
         const translations: Record<
@@ -398,15 +402,15 @@ export default function ActivityTimeline({
             getMetadataEvent(activity);
 
         if (event === "task_updated") {
-            return "Task updated";
+            return translateText("Task updated");
         }
 
         if (event === "task_deleted") {
-            return "Task deleted";
+            return translateText("Task deleted");
         }
 
         if (event === "task_reopened") {
-            return "Task reopened";
+            return translateText("Task reopened");
         }
 
         return getLocalizedAction(
@@ -419,8 +423,7 @@ export default function ActivityTimeline({
     return (
         <div className="rounded-xl bg-surface-1 p-6">
             <h2 className="mb-4 text-xl font-semibold text-foreground">
-                Activity Timeline
-            </h2>
+                {translateText("Activity Timeline")}</h2>
 
             <div className="mb-4 flex flex-wrap gap-2">
                 {[
@@ -444,15 +447,14 @@ export default function ActivityTimeline({
                                 : "bg-surface-2/80 text-foreground/80"
                         }`}
                     >
-                        {label}
+                        {translateText(label)}
                     </button>
                 ))}
             </div>
 
             {filteredActivities.length === 0 ? (
                 <p className="text-foreground/55">
-                    No activities yet.
-                </p>
+                    {translateText("No activities yet.")}</p>
             ) : (
                 <div className="space-y-3">
                     {filteredActivities.map(
@@ -471,7 +473,7 @@ export default function ActivityTimeline({
                                         <p className="font-medium text-foreground">
                                             {activity.type ===
                                             "ai"
-                                                ? "AI Assistant: "
+                                                ? `${translateText("AI Assistant")}: `
                                                 : ""}
 
                                             {getDisplayAction(

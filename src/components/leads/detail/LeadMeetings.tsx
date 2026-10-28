@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -10,7 +12,7 @@ type Props = {
 };
 
 const getTimezoneOffsetMs = (date: Date, timeZone: string) => {
-    const parts = new Intl.DateTimeFormat("en-US", {
+    const parts = new Intl.DateTimeFormat(getIntlLocale(), {
         timeZone,
         year: "numeric",
         month: "2-digit",
@@ -91,7 +93,7 @@ const formatMeetingDate = (
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone,
@@ -125,7 +127,7 @@ export default function LeadMeetings({
             );
 
             if (!startsAt) {
-                toast.error("Invalid meeting date");
+                toast.error(translateText("Invalid meeting date"));
                 return;
             }
 
@@ -139,10 +141,10 @@ export default function LeadMeetings({
             setDate("");
             setDescription("");
 
-            toast.success("Meeting created");
+            toast.success(translateText("Meeting created"));
         } catch (error) {
             console.error(error);
-            toast.error("Could not create meeting");
+            toast.error(translateText("Could not create meeting"));
         }
     }
 
@@ -156,8 +158,7 @@ bg-surface-1
 p-6
 ">
             <h2 className="text-xl font-semibold">
-                Meetings
-            </h2>
+                {translateText("Meetings")}</h2>
 
             <div className="space-y-3">
                 <input
@@ -165,7 +166,7 @@ p-6
                     onChange={(event) =>
                         setTitle(event.target.value)
                     }
-                    placeholder="Title"
+                    placeholder={translateText("Title")}
                     className="
 w-full
 rounded-xl
@@ -199,7 +200,7 @@ py-3
                     onChange={(event) =>
                         setDescription(event.target.value)
                     }
-                    placeholder="Description"
+                    placeholder={translateText("Description")}
                     className="
 h-24
 w-full
@@ -223,13 +224,12 @@ font-semibold
 text-background
 "
                 >
-                    Create meeting
-                </button>
+                    {translateText("Create meeting")}</button>
             </div>
 
             <div className="space-y-3">
                 {loading ? (
-                    <p>Loading...</p>
+                    <p>{translateText("Loading...")}</p>
                 ) : (
                     meetings.map((meeting) => (
                         <div
@@ -269,8 +269,7 @@ text-sm
 text-red-400
 "
                             >
-                                Delete
-                            </button>
+                                {translateText("Delete")}</button>
                         </div>
                     ))
                 )}

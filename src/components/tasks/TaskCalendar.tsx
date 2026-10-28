@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 type TaskCalendarProps = {
     tasks: Array<{
@@ -42,19 +44,17 @@ export default function TaskCalendar({
     tasks,
     timeZone,
 }: TaskCalendarProps) {
-    const locale = "en-US";
+    const locale = getIntlLocale();
 
     return (
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
             <h2 className="text-lg font-semibold text-foreground">
-                Calendar view
-            </h2>
+                {translateText("Calendar view")}</h2>
 
             <div className="mt-4 space-y-2">
                 {tasks.length === 0 ? (
                     <p className="text-sm text-foreground/55">
-                        No scheduled tasks.
-                    </p>
+                        {translateText("No scheduled tasks.")}</p>
                 ) : (
                     tasks.map((task) => (
                         <div
@@ -71,7 +71,7 @@ export default function TaskCalendar({
                                           task.due_date,
                                           locale,
                                       )
-                                    : "No due date"}
+                                    : translateText("No due date")}
                             </p>
 
                             <p className="mt-1 text-[11px] text-foreground/35">

@@ -1,8 +1,9 @@
+import { translateText } from "@/lib/i18n";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const getTokenSecret = (secret = process.env.SUPABASE_SERVICE_ROLE_KEY) => {
   if (!secret) {
-    throw new Error("Feedback token signing is not configured");
+    throw new Error(translateText("Feedback token signing is not configured"));
   }
 
   return secret;

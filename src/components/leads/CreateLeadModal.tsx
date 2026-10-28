@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useState } from "react";
 import toast from "react-hot-toast";
 import type { LeadSource, LeadStatus, LeadSortBy } from "@/types";
@@ -97,7 +99,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                         : "Could not create lead",
                 );
             }
-            toast.success("Lead created");
+            toast.success(translateText("Lead created"));
             resetForm();
             onCreated();
             onClose();
@@ -154,8 +156,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/60
               ">
-              Lead-Management
-            </p>
+              {translateText("Lead-Management")}</p>
 
 
             <h2 className="
@@ -163,8 +164,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 font-semibold
                 text-foreground
               ">
-              Create new lead
-            </h2>
+              {translateText("Create new lead")}</h2>
 
           </div>
 
@@ -185,9 +185,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
               hover:bg-foreground/5
             ">
 
-            Close
-
-          </button>
+            {translateText("Close")}</button>
 
 
         </div>
@@ -212,15 +210,14 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Kontaktname *
-            </label>
+              {translateText("Kontaktname *")}</label>
 
 
             <input value={name} onChange={(event) => {
                 setName(event.target.value);
                 setDuplicateConfirmationKey(null);
                 setError(null);
-            }} placeholder="John Smith" className="
+            }} placeholder={translateText("John Smith")} className="
                 w-full
                 rounded-2xl
                 border
@@ -248,15 +245,14 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Firma *
-            </label>
+              {translateText("Firma *")}</label>
 
 
             <input value={company} onChange={(event) => {
                 setCompany(event.target.value);
                 setDuplicateConfirmationKey(null);
                 setError(null);
-            }} placeholder="Firmenname" className="
+            }} placeholder={translateText("Firmenname")} className="
                 w-full
                 rounded-2xl
                 border
@@ -284,8 +280,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Deal-Wert (€)
-            </label>
+              {translateText("Deal-Wert (€)")}</label>
 
 
             <input value={value} onChange={(event) => setValue(event.target.value)} type="number" placeholder="5000" className="
@@ -315,8 +310,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Pipeline-Stufe
-            </label>
+              {translateText("Pipeline-Stufe")}</label>
 
 
             <select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus)} className="
@@ -334,24 +328,19 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
               ">
 
               <option value="new">
-                Neu
-              </option>
+                {translateText("Neu")}</option>
 
               <option value="contacted">
-                Kontaktiert
-              </option>
+                {translateText("Kontaktiert")}</option>
 
               <option value="proposal">
-                Angebot
-              </option>
+                {translateText("Angebot")}</option>
 
               <option value="won">
-                Gewonnen
-              </option>
+                {translateText("Gewonnen")}</option>
 
               <option value="lost">
-                Verloren
-              </option>
+                {translateText("Verloren")}</option>
 
 
             </select>
@@ -366,8 +355,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Lead source
-            </label>
+              {translateText("Lead source")}</label>
 
             <select value={source} onChange={(event) => setSource(event.target.value as LeadSource)} className="
                 w-full
@@ -384,24 +372,19 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
               ">
 
               <option value="website">
-                Website
-              </option>
+                {translateText("Website")}</option>
 
               <option value="recommendation">
-                Empfehlung
-              </option>
+                {translateText("Empfehlung")}</option>
 
               <option value="phone">
-                Phone
-              </option>
+                {translateText("Phone")}</option>
 
               <option value="advertising">
-                Werbung
-              </option>
+                {translateText("Werbung")}</option>
 
               <option value="other">
-                Sonstiges
-              </option>
+                {translateText("Sonstiges")}</option>
 
             </select>
 
@@ -417,11 +400,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Email
-            </label>
+              {translateText("Email")}</label>
 
 
-            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="customer@example.com" className="
+            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder={translateText("customer@example.com")} className="
                 w-full
                 rounded-2xl
                 border
@@ -448,8 +430,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Phone
-            </label>
+              {translateText("Phone")}</label>
 
 
             <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+49..." className="
@@ -479,11 +460,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Website
-            </label>
+              {translateText("Website")}</label>
 
 
-            <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://company.com" className="
+            <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder={translateText("https://company.com")} className="
                 w-full
                 rounded-2xl
                 border
@@ -510,11 +490,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Adresse
-            </label>
+              {translateText("Adresse")}</label>
 
 
-            <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Street, city" className="
+            <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder={translateText("Street, city")} className="
                 w-full
                 rounded-2xl
                 border
@@ -541,11 +520,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Tags
-            </label>
+              {translateText("Tags")}</label>
 
 
-            <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder="enterprise, hot-lead" className="
+            <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={translateText("enterprise, hot-lead")} className="
                 w-full
                 rounded-2xl
                 border
@@ -572,11 +550,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Next action
-            </label>
+              {translateText("Next action")}</label>
 
 
-            <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder="Customers anrufen" className="
+            <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder={translateText("Customers anrufen")} className="
                 w-full
                 rounded-2xl
                 border
@@ -603,8 +580,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              Next action date
-            </label>
+              {translateText("Next action date")}</label>
 
 
             <input value={nextActionDate} onChange={(event) => setNextActionDate(event.target.value)} type="date" className="
@@ -636,11 +612,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
               text-sm
               text-foreground/65
             ">
-            Notizen
-          </label>
+            {translateText("Notizen")}</label>
 
 
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add notes about this opportunity..." className="
+          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={translateText("Add notes about this opportunity...")} className="
               h-32
               w-full
               rounded-2xl
@@ -695,8 +670,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             hover:bg-foreground/5
             disabled:opacity-50
           ">
-          Cancel
-        </button>
+          {translateText("Cancel")}</button>
 
 
 
@@ -713,10 +687,10 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             disabled:opacity-50
           ">
           {loading
-            ? "Erstelle..."
+            ? translateText("Erstelle...")
             : duplicateConfirmationKey === `${name.trim().toLowerCase()}::${company.trim().toLowerCase()}`
-              ? "Create anyway"
-              : "Create lead"}
+              ? translateText("Create anyway")
+              : translateText("Create lead")}
         </button>
 
 

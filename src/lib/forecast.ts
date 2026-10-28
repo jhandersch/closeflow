@@ -1,6 +1,7 @@
 import { calculateSalesScore } from "@/lib/salesScore";
 import { getStaleDays } from "@/lib/scoring";
 import type { Lead } from "@/types/lead";
+import { getIntlLocale } from "@/lib/i18n";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
@@ -17,14 +18,14 @@ const getMonthKey = (value: string | Date, timeZone: string) => {
   return `${year}-${month}`;
 };
 
-const formatMonthLabel = (monthKey: string, timeZone: string) => {
+const formatMonthLabel = (monthKey: string, timeZone: string, locale = getIntlLocale()) => {
   const [year, month] = monthKey.split("-");
 
   const date = new Date(
     Date.UTC(Number(year), Number(month) - 1, 1, 12, 0, 0)
   );
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone,
     month: "short",
     year: "2-digit",

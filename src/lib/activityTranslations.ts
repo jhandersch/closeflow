@@ -3,5 +3,7 @@ export function translateActivity(action: string) {
         "Lead created": "Lead erstellt",
         "Task completed": "Task abgeschlossen",
     };
-    return map[action] ?? action;
+    return translateText(map[action] ?? action);
 }
+import { translateText } from "@/lib/i18n";
+

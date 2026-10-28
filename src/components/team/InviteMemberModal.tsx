@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useState } from "react";
 import type { WorkspaceRole } from "@/types";
 import RoleSelector from "@/components/team/RoleSelector";
@@ -20,29 +22,25 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
     return (<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-foreground">Invite member</h2>
+          <h2 className="text-xl font-semibold text-foreground">{translateText("Invite member")}</h2>
           <button type="button" onClick={onClose} className="text-sm text-foreground/55 hover:text-foreground">
-            Close
-          </button>
+            {translateText("Close")}</button>
         </div>
 
         <div className="mt-5 space-y-4">
           <label className="block text-sm text-foreground/70">
-            Email
-            <input value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" placeholder="name@company.com"/>
+            {translateText("Email")}<input value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400" placeholder={translateText("name@company.com")}/>
           </label>
 
           <label className="block text-sm text-foreground/70">
-            Role
-            <div className="mt-2">
+            {translateText("Role")}<div className="mt-2">
               <RoleSelector value={role} onChange={setRole}/>
             </div>
           </label>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/75 hover:bg-foreground/5">
-              Cancel
-            </button>
+              {translateText("Cancel")}</button>
             <button type="button" disabled={saving} onClick={async () => {
             setSaving(true);
             try {
@@ -53,7 +51,7 @@ export default function InviteMemberModal({ open, onClose, onInvite }: InviteMem
                 setSaving(false);
             }
         }} className="cf-btn-primary">
-              {saving ? "Inviting..." : "Invite"}
+              {saving ? translateText("Inviting...") : translateText("Invite")}
             </button>
           </div>
         </div>

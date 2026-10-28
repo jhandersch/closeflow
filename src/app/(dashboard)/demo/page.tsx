@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { loadDemoData } from "@/lib/demoData";
@@ -22,17 +24,17 @@ export default function DemoPage() {
     return (<AuthGuard>
       <div className="mx-auto max-w-3xl space-y-6 text-center">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">Demo</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">Load a demo workspace</h1>
-          <p className="mt-2 text-sm text-foreground/65">Spin up a sample dataset to explore CloseFlow instantly.</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{translateText("Demo")}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{translateText("Load a demo workspace")}</h1>
+          <p className="mt-2 text-sm text-foreground/65">{translateText("Spin up a sample dataset to explore CloseFlow instantly.")}</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-3">
           <button onClick={() => void startDemo(false)} disabled={loading} className="cf-btn-primary">
-            {loading ? "Loading..." : "Load demo data"}
+            {loading ? translateText("Loading...") : translateText("Load demo data")}
           </button>
           <button onClick={() => void startDemo(true)} disabled={loading} className="rounded-xl border border-border-subtle bg-surface-1 px-5 py-3 font-semibold text-foreground disabled:opacity-60">
-            {loading ? "Reloading..." : "Reload demo data"}
+            {loading ? translateText("Reloading...") : translateText("Reload demo data")}
           </button>
         </div>
 

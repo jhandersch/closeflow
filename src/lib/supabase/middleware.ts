@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -6,10 +7,10 @@ const getSupabasePublicKey = () => {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const key = (publishableKey?.startsWith("sb_secret_") ? anonKey : publishableKey) || anonKey;
     if (!key) {
-        throw new Error("Missing Supabase public key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+        throw new Error(translateText("Missing Supabase public key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY."));
     }
     if (key.startsWith("sb_secret_")) {
-        throw new Error("Invalid Supabase public key. Use NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY, never an sb_secret key.");
+        throw new Error(translateText("Invalid Supabase public key. Use NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY, never an sb_secret key."));
     }
     return key;
 };

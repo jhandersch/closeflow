@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { Search as SearchIcon, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 type SearchInputProps = {
@@ -48,9 +50,7 @@ export default function SearchInput({ value, onChange, onClose, onEnter, onArrow
       <SearchIcon size={18} className="text-cyan-400"/>
 
 
-      <input ref={inputRef} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder="
-          Leads, Customers, Tasks oder Seiten suchen...
-        " className="
+      <input ref={inputRef} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder={translateText("Leads, Customers, Tasks oder Seiten suchen...")} className="
           flex-1
           bg-transparent
           text-sm

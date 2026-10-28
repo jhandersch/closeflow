@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { readApiError } from "@/lib/apiError";
 import { appPrompt } from "@/lib/dialogs";
 
@@ -10,6 +12,7 @@ import {
   useAppPreferences,
 } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 
 type ThemeOption = "dark" | "light";
 
@@ -73,7 +76,7 @@ const TIMEZONE_OPTIONS = [
 ] as const;
 
 const formatDateTime = (value: string, timeZone: string) => {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -82,7 +85,7 @@ const formatDateTime = (value: string, timeZone: string) => {
 
 const isValidTimeZone = (value: string) => {
   try {
-    Intl.DateTimeFormat("en-US", {
+    Intl.DateTimeFormat(getIntlLocale(), {
       timeZone: value,
     });
     return true;
@@ -97,6 +100,8 @@ export default function SettingsPage() {
   const {
     theme: appTheme,
     setTheme: setAppTheme,
+    language: appLanguage,
+    setLanguage: setAppLanguage,
   } = useAppPreferences();
 
   const [loading, setLoading] = useState(true);
@@ -114,6 +119,7 @@ export default function SettingsPage() {
 
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
   const [theme, setTheme] = useState<ThemeOption>(appTheme);
+  const [language, setLanguage] = useState<AppLanguage>(appLanguage);
 
   const [notifications, setNotifications] =
     useState<NotificationSettings>({
@@ -266,6 +272,11 @@ export default function SettingsPage() {
       }
 
       setEmail(user.email || "");
+      const profileResponse = await fetch("/api/profile", { cache: "no-store" });
+      const profileData = profileResponse.ok ? await profileResponse.json() : null;
+      const storedLanguage = normalizeLanguage(profileData?.language ?? metadata.language);
+      setLanguage(storedLanguage);
+      setAppLanguage(storedLanguage);
       setName(metadata.name || "");
       setUsername(metadata.username || "");
       setAvatarUrl(metadata.avatar_url || "");
@@ -376,12 +387,12 @@ export default function SettingsPage() {
     const trimmedUsername = username.trim().toLowerCase();
 
     if (!trimmedName) {
-      toast.error("Name is required");
+      toast.error(translateText("Name is required"));
       return;
     }
 
     if (!trimmedUsername) {
-      toast.error("Username is required");
+      toast.error(translateText("Username is required"));
       return;
     }
 
@@ -401,7 +412,7 @@ export default function SettingsPage() {
     if (error) {
       toast.error(error.message || "Could not save profile");
     } else {
-      toast.success("Profile and company settings updated");
+      toast.success(translateText("Profile and company settings updated"));
     }
 
     setSavingProfile(false);
@@ -425,7 +436,7 @@ export default function SettingsPage() {
 
     const { error } = await supabase.auth.updateUser({
       data: {
-        language: "en",
+        language,
         theme,
         timezone: nextTimezone,
         notifications,
@@ -437,7 +448,24 @@ export default function SettingsPage() {
     if (error) {
       toast.error(error.message || "Could not save preferences");
     } else {
-      toast.success("Preferences updated");
+      const response = await fetch("/api/profile/preferences", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeaders()),
+        },
+        body: JSON.stringify({ language, timezone: nextTimezone }),
+      });
+
+      const result = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        toast.error(result?.error || "Could not save language preference");
+        setSavingPreferences(false);
+        return;
+      }
+
+      setAppLanguage(language);
+      toast.success(translateText("Preferences updated"));
     }
 
     setSavingPreferences(false);
@@ -445,12 +473,12 @@ export default function SettingsPage() {
 
   const changePassword = async () => {
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(translateText("Password must be at least 8 characters"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(translateText("Passwords do not match"));
       return;
     }
 
@@ -463,7 +491,7 @@ export default function SettingsPage() {
     if (error) {
       toast.error(error.message || "Could not change password");
     } else {
-      toast.success("Password updated");
+      toast.success(translateText("Password updated"));
       setNewPassword("");
       setConfirmPassword("");
     }
@@ -478,7 +506,7 @@ export default function SettingsPage() {
 
   const deleteAccount = async () => {
     if (deleteConfirmation.trim() !== "DELETE") {
-      toast.error("Type DELETE to confirm");
+      toast.error(translateText("Type DELETE to confirm"));
       return;
     }
 
@@ -507,7 +535,7 @@ export default function SettingsPage() {
       scope: "global",
     });
 
-    toast.success("Account deleted");
+    toast.success(translateText("Account deleted"));
     router.push("/login");
   };
 
@@ -529,7 +557,7 @@ export default function SettingsPage() {
 
   const sendMagicLink = async () => {
     if (!email.trim()) {
-      toast.error("No email found for this account");
+      toast.error(translateText("No email found for this account"));
       return;
     }
 
@@ -543,7 +571,7 @@ export default function SettingsPage() {
     if (error) {
       toast.error(error.message || "Could not send magic link");
     } else {
-      toast.success("Magic link sent");
+      toast.success(translateText("Magic link sent"));
     }
   };
 
@@ -555,7 +583,7 @@ export default function SettingsPage() {
     ).mfa;
 
     if (!mfaApi?.enroll) {
-      toast.error("MFA is not available in this environment");
+      toast.error(translateText("MFA is not available in this environment"));
       return;
     }
 
@@ -578,7 +606,7 @@ export default function SettingsPage() {
     setMfaStatus("pending");
 
     toast.success(
-      "2FA setup started. Scan the QR code and verify."
+      translateText("2FA setup started. Scan the QR code and verify.")
     );
 
     setMfaBusy(false);
@@ -592,12 +620,12 @@ export default function SettingsPage() {
     ).mfa;
 
     if (!mfaApi?.challengeAndVerify || !mfaFactorId) {
-      toast.error("2FA factor is missing");
+      toast.error(translateText("2FA factor is missing"));
       return;
     }
 
     if (!mfaVerifyCode.trim()) {
-      toast.error("Authentication code is required");
+      toast.error(translateText("Authentication code is required"));
       return;
     }
 
@@ -625,7 +653,7 @@ export default function SettingsPage() {
 
     await syncMfaState();
 
-    toast.success("Two-factor authentication enabled");
+    toast.success(translateText("Two-factor authentication enabled"));
     setMfaBusy(false);
   };
 
@@ -641,11 +669,11 @@ export default function SettingsPage() {
       !mfaApi?.verify ||
       !mfaFactorId
     ) {
-      toast.error("Could not start MFA session.");
+      toast.error(translateText("Could not start MFA session."));
       return;
     }
 
-    const code = await appPrompt("Enter the 6-digit code from your authenticator app:", { title: "Verify authenticator code", confirmLabel: "Verify", inputMode: "numeric", autoComplete: "one-time-code", maxLength: 6 });
+    const code = await appPrompt(translateText("Enter the 6-digit code from your authenticator app:"), { title: translateText("Verify authenticator code"), confirmLabel: translateText("Verify"), inputMode: "numeric", autoComplete: "one-time-code", maxLength: 6 });
 
     if (!code?.trim()) {
       return;
@@ -676,7 +704,7 @@ export default function SettingsPage() {
       }
 
       toast.success(
-        "MFA session verified. AAL2 is now active."
+        translateText("MFA session verified. AAL2 is now active.")
       );
     } catch (error) {
       console.error("MFA ELEVATION ERROR:", error);
@@ -699,7 +727,7 @@ export default function SettingsPage() {
     ).mfa;
 
     if (!mfaApi?.unenroll || !mfaFactorId) {
-      toast.error("No 2FA factor to disable");
+      toast.error(translateText("No 2FA factor to disable"));
       return;
     }
 
@@ -721,7 +749,7 @@ export default function SettingsPage() {
 
       if (aal.currentLevel !== "aal2") {
         toast.error(
-          "Please verify your 2FA with your authenticator code first."
+          translateText("Please verify your 2FA with your authenticator code first.")
         );
         return;
       }
@@ -748,7 +776,7 @@ export default function SettingsPage() {
 
       await syncMfaState();
 
-      toast.success("Two-factor authentication disabled");
+      toast.success(translateText("Two-factor authentication disabled"));
     } finally {
       setMfaBusy(false);
     }
@@ -794,13 +822,13 @@ export default function SettingsPage() {
 
     await loadRecoveryStatus();
 
-    toast.success("Recovery codes generated");
+    toast.success(translateText("Recovery codes generated"));
     setRecoveryBusy(false);
   };
 
   const consumeRecoveryCode = async () => {
     if (!recoveryCodeInput.trim()) {
-      toast.error("Enter a recovery code");
+      toast.error(translateText("Enter a recovery code"));
       return;
     }
 
@@ -834,7 +862,7 @@ export default function SettingsPage() {
     await loadRecoveryStatus();
 
     toast.success(
-      "Recovery code accepted and marked as used"
+      translateText("Recovery code accepted and marked as used")
     );
 
     setRecoveryBusy(false);
@@ -843,8 +871,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="text-foreground">
-        Loading...
-      </div>
+        {translateText("Loading...")}</div>
     );
   }
 
@@ -852,36 +879,29 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-          Settings
-        </p>
+          {translateText("Settings")}</p>
         <h1 className="mt-2 text-3xl font-bold text-foreground">
-          Manage your workspace and preferences
-        </h1>
+          {translateText("Manage your workspace and preferences")}</h1>
 
         <p className="mt-2 text-foreground/65">
-          Manage your CloseFlow workspace, preferences, and security.
-        </p>
+          {translateText("Manage your CloseFlow workspace, preferences, and security.")}</p>
 
         <div className="mt-4">
           <Link
             href="/settings/profile"
             className="inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
           >
-            Open profile settings
-          </Link>
+            {translateText("Open profile settings")}</Link>
         </div>
       </div>
 
       <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
         <h2 className="text-xl font-semibold text-foreground">
-          Profile and Company
-        </h2>
+          {translateText("Profile and Company")}</h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <label className="text-sm text-foreground/70">
-            Name
-
-            <input
+            {translateText("Name")}<input
               required
               value={name}
               onChange={(event) =>
@@ -892,9 +912,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            Username
-
-            <input
+            {translateText("Username")}<input
               required
               value={username}
               onChange={(event) =>
@@ -905,9 +923,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70 md:col-span-2">
-            Profile image URL
-
-            <input
+            {translateText("Profile image URL")}<input
               value={avatarUrl}
               onChange={(event) =>
                 setAvatarUrl(event.target.value)
@@ -917,9 +933,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            Company name
-
-            <input
+            {translateText("Company name")}<input
               value={companyName}
               onChange={(event) =>
                 setCompanyName(event.target.value)
@@ -929,9 +943,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            Industry
-
-            <input
+            {translateText("Industry")}<input
               value={industry}
               onChange={(event) =>
                 setIndustry(event.target.value)
@@ -941,9 +953,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            Team size
-
-            <input
+            {translateText("Team size")}<input
               value={teamSize}
               onChange={(event) =>
                 setTeamSize(event.target.value)
@@ -953,9 +963,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            Email
-
-            <div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground/80">
+            {translateText("Email")}<div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground/80">
               {email}
             </div>
           </label>
@@ -965,7 +973,7 @@ export default function SettingsPage() {
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
             <img
               src={avatarUrl}
-              alt="Profile preview"
+              alt={translateText("Profile preview")}
               className="h-10 w-10 rounded-full object-cover"
               onError={(event) => {
                 event.currentTarget.style.display = "none";
@@ -973,8 +981,7 @@ export default function SettingsPage() {
             />
 
             <span className="text-xs text-foreground/65">
-              Preview
-            </span>
+              {translateText("Preview")}</span>
           </div>
         ) : null}
 
@@ -984,21 +991,18 @@ export default function SettingsPage() {
           className="mt-5 rounded-xl bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-50"
         >
           {savingProfile
-            ? "Saving..."
-            : "Save profile and company"}
+            ? translateText("Saving...")
+            : translateText("Save profile and company")}
         </button>
       </div>
 
       <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
         <h2 className="text-xl font-semibold text-foreground">
-          Preferences
-        </h2>
+          {translateText("Preferences")}</h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <label className="text-sm text-foreground/70">
-            Theme
-
-            <select
+            {translateText("Theme")}<select
               value={theme}
               onChange={(event) => {
                 const value =
@@ -1009,15 +1013,24 @@ export default function SettingsPage() {
               }}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             >
-              <option value="dark">Dark mode</option>
-              <option value="light">Light mode</option>
+              <option value="dark">{translateText("Dark mode")}</option>
+              <option value="light">{translateText("Light mode")}</option>
             </select>
           </label>
 
           <label className="text-sm text-foreground/70">
-            Time zone
+            {translateText("Language / Sprache")}<select
+              value={language}
+              onChange={(event) => setLanguage(normalizeLanguage(event.target.value))}
+              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
+            >
+              <option value="de">{translateText("Deutsch")}</option>
+              <option value="en">{translateText("English")}</option>
+            </select>
+          </label>
 
-            <select
+          <label className="text-sm text-foreground/70">
+            {translateText("Time zone")}<select
               value={timezone}
               onChange={(event) =>
                 setTimezone(event.target.value)
@@ -1038,9 +1051,7 @@ export default function SettingsPage() {
 
         <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Browser notifications
-
-            <input
+            {translateText("Browser notifications")}<input
               type="checkbox"
               checked={notifications.browser}
               onChange={(event) =>
@@ -1053,9 +1064,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Email notifications
-
-            <input
+            {translateText("Email notifications")}<input
               type="checkbox"
               checked={notifications.email}
               onChange={(event) =>
@@ -1068,9 +1077,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Task reminders
-
-            <input
+            {translateText("Task reminders")}<input
               type="checkbox"
               checked={notifications.taskReminders}
               onChange={(event) =>
@@ -1089,25 +1096,21 @@ export default function SettingsPage() {
           className="mt-5 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60"
         >
           {savingPreferences
-            ? "Saving..."
-            : "Save preferences"}
+            ? translateText("Saving...")
+            : translateText("Save preferences")}
         </button>
       </div>
 
       <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
         <h2 className="text-xl font-semibold text-foreground">
-          Integrations
-        </h2>
+          {translateText("Integrations")}</h2>
 
         <p className="mt-2 text-sm text-foreground/65">
-          Connect your communication and calendar stack.
-        </p>
+          {translateText("Connect your communication and calendar stack.")}</p>
 
         <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Google
-
-            <input
+            {translateText("Google")}<input
               type="checkbox"
               checked={integrations.google}
               onChange={(event) =>
@@ -1120,9 +1123,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Gmail
-
-            <input
+            {translateText("Gmail")}<input
               type="checkbox"
               checked={integrations.gmail}
               onChange={(event) =>
@@ -1135,9 +1136,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Calendar
-
-            <input
+            {translateText("Calendar")}<input
               type="checkbox"
               checked={integrations.calendar}
               onChange={(event) =>
@@ -1150,9 +1149,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            Slack
-
-            <input
+            {translateText("Slack")}<input
               type="checkbox"
               checked={integrations.slack}
               onChange={(event) =>
@@ -1172,29 +1169,27 @@ export default function SettingsPage() {
         className="scroll-mt-24 rounded-2xl border border-border-subtle bg-surface-1 p-6 outline-none"
       >
         <h2 className="text-xl font-semibold text-foreground">
-          Security
-        </h2>
+          {translateText("Security")}</h2>
 
         <p className="mt-2 text-sm text-foreground/65">
-          Password, active sessions, and 2FA readiness.
-        </p>
+          {translateText("Password, active sessions, and 2FA readiness.")}</p>
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/60 p-4 text-sm text-foreground/75">
           <p>
-            Current device session:{" "}
+            {translateText("Current device session:")}{" "}
             {sessionExpiresAt
               ? `active until ${formatDateTime(
                   sessionExpiresAt,
                   timezone
                 )}`
-              : "not available"}
+              : translateText("not available")}
           </p>
 
           <p className="mt-1">
-            2FA support:{" "}
+            {translateText("2FA support:")}{" "}
             {mfaAvailable
-              ? "available in Supabase"
-              : "not available in this environment"}
+              ? translateText("available in Supabase")
+              : translateText("not available in this environment")}
           </p>
         </div>
 
@@ -1202,9 +1197,9 @@ export default function SettingsPage() {
           <table className="w-full text-left text-sm text-foreground/80">
             <thead className="border-b border-border-subtle text-xs uppercase tracking-[0.14em] text-foreground/55">
               <tr>
-                <th className="px-4 py-3">Device</th>
-                <th className="px-4 py-3">Session</th>
-                <th className="px-4 py-3">Expires</th>
+                <th className="px-4 py-3">{translateText("Device")}</th>
+                <th className="px-4 py-3">{translateText("Session")}</th>
+                <th className="px-4 py-3">{translateText("Expires")}</th>
               </tr>
             </thead>
 
@@ -1215,8 +1210,7 @@ export default function SettingsPage() {
                 </td>
 
                 <td className="px-4 py-3">
-                  Current
-                </td>
+                  {translateText("Current")}</td>
 
                 <td className="px-4 py-3">
                   {sessionExpiresAt
@@ -1224,7 +1218,7 @@ export default function SettingsPage() {
                         sessionExpiresAt,
                         timezone
                       )
-                    : "Unknown"}
+                    : translateText("Unknown")}
                 </td>
               </tr>
             </tbody>
@@ -1233,23 +1227,22 @@ export default function SettingsPage() {
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <p className="text-sm font-semibold text-foreground">
-            Authenticator app (TOTP)
-          </p>
+            {translateText("Authenticator app (TOTP)")}</p>
 
           <p className="mt-1 text-xs text-foreground/60">
-            Status:{" "}
+            {translateText("Status:")}{" "}
             {mfaStatus === "enabled"
-              ? "Enabled"
+              ? translateText("Enabled")
               : mfaStatus === "pending"
-                ? "Pending verification"
-                : "Disabled"}
+                ? translateText("Pending verification")
+                : translateText("Disabled")}
           </p>
 
           {qrImageSrc && mfaStatus === "pending" ? (
             <div className="mt-3 rounded-xl border border-border-subtle bg-white p-3">
               <img
                 src={qrImageSrc}
-                alt="MFA QR code"
+                alt={translateText("MFA QR code")}
                 className="mx-auto h-44 w-44 object-contain"
               />
             </div>
@@ -1262,7 +1255,7 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setMfaVerifyCode(event.target.value)
                 }
-                placeholder="Enter 6-digit code"
+                placeholder={translateText("Enter 6-digit code")}
                 className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
               />
 
@@ -1271,8 +1264,7 @@ export default function SettingsPage() {
                 disabled={mfaBusy}
                 className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-60"
               >
-                Verify 2FA
-              </button>
+                {translateText("Verify 2FA")}</button>
             </div>
           ) : null}
 
@@ -1287,8 +1279,8 @@ export default function SettingsPage() {
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50"
             >
               {mfaStatus === "pending"
-                ? "Restart setup"
-                : "Enable 2FA"}
+                ? translateText("Restart setup")
+                : translateText("Enable 2FA")}
             </button>
 
             <button
@@ -1298,8 +1290,7 @@ export default function SettingsPage() {
               }
               className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-50"
             >
-              Disable 2FA
-            </button>
+              {translateText("Disable 2FA")}</button>
 
             <button
               onClick={() => void elevateMfaSession()}
@@ -1308,16 +1299,13 @@ export default function SettingsPage() {
               }
               className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50"
             >
-              Verify 2FA for this session
-            </button>
+              {translateText("Verify 2FA for this session")}</button>
           </div>
         </div>
 
         <div className="mt-4">
           <label className="text-sm text-foreground/70">
-            Active sessions
-
-            <input
+            {translateText("Active sessions")}<input
               type="number"
               min={1}
               value={sessionCount}
@@ -1341,7 +1329,7 @@ export default function SettingsPage() {
             onChange={(event) =>
               setNewPassword(event.target.value)
             }
-            placeholder="New password"
+            placeholder={translateText("New password")}
             className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
           />
 
@@ -1351,7 +1339,7 @@ export default function SettingsPage() {
             onChange={(event) =>
               setConfirmPassword(event.target.value)
             }
-            placeholder="Confirm new password"
+            placeholder={translateText("Confirm new password")}
             className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
           />
         </div>
@@ -1362,8 +1350,8 @@ export default function SettingsPage() {
           className="mt-4 rounded-xl border border-border-subtle px-5 py-3 text-foreground hover:bg-foreground/5 disabled:opacity-60"
         >
           {changingPassword
-            ? "Updating..."
-            : "Change password"}
+            ? translateText("Updating...")
+            : translateText("Change password")}
         </button>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -1371,33 +1359,29 @@ export default function SettingsPage() {
             onClick={() => void sendMagicLink()}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
           >
-            Send magic sign-in link
-          </button>
+            {translateText("Send magic sign-in link")}</button>
 
           <button
             onClick={() => void logoutCurrentSession()}
             className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
           >
-            Sign out this device
-          </button>
+            {translateText("Sign out this device")}</button>
 
           <button
             onClick={() => void logoutAllSessions()}
             className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300"
           >
-            Sign out all devices
-          </button>
+            {translateText("Sign out all devices")}</button>
         </div>
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Recovery codes
-              </p>
+                {translateText("Recovery codes")}</p>
 
               <p className="text-xs text-foreground/60">
-                Remaining unused codes: {recoveryRemaining}
+                {translateText("Remaining unused codes:")}{recoveryRemaining}
               </p>
             </div>
 
@@ -1408,8 +1392,7 @@ export default function SettingsPage() {
               disabled={recoveryBusy}
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-50"
             >
-              Generate new codes
-            </button>
+              {translateText("Generate new codes")}</button>
           </div>
 
           {recoveryCodes.length > 0 ? (
@@ -1431,7 +1414,7 @@ export default function SettingsPage() {
               onChange={(event) =>
                 setRecoveryCodeInput(event.target.value)
               }
-              placeholder="Use recovery code"
+              placeholder={translateText("Use recovery code")}
               className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             />
 
@@ -1440,33 +1423,28 @@ export default function SettingsPage() {
               disabled={recoveryBusy}
               className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 disabled:opacity-50"
             >
-              Verify code
-            </button>
+              {translateText("Verify code")}</button>
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
         <h2 className="text-xl font-semibold text-red-300">
-          Account
-        </h2>
+          {translateText("Account")}</h2>
 
         <p className="mt-2 text-sm text-foreground/65">
-          Sign out from this workspace.
-        </p>
+          {translateText("Sign out from this workspace.")}</p>
 
         <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
           <p className="text-sm font-semibold text-rose-300">
-            Account deletion is permanent. Type DELETE to remove
-            all associated CRM data.
-          </p>
+            {translateText("Account deletion is permanent. Type DELETE to remove all associated CRM data.")}</p>
 
           <input
             value={deleteConfirmation}
             onChange={(event) =>
               setDeleteConfirmation(event.target.value)
             }
-            placeholder="DELETE"
+            placeholder={translateText("DELETE")}
             className="mt-3 w-full rounded-xl border border-red-500/20 bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-red-400"
           />
 
@@ -1476,8 +1454,8 @@ export default function SettingsPage() {
             className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 disabled:opacity-60"
           >
             {deletingAccount
-              ? "Deleting account..."
-              : "Permanently delete account"}
+              ? translateText("Deleting account...")
+              : translateText("Permanently delete account")}
           </button>
         </div>
 
@@ -1485,8 +1463,7 @@ export default function SettingsPage() {
           onClick={logout}
           className="mt-4 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white"
         >
-          Sign out
-        </button>
+          {translateText("Sign out")}</button>
       </div>
     </div>
   );

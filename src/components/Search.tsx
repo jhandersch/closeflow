@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SearchInput from "@/components/search/SearchInput";
@@ -12,72 +14,72 @@ type ResultItem = {
 const pageLinks: ResultItem[] = [
     {
         id: "dashboard",
-        title: "Dashboard",
+        title: translateText("Dashboard"),
         href: "/dashboard",
     },
     {
         id: "leads",
-        title: "Leads",
+        title: translateText("Leads"),
         href: "/leads",
     },
     {
         id: "customers",
-        title: "Customers",
+        title: translateText("Customers"),
         href: "/customers",
     },
     {
         id: "pipeline",
-        title: "Pipeline",
+        title: translateText("Pipeline"),
         href: "/pipeline",
     },
     {
         id: "tasks",
-        title: "Tasks",
+        title: translateText("Tasks"),
         href: "/tasks",
     },
     {
         id: "activities",
-        title: "Activities",
+        title: translateText("Activities"),
         href: "/activities",
     },
     {
         id: "analytics",
-        title: "Analytics",
+        title: translateText("Analytics"),
         href: "/analytics",
     },
     {
         id: "forecast",
-        title: "Forecast",
+        title: translateText("Forecast"),
         href: "/forecast",
     },
     {
         id: "ai",
-        title: "AI Assistant",
+        title: translateText("AI Assistant"),
         href: "/ai",
     },
     {
         id: "automations",
-        title: "Automations",
+        title: translateText("Automations"),
         href: "/automations",
     },
     {
         id: "notifications",
-        title: "Notifications",
+        title: translateText("Notifications"),
         href: "/notifications",
     },
     {
         id: "team",
-        title: "Team",
+        title: translateText("Team"),
         href: "/team",
     },
     {
         id: "billing",
-        title: "Billing",
+        title: translateText("Billing"),
         href: "/billing",
     },
     {
         id: "settings",
-        title: "Settings",
+        title: translateText("Settings"),
         href: "/settings",
     },
 ];

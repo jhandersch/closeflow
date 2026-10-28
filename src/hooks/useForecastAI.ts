@@ -9,6 +9,8 @@ import {
 } from "@/lib/scoring";
 import type { Lead } from "@/types";
 import type { ForecastSummary } from "@/types/forecast";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { translateText } from "@/lib/i18n";
 
 type ForecastAI = {
   summary: string;
@@ -22,6 +24,7 @@ export function useForecastAI(
   leads: Lead[],
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [analysis, setAnalysis] = useState<ForecastAI | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +75,7 @@ export function useForecastAI(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            language: "en",
+            language,
             forecast,
             leads: analyzedLeads,
           }),
@@ -112,13 +115,13 @@ export function useForecastAI(
         }
 
         setAnalysis({
-          summary: "Forecast analysis unavailable.",
+          summary: translateText("Forecast analysis unavailable."),
           positiveFactors: [],
           risks: [
-            "The AI forecast analysis could not be generated.",
+            translateText("The AI forecast analysis could not be generated."),
           ],
           recommendation:
-            "Review the pipeline manually and prioritize the largest open deals.",
+            translateText("Review the pipeline manually and prioritize the largest open deals."),
         });
       } finally {
         if (active) {
@@ -143,6 +146,7 @@ export function useForecastAI(
     forecast.averageProbability,
     forecast.activeDeals,
     leads,
+    language,
   ]);
 
   return {

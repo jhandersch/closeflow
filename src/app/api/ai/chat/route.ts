@@ -6,6 +6,7 @@ import { getUserFacingErrorMessage, getRetryableStatus } from "@/lib/errorRecove
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { recordAiUsageEvent } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: Request) {
     let userId: string | null = null;
     try {
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status });
         }
         const body = await request.json();
+        const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
+        const responseLanguage = language === "de" ? "German" : "English";
         const message = typeof body.message === "string" ? body.message.trim() : "";
         const mode = typeof body.mode === "string" ? body.mode.trim() : "sales-coach";
         const leadId = typeof body.leadId === "string" ? body.leadId.trim() : null;
@@ -38,7 +41,7 @@ export async function POST(request: Request) {
         );
         const apiKey = process.env.OPENAI_API_KEY;
         const fallback = {
-            answer: `AI (${mode}): ${message}`,
+            answer: language === "de" ? `KI (${mode}): ${message}` : `AI (${mode}): ${message}`,
             sources: [],
         };
         if (!apiKey) {
@@ -54,7 +57,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance.${dealCostContext}`,
+                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance in ${responseLanguage}.${dealCostContext}`,
                 },
                 {
                     role: "user",

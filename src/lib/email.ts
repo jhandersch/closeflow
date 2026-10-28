@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 type SendInviteEmailParams = {
@@ -8,7 +9,7 @@ type SendInviteEmailParams = {
 export async function sendWorkspaceInviteEmail({ to, inviteUrl, workspaceName = "CloseFlow", }: SendInviteEmailParams) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-        throw new Error("RESEND_API_KEY is missing");
+        throw new Error(translateText("RESEND_API_KEY is missing"));
     }
     const { data, error } = await resend.emails.send({
         from: process.env.EMAIL_FROM || "CloseFlow <onboarding@resend.dev>",

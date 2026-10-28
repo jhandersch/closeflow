@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getRouteUser } from "@/lib/supabase/route";
+import { normalizeLanguage } from "@/lib/i18n";
 
 export async function GET(request: Request) {
   const { supabase, user, error } =
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
       metadata.timezone.trim()
         ? metadata.timezone
         : "Europe/Berlin",
-    language: "en",
+    language: normalizeLanguage(profile?.language ?? metadata.language),
     created_at:
       profile?.created_at || null,
     updated_at:
@@ -106,7 +107,7 @@ export async function PATCH(request: Request) {
       ? body.timezone.trim()
       : "Europe/Berlin";
 
-  const language = "en";
+  const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
 
   const { error: updateError } =
     await supabase

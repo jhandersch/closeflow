@@ -1,16 +1,21 @@
+import { translateText } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: NextRequest) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
+    let language = normalizeLanguage(undefined);
     try {
         const payload = await request.json();
+        language = normalizeLanguage(payload?.language);
+        const responseLanguage = language === "de" ? "German" : "English";
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
             return NextResponse.json({
-                explanation: "Focus on high-value deals and opportunities that are close to conversion.",
-                nextAction: "Review priority leads and schedule follow-ups.",
+                explanation: language === "de" ? "Konzentriere dich auf hochwertige Abschlüsse mit hoher Abschlusschance." : "Focus on high-value deals and opportunities that are close to conversion.",
+                nextAction: language === "de" ? "Prüfe priorisierte Leads und plane Follow-ups." : "Review priority leads and schedule follow-ups.",
             });
         }
         const trackedFetch = createTrackedOpenAIFetch(
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 Be concise and practical.
-                Write explanation and nextAction in ${"English"}.
+                Write explanation and nextAction in ${responseLanguage}.
                 `,
                     },
                     {
@@ -54,15 +59,15 @@ export async function POST(request: NextRequest) {
             }),
         });
         if (!response.ok) {
-            throw new Error("AI request failed");
+            throw new Error(translateText("AI request failed"));
         }
         const data = await response.json();
         return NextResponse.json(JSON.parse(data.choices[0].message.content));
     }
     catch {
         return NextResponse.json({
-            explanation: "Review the highest priority opportunities first.",
-            nextAction: "Contact deals with high value and low activity.",
+            explanation: language === "de" ? "Prüfe zuerst die Verkaufschancen mit höchster Priorität." : "Review the highest priority opportunities first.",
+            nextAction: language === "de" ? "Kontaktiere Abschlüsse mit hohem Wert und geringer Aktivität." : "Contact deals with high value and low activity.",
         });
     }
 }

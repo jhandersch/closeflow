@@ -1,4 +1,8 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
+
+import { getIntlLocale } from "@/lib/i18n";
 import { toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 import toast from "react-hot-toast";
@@ -45,7 +49,7 @@ const getTodayKey = (timezone: string) => {
 };
 
 export default function TasksPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const [timezone, setTimezone] = useState("Europe/Berlin");
     const [tasks, setTasks] = useState<Task[]>([]);
     const [leads, setLeads] = useState<LeadOption[]>([]);
@@ -405,7 +409,7 @@ export default function TasksPage() {
             type: "task_deleted",
             taskId,
         });
-        toast.success("Task deleted");
+        toast.success(translateText("Task deleted"));
     };
     /*
      * =========================
@@ -458,7 +462,7 @@ export default function TasksPage() {
               tracking-[0.24em]
               text-cyan-400
             ">
-            {"Tasks"}
+            {translateText("Tasks")}
           </p>
 
 
@@ -468,7 +472,7 @@ export default function TasksPage() {
               font-bold
               text-foreground
             ">
-            {"Your follow-ups and next steps"}
+            {translateText("Your follow-ups and next steps")}
           </h1>
 
 
@@ -477,7 +481,7 @@ export default function TasksPage() {
               text-sm
               text-foreground/65
             ">
-            {"Track follow-up work across your workspace."}
+            {translateText("Track follow-up work across your workspace.")}
           </p>
 
         </div>
@@ -496,7 +500,7 @@ export default function TasksPage() {
               font-semibold
               text-foreground
             ">
-            {"Create task"}
+            {translateText("Create task")}
           </h2>
 
 
@@ -536,7 +540,7 @@ export default function TasksPage() {
               ">
 
               {leads.length === 0 ? (<option value="">
-                    {"No leads available"}
+                    {translateText("No leads available")}
                   </option>) : (leads.map((lead) => (<option key={lead.id} value={lead.id}>
                         {(lead.name ||
                 ("Untitled")) +
@@ -564,19 +568,19 @@ export default function TasksPage() {
 
             <select value={taskPriority} onChange={(event) => setTaskPriority(event.target.value as TaskPriority)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-sm text-foreground outline-none">
               <option value="low">
-                {"Low"}
+                {translateText("Low")}
               </option>
 
               <option value="medium">
-                {"Medium"}
+                {translateText("Medium")}
               </option>
 
               <option value="high">
-                {"High"}
+                {translateText("High")}
               </option>
 
               <option value="urgent">
-                {"Urgent"}
+                {translateText("Urgent")}
               </option>
             </select>
 
@@ -604,7 +608,7 @@ export default function TasksPage() {
                 text-xs
                 text-foreground/55
               ">
-              {"For active follow-up workflows."}
+              {translateText("For active follow-up workflows.")}
             </p>
 
 
@@ -620,8 +624,8 @@ export default function TasksPage() {
                 disabled:opacity-60
               ">
               {creatingTask
-            ? ("Saving...")
-            : ("Save task")}
+            ? (translateText("Saving..."))
+            : (translateText("Save task"))}
             </button>
 
           </div>
@@ -638,7 +642,7 @@ export default function TasksPage() {
         {loading ? (<p className="
                 text-foreground/65
               ">
-              {"Loading..."}
+              {translateText("Loading...")}
             </p>) : (<div className="
                 space-y-6
               ">

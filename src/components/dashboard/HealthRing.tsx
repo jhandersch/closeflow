@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type HealthRingProps = {
     value: number;
 };
@@ -28,7 +29,6 @@ export default function HealthRing({ value }: HealthRingProps) {
       </svg>
 
       <p className="mt-1 text-xs text-foreground/65">
-        Health
-      </p>
+        {translateText("Health")}</p>
     </div>);
 }

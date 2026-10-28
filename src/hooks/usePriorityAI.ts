@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
@@ -8,6 +10,7 @@ import {
   getPriorityScore,
   getCloseProbability,
 } from "@/lib/scoring";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type PriorityAIResult = {
   headline: string;
@@ -21,6 +24,7 @@ export function usePriorityAI(
   leads: any[],
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [data, setData] = useState<PriorityAIResult>({
     headline: "",
     explanation: "",
@@ -32,10 +36,10 @@ export function usePriorityAI(
   useEffect(() => {
     if (!leads.length) {
       setData({
-        headline: "No priorities available",
-        explanation: "Add leads to receive AI recommendations.",
-        nextAction: "Create new opportunities.",
-        priorityReason: "No data available.",
+        headline: translateText("No priorities available"),
+        explanation: translateText("Add leads to receive AI recommendations."),
+        nextAction: translateText("Create new opportunities."),
+        priorityReason: translateText("No data available."),
         riskLevel: "Low",
       });
       return;
@@ -65,7 +69,7 @@ export function usePriorityAI(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            language: "en",
+            language,
             leads: scoredLeads.map((lead) => ({
               id: lead.id,
               name: leadDisplayName(lead),
@@ -86,7 +90,7 @@ export function usePriorityAI(
         });
 
         if (!response.ok) {
-          throw new Error("Priority AI request failed");
+          throw new Error(translateText("Priority AI request failed"));
         }
 
         const result = await response.json();
@@ -115,20 +119,25 @@ export function usePriorityAI(
 
         setData({
           headline: highest
-            ? `${leadDisplayName(highest)} needs attention`
-            : "AI analysis unavailable",
+            ? language === "de" ? `${leadDisplayName(highest)} benötigt Aufmerksamkeit` : `${leadDisplayName(highest)} needs attention`
+            : translateText("AI analysis unavailable"),
 
           explanation: highest
-            ? "This opportunity was prioritized using value, stage and activity signals."
-            : "Unable to analyze opportunities right now.",
+            ? translateText("This opportunity was prioritized using value, stage and activity signals.")
+            : translateText("Unable to analyze opportunities right now."),
 
           nextAction:
             highest?.next_action ??
-            "Review your highest-value deals manually.",
+            translateText("Review your highest-value deals manually."),
 
           priorityReason: highest
-            ? analyzeLead(highest).reasons.join(" ")
-            : "No AI data available.",
+            ? analyzeLead(highest).reasons.map((reason) => {
+                const inactive = reason.match(/^No activity for (\d+) days\.$/);
+                return inactive && language === "de"
+                  ? `Seit ${inactive[1]} Tagen keine Aktivität.`
+                  : translateText(reason);
+              }).join(" ")
+            : translateText("No AI data available."),
 
           riskLevel: highest
             ? getHealthScore(highest) < 50
@@ -142,7 +151,7 @@ export function usePriorityAI(
     }
 
     void generate();
-  }, [leads]);
+  }, [leads, language]);
 
   return data;
 }

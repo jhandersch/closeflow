@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type PaginationControlsProps = {
     page: number;
     pageSize: number;
@@ -34,7 +35,7 @@ export default function PaginationControls({
         >
             {showSummary ? (
                 <p aria-live="polite" className="text-foreground/60">
-                    Showing {firstItem}–{lastItem} of {totalItems} {label} · Page {currentPage} of {totalPages}
+                    {translateText("Showing")}{firstItem}–{lastItem} {" "}{translateText("of")}{" "}{totalItems} {label} {" "}{translateText("· Page")}{" "}{currentPage} {" "}{translateText("of")}{" "}{totalPages}
                 </p>
             ) : null}
             <div className="flex items-center gap-2">
@@ -44,16 +45,14 @@ export default function PaginationControls({
                     disabled={currentPage === 1}
                     className={buttonClassName}
                 >
-                    Previous
-                </button>
+                    {translateText("Previous")}</button>
                 <button
                     type="button"
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={buttonClassName}
                 >
-                    Next
-                </button>
+                    {translateText("Next")}</button>
             </div>
         </nav>
     );

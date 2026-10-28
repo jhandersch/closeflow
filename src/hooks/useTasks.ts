@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { toDisplayMessage } from "@/lib/apiError";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -114,11 +116,11 @@ export function useTasks(leadId: string) {
     const addTask = async (title: string, dueDate?: string, priority: TaskPriority = "medium") => {
         const { data: { user }, } = await supabase.auth.getUser();
         if (!user) {
-            throw new Error("Not authenticated");
+            throw new Error(translateText("Not authenticated"));
         }
         const workspaceId = await getLeadWorkspaceId();
         if (!workspaceId) {
-            throw new Error("No workspace found");
+            throw new Error(translateText("No workspace found"));
         }
         const { data: createdTask, error } = await supabase
             .from("tasks")
@@ -138,7 +140,7 @@ export function useTasks(leadId: string) {
             throw error;
         }
         if (!createdTask) {
-            throw new Error("Task was not created");
+            throw new Error(translateText("Task was not created"));
         }
         setTasks((previous) => [
             createdTask as Task,
@@ -167,11 +169,11 @@ export function useTasks(leadId: string) {
     }) => {
         const { data: { user }, } = await supabase.auth.getUser();
         if (!user) {
-            throw new Error("Not authenticated");
+            throw new Error(translateText("Not authenticated"));
         }
         const title = updates.title.trim();
         if (!title) {
-            throw new Error("Task title is required");
+            throw new Error(translateText("Task title is required"));
         }
         const { data: updatedTask, error } = await supabase
             .from("tasks")
@@ -188,7 +190,7 @@ export function useTasks(leadId: string) {
             throw error;
         }
         if (!updatedTask) {
-            throw new Error("Task was not updated");
+            throw new Error(translateText("Task was not updated"));
         }
         const workspaceId = await resolveWorkspaceId(updatedTask.workspace_id ?? null);
         setTasks((previous) => previous.map((task) => task.id === id
@@ -251,7 +253,7 @@ export function useTasks(leadId: string) {
             await createActivitySafe({
                 userId: user.id,
                 workspaceId,
-                title: "Task completed",
+                title: translateText("Task completed"),
                 type: "task_completed",
                 metadata: {
                     event: "task_completed",
@@ -263,7 +265,7 @@ export function useTasks(leadId: string) {
             await createActivitySafe({
                 userId: user.id,
                 workspaceId,
-                title: "Task reopened",
+                title: translateText("Task reopened"),
                 type: "other",
                 metadata: {
                     event: "task_reopened",
@@ -311,7 +313,7 @@ export function useTasks(leadId: string) {
                 task_title: task?.title || null,
             },
         });
-        toast.success("Task deleted");
+        toast.success(translateText("Task deleted"));
     };
     return {
         tasks,

@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { LayoutDashboard, Users, ListTodo, Settings2, Calendar, FileText, } from "lucide-react";
 import SearchResult from "./SearchResult";
 type ResultItem = {
@@ -89,8 +91,7 @@ export default function SearchResults({ leads, customers, tasks, pages, selected
               text-sm
               text-foreground/50
             ">
-            No results found
-          </div>)
+            {translateText("No results found")}</div>)
             :
                 null}
 

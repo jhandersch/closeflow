@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type AIRiskCardProps = {
     risk: {
         level: string;
@@ -24,8 +25,7 @@ export default function AIRiskCard({ risk, }: AIRiskCardProps) {
             tracking-widest
             text-foreground/55
           ">
-            AI Risk Detection
-          </p>
+            {translateText("AI Risk Detection")}</p>
 
 
           <h2 className="

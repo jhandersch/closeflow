@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 type LeadMemory = {
     summary: string;
     risk: string;
@@ -21,23 +22,21 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
     return (<div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
 
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">AI</span>
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{translateText("AI")}</span>
 
         <div>
           <p className="text-sm uppercase tracking-widest text-cyan-400">
-            AI Memory
-          </p>
+            {translateText("AI Memory")}</p>
 
           <h2 className="text-2xl font-bold text-foreground">
-            Lead History Analysis
-          </h2>
+            {translateText("Lead History Analysis")}</h2>
         </div>
       </div>
 
       <div className="mt-6 space-y-5">
 
         <div>
-          <p className="text-sm text-foreground/55">Summary</p>
+          <p className="text-sm text-foreground/55">{translateText("Summary")}</p>
 
           <p className="mt-1 text-foreground">
             {memory.summary}
@@ -45,15 +44,15 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
         </div>
 
         <div>
-          <p className="text-sm text-foreground/55">Risk</p>
+          <p className="text-sm text-foreground/55">{translateText("Risk")}</p>
 
           <p className="mt-1 text-yellow-300">
-            {memory.risk}
+            {translateText(memory.risk)}
           </p>
         </div>
 
         <div>
-          <p className="text-sm text-foreground/55">Next Action</p>
+          <p className="text-sm text-foreground/55">{translateText("Next Action")}</p>
 
           <p className="mt-1 text-cyan-300 font-semibold">
             {memory.nextAction}
@@ -62,16 +61,14 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
 
         <div className="flex justify-between items-center border-t border-border-subtle pt-4">
           <span className="text-foreground/55">
-            Analysis confidence
-          </span>
+            {translateText("Analysis confidence")}</span>
 
           <span className="text-emerald-400 font-bold">
             {Math.round(memory.confidence * 100)}%
           </span>
         </div>
         <p className="text-xs text-foreground/50">
-          Confidence in this analysis, not the deal&apos;s win probability.
-        </p>
+          {translateText("Confidence in this analysis, not the deal's win probability.")}</p>
 
       </div>
 

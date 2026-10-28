@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { appConfirm } from "@/lib/dialogs";
 
 import Link from "next/link";
@@ -30,7 +32,7 @@ const formatActivityDate = (
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone,
@@ -38,7 +40,7 @@ const formatActivityDate = (
 };
 
 export default function CustomerDetailPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const params = useParams();
     const router = useRouter();
 
@@ -123,7 +125,7 @@ export default function CustomerDetailPage() {
 
             try {
                 new Intl.DateTimeFormat(
-                    "en-US",
+                    getIntlLocale(),
                     {
                         timeZone:
                             savedTimezone,
@@ -393,7 +395,7 @@ export default function CustomerDetailPage() {
                     !session?.access_token
                 ) {
                     throw new Error(
-                        "Not authenticated.",
+                        translateText("Not authenticated."),
                     );
                 }
 
@@ -468,7 +470,7 @@ export default function CustomerDetailPage() {
                     !session?.access_token
                 ) {
                     throw new Error(
-                        "Not authenticated.",
+                        translateText("Not authenticated."),
                     );
                 }
 
@@ -563,19 +565,17 @@ export default function CustomerDetailPage() {
             <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                     <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        Customer
-                    </p>
+                        {translateText("Customer")}</p>
 
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                         <h1 className="truncate text-3xl font-bold tracking-tight text-foreground">
                             {customer?.company ||
-                                "Customer"}
+                                translateText("Customer")}
                         </h1>
 
                         {customer?.isVip ? (
                             <span className="inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
-                                ★ VIP
-                            </span>
+                                {translateText("★ VIP")}</span>
                         ) : null}
                     </div>
                 </div>
@@ -591,8 +591,7 @@ export default function CustomerDetailPage() {
                         }
                         className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/15 disabled:opacity-50"
                     >
-                        Edit
-                    </button>
+                        {translateText("Edit")}</button>
 
                     <button
                         type="button"
@@ -607,53 +606,47 @@ export default function CustomerDetailPage() {
                         className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {deleting
-                            ? "Deleting..."
-                            : "Delete customer"}
+                            ? translateText("Deleting...")
+                            : translateText("Delete customer")}
                     </button>
 
                     <Link
                         href="/customers"
                         className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/75 transition hover:bg-foreground/5"
                     >
-                        Back
-                    </Link>
+                        {translateText("Back")}</Link>
                 </div>
             </div>
 
             {error ? (
                 <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-                    Could not load customer:{" "}
+                    {translateText("Could not load customer:")}{" "}
                     {error}
                 </div>
             ) : null}
 
             {loading ? (
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">
-                    Loading customer...
-                </div>
+                    {translateText("Loading customer...")}</div>
             ) : !customer ? (
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground/65">
-                    Customer not found.
-                </div>
+                    {translateText("Customer not found.")}</div>
             ) : (
                 <>
                     {editing ? (
                         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                             <div>
                                 <h2 className="text-lg font-semibold text-foreground">
-                                    Edit Customer
-                                </h2>
+                                    {translateText("Edit Customer")}</h2>
 
                                 <p className="mt-1 text-sm text-foreground/55">
-                                    Update this customer&apos;s information.
-                                </p>
+                                    {translateText("Update this customer's information.")}</p>
                             </div>
 
                             <div className="mt-5 grid gap-4 md:grid-cols-2">
                                 <div>
                                     <label className="text-sm text-foreground/65">
-                                        Company
-                                    </label>
+                                        {translateText("Company")}</label>
 
                                     <input
                                         value={
@@ -669,14 +662,13 @@ export default function CustomerDetailPage() {
                                             )
                                         }
                                         className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400/50"
-                                        placeholder="Company name"
+                                        placeholder={translateText("Company name")}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-sm text-foreground/65">
-                                        Website
-                                    </label>
+                                        {translateText("Website")}</label>
 
                                     <input
                                         value={
@@ -692,14 +684,13 @@ export default function CustomerDetailPage() {
                                             )
                                         }
                                         className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400/50"
-                                        placeholder="https://example.com"
+                                        placeholder={translateText("https://example.com")}
                                     />
                                 </div>
 
                                 <div className="md:col-span-2">
                                     <label className="text-sm text-foreground/65">
-                                        Address
-                                    </label>
+                                        {translateText("Address")}</label>
 
                                     <input
                                         value={
@@ -715,14 +706,13 @@ export default function CustomerDetailPage() {
                                             )
                                         }
                                         className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400/50"
-                                        placeholder="Address"
+                                        placeholder={translateText("Address")}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-sm text-foreground/65">
-                                        Industry
-                                    </label>
+                                        {translateText("Industry")}</label>
 
                                     <input
                                         value={
@@ -738,7 +728,7 @@ export default function CustomerDetailPage() {
                                             )
                                         }
                                         className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400/50"
-                                        placeholder="e.g. Software"
+                                        placeholder={translateText("e.g. Software")}
                                     />
                                 </div>
 
@@ -763,12 +753,10 @@ export default function CustomerDetailPage() {
 
                                         <div>
                                             <p className="text-sm font-medium text-foreground">
-                                                VIP Customer
-                                            </p>
+                                                {translateText("VIP Customer")}</p>
 
                                             <p className="mt-0.5 text-xs text-foreground/55">
-                                                Mark this customer as a VIP customer.
-                                            </p>
+                                                {translateText("Mark this customer as a VIP customer.")}</p>
                                         </div>
                                     </label>
                                 </div>
@@ -796,8 +784,7 @@ export default function CustomerDetailPage() {
                                     }
                                     className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/75 hover:bg-foreground/5 disabled:opacity-50"
                                 >
-                                    Cancel
-                                </button>
+                                    {translateText("Cancel")}</button>
 
                                 <button
                                     type="button"
@@ -810,8 +797,8 @@ export default function CustomerDetailPage() {
                                     className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50"
                                 >
                                     {saving
-                                        ? "Saving..."
-                                        : "Save changes"}
+                                        ? translateText("Saving...")
+                                        : translateText("Save changes")}
                                 </button>
                             </div>
                         </section>
@@ -820,11 +807,10 @@ export default function CustomerDetailPage() {
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
                             <p className="text-xs text-foreground/55">
-                                Revenue History
-                            </p>
+                                {translateText("Revenue History")}</p>
 
                             <p className="mt-2 text-2xl font-semibold text-emerald-300">
-                                EUR{" "}
+                                {translateText("EUR")}{" "}
                                 {customer.revenue.toLocaleString(
                                     locale,
                                 )}
@@ -833,8 +819,7 @@ export default function CustomerDetailPage() {
 
                         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
                             <p className="text-xs text-foreground/55">
-                                Purchased Products
-                            </p>
+                                {translateText("Purchased Products")}</p>
 
                             <p className="mt-2 text-2xl font-semibold text-foreground">
                                 {
@@ -844,14 +829,12 @@ export default function CustomerDetailPage() {
                                             "won",
                                     ).length
                                 }{" "}
-                                deals won
-                            </p>
+                                {translateText("deals won")}</p>
                         </div>
 
                         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
                             <p className="text-xs text-foreground/55">
-                                Contacts
-                            </p>
+                                {translateText("Contacts")}</p>
 
                             <p className="mt-2 text-2xl font-semibold text-foreground">
                                 {
@@ -865,40 +848,37 @@ export default function CustomerDetailPage() {
                     <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
                         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                             <h2 className="text-lg font-semibold text-foreground">
-                                Company Profile
-                            </h2>
+                                {translateText("Company Profile")}</h2>
 
                             {customer.isVip ? (
                                 <span className="mt-3 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
-                                    ★ VIP Customer
-                                </span>
+                                    {translateText("★ VIP Customer")}</span>
                             ) : null}
 
                             <div className="mt-4 space-y-2 text-sm text-foreground/80">
                                 <p>
-                                    Industry:{" "}
+                                    {translateText("Industry:")}{" "}
                                     {customer.industry ||
-                                        "n/a"}
+                                        translateText("n/a")}
                                 </p>
 
                                 <p>
-                                    Website:{" "}
+                                    {translateText("Website:")}{" "}
                                     {customer.website ||
-                                        "n/a"}
+                                        translateText("n/a")}
                                 </p>
 
                                 <p>
-                                    Address:{" "}
+                                    {translateText("Address:")}{" "}
                                     {customer.address ||
-                                        "n/a"}
+                                        translateText("n/a")}
                                 </p>
                             </div>
                         </section>
 
                         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                             <h2 className="text-lg font-semibold text-foreground">
-                                Contacts
-                            </h2>
+                                {translateText("Contacts")}</h2>
 
                             <div className="mt-4 space-y-2 text-sm text-foreground/80">
                                 {customer.contacts
@@ -920,8 +900,7 @@ export default function CustomerDetailPage() {
                                     )
                                 ) : (
                                     <p className="text-foreground/55">
-                                        No contacts available.
-                                    </p>
+                                        {translateText("No contacts available.")}</p>
                                 )}
                             </div>
                         </section>
@@ -929,14 +908,12 @@ export default function CustomerDetailPage() {
 
                     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                         <h2 className="text-lg font-semibold text-foreground">
-                            Communication History
-                        </h2>
+                            {translateText("Communication History")}</h2>
 
                         <div className="mt-4 space-y-3">
                             {activitiesLoading ? (
                                 <p className="text-sm text-foreground/55">
-                                    Loading activities...
-                                </p>
+                                    {translateText("Loading activities...")}</p>
                             ) : customerActivities.length ? (
                                 customerActivities.map(
                                     (
@@ -952,7 +929,7 @@ export default function CustomerDetailPage() {
                                                 {activity.title ||
                                                     activity.action ||
                                                     activity.type ||
-                                                    "Activity"}
+                                                    translateText("Activity")}
                                             </p>
 
                                             {activity.description ? (
@@ -969,23 +946,21 @@ export default function CustomerDetailPage() {
                                                           activity.created_at,
                                                           timezone,
                                                       )
-                                                    : "n/a"}
+                                                    : translateText("n/a")}
                                             </p>
                                         </div>
                                     ),
                                 )
                             ) : (
                                 <p className="text-sm text-foreground/55">
-                                    No activities available.
-                                </p>
+                                    {translateText("No activities available.")}</p>
                             )}
                         </div>
                     </section>
 
                     <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                         <h2 className="text-lg font-semibold text-foreground">
-                            Notes
-                        </h2>
+                            {translateText("Notes")}</h2>
 
                         <div className="mt-4 space-y-2 text-sm text-foreground/80">
                             {customer.notes.length ? (
@@ -1006,8 +981,7 @@ export default function CustomerDetailPage() {
                                 )
                             ) : (
                                 <p className="text-foreground/55">
-                                    No notes available.
-                                </p>
+                                    {translateText("No notes available.")}</p>
                             )}
                         </div>
                     </section>

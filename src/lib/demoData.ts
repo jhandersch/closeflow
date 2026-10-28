@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase/client";
 type DemoSeedResponse = {
     mode: "load" | "reload";
@@ -14,7 +15,7 @@ type LoadDemoOptions = {
 export async function loadDemoData(options: LoadDemoOptions = {}) {
     const { data: { session }, } = await supabase.auth.getSession();
     if (!session?.access_token) {
-        throw new Error("You need an active session to load demo data.");
+        throw new Error(translateText("You need an active session to load demo data."));
     }
     const response = await fetch("/api/demo/seed", {
         method: "POST",
@@ -31,7 +32,7 @@ export async function loadDemoData(options: LoadDemoOptions = {}) {
         throw new Error(payload && "error" in payload && payload.error ? payload.error : "Failed to load demo data");
     }
     if (!payload || !("message" in payload)) {
-        throw new Error("Demo response was invalid");
+        throw new Error(translateText("Demo response was invalid"));
     }
     return payload;
 }

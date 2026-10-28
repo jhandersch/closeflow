@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 
@@ -47,7 +49,7 @@ type DeletedCalendarEvent = {
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 const formatDateTime = (value: string, timeZone: string) => {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -55,7 +57,7 @@ const formatDateTime = (value: string, timeZone: string) => {
 };
 
 const formatDate = (value: string, timeZone: string) => {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: "medium",
     timeZone,
   }).format(new Date(value));
@@ -63,7 +65,7 @@ const formatDate = (value: string, timeZone: string) => {
 
 const isValidTimeZone = (value: string) => {
   try {
-    Intl.DateTimeFormat("en-US", {
+    Intl.DateTimeFormat(getIntlLocale(), {
       timeZone: value,
     });
     return true;
@@ -155,7 +157,7 @@ export default function TrashPage() {
       setCalendarEvents((calendarResult?.events ?? []) as DeletedCalendarEvent[]);
     } catch (error) {
       console.error("Trash load error:", error);
-      toast.error("Could not load trash");
+      toast.error(translateText("Could not load trash"));
     } finally {
       setLoading(false);
     }
@@ -256,7 +258,7 @@ export default function TrashPage() {
       setTasks((current) => current.filter((task) => task.lead_id !== leadId));
       setCalendarEvents((current) => current.filter((event) => event.lead_id !== leadId));
 
-      toast.success("Lead restored");
+      toast.success(translateText("Lead restored"));
     } catch (error) {
       console.error("Restore lead error:", error);
 
@@ -303,7 +305,7 @@ export default function TrashPage() {
       setTasks((current) => current.filter((task) => !restoredIds.has(task.lead_id)));
       setCalendarEvents((current) => current.filter((event) => !event.lead_id || !restoredIds.has(event.lead_id)));
 
-      toast.success("Customer restored");
+      toast.success(translateText("Customer restored"));
     } catch (error) {
       console.error("Restore customer error:", error);
 
@@ -322,7 +324,7 @@ export default function TrashPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        throw new Error("Please sign in again.");
+        throw new Error(translateText("Please sign in again."));
       }
 
       const {
@@ -342,7 +344,7 @@ export default function TrashPage() {
 
       if (error || !restoredTask) {
         throw (
-          error || new Error("Could not restore task")
+          error || new Error(translateText("Could not restore task"))
         );
       }
 
@@ -350,7 +352,7 @@ export default function TrashPage() {
         current.filter((task) => task.id !== taskId)
       );
 
-      toast.success("Task restored");
+      toast.success(translateText("Task restored"));
     } catch (error) {
       console.error("Restore task error:", error);
 
@@ -372,7 +374,7 @@ export default function TrashPage() {
         throw new Error(result?.error || "Could not restore calendar event");
       }
       setCalendarEvents((current) => current.filter((event) => event.id !== eventId));
-      toast.success("Calendar event restored");
+      toast.success(translateText("Calendar event restored"));
     } catch (error) {
       toast.error(toDisplayMessage(error, "Could not restore calendar event"));
     } finally {
@@ -383,7 +385,7 @@ export default function TrashPage() {
   const emptyTrash = async () => {
     if (
       !await appConfirm(
-        "Permanently delete all items in the trash? This cannot be undone."
+        translateText("Permanently delete all items in the trash? This cannot be undone.")
       )
     ) {
       return;
@@ -438,16 +440,13 @@ export default function TrashPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-              Trash
-            </p>
+              {translateText("Trash")}</p>
 
             <h1 className="mt-2 text-3xl font-bold text-foreground">
-              Recover deleted records
-            </h1>
+              {translateText("Recover deleted records")}</h1>
 
             <p className="mt-2 text-sm text-foreground/65">
-              Restore deleted customers, leads, tasks, and calendar events.
-            </p>
+              {translateText("Restore deleted customers, leads, tasks, and calendar events.")}</p>
           </div>
 
           {!loading && totalItems > 0 ? (
@@ -458,7 +457,7 @@ export default function TrashPage() {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-medium text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Trash2 size={16} />
-              {emptying ? "Emptying..." : "Empty trash"}
+              {emptying ? translateText("Emptying...") : translateText("Empty trash")}
             </button>
           ) : null}
         </div>
@@ -466,8 +465,7 @@ export default function TrashPage() {
         {loading ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
             <p className="text-sm text-foreground/60">
-              Loading trash...
-            </p>
+              {translateText("Loading trash...")}</p>
           </div>
         ) : totalItems === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-10 text-center">
@@ -477,12 +475,10 @@ export default function TrashPage() {
             />
 
             <h2 className="mt-4 text-lg font-semibold text-foreground">
-              Trash is empty
-            </h2>
+              {translateText("Trash is empty")}</h2>
 
             <p className="mt-2 text-sm text-foreground/55">
-              Deleted customers, leads, tasks, and calendar events appear here.
-            </p>
+              {translateText("Deleted customers, leads, tasks, and calendar events appear here.")}</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -490,12 +486,11 @@ export default function TrashPage() {
               <section className="space-y-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Customers ({customerGroups.length})
+                    {translateText("Customers (")}{customerGroups.length})
                   </h2>
 
                   <p className="mt-1 text-sm text-foreground/55">
-                    Deleted customers are grouped from their deleted deals.
-                  </p>
+                    {translateText("Deleted customers are grouped from their deleted deals.")}</p>
                 </div>
 
                 {customerGroups.map((customer) => (
@@ -512,13 +507,12 @@ export default function TrashPage() {
                         {customer.contacts.length > 0
                           ? customer.contacts.join(", ")
                           : customer.isPrivate
-                            ? "Private customer"
-                            : "No contact"}
+                            ? translateText("Private customer")
+                            : translateText("No contact")}
                       </p>
 
                       <p className="mt-2 text-xs text-foreground/40">
-                        {customer.deals} deal
-                        {customer.deals === 1 ? "" : "s"}
+                        {customer.deals} {translateText("deal")}{customer.deals === 1 ? "" : translateText("s")}
                         {customer.deleted_at
                           ? ` • Deleted on ${formatDateTime(
                               customer.deleted_at,
@@ -540,8 +534,8 @@ export default function TrashPage() {
                     >
                       <RotateCcw size={16} />
                       {restoringCustomerKey === customer.key
-                        ? "Restoring..."
-                        : "Restore"}
+                        ? translateText("Restoring...")
+                        : translateText("Restore")}
                     </button>
                   </div>
                 ))}
@@ -552,12 +546,11 @@ export default function TrashPage() {
               <section className="space-y-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Leads ({deletedLeadItems.length})
+                    {translateText("Leads (")}{deletedLeadItems.length})
                   </h2>
 
                   <p className="mt-1 text-sm text-foreground/55">
-                    Deleted leads that are not customer records.
-                  </p>
+                    {translateText("Deleted leads that are not customer records.")}</p>
                 </div>
 
                 {deletedLeadItems.map((lead) => (
@@ -567,11 +560,11 @@ export default function TrashPage() {
                   >
                     <div>
                       <p className="font-semibold text-foreground">
-                        {lead.name || "Untitled lead"}
+                        {lead.name || translateText("Untitled lead")}
                       </p>
 
                       <p className="mt-1 text-sm text-foreground/55">
-                        {lead.company || "No company"}
+                        {lead.company || translateText("No company")}
                       </p>
 
                       <p className="mt-2 text-xs text-foreground/40">
@@ -580,7 +573,7 @@ export default function TrashPage() {
                               lead.deleted_at,
                               timezone
                             )}`
-                          : "Deleted"}
+                          : translateText("Deleted")}
                       </p>
                     </div>
 
@@ -592,8 +585,8 @@ export default function TrashPage() {
                     >
                       <RotateCcw size={16} />
                       {restoringId === lead.id
-                        ? "Restoring..."
-                        : "Restore"}
+                        ? translateText("Restoring...")
+                        : translateText("Restore")}
                     </button>
                   </div>
                 ))}
@@ -604,12 +597,11 @@ export default function TrashPage() {
               <section className="space-y-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Tasks ({tasks.length})
+                    {translateText("Tasks (")}{tasks.length})
                   </h2>
 
                   <p className="mt-1 text-sm text-foreground/55">
-                    Deleted tasks can be restored here.
-                  </p>
+                    {translateText("Deleted tasks can be restored here.")}</p>
                 </div>
 
                 {tasks.map((task) => (
@@ -624,8 +616,8 @@ export default function TrashPage() {
 
                       <p className="mt-1 text-sm text-foreground/55">
                         {task.completed
-                          ? "Completed task"
-                          : "Open task"}
+                          ? translateText("Completed task")
+                          : translateText("Open task")}
                       </p>
 
                       <p className="mt-2 text-xs text-foreground/40">
@@ -634,7 +626,7 @@ export default function TrashPage() {
                               task.due_date,
                               timezone
                             )}`
-                          : "No due date"}
+                          : translateText("No due date")}
                         {task.deleted_at
                           ? ` • Deleted on ${formatDateTime(
                               task.deleted_at,
@@ -652,8 +644,8 @@ export default function TrashPage() {
                     >
                       <RotateCcw size={16} />
                       {restoringId === task.id
-                        ? "Restoring..."
-                        : "Restore"}
+                        ? translateText("Restoring...")
+                        : translateText("Restore")}
                     </button>
                   </div>
                 ))}
@@ -664,11 +656,10 @@ export default function TrashPage() {
               <section className="space-y-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Calendar events ({calendarEvents.length})
+                    {translateText("Calendar events (")}{calendarEvents.length})
                   </h2>
                   <p className="mt-1 text-sm text-foreground/55">
-                    Deleted calendar events can be restored here.
-                  </p>
+                    {translateText("Deleted calendar events can be restored here.")}</p>
                 </div>
                 {calendarEvents.map((event) => (
                   <div key={event.id} className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-1 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -676,7 +667,7 @@ export default function TrashPage() {
                       <p className="font-semibold text-foreground">{event.title}</p>
                       {event.description ? <p className="mt-1 text-sm text-foreground/55">{event.description}</p> : null}
                       <p className="mt-2 text-xs text-foreground/40">
-                        Scheduled {formatDateTime(event.scheduled_at, timezone)}
+                        {translateText("Scheduled")}{formatDateTime(event.scheduled_at, timezone)}
                         {` • Deleted on ${formatDateTime(event.deleted_at, timezone)}`}
                       </p>
                     </div>
@@ -687,7 +678,7 @@ export default function TrashPage() {
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <RotateCcw size={16} />
-                      {restoringId === event.id ? "Restoring..." : "Restore"}
+                      {restoringId === event.id ? translateText("Restoring...") : translateText("Restore")}
                     </button>
                   </div>
                 ))}

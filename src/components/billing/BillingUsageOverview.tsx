@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -18,7 +20,7 @@ function UsageMeter({ label, used, limit, suffix, detail }: { label: string; use
             <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-foreground/65">{label}</span>
                 <span className="text-sm font-semibold text-foreground">
-                    {used.toLocaleString("en-US")} / {unlimited ? "Unlimited" : limit?.toLocaleString("en-US")} {suffix}
+                    {used.toLocaleString(getIntlLocale())} / {unlimited ? translateText("Unlimited") : limit?.toLocaleString(getIntlLocale())} {suffix}
                 </span>
             </div>
             {detail ? <p className="mt-1 text-xs text-foreground/50">{detail}</p> : null}
@@ -39,7 +41,7 @@ export default function BillingUsageOverview() {
             const workspaceId = window.localStorage.getItem("closeflow_active_workspace");
             if (workspaceId) headers["x-closeflow-workspace-id"] = workspaceId;
             const response = await fetch("/api/usage", { cache: "no-store", headers });
-            if (!response.ok) throw new Error("Could not load plan usage");
+            if (!response.ok) throw new Error(translateText("Could not load plan usage"));
             setData((await response.json()) as UsageData);
         } catch {
             setData(null);
@@ -58,10 +60,10 @@ export default function BillingUsageOverview() {
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
                 <div>
-                    <h2 className="text-lg font-semibold text-foreground">Plan usage</h2>
-                    <p className="mt-1 text-sm text-foreground/55">Track your current limits and monthly usage.</p>
+                    <h2 className="text-lg font-semibold text-foreground">{translateText("Plan usage")}</h2>
+                    <p className="mt-1 text-sm text-foreground/55">{translateText("Track your current limits and monthly usage.")}</p>
                 </div>
-                {data && <span className="text-xs text-foreground/45">Usage for {data.month}</span>}
+                {data && <span className="text-xs text-foreground/45">{translateText("Usage for")}{" "}{data.month}</span>}
             </div>
             {loading ? (
                 <div className="grid gap-3 sm:grid-cols-2"><div className="h-[76px] animate-pulse rounded-xl bg-foreground/5" /><div className="h-[76px] animate-pulse rounded-xl bg-foreground/5" /><div className="h-[76px] animate-pulse rounded-xl bg-foreground/5" /><div className="h-[76px] animate-pulse rounded-xl bg-foreground/5" /></div>
@@ -79,7 +81,7 @@ export default function BillingUsageOverview() {
                     />
                 </div>
             ) : (
-                <p className="text-sm text-foreground/55">Usage information is currently unavailable.</p>
+                <p className="text-sm text-foreground/55">{translateText("Usage information is currently unavailable.")}</p>
             )}
         </section>
     );

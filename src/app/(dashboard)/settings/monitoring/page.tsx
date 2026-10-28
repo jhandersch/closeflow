@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
@@ -20,7 +22,7 @@ type MonitoringItem = {
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 const formatDateTime = (value: string, timeZone: string) => {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -50,7 +52,7 @@ export default function MonitoringPage() {
           : DEFAULT_TIMEZONE;
 
       try {
-        Intl.DateTimeFormat("en-US", {
+        Intl.DateTimeFormat(getIntlLocale(), {
           timeZone: userTimezone,
         });
         setTimezone(userTimezone);
@@ -100,28 +102,23 @@ export default function MonitoringPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Settings
-          </p>
+            {translateText("Settings")}</p>
 
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Error Monitoring
-          </h1>
+            {translateText("Error Monitoring")}</h1>
 
           <p className="mt-2 text-sm text-foreground/65">
-            Recent application and API errors captured for this workspace.
-          </p>
+            {translateText("Recent application and API errors captured for this workspace.")}</p>
         </div>
 
         {loading ? (
           <p className="text-sm text-foreground/60">
-            Loading errors...
-          </p>
+            {translateText("Loading errors...")}</p>
         ) : null}
 
         {!loading && items.length === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-sm text-foreground/65">
-            No errors captured yet.
-          </div>
+            {translateText("No errors captured yet.")}</div>
         ) : null}
 
         {items.length > 0 ? (
@@ -129,11 +126,11 @@ export default function MonitoringPage() {
             <table className="min-w-full divide-y divide-border-subtle text-sm">
               <thead>
                 <tr className="text-left text-foreground/60">
-                  <th className="px-4 py-3">Time</th>
-                  <th className="px-4 py-3">Source</th>
-                  <th className="px-4 py-3">Level</th>
-                  <th className="px-4 py-3">Message</th>
-                  <th className="px-4 py-3">Path</th>
+                  <th className="px-4 py-3">{translateText("Time")}</th>
+                  <th className="px-4 py-3">{translateText("Source")}</th>
+                  <th className="px-4 py-3">{translateText("Level")}</th>
+                  <th className="px-4 py-3">{translateText("Message")}</th>
+                  <th className="px-4 py-3">{translateText("Path")}</th>
                 </tr>
               </thead>
 
@@ -150,11 +147,11 @@ export default function MonitoringPage() {
                     </td>
 
                     <td className="px-4 py-3 text-foreground/85">
-                      {item.payload?.level || "error"}
+                      {item.payload?.level || translateText("error")}
                     </td>
 
                     <td className="px-4 py-3 text-foreground">
-                      {item.payload?.message || "Unknown error"}
+                      {item.payload?.message || translateText("Unknown error")}
                     </td>
 
                     <td className="px-4 py-3 text-foreground/70">

@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { toDisplayMessage } from "@/lib/apiError";
 
 import { useState } from "react";
@@ -6,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import toast from "react-hot-toast";
 import type { Lead } from "@/types";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type AILeadSummaryProps = {
   lead: Lead;
@@ -21,6 +24,7 @@ type FollowUp = {
 export default function AILeadSummary({
   lead,
 }: AILeadSummaryProps) {
+  const { language } = useAppPreferences();
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
@@ -37,7 +41,7 @@ export default function AILeadSummary({
 
       if (!session?.access_token) {
         throw new Error(
-          "Please sign in again to generate AI analysis.",
+          translateText("Please sign in again to generate AI analysis."),
         );
       }
 
@@ -50,6 +54,7 @@ export default function AILeadSummary({
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
+          body: JSON.stringify({ language }),
         },
       );
 
@@ -68,7 +73,7 @@ export default function AILeadSummary({
       );
     } catch (error) {
       console.error(error);
-      setAnalysis("Could not generate AI analysis.");
+      setAnalysis(translateText("Could not generate AI analysis."));
     } finally {
       setLoading(false);
     }
@@ -92,6 +97,7 @@ export default function AILeadSummary({
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
+          body: JSON.stringify({ language }),
         },
       );
 
@@ -119,7 +125,7 @@ export default function AILeadSummary({
       await copyTextToClipboard(`${followUp.subject}\n\n${followUp.email}`);
       setFollowCopied(true);
     } catch {
-      toast.error("Could not copy the email. Please copy it manually.");
+      toast.error(translateText("Could not copy the email. Please copy it manually."));
       return;
     }
 
@@ -133,16 +139,13 @@ export default function AILeadSummary({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-cyan-400">
-            AI Insights
-          </p>
+            {translateText("AI Insights")}</p>
 
           <h2 className="mt-2 text-xl font-bold text-foreground">
-            Deal Analysis
-          </h2>
+            {translateText("Deal Analysis")}</h2>
 
           <p className="mt-2 text-sm text-foreground/70">
-            Get AI-powered recommendations for this opportunity.
-          </p>
+            {translateText("Get AI-powered recommendations for this opportunity.")}</p>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -152,7 +155,7 @@ export default function AILeadSummary({
             disabled={loading}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50"
           >
-            {loading ? "Analyzing..." : "Analyze"}
+            {loading ? translateText("Analyzing...") : translateText("Analyze")}
           </button>
 
           <button
@@ -161,7 +164,7 @@ export default function AILeadSummary({
             disabled={followLoading}
             className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/20 disabled:opacity-50"
           >
-            {followLoading ? "Writing..." : "Generate Follow-up"}
+            {followLoading ? translateText("Writing...") : translateText("Generate Follow-up")}
           </button>
         </div>
       </div>
@@ -173,8 +176,7 @@ export default function AILeadSummary({
           </p>
         ) : (
           <p className="text-sm text-foreground/50">
-            No AI analysis generated yet.
-          </p>
+            {translateText("No AI analysis generated yet.")}</p>
         )}
       </div>
 
@@ -182,8 +184,7 @@ export default function AILeadSummary({
         <div className="mt-5 space-y-4 rounded-xl border border-purple-500/20 bg-surface-2/60 p-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-purple-300">
-              Follow-up draft
-            </p>
+              {translateText("Follow-up draft")}</p>
 
             <h3 className="mt-2 text-base font-semibold text-foreground">
               {followUp.subject}
@@ -193,15 +194,13 @@ export default function AILeadSummary({
           <div className="space-y-3 text-sm text-foreground/80">
             <p>
               <span className="font-semibold text-foreground">
-                Reason:
-              </span>{" "}
+                {translateText("Reason:")}</span>{" "}
               {followUp.reason}
             </p>
 
             <p>
               <span className="font-semibold text-foreground">
-                Next action:
-              </span>{" "}
+                {translateText("Next action:")}</span>{" "}
               {followUp.next_action}
             </p>
           </div>
@@ -217,7 +216,7 @@ export default function AILeadSummary({
             onClick={() => void copyFollowUp()}
             className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/20"
           >
-            {followCopied ? "Copied" : "Copy Follow-up"}
+            {followCopied ? translateText("Copied") : translateText("Copy Follow-up")}
           </button>
         </div>
       )}

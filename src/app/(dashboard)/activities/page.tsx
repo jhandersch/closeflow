@@ -1,10 +1,13 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase/client";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type ActivityItem = {
     id: string;
@@ -32,7 +35,7 @@ function formatActivityDate(
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone,
@@ -40,7 +43,8 @@ function formatActivityDate(
 }
 
 export default function ActivitiesPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
+    const { language } = useAppPreferences();
     const [timezone, setTimezone] =
         useState(DEFAULT_TIMEZONE);
     const [activities, setActivities] =
@@ -124,7 +128,7 @@ export default function ActivitiesPage() {
         type?: string | null,
     ) => {
         if (!type) {
-            return "Activity";
+            return translateText("Activity");
         }
 
         const labels: Record<string, string> = {
@@ -149,7 +153,7 @@ export default function ActivitiesPage() {
             other: "Update",
         };
 
-        return labels[type] || type;
+        return translateText(labels[type] || type);
     };
 
     const getCalendarTitle = (
@@ -157,13 +161,13 @@ export default function ActivitiesPage() {
     ) => {
         switch (type) {
             case "meeting_created":
-                return "Meeting created";
+                return translateText("Meeting created");
             case "meeting_updated":
-                return "Meeting updated";
+                return translateText("Meeting updated");
             case "meeting_completed":
-                return "Meeting completed";
+                return translateText("Meeting completed");
             case "meeting_deleted":
-                return "Meeting deleted";
+                return translateText("Meeting deleted");
             default:
                 return null;
         }
@@ -188,15 +192,15 @@ export default function ActivitiesPage() {
                 : "";
 
         if (event === "task_updated") {
-            return "Task updated";
+            return translateText("Task updated");
         }
 
         if (event === "task_deleted") {
-            return "Task deleted";
+            return translateText("Task deleted");
         }
 
         if (event === "task_reopened") {
-            return "Task reopened";
+            return translateText("Task reopened");
         }
 
         const calendarTitle =
@@ -211,28 +215,28 @@ export default function ActivitiesPage() {
             normalized === "lead_created" ||
             normalized === "lead created"
         ) {
-            return "Lead created";
+            return translateText("Lead created");
         }
 
         const taskCreatedMatch =
             raw.match(/^task created:\s*(.+)$/i);
 
         if (taskCreatedMatch) {
-            return `Task created: ${taskCreatedMatch[1]}`;
+            return language === "de" ? `Aufgabe erstellt: ${taskCreatedMatch[1]}` : `Task created: ${taskCreatedMatch[1]}`;
         }
 
         const taskUpdatedMatch =
             raw.match(/^task updated:\s*(.+)$/i);
 
         if (taskUpdatedMatch) {
-            return `Task updated: ${taskUpdatedMatch[1]}`;
+            return language === "de" ? `Aufgabe aktualisiert: ${taskUpdatedMatch[1]}` : `Task updated: ${taskUpdatedMatch[1]}`;
         }
 
         const taskDeletedMatch =
             raw.match(/^task deleted:\s*(.+)$/i);
 
         if (taskDeletedMatch) {
-            return `Task deleted: ${taskDeletedMatch[1]}`;
+            return language === "de" ? `Aufgabe gelöscht: ${taskDeletedMatch[1]}` : `Task deleted: ${taskDeletedMatch[1]}`;
         }
 
         const translations: Record<string, string> = {
@@ -246,11 +250,8 @@ export default function ActivitiesPage() {
             "meeting deleted": "Meeting deleted",
         };
 
-        return (
-            translations[normalized] ||
-            raw ||
-            "Activity"
-        );
+        const value = translations[normalized] || raw || "Activity";
+        return translateText(value);
     };
 
     const totalPages = Math.max(1, Math.ceil(activities.length / PAGE_SIZE));
@@ -265,16 +266,13 @@ export default function ActivitiesPage() {
             <div className="mx-auto max-w-4xl space-y-6">
                 <div>
                     <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        Activities
-                    </p>
+                        {translateText("Activities")}</p>
 
                     <h1 className="mt-2 text-3xl font-bold text-foreground">
-                        Review recent workspace activity
-                    </h1>
+                        {translateText("Review recent workspace activity")}</h1>
 
                     <p className="mt-2 text-sm text-foreground/65">
-                        All interactions, stage changes, tasks and AI actions in one place.
-                    </p>
+                        {translateText("All interactions, stage changes, tasks and AI actions in one place.")}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -282,8 +280,7 @@ export default function ActivitiesPage() {
                         onClick={() => setFilter("all")}
                         className={`rounded-full px-3 py-1 text-xs ${filter === "all" ? "bg-foreground text-background" : "bg-surface-2/80 text-foreground/80"}`}
                     >
-                        All time
-                    </button>
+                        {translateText("All time")}</button>
                     <button
                         onClick={() => setFilter("today")}
                         className={`rounded-full px-3 py-1 text-xs ${
@@ -292,8 +289,7 @@ export default function ActivitiesPage() {
                                 : "bg-surface-2/80 text-foreground/80"
                         }`}
                     >
-                        Today
-                    </button>
+                        {translateText("Today")}</button>
 
                     <button
                         onClick={() => setFilter("week")}
@@ -303,8 +299,7 @@ export default function ActivitiesPage() {
                                 : "bg-surface-2/80 text-foreground/80"
                         }`}
                     >
-                        7 days
-                    </button>
+                        {translateText("7 days")}</button>
 
                     <button
                         onClick={() => setFilter("month")}
@@ -314,15 +309,14 @@ export default function ActivitiesPage() {
                                 : "bg-surface-2/80 text-foreground/80"
                         }`}
                     >
-                        30 days
-                    </button>
+                        {translateText("30 days")}</button>
                 </div>
 
                 {loadError ? <p role="alert" className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">{loadError}</p> : null}
 
                 <div className="flex items-center justify-between text-sm text-foreground/55">
-                    <span>{activities.length.toLocaleString(locale)} activities loaded</span>
-                    <span>{filter === "all" ? "All recorded activity" : filter === "month" ? "Last 30 days" : filter === "week" ? "Last 7 days" : "Today"}</span>
+                    <span>{activities.length.toLocaleString(locale)} {" "}{translateText("activities loaded")}</span>
+                    <span>{filter === "all" ? translateText("All recorded activity") : filter === "month" ? translateText("Last 30 days") : filter === "week" ? translateText("Last 7 days") : translateText("Today")}</span>
                 </div>
 
                 <PaginationControls
@@ -336,12 +330,10 @@ export default function ActivitiesPage() {
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                     {loading ? (
                         <p className="text-sm text-foreground/65">
-                            Loading activities...
-                        </p>
+                            {translateText("Loading activities...")}</p>
                     ) : activities.length === 0 ? (
                         <p className="text-sm text-foreground/55">
-                            No activities yet.
-                        </p>
+                            {translateText("No activities yet.")}</p>
                     ) : (
                         <div className="space-y-3">
                             {visibleActivities.map(
@@ -364,7 +356,7 @@ export default function ActivitiesPage() {
 
                                         {activity.user_id ? (
                                             <p className="mt-1 break-all text-xs text-foreground/55">
-                                                Actor: {activity.actor_name || activity.user_id}
+                                                {translateText("Actor:")}{activity.actor_name || activity.user_id}
                                             </p>
                                         ) : null}
 
@@ -382,8 +374,7 @@ export default function ActivitiesPage() {
                                                     href={`/leads/${activity.lead_id}`}
                                                     className="text-xs text-cyan-300 hover:underline"
                                                 >
-                                                    Open lead
-                                                </Link>
+                                                    {translateText("Open lead")}</Link>
                                             </div>
                                         ) : null}
 

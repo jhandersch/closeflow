@@ -1,48 +1,45 @@
-import type { Metadata } from "next";
+"use client";
+import { translateText } from "@/lib/i18n";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
-export const metadata: Metadata = {
-    title: "AGB | CloseFlow",
-    description: "Allgemeine Geschaeftsbedingungen fuer CloseFlow.",
-};
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 export default function AgbPage() {
+    useAppPreferences();
     return (<main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-12 text-foreground sm:px-8">
       <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8">
         <LogoMark size={36} className="mb-5" />
-        <h1 className="text-3xl font-semibold">Allgemeine Geschaeftsbedingungen (AGB)</h1>
+        <h1 className="text-3xl font-semibold">{translateText("Terms and Conditions (AGB)")}</h1>
         <p className="mt-4 text-sm leading-7 text-foreground/70">
-          Diese AGB regeln die Nutzung von CloseFlow. Vor dem Go-Live sollten diese Inhalte rechtlich geprueft und final ersetzt werden.
-        </p>
+          {translateText("These terms govern the use of CloseFlow. Have this placeholder content reviewed by legal counsel and finalized before launch.")}</p>
 
         <section className="mt-8 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">1. Geltungsbereich</h2>
-          <p className="mt-2">Diese Bedingungen gelten fuer alle Vertraege zwischen CloseFlow und den jeweiligen Kundinnen und Customers.</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("1. Scope")}</h2>
+          <p className="mt-2">{translateText("These terms apply to all agreements between CloseFlow and its customers.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">2. Leistungen</h2>
-          <p className="mt-2">CloseFlow stellt eine cloudbasierte CRM-Software inklusive optionaler AI-Funktionen bereit.</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("2. Services")}</h2>
+          <p className="mt-2">{translateText("CloseFlow provides cloud-based CRM software with optional AI features.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">3. Pflichten der Nutzer</h2>
-          <p className="mt-2">Access credentials must be kept confidential. Content must be lawful and must not infringe third-party rights.</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("3. User obligations")}</h2>
+          <p className="mt-2">{translateText("Access credentials must be kept confidential. Content must be lawful and must not infringe third-party rights.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">4. Pricing und Billing</h2>
-          <p className="mt-2">Es gelten die jeweils im Produkt oder im Angebot ausgewiesenen Pricing und Zahlungsbedingungen.</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("4. Pricing and billing")}</h2>
+          <p className="mt-2">{translateText("The prices and payment terms displayed in the product or offer apply.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">5. Laufzeit und Kuendigung</h2>
-          <p className="mt-2">Vertragslaufzeiten und Kuendigungsfristen richten sich nach dem gebuchten Plan bzw. den vertraglichen Vereinbarungen.</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("5. Term and termination")}</h2>
+          <p className="mt-2">{translateText("Contract terms and notice periods are governed by the selected plan and the applicable contractual agreements.")}</p>
         </section>
 
         <div className="mt-8">
           <Link href="/" className="text-sm font-semibold text-cyan-300 hover:underline">
-            Zurueck zur Startseite
-          </Link>
+            {translateText("Back to home")}</Link>
         </div>
       </div>
     </main>);

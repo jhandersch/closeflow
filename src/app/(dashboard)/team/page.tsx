@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -55,7 +57,7 @@ export default function TeamPage() {
         .includes("two-factor authentication required")
     ) {
       toast.error(
-        "2FA required for this action. Verify 2FA in Settings -> Security.",
+        translateText("2FA required for this action. Verify 2FA in Settings -> Security."),
       );
       return;
     }
@@ -78,7 +80,7 @@ export default function TeamPage() {
       });
 
       if (!response.ok) {
-        toast.error("Could not load workspaces");
+        toast.error(translateText("Could not load workspaces"));
         return;
       }
 
@@ -121,7 +123,7 @@ export default function TeamPage() {
       });
     } catch (error) {
       console.error("LOAD WORKSPACES ERROR:", error);
-      toast.error("Could not load workspaces");
+      toast.error(translateText("Could not load workspaces"));
     } finally {
       setLoading(false);
     }
@@ -157,7 +159,7 @@ export default function TeamPage() {
 
       const invitedWorkspaceId = data.workspaceId;
 
-      toast.success("Invitation accepted");
+      toast.success(translateText("Invitation accepted"));
       setInviteToken(null);
 
       window.history.replaceState({}, "", "/team");
@@ -165,7 +167,7 @@ export default function TeamPage() {
       await load(invitedWorkspaceId);
     } catch (error) {
       console.error("ACCEPT INVITE ERROR:", error);
-      toast.error("Could not accept invitation.");
+      toast.error(translateText("Could not accept invitation."));
     } finally {
       setAcceptingInvite(false);
     }
@@ -207,14 +209,14 @@ export default function TeamPage() {
 
         const invitedWorkspaceId = data.workspaceId;
 
-        toast.success("Invitation accepted");
+        toast.success(translateText("Invitation accepted"));
 
         window.history.replaceState({}, "", "/team");
 
         await load(invitedWorkspaceId);
       } catch (error) {
         console.error("ACCEPT INVITE ERROR:", error);
-        toast.error("Could not accept invitation.");
+        toast.error(translateText("Could not accept invitation."));
       } finally {
         setAcceptingInvite(false);
         setInviteToken(null);
@@ -276,7 +278,7 @@ export default function TeamPage() {
    */
   const createWorkspace = async () => {
     if (!workspaceName.trim()) {
-      toast.error("Workspace name is required");
+      toast.error(translateText("Workspace name is required"));
       return;
     }
 
@@ -298,7 +300,7 @@ export default function TeamPage() {
           workspace?: { id?: string };
         };
         setWorkspaceName("");
-        toast.success("Workspace created");
+        toast.success(translateText("Workspace created"));
         await load(data.workspace?.id);
       } else {
         showActionError(
@@ -310,7 +312,7 @@ export default function TeamPage() {
       }
     } catch (error) {
       console.error("CREATE WORKSPACE ERROR:", error);
-      toast.error("Could not create workspace");
+      toast.error(translateText("Could not create workspace"));
     } finally {
       setCreating(false);
     }
@@ -350,11 +352,11 @@ export default function TeamPage() {
           try {
             await copyTextToClipboard(data.inviteUrl);
           } catch {
-            toast.error("Invite created, but its link could not be copied.");
+            toast.error(translateText("Invite created, but its link could not be copied."));
           }
         }
 
-        toast.success("Invite created");
+        toast.success(translateText("Invite created"));
         setInviteOpen(false);
 
         await load(selectedWorkspace.workspace.id);
@@ -368,7 +370,7 @@ export default function TeamPage() {
       }
     } catch (error) {
       console.error("INVITE MEMBER ERROR:", error);
-      toast.error("Could not create invite");
+      toast.error(translateText("Could not create invite"));
     }
   };
 
@@ -396,7 +398,7 @@ export default function TeamPage() {
     });
 
     if (response.ok) {
-      toast.success("Role updated");
+      toast.success(translateText("Role updated"));
       await load(selectedWorkspace.workspace.id);
     } else {
       showActionError(
@@ -428,7 +430,7 @@ export default function TeamPage() {
     });
 
     if (response.ok) {
-      toast.success("Member removed");
+      toast.success(translateText("Member removed"));
       await load(selectedWorkspace.workspace.id);
     } else {
       showActionError(
@@ -460,7 +462,7 @@ export default function TeamPage() {
     });
 
     if (response.ok) {
-      toast.success("Invite revoked");
+      toast.success(translateText("Invite revoked"));
       await load(selectedWorkspace.workspace.id);
     } else {
       showActionError(
@@ -483,26 +485,21 @@ export default function TeamPage() {
       <div className="space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Team
-          </p>
+            {translateText("Team")}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Members and invitations
-          </h1>
+            {translateText("Members and invitations")}</h1>
 
           <p className="mt-2 text-sm text-foreground/65">
-            Manage members, invitations, and workspaces.
-          </p>
+            {translateText("Manage members, invitations, and workspaces.")}</p>
         </div>
 
         {inviteToken ? (
           <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-6">
             <p className="text-lg font-semibold text-foreground">
-              You have been invited
-            </p>
+              {translateText("You have been invited")}</p>
 
             <p className="mt-2 text-sm text-foreground/70">
-              You have been invited to join a workspace on CloseFlow.
-            </p>
+              {translateText("You have been invited to join a workspace on CloseFlow.")}</p>
 
             <button
               onClick={() => void acceptInvite()}
@@ -510,8 +507,8 @@ export default function TeamPage() {
               className="cf-btn-primary mt-4"
             >
               {acceptingInvite
-                ? "Accepting..."
-                : "Accept invitation"}
+                ? translateText("Accepting...")
+                : translateText("Accept invitation")}
             </button>
           </div>
         ) : null}
@@ -519,27 +516,22 @@ export default function TeamPage() {
         {!twoFactorEnabled ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
             <p className="text-sm font-semibold text-amber-300">
-              Security recommendation: enable 2FA before managing workspace
-              members.
-            </p>
+              {translateText("Security recommendation: enable 2FA before managing workspace members.")}</p>
 
             <p className="mt-1 text-sm text-amber-100/80">
-              Sensitive actions can be blocked until your session reaches AAL2.
-            </p>
+              {translateText("Sensitive actions can be blocked until your session reaches AAL2.")}</p>
 
             <Link
               href="/settings#security"
               className="mt-3 inline-flex rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-200"
             >
-              Open Security Settings
-            </Link>
+              {translateText("Open Security Settings")}</Link>
           </div>
         ) : null}
 
         {loading ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">
-            Loading workspace...
-          </div>
+            {translateText("Loading workspace...")}</div>
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
@@ -558,12 +550,9 @@ export default function TeamPage() {
 
               <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
                 <p className="text-sm text-foreground/65">
-                  Create workspace
-                </p>
+                  {translateText("Create workspace")}</p>
                 <p className="mt-2 text-xs text-foreground/55">
-                  Owned workspaces: {workspaceCapacity.ownedCount}/{workspaceCapacity.limit}.
-                  Each workspace starts on Free and has separate plan billing.
-                </p>
+                  {translateText("Owned workspaces:")}{workspaceCapacity.ownedCount}/{workspaceCapacity.limit}{translateText(". Each workspace starts on Free and has separate plan billing.")}</p>
 
                 <div className="mt-3 flex gap-3">
                   <input
@@ -571,7 +560,7 @@ export default function TeamPage() {
                     onChange={(event) =>
                       setWorkspaceName(event.target.value)
                     }
-                    placeholder="New workspace name"
+                    placeholder={translateText("New workspace name")}
                     disabled={!workspaceCapacity.canCreate}
                     className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
                   />
@@ -582,10 +571,10 @@ export default function TeamPage() {
                     className="cf-btn-primary"
                   >
                     {creating
-                      ? "Creating..."
+                      ? translateText("Creating...")
                       : workspaceCapacity.canCreate
-                        ? "Create"
-                        : "Limit reached"}
+                        ? translateText("Create")
+                        : translateText("Limit reached")}
                   </button>
                 </div>
               </div>
@@ -620,8 +609,7 @@ export default function TeamPage() {
                       onClick={() => setInviteOpen(true)}
                       className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300"
                     >
-                      Invite User
-                    </button>
+                      {translateText("Invite User")}</button>
                   </div>
                 ) : null}
 
@@ -635,14 +623,12 @@ export default function TeamPage() {
 
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
                   <h2 className="text-xl font-semibold text-foreground">
-                    Pending invites
-                  </h2>
+                    {translateText("Pending invites")}</h2>
 
                   <div className="mt-4 space-y-2">
                     {selectedWorkspace.invites.length === 0 ? (
                       <p className="text-sm text-foreground/55">
-                        No pending invites.
-                      </p>
+                        {translateText("No pending invites.")}</p>
                     ) : (
                       selectedWorkspace.invites.map((invite) => (
                         <div
@@ -658,8 +644,7 @@ export default function TeamPage() {
                               onClick={() => void revokeInvite(invite.id)}
                               className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-xs text-rose-300"
                             >
-                              Revoke
-                            </button>
+                              {translateText("Revoke")}</button>
                           ) : null}
                         </div>
                       ))

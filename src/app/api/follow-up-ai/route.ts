@@ -1,26 +1,33 @@
+import { translateText } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
   if (!access.ok) return access.response;
+    let language = normalizeLanguage(undefined);
   try {
     const { user, error } = await getRouteUser(request);
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { lead } = await request.json();
+    const payload = await request.json();
+    const { lead } = payload;
+    language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
+    const responseLanguage = language === "de" ? "German" : "English";
 
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({
-        subject: "Follow up",
-        email:
-          "Hello, I wanted to follow up regarding our previous conversation.",
+        subject: language === "de" ? "Rückfrage" : "Follow up",
+        email: language === "de"
+          ? "Guten Tag, ich möchte mich zu unserem letzten Gespräch erkundigen."
+          : "Hello, I wanted to follow up regarding our previous conversation.",
       });
     }
 
@@ -67,7 +74,7 @@ Return ONLY JSON:
 }
 
 Keep it concise and human.
-Write subject and email in English.
+Write subject and email in ${responseLanguage}.
 `,
             },
             {
@@ -90,7 +97,7 @@ Write subject and email in English.
     const content = result.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("OpenAI returned no content.");
+      throw new Error(translateText("OpenAI returned no content."));
     }
 
     return NextResponse.json(JSON.parse(content));
@@ -98,8 +105,8 @@ Write subject and email in English.
     console.error(error);
 
     return NextResponse.json({
-      subject: "Follow up",
-      email: "Unable to generate email.",
+      subject: language === "de" ? "Rückfrage" : "Follow up",
+      email: language === "de" ? "Die E-Mail konnte nicht erstellt werden." : "Unable to generate email.",
     });
   }
 }

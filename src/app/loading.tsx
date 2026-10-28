@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { LogoMark } from "@/components/Logo";
@@ -21,8 +23,7 @@ export default function LoadingPage() {
 
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">
-              CloseFlow
-            </p>
+              {translateText("CloseFlow")}</p>
 
             <h1 className="mt-1 text-xl font-semibold text-foreground">
               {loadingTitle}

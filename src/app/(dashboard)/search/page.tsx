@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -84,12 +86,12 @@ export default function SearchPage() {
     return (<AuthGuard>
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{"Search"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Find records across CloseFlow"}</h1>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{translateText("Search")}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{translateText("Find records across CloseFlow")}</h1>
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3 focus-within:border-foreground/35">
-          <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{"Search"}</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-foreground/40">{translateText("Search")}</span>
           <input autoFocus value={query} onChange={(e) => {
               setQuery(e.target.value);
               setLeadsPage(1);
@@ -97,7 +99,7 @@ export default function SearchPage() {
               setTasksPage(1);
               setPagesPage(1);
           }} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
-          {loading ? <span className="text-xs text-foreground/45">{"Search..."}</span> : null}
+          {loading ? <span className="text-xs text-foreground/45">{translateText("Search...")}</span> : null}
         </div>
 
         {error ? <p className="text-sm text-rose-300">{error}</p> : null}
@@ -105,7 +107,7 @@ export default function SearchPage() {
         {query.trim().length >= 2 && !loading && !error && total === 0 ? (<p className="text-sm text-foreground/55">{`No results found for "${query.trim()}".`}</p>) : null}
 
         {leads.length > 0 ? (<section>
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Active Leads"} ({leads.length})</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Active Leads")} ({leads.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
                             {visibleResults(leads, leadsPage).map((lead) => (<Link key={lead.id} href={lead.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                                     <p className="font-semibold text-foreground">{lead.title}</p>
@@ -116,7 +118,7 @@ export default function SearchPage() {
           </section>) : null}
 
                 {customers.length > 0 ? (<section>
-                        <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Customers"} ({customers.length})</p>
+                        <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Customers")} ({customers.length})</p>
                         <div className="grid gap-2 sm:grid-cols-2">
                             {visibleResults(customers, customersPage).map((customer) => (<Link key={customer.id} href={customer.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                                     <p className="font-semibold text-foreground">{customer.title}</p>
@@ -127,7 +129,7 @@ export default function SearchPage() {
                     </section>) : null}
 
         {tasks.length > 0 ? (<section>
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Tasks"} ({tasks.length})</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Tasks")} ({tasks.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {visibleResults(tasks, tasksPage).map((task) => (<Link key={task.id} href={task.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                   <p className="font-semibold text-foreground">{task.title}</p>
@@ -138,7 +140,7 @@ export default function SearchPage() {
           </section>) : null}
 
         {pageResults.length > 0 ? (<section>
-            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{"Pages"} ({pageResults.length})</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Pages")} ({pageResults.length})</p>
             <div className="grid gap-2 sm:grid-cols-3">
               {visibleResults(pageResults, pagesPage).map((page) => (<Link key={page.href} href={page.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
                   <p className="font-semibold text-foreground">{page.title}</p>
@@ -149,7 +151,7 @@ export default function SearchPage() {
           </section>) : null}
 
         {query.trim().length < 2 ? (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-center text-sm text-foreground/50">
-            {"Type at least 2 characters to search."}
+            {translateText("Type at least 2 characters to search.")}
           </div>) : null}
       </div>
     </AuthGuard>);

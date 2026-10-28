@@ -1,3 +1,4 @@
+import { getIntlLocale } from "@/lib/i18n";
 ﻿import KpiCard from "@/components/dashboard/KpiCard";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
@@ -21,7 +22,7 @@ export default function KPIGrid({
   openTasks,
 }: KPIGridProps) {
   const { t } = useAppPreferences();
-  const locale = "en-US";
+  const locale = getIntlLocale();
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

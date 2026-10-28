@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
@@ -711,7 +712,7 @@ export async function DELETE(req: Request) {
       user_id: user.id,
       type: "lead_deleted",
       action: "lead_deleted",
-      title: "Lead deleted",
+      title: translateText("Lead deleted"),
       description: `${leadToDelete?.name ?? "Lead"} was moved to the trash`,
       metadata: {
         trigger: "lead_actions",
@@ -829,7 +830,7 @@ export async function PATCH(req: Request) {
       user_id: user.id,
       type: "lead_restored",
       action: "lead_restored",
-      title: "Lead restored",
+      title: translateText("Lead restored"),
       description: `${data.name ?? "Lead"} was restored from the trash`,
       metadata: {
         trigger: "lead_actions",

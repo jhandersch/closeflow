@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import type {
   Lead,
   LeadStatus,
@@ -252,7 +253,7 @@ async function createAutomationTask(
       workspace_id: workspaceId,
       lead_id: lead.id,
       user_id: userId,
-      title: "Automation created task",
+      title: translateText("Automation created task"),
       description: title,
       action: title,
       type: "task_created",

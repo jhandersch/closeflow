@@ -4,6 +4,7 @@ import { recordAiUsageEvent } from "@/lib/aiCost";
 import { createClient } from "@/lib/supabase/server";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
+import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 type LeadPayload = {
     id?: string;
     name?: string;
@@ -43,10 +44,23 @@ type RevenueForecastAIResponse = {
     pipelineComment: string;
     singleDealRisk: number;
 };
-function fallbackInsight(locale: "en", forecastConfidence?: number): RevenueForecastAIResponse {
+function fallbackInsight(locale: AppLanguage, forecastConfidence?: number): RevenueForecastAIResponse {
     const confidence = typeof forecastConfidence === "number"
         ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
         : 20;
+    if (locale === "de") {
+        return {
+            confidence,
+            health: "Warning",
+            headline: "Umsatzanalyse vorübergehend nicht verfügbar",
+            summary: "Die KI-Analyse konnte gerade nicht erstellt werden. Deine Prognosedaten sind weiterhin verfügbar.",
+            topDrivers: [],
+            risks: ["Die KI-Analyse ist vorübergehend nicht verfügbar."],
+            recommendations: ["Prüfe deine größten offenen Verkaufschancen manuell.", "Prüfe Abschlüsse mit niedrigem Statuswert oder ohne nächste Maßnahme."],
+            pipelineComment: "Die Pipeline ist weiterhin verfügbar und kann manuell geprüft werden.",
+            singleDealRisk: 0,
+        };
+    }
     if (locale === "en") {
         return {
             confidence,
@@ -82,7 +96,7 @@ function fallbackInsight(locale: "en", forecastConfidence?: number): RevenueFore
         singleDealRisk: 0,
     };
 }
-function normalizeResponse(value: Partial<RevenueForecastAIResponse>, locale: "en", forecastConfidence?: number, forecastSingleDealRisk?: number): RevenueForecastAIResponse {
+function normalizeResponse(value: Partial<RevenueForecastAIResponse>, locale: AppLanguage, forecastConfidence?: number, forecastSingleDealRisk?: number): RevenueForecastAIResponse {
     const validHealth = value.health === "Excellent" ||
         value.health === "Healthy" ||
         value.health === "Warning" ||
@@ -132,6 +146,7 @@ function normalizeResponse(value: Partial<RevenueForecastAIResponse>, locale: "e
 }
 export async function POST(req: Request) {
     const supabase = await createClient();
+    let locale: AppLanguage = "en";
     /*
      * AUTHENTICATION
      */
@@ -150,9 +165,10 @@ export async function POST(req: Request) {
         const body = (await req.json()) as {
             leads?: LeadPayload[];
             forecast?: ForecastPayload;
-            language?: "en";
+            language?: AppLanguage;
         };
-        const locale = "en";
+        locale = normalizeLanguage(body.language ?? user.user_metadata?.language);
+        const responseLanguage = locale === "de" ? "German" : "English";
         const leads = body.leads ?? [];
         const forecast = body.forecast ?? {};
         if (!Array.isArray(leads) ||
@@ -352,7 +368,7 @@ Rules:
 - If nextActionCoverage is provided, all statements about next actions must be consistent with it
 
 Language:
-${"English"}
+${responseLanguage}
 `;
         const openai = new OpenAI({
             apiKey,
@@ -470,7 +486,7 @@ ${"English"}
          * Even unexpected errors do not
          * destroy the dashboard.
          */
-        return NextResponse.json(fallbackInsight("en"), {
+        return NextResponse.json(fallbackInsight(locale), {
             status: 200,
             headers: {
                 "X-AI-Fallback": "true",

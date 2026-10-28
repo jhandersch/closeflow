@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { appConfirm } from "@/lib/dialogs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -59,25 +61,25 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
             if (updatedLead) {
                 onStatusChanged?.(updatedLead);
             }
-            toast.success("Status updated");
+            toast.success(translateText("Status updated"));
         }
         catch (error) {
             console.error(error);
-            toast.error("Status update failed");
+            toast.error(translateText("Status update failed"));
         }
     }
     async function handleDelete() {
-        const confirmed = await appConfirm("Delete this lead?");
+        const confirmed = await appConfirm(translateText("Delete this lead?"));
         if (!confirmed)
             return;
         try {
             await deleteLead(leadId);
-            toast.success("Lead deleted");
+            toast.success(translateText("Lead deleted"));
             onLeadDeleted?.();
         }
         catch (error) {
             console.error(error);
-            toast.error("Delete failed");
+            toast.error(translateText("Delete failed"));
         }
     }
     return (<div className="flex flex-wrap gap-2 mt-4">
@@ -98,7 +100,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           hover:bg-white/10
           disabled:opacity-40
         ">
-        {"Call"}
+        {translateText("Call")}
       </button>
 
       <button onClick={(e) => {
@@ -117,7 +119,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           hover:bg-white/10
           disabled:opacity-40
         ">
-        {"Email"}
+        {translateText("Email")}
       </button>
 
       <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -178,7 +180,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           text-red-300
           hover:bg-red-500/20
         ">
-        {"Delete"}
+        {translateText("Delete")}
       </button>)}
 
       <button onClick={(e) => {
@@ -194,7 +196,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
           text-xs
           text-cyan-300
         ">
-        {"Open"}
+        {translateText("Open")}
       </button>
     </div>);
 }

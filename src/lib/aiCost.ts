@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 export type AiFeature =
@@ -57,13 +58,13 @@ export async function recordAiUsageEvent(workspaceId: string, userId: string, fe
         !Number.isSafeInteger(completionTokens) ||
         completionTokens < 0
     ) {
-        throw new Error("AI token usage must be non-negative safe integers.");
+        throw new Error(translateText("AI token usage must be non-negative safe integers."));
     }
     const safePrompt = promptTokens;
     const safeCompletion = completionTokens;
     const total = safePrompt + safeCompletion;
     if (!Number.isSafeInteger(total)) {
-        throw new Error("Total AI token usage exceeds the safe integer range.");
+        throw new Error(translateText("Total AI token usage exceeds the safe integer range."));
     }
     const cost = calcCostUsd(model, safePrompt, safeCompletion);
     let client = auditClient;
@@ -123,7 +124,7 @@ export function createTrackedOpenAIFetch(
         try {
             completion = await response.clone().json();
         } catch {
-            throw new Error("AI provider returned an invalid usage response.");
+            throw new Error(translateText("AI provider returned an invalid usage response."));
         }
 
         const requestBody = typeof init?.body === "string"
@@ -141,7 +142,7 @@ export function createTrackedOpenAIFetch(
             typeof completionTokens !== "number" ||
             !Number.isSafeInteger(completionTokens)
         ) {
-            throw new Error("AI provider returned incomplete token usage.");
+            throw new Error(translateText("AI provider returned incomplete token usage."));
         }
 
         await recordAiUsageEvent(
@@ -182,7 +183,7 @@ export function createTrackedOpenAIClient(
 
 export async function summarizeWorkspaceAiUsage(supabase: SupabaseClient, workspaceId: string, month: string): Promise<AiUsageSummary> {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
-        throw new Error("AI usage month must use YYYY-MM format.");
+        throw new Error(translateText("AI usage month must use YYYY-MM format."));
     }
     const from = `${month}-01T00:00:00.000Z`;
     const toDate = new Date(from);
@@ -223,7 +224,7 @@ export async function summarizeWorkspaceAiUsage(supabase: SupabaseClient, worksp
             !Number.isFinite(cost) ||
             cost < 0
         ) {
-            throw new Error("AI usage summary contains an invalid audit record.");
+            throw new Error(translateText("AI usage summary contains an invalid audit record."));
         }
         summary.prompt_tokens += prompt;
         summary.completion_tokens += completion;

@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -117,18 +119,18 @@ export default function Sidebar() {
     };
     return (<>
       {/* Desktop sidebar */}
-      <aside aria-label="Primary navigation" className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)] lg:flex">
+      <aside aria-label={translateText("Primary navigation")} className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-[inset_-1px_0_0_color-mix(in_oklab,var(--foreground)_8%,transparent)] lg:flex">
         <SidebarContent hydrated={hydrated} links={links} t={t} pathname={pathname} notificationCount={notificationCount} onLinkClick={() => undefined} onLogout={() => void handleLogout()}/>
       </aside>
 
       {/* Mobile drawer */}
-      <aside aria-label="Mobile navigation" aria-hidden={!open} inert={!open} className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-2xl transition-transform duration-200 lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside aria-label={translateText("Mobile navigation")} aria-hidden={!open} inert={!open} className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border-subtle bg-gradient-to-b from-surface-1 to-surface-2 px-5 py-6 shadow-2xl transition-transform duration-200 lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LogoMark size={36} />
             <p className="text-base font-semibold tracking-tight text-foreground">{t("brand.name", "CloseFlow")}</p>
           </div>
-          <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground">
+          <button type="button" aria-label={translateText("Close navigation")} onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground">
             <X size={16}/>
           </button>
         </div>
@@ -156,8 +158,8 @@ function SidebarContent({ hydrated, links, t, pathname, notificationCount, onLin
       <div className="mb-8 hidden items-center gap-3 lg:flex">
         <LogoMark size={40} />
         <div>
-          <p className="text-lg font-semibold tracking-tight text-foreground">{hydrated ? t("brand.name", "CloseFlow") : "CloseFlow"}</p>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{hydrated ? t("brand.tagline", "Revenue OS") : "Revenue OS"}</p>
+          <p className="text-lg font-semibold tracking-tight text-foreground">{hydrated ? t("brand.name", "CloseFlow") : translateText("CloseFlow")}</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-foreground/55">{hydrated ? t("brand.tagline", "Revenue OS") : translateText("Revenue OS")}</p>
         </div>
       </div>
 
@@ -175,8 +177,7 @@ function SidebarContent({ hydrated, links, t, pathname, notificationCount, onLin
                   <span className="block h-3 w-20 animate-pulse rounded-full bg-foreground/10"/>
                 </span>)}
               {isSearch ? (<span className="rounded-md border border-border-subtle px-1.5 py-0.5 text-[10px] text-foreground/55">
-                  Ctrl+K
-                </span>) : null}
+                  {translateText("Ctrl+K")}</span>) : null}
               {isNotifications && notificationCount > 0 ? (<span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500/80 px-1.5 text-[10px] font-semibold text-white">
                   {notificationCount > 99 ? "99+" : notificationCount}
                 </span>) : null}

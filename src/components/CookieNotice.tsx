@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 const COOKIE_NOTICE_KEY = "closeflow_cookie_notice_ack";
@@ -19,25 +21,20 @@ export default function CookieNotice() {
     }
     return (<div className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-3xl rounded-2xl border border-border-subtle bg-surface-1/95 p-4 shadow-2xl backdrop-blur-sm sm:inset-x-6">
       <p className="text-sm leading-6 text-foreground/85">
-        CloseFlow only uses strictly necessary cookies for sign-in, security,
-        and core functionality. No tracking or advertising cookies. Learn more in our{" "}
+        {translateText("CloseFlow only uses strictly necessary cookies for sign-in, security, and core functionality. No tracking or advertising cookies. Learn more in our")}{" "}
         <Link href="/datenschutz" className="font-semibold text-cyan-300 hover:underline">
-          Privacy Notice
-        </Link>{" "}
-        and{" "}
+          {translateText("Privacy Notice")}</Link>{" "}
+        {translateText("and")}{" "}
         <Link href="/cookies" className="font-semibold text-cyan-300 hover:underline">
-          Cookie Notice
-        </Link>
+          {translateText("Cookie Notice")}</Link>
         .
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={acknowledge} className="cf-btn-primary">
-          OK
-        </button>
+          {translateText("OK")}</button>
         <Link href="/cookies" className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground/85 transition hover:bg-foreground/5">
-          Details
-        </Link>
+          {translateText("Details")}</Link>
       </div>
     </div>);
 }

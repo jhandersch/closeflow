@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,7 +42,7 @@ const levelConfig: Record<
 
 function isValidTimeZone(timeZone: string): boolean {
   try {
-    new Intl.DateTimeFormat("en-US", { timeZone }).format();
+    new Intl.DateTimeFormat(getIntlLocale(), { timeZone }).format();
     return true;
   } catch {
     return false;
@@ -54,23 +56,23 @@ const relativeTime = (iso: string, timeZone: string) => {
   const diff = now.getTime() - created.getTime();
 
   if (diff < 60000) {
-    return "just now";
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(0, "minute");
   }
 
   const minutes = Math.floor(diff / 60000);
 
   if (minutes < 60) {
-    return `${minutes}m ago`;
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-minutes, "minute");
   }
 
   const hours = Math.floor(minutes / 60);
 
   if (hours < 24) {
-    return `${hours}h ago`;
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-hours, "hour");
   }
 
   const formatDateKey = (date: Date) =>
-  new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat(getIntlLocale(), {
     timeZone,
     year: "numeric",
     month: "2-digit",
@@ -93,7 +95,7 @@ const relativeTime = (iso: string, timeZone: string) => {
   const createdKey = `${createdParts.year}-${createdParts.month}-${createdParts.day}`;
 
   if (createdKey === nowKey) {
-    return `${hours}h ago`;
+    return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-hours, "hour");
   }
 
   const yesterdayKey = (() => {
@@ -113,11 +115,11 @@ const relativeTime = (iso: string, timeZone: string) => {
 })();
 
 if (createdKey === yesterdayKey) {
-  return "yesterday";
+  return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-1, "day");
 }
 
   const days = Math.max(2, Math.floor(hours / 24));
-  return `${days}d ago`;
+  return new Intl.RelativeTimeFormat(getIntlLocale(), { numeric: "auto" }).format(-days, "day");
 };
 
 function NotificationCard({
@@ -155,8 +157,7 @@ function NotificationCard({
               href={`/leads/${item.leadId}`}
               className="rounded-xl border border-border-subtle bg-surface-2/70 px-3 py-1.5 text-xs text-foreground/75 transition hover:bg-foreground/5 hover:text-foreground"
             >
-              Open lead →
-            </Link>
+              {translateText("Open lead →")}</Link>
           ) : null}
         </div>
       </div>
@@ -216,14 +217,11 @@ export default function NotificationsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-              Notifications
-            </p>
+              {translateText("Notifications")}</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">
-              Review updates that need your attention
-            </h1>
+              {translateText("Review updates that need your attention")}</h1>
             <p className="mt-1 text-sm text-foreground/65">
-              {notifications.length} active
-              {criticalCount > 0 ? `, ${criticalCount} critical` : ""}
+              {notifications.length} {translateText("active")}{criticalCount > 0 ? `, ${criticalCount} critical` : ""}
               {warningCount > 0 ? `, ${warningCount} warnings` : ""}
             </p>
           </div>
@@ -233,7 +231,7 @@ export default function NotificationsPage() {
             disabled={loading}
             className="rounded-2xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/75 transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? translateText("Refreshing...") : translateText("Refresh")}
           </button>
         </div>
 
@@ -257,12 +255,11 @@ export default function NotificationsPage() {
 
         {loading ? (
           <p className="text-sm text-foreground/60">
-            Loading notifications...
-          </p>
+            {translateText("Loading notifications...")}</p>
         ) : visible.length === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-8 text-center text-sm text-foreground/55">
             {filter === "all"
-              ? "No active notifications. All leads are up to date."
+              ? translateText("No active notifications. All leads are up to date.")
               : `No ${filter} notifications.`}
           </div>
         ) : (

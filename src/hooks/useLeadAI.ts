@@ -1,3 +1,4 @@
+import { getIntlLocale, translateText } from "@/lib/i18n";
 import { getPriorityScore, getStaleDays, } from "@/lib/scoring";
 import { generateAIInsight, } from "@/lib/ai";
 type AICoach = {
@@ -39,102 +40,104 @@ export function useLeadAI(lead: any): LeadAIResult {
     if (lead.status === "new") {
         recommendations.push({
             icon: "AI",
-            title: "Qualify lead",
-            description: "Gather missing information and identify intent.",
+            title: translateText("Qualify lead"),
+            description: translateText("Gather missing information and identify intent."),
             priority: "low",
-            reason: "New lead needs qualification.",
+            reason: translateText("New lead needs qualification."),
             score: priority,
         });
     }
     if (lead.status === "contacted") {
         recommendations.push({
             icon: "MAIL",
-            title: "Send follow-up",
-            description: "Re-engage the customer.",
+            title: translateText("Send follow-up"),
+            description: translateText("Re-engage the customer."),
             priority: "medium",
-            reason: "Lead has been contacted but not progressed.",
+            reason: translateText("Lead has been contacted but not progressed."),
             score: priority,
         });
     }
     if (lead.status === "proposal") {
         recommendations.push({
             icon: "CALL",
-            title: "Call customer today",
-            description: "Address objections and close the deal.",
+            title: translateText("Call customer today"),
+            description: translateText("Address objections and close the deal."),
             priority: priority >= 75
                 ? "high"
                 : "medium",
-            reason: "Proposal stage requires attention.",
+            reason: translateText("Proposal stage requires attention."),
             score: priority,
         });
     }
     const nextAction = staleDays > 7
         ? {
             icon: "ALERT",
-            title: "Immediate follow-up required",
-            action: "Contact customer today",
-            description: "Lead has become inactive.",
+            title: translateText("Immediate follow-up required"),
+            action: translateText("Contact customer today"),
+            description: translateText("Lead has become inactive."),
             confidence: 92,
         }
         :
             lead.status === "proposal"
                 ? {
                     icon: "CALL",
-                    title: "Closing opportunity",
-                    action: "Schedule closing call",
-                    description: "Proposal stage shows buying intent.",
+                    title: translateText("Closing opportunity"),
+                    action: translateText("Schedule closing call"),
+                    description: translateText("Proposal stage shows buying intent."),
                     confidence: 87,
                 }
                 :
                     {
                         icon: "INFO",
-                        title: "Continue nurturing",
-                        action: "Maintain relationship",
-                        description: "No urgent action required.",
+                        title: translateText("Continue nurturing"),
+                        action: translateText("Maintain relationship"),
+                        description: translateText("No urgent action required."),
                         confidence: 70,
                     };
     const aiInsight = generateAIInsight(lead);
+    aiInsight.recommendation = translateText(aiInsight.recommendation);
+    aiInsight.risk = translateText(aiInsight.risk);
     const aiRisk = staleDays > 14
         ? {
             level: "high",
-            title: "Lead going cold",
-            message: `No activity for ${staleDays} days.`,
+            title: translateText("Lead going cold"),
+            message: getIntlLocale() === "de-DE" ? `Seit ${staleDays} Tagen keine Aktivität.` : `No activity for ${staleDays} days.`,
             icon: "ALERT",
         }
         :
             {
                 level: "low",
-                title: "Healthy lead",
-                message: "No major risks detected.",
+                title: translateText("Healthy lead"),
+                message: translateText("No major risks detected."),
                 icon: "OK",
             };
     const scoreReasons = [];
     if (lead.value >= 10000) {
         scoreReasons.push({
             icon: "VALUE",
-            text: "High deal value increases opportunity score",
+            text: translateText("High deal value increases opportunity score"),
         });
     }
     if (priority > 80) {
         scoreReasons.push({
             icon: "SIGNAL",
-            text: "Strong overall opportunity signal",
+            text: translateText("Strong overall opportunity signal"),
         });
     }
     const aiCoach: AICoach = {
         title: lead.status === "proposal"
-            ? "Closing opportunity"
+            ? translateText("Closing opportunity")
             : priority > 80
-                ? "High priority lead"
-                : "Continue nurturing",
+                ? translateText("High priority lead")
+                : translateText("Continue nurturing"),
         message: lead.status === "proposal"
-            ? "This lead is close to conversion."
-            : "Lead is progressing normally.",
+            ? translateText("This lead is close to conversion.")
+            : translateText("Lead is progressing normally."),
         reasons: [
-            `Priority score: ${priority}`,
-            `Current stage: ${lead.status}`,
+            `${translateText("Priority score:")} ${priority}`,
+            `${translateText("Current stage:")} ${translateText(lead.status)}`,
         ],
-        action: nextAction?.action ?? "Review lead",
+        action: nextAction?.action ?? translateText("Review lead"),
         confidence: nextAction?.confidence ?? 70,
     };
     return {

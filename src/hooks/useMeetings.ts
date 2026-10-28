@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import type { Meeting } from "@/types";
@@ -35,7 +36,7 @@ export function useMeetings(leadId: string) {
         const { data: userData } = await supabase.auth.getUser();
         const user = userData.user;
         if (!user)
-            throw new Error("No user");
+            throw new Error(translateText("No user"));
         const { error } = await supabase
             .from("meetings")
             .insert({

@@ -1,4 +1,6 @@
 ﻿"use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import {
@@ -93,12 +95,10 @@ export default function AuthGuard({
 
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-cyan-400">
-                CloseFlow
-              </p>
+                {translateText("CloseFlow")}</p>
 
               <h1 className="mt-1 text-xl font-semibold text-foreground">
-                Loading session...
-              </h1>
+                {translateText("Loading session...")}</h1>
             </div>
           </div>
 
@@ -109,9 +109,7 @@ export default function AuthGuard({
           </div>
 
           <p className="mt-6 text-sm leading-7 text-foreground/65">
-            We are preparing your workspace and restoring your
-            session securely.
-          </p>
+            {translateText("We are preparing your workspace and restoring your session securely.")}</p>
         </div>
       </div>
     );

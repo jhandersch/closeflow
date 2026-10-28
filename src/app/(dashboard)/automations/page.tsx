@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { appConfirm } from "@/lib/dialogs";
 
 import { useEffect, useState } from "react";
@@ -95,7 +97,7 @@ const PRESETS: Omit<
       {
         type: "task.create",
         payload: {
-          title: "Call customer within 24h",
+          title: translateText("Call customer within 24h"),
         },
       },
     ],
@@ -107,7 +109,7 @@ const PRESETS: Omit<
       {
         type: "task.create",
         payload: {
-          title: "Follow up in 3 days",
+          title: translateText("Follow up in 3 days"),
         },
       },
     ],
@@ -119,7 +121,7 @@ const PRESETS: Omit<
       {
         type: "task.create",
         payload: {
-          title: "Ask for the reason and plan reactivation",
+          title: translateText("Ask for the reason and plan reactivation"),
         },
       },
     ],
@@ -143,7 +145,7 @@ const PRESETS: Omit<
       {
         type: "task.create",
         payload: {
-          title: "Send thanks and ask for a referral",
+          title: translateText("Send thanks and ask for a referral"),
         },
       },
     ],
@@ -196,7 +198,7 @@ export default function AutomationsPage() {
       msg.toLowerCase().includes("two-factor")
     ) {
       toast.error(
-        "2FA required. Enable 2FA in Settings -> Security."
+        translateText("2FA required. Enable 2FA in Settings -> Security.")
       );
     } else {
       toast.error(msg);
@@ -249,7 +251,7 @@ export default function AutomationsPage() {
 
   const saveAutomation = async () => {
     if (!bName.trim()) {
-      toast.error("Name is required.");
+      toast.error(translateText("Name is required."));
       return;
     }
 
@@ -271,7 +273,7 @@ export default function AutomationsPage() {
 
     if (!validActions.length) {
       toast.error(
-        "Add at least one complete action."
+        translateText("Add at least one complete action.")
       );
       return;
     }
@@ -294,7 +296,7 @@ export default function AutomationsPage() {
     );
 
     if (res.ok) {
-      toast.success("Automation saved");
+      toast.success(translateText("Automation saved"));
       setBuilderOpen(false);
       await load();
     } else {
@@ -312,6 +314,19 @@ export default function AutomationsPage() {
   const installPreset = async (
     preset: Omit<Automation, "id" | "enabled">
   ) => {
+    const localizedPreset = {
+      ...preset,
+      name: translateText(preset.name),
+      actions: preset.actions.map((action) => ({
+        ...action,
+        payload: Object.fromEntries(
+          Object.entries(action.payload).map(([key, value]) => [
+            key,
+            translateText(value),
+          ]),
+        ),
+      })),
+    };
     const res = await fetch(
       "/api/automations",
       {
@@ -319,14 +334,14 @@ export default function AutomationsPage() {
         headers: await getHeaders(true),
         credentials: "include",
         body: JSON.stringify({
-          ...preset,
+          ...localizedPreset,
           enabled: true,
         }),
       }
     );
 
     if (res.ok) {
-      toast.success("Preset installed");
+      toast.success(translateText("Preset installed"));
       await load();
     } else {
       showErr(
@@ -369,7 +384,7 @@ export default function AutomationsPage() {
   const remove = async (id: string) => {
     if (
       !await appConfirm(
-        "Delete this automation?"
+        translateText("Delete this automation?")
       )
     ) {
       return;
@@ -386,7 +401,7 @@ export default function AutomationsPage() {
     );
 
     if (res.ok) {
-      toast.success("Deleted");
+      toast.success(translateText("Deleted"));
       await load();
     } else {
       showErr(
@@ -438,8 +453,9 @@ export default function AutomationsPage() {
     (item) => item.value === bTrigger
   );
 
-  const triggerLabel =
-    trigger?.label || bTrigger;
+  const triggerLabel = trigger
+    ? translateText(trigger.label)
+    : bTrigger;
 
   return (
     <AuthGuard>
@@ -447,16 +463,13 @@ export default function AutomationsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-              Automations
-            </p>
+              {translateText("Automations")}</p>
 
             <h1 className="mt-2 text-3xl font-bold text-foreground">
-              Automate repeatable CRM work
-            </h1>
+              {translateText("Automate repeatable CRM work")}</h1>
 
             <p className="mt-2 text-sm text-foreground/65">
-              Automate repeatable actions triggered by CRM events.
-            </p>
+              {translateText("Automate repeatable actions triggered by CRM events.")}</p>
           </div>
 
           <button
@@ -464,22 +477,19 @@ export default function AutomationsPage() {
             className="cf-btn-primary"
           >
             <Plus size={15} />
-            New Automation
-          </button>
+            {translateText("New Automation")}</button>
         </div>
 
         {!twoFactorEnabled ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-amber-300">
-              Enable 2FA for reliable automation management.
-            </p>
+              {translateText("Enable 2FA for reliable automation management.")}</p>
 
             <Link
               href="/settings#security"
               className="mt-2 inline-flex rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-200"
             >
-              Open Security Settings
-            </Link>
+              {translateText("Open Security Settings")}</Link>
           </div>
         ) : null}
 
@@ -491,8 +501,7 @@ export default function AutomationsPage() {
                   <Zap size={16} />
 
                   <span className="text-sm font-semibold">
-                    Build Automation
-                  </span>
+                    {translateText("Build Automation")}</span>
                 </div>
 
                 <button
@@ -507,23 +516,21 @@ export default function AutomationsPage() {
 
               <div className="mb-4">
                 <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-foreground/50">
-                  Name
-                </label>
+                  {translateText("Name")}</label>
 
                 <input
                   value={bName}
                   onChange={(event) =>
                     setBName(event.target.value)
                   }
-                  placeholder="e.g. New lead follow-up"
+                  placeholder={translateText("e.g. New lead follow-up")}
                   className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2.5 text-sm text-foreground outline-none focus:border-cyan-500/50"
                 />
               </div>
 
               <div className="mb-4">
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-foreground/50">
-                  When (Trigger)
-                </label>
+                  {translateText("When (Trigger)")}</label>
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   {TRIGGERS.map((item) => (
@@ -539,11 +546,11 @@ export default function AutomationsPage() {
                       }`}
                     >
                       <p className="font-medium">
-                        {item.label}
+                        {translateText(item.label)}
                       </p>
 
                       <p className="mt-0.5 text-xs text-foreground/45">
-                        {item.description}
+                        {translateText(item.description)}
                       </p>
                     </button>
                   ))}
@@ -553,8 +560,7 @@ export default function AutomationsPage() {
               <div className="mb-4">
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-xs uppercase tracking-[0.2em] text-foreground/50">
-                    Then (Actions)
-                  </label>
+                    {translateText("Then (Actions)")}</label>
 
                   <button
                     onClick={() =>
@@ -565,8 +571,7 @@ export default function AutomationsPage() {
                     }
                     className="text-xs text-cyan-400 hover:text-cyan-300"
                   >
-                    + Add action
-                  </button>
+                    {translateText("+ Add action")}</button>
                 </div>
 
                 <div className="space-y-2">
@@ -624,7 +629,7 @@ export default function AutomationsPage() {
                                       item.value
                                     }
                                   >
-                                    {item.label}
+                                    {translateText(item.label)}
                                   </option>
                                 )
                               )}
@@ -682,13 +687,12 @@ export default function AutomationsPage() {
 
               <div className="mb-5 rounded-xl border border-border-subtle bg-surface-2/60 px-4 py-3 text-xs text-foreground/60">
                 <span className="font-semibold text-foreground/80">
-                  Preview:
-                </span>{" "}
-                When{" "}
+                  {translateText("Preview:")}</span>{" "}
+                {translateText("When")}{" "}
                 <span className="text-cyan-300">
                   &quot;{triggerLabel}&quot;
                 </span>{" "}
-                then{" "}
+                {translateText("then")}{" "}
                 {bActions.map(
                   (action, index) => {
                     const actionDef =
@@ -732,8 +736,7 @@ export default function AutomationsPage() {
                   }
                   className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/65 hover:bg-foreground/5"
                 >
-                  Cancel
-                </button>
+                  {translateText("Cancel")}</button>
 
                 <button
                   onClick={() =>
@@ -743,8 +746,8 @@ export default function AutomationsPage() {
                   className="cf-btn-primary"
                 >
                   {bSaving
-                    ? "Saving..."
-                    : "Save Automation"}
+                    ? translateText("Saving...")
+                    : translateText("Save Automation")}
                 </button>
               </div>
             </div>
@@ -753,8 +756,7 @@ export default function AutomationsPage() {
 
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
           <h2 className="mb-4 text-base font-semibold text-foreground">
-            Quick-install presets
-          </h2>
+            {translateText("Quick-install presets")}</h2>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {PRESETS.map((preset) => (
@@ -768,11 +770,11 @@ export default function AutomationsPage() {
                 className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-left transition hover:border-cyan-500/40 hover:bg-cyan-500/15"
               >
                 <p className="font-semibold text-cyan-200">
-                  {preset.name}
+                  {translateText(preset.name)}
                 </p>
 
                 <p className="mt-1 text-xs uppercase tracking-[0.18em] text-cyan-300/70">
-                  {preset.trigger_event}
+                  {translateText(TRIGGERS.find((item) => item.value === preset.trigger_event)?.label ?? preset.trigger_event)}
                 </p>
               </button>
             ))}
@@ -781,17 +783,15 @@ export default function AutomationsPage() {
 
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
           <h2 className="mb-4 text-base font-semibold text-foreground">
-            Active automations ({automations.length})
+            {translateText("Active automations (")}{automations.length})
           </h2>
 
           {loading ? (
             <p className="text-sm text-foreground/60">
-              Loading...
-            </p>
+              {translateText("Loading...")}</p>
           ) : automations.length === 0 ? (
             <p className="text-sm text-foreground/50">
-              No automations yet. Use a preset or build your own.
-            </p>
+              {translateText("No automations yet. Use a preset or build your own.")}</p>
           ) : (
             <div className="space-y-2">
               {automations.map((item) => (
@@ -802,7 +802,7 @@ export default function AutomationsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground">
-                        {item.name}
+                        {translateText(item.name)}
                       </p>
 
                       <span
@@ -813,21 +813,21 @@ export default function AutomationsPage() {
                         }`}
                       >
                         {item.enabled
-                          ? "On"
-                          : "Off"}
+                          ? translateText("On")
+                          : translateText("Off")}
                       </span>
                     </div>
 
                     <p className="mt-1 text-xs text-foreground/50">
-                      Trigger:{" "}
+                      {translateText("Trigger:")}{" "}
                       <span className="text-foreground/70">
-                        {item.trigger_event}
+                        {translateText(TRIGGERS.find((triggerItem) => triggerItem.value === item.trigger_event)?.label ?? item.trigger_event)}
                       </span>{" "}
                       · {item.actions.length}{" "}
                       {item.actions.length !==
                       1
-                        ? "actions"
-                        : "action"}
+                        ? translateText("actions")
+                        : translateText("action")}
                     </p>
                   </div>
 
@@ -839,8 +839,8 @@ export default function AutomationsPage() {
                       className="rounded-lg border border-border-subtle px-3 py-1.5 text-xs font-medium text-foreground/70 transition hover:bg-foreground/5"
                     >
                       {item.enabled
-                        ? "Disable"
-                        : "Enable"}
+                        ? translateText("Disable")
+                        : translateText("Enable")}
                     </button>
 
                     <button

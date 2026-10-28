@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import type { TaskPriority } from "@/types";
@@ -55,7 +57,7 @@ const formatDateOnly = (
 
     const [, year, month, day] = match;
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         timeZone: "UTC",
         year: "numeric",
         month: "short",
@@ -149,7 +151,7 @@ export default function TaskCard({
                         onChange={(event) =>
                             setEditTitle(event.target.value)
                         }
-                        placeholder="Task title"
+                        placeholder={translateText("Task title")}
                         className="w-full rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none"
                     />
 
@@ -172,10 +174,10 @@ export default function TaskCard({
                             }
                             className="w-full rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none"
                         >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
+                            <option value="low">{translateText("Low")}</option>
+                            <option value="medium">{translateText("Medium")}</option>
+                            <option value="high">{translateText("High")}</option>
+                            <option value="urgent">{translateText("Urgent")}</option>
                         </select>
                     </div>
 
@@ -189,7 +191,7 @@ export default function TaskCard({
                             }
                             className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-50"
                         >
-                            {saving ? "Saving..." : "Save"}
+                            {saving ? translateText("Saving...") : translateText("Save")}
                         </button>
 
                         <button
@@ -198,8 +200,7 @@ export default function TaskCard({
                             disabled={saving}
                             className="rounded-lg border border-border-subtle px-3 py-1.5 text-xs font-semibold text-foreground"
                         >
-                            Cancel
-                        </button>
+                            {translateText("Cancel")}</button>
                     </div>
                 </div>
             </div>
@@ -250,7 +251,7 @@ export default function TaskCard({
 
                     {dueDate && (
                         <p className="text-xs text-foreground/55">
-                            Due:{" "}
+                            {translateText("Due:")}{" "}
                             {formatDateOnly(dueDate)}
                         </p>
                     )}
@@ -263,16 +264,14 @@ export default function TaskCard({
                     onClick={() => setEditing(true)}
                     className="text-sm text-cyan-400 hover:text-cyan-300"
                 >
-                    Edit
-                </button>
+                    {translateText("Edit")}</button>
 
                 <button
                     type="button"
                     onClick={onDelete}
                     className="text-sm text-red-400 hover:text-red-300"
                 >
-                    Delete
-                </button>
+                    {translateText("Delete")}</button>
             </div>
         </div>
     );

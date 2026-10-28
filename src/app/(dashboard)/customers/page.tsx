@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { readApiError } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 
@@ -54,7 +56,7 @@ const escapeCsv = (value: unknown) => {
 };
 
 const getDateKey = (value: string | Date, timeZone: string) => {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = new Intl.DateTimeFormat(getIntlLocale(), {
     timeZone,
     year: "numeric",
     month: "2-digit",
@@ -69,7 +71,7 @@ const getDateKey = (value: string | Date, timeZone: string) => {
 };
 
 const formatDate = (value: string, timeZone: string) => {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: "medium",
     timeZone,
   }).format(new Date(value));
@@ -81,7 +83,7 @@ export default function CustomersPage() {
     includeCompleted: true,
   });
 
-  const locale = "en-US";
+  const locale = getIntlLocale();
   const currencyFormatter = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
@@ -123,7 +125,7 @@ export default function CustomersPage() {
           : DEFAULT_TIMEZONE;
 
       try {
-        Intl.DateTimeFormat("en-US", {
+        Intl.DateTimeFormat(getIntlLocale(), {
           timeZone: userTimezone,
         });
         setTimezone(userTimezone);
@@ -408,7 +410,7 @@ export default function CustomersPage() {
 
                 if (!firstSheet) {
                   throw new Error(
-                    "Import failed: workbook has no sheets."
+                    translateText("Import failed: workbook has no sheets.")
                   );
                 }
 
@@ -541,23 +543,20 @@ export default function CustomersPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-          Customers
-        </p>
+          {translateText("Customers")}</p>
 
         <h1 className="mt-2 text-3xl font-bold text-foreground">
-          Your active customer relationships
-        </h1>
+          {translateText("Your active customer relationships")}</h1>
 
         <p className="mt-2 text-sm text-foreground/65">
-          Manage active customers, churn risks, and VIP customers.
-        </p>
+          {translateText("Manage active customers, churn risks, and VIP customers.")}</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto_auto]">
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search customers..."
+          placeholder={translateText("Search customers...")}
           className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground outline-none"
         />
 
@@ -572,8 +571,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          All
-        </button>
+          {translateText("All")}</button>
 
         <button
           onClick={() =>
@@ -587,8 +585,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          Active Customers
-        </button>
+          {translateText("Active Customers")}</button>
 
         <button
           onClick={() =>
@@ -602,8 +599,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          Lost Customers
-        </button>
+          {translateText("Lost Customers")}</button>
 
         <button
           onClick={() =>
@@ -617,8 +613,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          VIP
-        </button>
+          {translateText("VIP")}</button>
 
         <button
           onClick={() =>
@@ -632,8 +627,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          Companies
-        </button>
+          {translateText("Companies")}</button>
 
         <button
           onClick={() =>
@@ -647,8 +641,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          Private Customers
-        </button>
+          {translateText("Private Customers")}</button>
 
         <button
           onClick={() => {
@@ -658,8 +651,7 @@ export default function CustomersPage() {
           }}
           className="rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
         >
-          Reset filters
-        </button>
+          {translateText("Reset filters")}</button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -667,22 +659,20 @@ export default function CustomersPage() {
           onClick={() => void downloadExport("csv")}
           className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
         >
-          Export CSV
-        </button>
+          {translateText("Export CSV")}</button>
 
         <button
           onClick={() => void downloadExport("xlsx")}
           className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
         >
-          Export Excel
-        </button>
+          {translateText("Export Excel")}</button>
 
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={importingCsv}
           className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 disabled:opacity-60"
         >
-          {importingCsv ? "Importing..." : "Import File"}
+          {importingCsv ? translateText("Importing...") : translateText("Import File")}
         </button>
 
         <input
@@ -706,8 +696,7 @@ export default function CustomersPage() {
             onClick={downloadImportIssuesReport}
             className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-200"
           >
-            Download Import Issues
-          </button>
+            {translateText("Download Import Issues")}</button>
         ) : null}
 
         {importMessage ? (
@@ -725,13 +714,12 @@ export default function CustomersPage() {
 
       <details className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
         <summary className="cursor-pointer list-none text-sm font-semibold text-foreground marker:hidden">
-          Spreadsheet import format
-          <span className="ml-2 text-xs font-normal text-foreground/50">View required columns and examples</span>
+          {translateText("Spreadsheet import format")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
         </summary>
         <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
           <Image
             src="/customer-import-guide.png"
-            alt="Spreadsheet template with contact, company, and revenue columns. Contact is required; company and revenue are optional."
+            alt={translateText("Spreadsheet template with contact, company, and revenue columns. Contact is required; company and revenue are optional.")}
             width={1200}
             height={720}
             className="h-auto w-full"
@@ -739,20 +727,18 @@ export default function CustomersPage() {
           />
         </div>
         <a href="/customer-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
-          Download PNG guide
-        </a>
+          {translateText("Download PNG guide")}</a>
       </details>
 
       {error ? (
         <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-          Could not load customers: {error}
+          {translateText("Could not load customers:")}{error}
         </div>
       ) : null}
 
       {loading && customers.length === 0 ? (
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">
-          Loading...
-        </div>
+          {translateText("Loading...")}</div>
       ) : filteredCustomers.length === 0 ? (
         customers.length === 0 ? (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-10 text-center">
@@ -761,12 +747,10 @@ export default function CustomersPage() {
             </div>
 
             <h3 className="mt-4 text-xl font-semibold text-foreground">
-              No customers yet
-            </h3>
+              {translateText("No customers yet")}</h3>
 
             <p className="mt-2 text-sm text-foreground/65">
-              Customers will appear here once your deals are completed.
-            </p>
+              {translateText("Customers will appear here once your deals are completed.")}</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-10 text-center">
@@ -775,12 +759,10 @@ export default function CustomersPage() {
             </div>
 
             <h3 className="mt-4 text-xl font-semibold text-foreground">
-              No customers found
-            </h3>
+              {translateText("No customers found")}</h3>
 
             <p className="mt-2 text-sm text-foreground/65">
-              No customers match your current search or filter.
-            </p>
+              {translateText("No customers match your current search or filter.")}</p>
 
             <button
               onClick={() => {
@@ -790,8 +772,7 @@ export default function CustomersPage() {
               }}
               className="mt-5 rounded-xl border border-border-subtle bg-surface-2 px-5 py-2 font-medium text-foreground/80 transition hover:bg-foreground/5"
             >
-              Clear filters
-            </button>
+              {translateText("Clear filters")}</button>
           </div>
         )
       ) : (
@@ -834,13 +815,12 @@ export default function CustomersPage() {
                               </h2>
 
                               <p className="mt-0.5 truncate text-sm text-foreground/55">
-                                {customer.contacts.join(", ") || "n/a"}
+                                {customer.contacts.join(", ") || translateText("n/a")}
                               </p>
 
                               {customer.isVip ? (
                                 <span className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
-                                  ★ VIP
-                                </span>
+                                  {translateText("★ VIP")}</span>
                               ) : null}
 
                             </div>
@@ -848,8 +828,7 @@ export default function CustomersPage() {
                             <div className="grid gap-3 text-sm md:grid-cols-3">
                               <div>
                                 <p className="text-foreground/55">
-                                  Revenue
-                                </p>
+                                  {translateText("Revenue")}</p>
 
                                 <p className="font-semibold text-emerald-300">
                                   {currencyFormatter.format(
@@ -860,8 +839,7 @@ export default function CustomersPage() {
 
                               <div>
                                 <p className="text-foreground/55">
-                                  Deals
-                                </p>
+                                  {translateText("Deals")}</p>
 
                                 <p className="font-semibold text-foreground">
                                   {customer.deals}
@@ -870,8 +848,7 @@ export default function CustomersPage() {
 
                               <div>
                                 <p className="text-foreground/55">
-                                  Last Contact
-                                </p>
+                                  {translateText("Last Contact")}</p>
 
                                 <p className="font-semibold text-foreground">
                                   {customer.lastContactAt
@@ -879,14 +856,14 @@ export default function CustomersPage() {
                                         customer.lastContactAt,
                                         timezone
                                       )
-                                    : "n/a"}
+                                    : translateText("n/a")}
                                 </p>
                               </div>
                             </div>
                           </div>
                           {customer.nextActions.length ? (
                             <div className="mt-4 border-t border-border-subtle pt-3">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">Next actions</p>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Next actions")}</p>
                               <ul className="mt-2 space-y-1 text-sm text-foreground/75">
                                 {customer.nextActions.map((item, index) => (
                                   <li key={`${customer.id}-${item.deal}-${index}`}>
@@ -909,8 +886,8 @@ export default function CustomersPage() {
                           className="shrink-0 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {deletingCustomer === customer.id
-                            ? "Deleting..."
-                            : "Delete"}
+                            ? translateText("Deleting...")
+                            : translateText("Delete")}
                         </button>
                       </div>
                     </div>

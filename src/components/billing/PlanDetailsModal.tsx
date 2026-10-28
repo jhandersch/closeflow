@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import React from "react";
 
@@ -74,7 +76,7 @@ function renderValue(value: string | boolean) {
     if (typeof value === "string") {
         return (
             <span className="text-sm text-foreground/75">
-                {value}
+                {translateText(value)}
             </span>
         );
     }
@@ -111,23 +113,19 @@ export default function PlanDetailsModal({
                 <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border-subtle bg-surface-1 p-6">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400">
-                            Plan comparison
-                        </p>
+                            {translateText("Plan comparison")}</p>
 
                         <h2 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
-                            Compare CloseFlow plans
-                        </h2>
+                            {translateText("Compare CloseFlow plans")}</h2>
 
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-foreground/60">
-                            Compare pricing, capacity, AI capabilities,
-                            forecasting, and analytics side by side.
-                        </p>
+                            {translateText("Compare pricing, capacity, AI capabilities, forecasting, and analytics side by side.")}</p>
                     </div>
 
                     <button
                         type="button"
                         onClick={onClose}
-                        aria-label="Close plan comparison"
+                        aria-label={translateText("Close plan comparison")}
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border-subtle text-foreground/60 transition hover:bg-foreground/5 hover:text-foreground"
                     >
                         <X className="h-5 w-5" />
@@ -139,8 +137,7 @@ export default function PlanDetailsModal({
                         <thead>
                             <tr className="border-b border-border-subtle">
                                 <th className="w-[34%] p-5 text-left text-sm font-medium text-foreground/50">
-                                    Features
-                                </th>
+                                    {translateText("Features")}</th>
 
                                 {(["free", "pro", "business"] as Plan[]).map(
                                     (currentPlan) => {
@@ -159,16 +156,13 @@ export default function PlanDetailsModal({
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-lg font-semibold text-foreground">
                                                         {
-                                                            planDetails[
-                                                                currentPlan
-                                                            ].name
+                                                            translateText(planDetails[currentPlan].name)
                                                         }
                                                     </span>
 
                                                     {selected && (
                                                         <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-300">
-                                                            Selected
-                                                        </span>
+                                                            {translateText("Selected")}</span>
                                                     )}
                                                 </div>
 
@@ -179,14 +173,12 @@ export default function PlanDetailsModal({
                                                         ].price
                                                     }
                                                     {currentPlan !== "free" &&
-                                                        " per workspace"}
+                                                        translateText("per workspace")}
                                                 </p>
 
                                                 <p className="mt-1 text-xs font-normal text-foreground/45">
                                                     {
-                                                        planDetails[
-                                                            currentPlan
-                                                        ].seats
+                                                        translateText(planDetails[currentPlan].seats)
                                                     }
                                                 </p>
                                             </th>
@@ -204,7 +196,7 @@ export default function PlanDetailsModal({
                                             colSpan={4}
                                             className="border-b border-border-subtle bg-surface-2/50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400"
                                         >
-                                            {section.category}
+                                            {translateText(section.category)}
                                         </td>
                                     </tr>
 
@@ -214,7 +206,7 @@ export default function PlanDetailsModal({
                                             className="border-b border-border-subtle last:border-b-0"
                                         >
                                             <td className="p-5 text-sm font-medium text-foreground/75">
-                                                {row.label}
+                                                {translateText(row.label)}
                                             </td>
 
                                             {(
@@ -249,9 +241,7 @@ export default function PlanDetailsModal({
                 </div>
 
                 <div className="shrink-0 border-t border-border-subtle bg-surface-2/30 p-5 text-sm text-foreground/50">
-                    Prices and limits shown here reflect the current
-                    CloseFlow plan configuration.
-                </div>
+                    {translateText("Prices and limits shown here reflect the current CloseFlow plan configuration.")}</div>
             </div>
         </div>
     );

@@ -1,9 +1,12 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import toast from "react-hot-toast";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type Props = {
   lead: any;
@@ -20,6 +23,7 @@ export default function AISalesCopilot({
   risk,
   status,
 }: Props) {
+  const { language } = useAppPreferences();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +38,7 @@ export default function AISalesCopilot({
       await copyTextToClipboard(data.emailDraft);
       setCopied(true);
     } catch {
-      toast.error("Could not copy the email. Please copy it manually.");
+      toast.error(translateText("Could not copy the email. Please copy it manually."));
       return;
     }
 
@@ -57,7 +61,7 @@ export default function AISalesCopilot({
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error("Please sign in again.");
+        throw new Error(translateText("Please sign in again."));
       }
 
       const response = await fetch("/api/sales-copilot", {
@@ -73,12 +77,12 @@ export default function AISalesCopilot({
           memory,
           risk,
           status,
-          language: "en",
+          language,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Copilot failed");
+        throw new Error(translateText("Copilot failed"));
       }
 
       const result = await response.json();
@@ -102,8 +106,7 @@ export default function AISalesCopilot({
   if (loading) {
     return (
       <div className="rounded-xl bg-surface-1 p-6 text-foreground/65">
-        AI Sales Copilot is preparing recommendations...
-      </div>
+        {translateText("AI Sales Copilot is preparing recommendations...")}</div>
     );
   }
 
@@ -124,14 +127,12 @@ export default function AISalesCopilot({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-xl font-semibold text-foreground">
-            AI Sales Copilot
-          </h2>
+            {translateText("AI Sales Copilot")}</h2>
 
           {data.strategy && (
             <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
               <h3 className="font-semibold text-cyan-300">
-                Deal Strategy
-              </h3>
+                {translateText("Deal Strategy")}</h3>
 
               <p className="mt-2 text-sm text-foreground/85">
                 {data.strategy}
@@ -140,8 +141,7 @@ export default function AISalesCopilot({
           )}
 
           <p className="mt-1 text-sm text-foreground/65">
-            AI-powered closing assistance
-          </p>
+            {translateText("AI-powered closing assistance")}</p>
         </div>
 
         <button
@@ -150,20 +150,17 @@ export default function AISalesCopilot({
           disabled={loading}
           className="cf-btn-primary"
         >
-          Regenerate
-        </button>
+          {translateText("Regenerate")}</button>
       </div>
 
       <div>
         <h3 className="font-semibold text-cyan-400">
-          Call Preparation
-        </h3>
+          {translateText("Call Preparation")}</h3>
 
         {data.dealSummary && (
           <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
             <h3 className="font-semibold text-foreground">
-              Deal Summary
-            </h3>
+              {translateText("Deal Summary")}</h3>
 
             <p className="mt-2 text-sm text-foreground/80">
               {data.dealSummary}
@@ -191,8 +188,7 @@ export default function AISalesCopilot({
 
       <div>
         <h3 className="font-semibold text-cyan-400">
-          Questions to ask
-        </h3>
+          {translateText("Questions to ask")}</h3>
 
         <ul className="mt-3 space-y-2">
           {data.callPreparation?.questions?.map(
@@ -210,8 +206,7 @@ export default function AISalesCopilot({
 
       <div>
         <h3 className="font-semibold text-cyan-400">
-          Possible objections
-        </h3>
+          {translateText("Possible objections")}</h3>
 
         <div className="mt-3 space-y-3">
           {data.objections?.map((item: any) => (
@@ -233,8 +228,7 @@ export default function AISalesCopilot({
 
       <div>
         <h3 className="font-semibold text-cyan-400">
-          Email Draft
-        </h3>
+          {translateText("Email Draft")}</h3>
 
         <div className="mt-2 rounded-xl bg-surface-2/70 p-4 text-sm text-foreground/80">
           <textarea
@@ -248,7 +242,7 @@ export default function AISalesCopilot({
             onClick={() => void copyEmail()}
             className="cf-btn-primary mt-3"
           >
-            {copied ? "Copied" : "Copy Email"}
+            {copied ? translateText("Copied") : translateText("Copy Email")}
           </button>
         </div>
       </div>

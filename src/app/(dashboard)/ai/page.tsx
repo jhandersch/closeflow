@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -6,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase/client";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type LeadLite = {
   id: string;
@@ -40,6 +43,7 @@ type ChatMessage = {
 };
 
 export default function AIAssistantPage() {
+  const { language } = useAppPreferences();
   const searchParams = useSearchParams();
   const leadIdFromQuery = searchParams.get("leadId");
 
@@ -54,7 +58,7 @@ export default function AIAssistantPage() {
   const [question, setQuestion] = useState("");
   const [chat, setChat] = useState<ChatMessage[]>([]);
 
-  const locale = "en-US";
+  const locale = getIntlLocale();
 
   useEffect(() => {
     const loadLeads = async () => {
@@ -81,7 +85,7 @@ export default function AIAssistantPage() {
           .single();
 
         if (membershipError || !membership) {
-          throw new Error("No workspace found");
+          throw new Error(translateText("No workspace found"));
         }
 
         const workspaceId = membership.workspace_id;
@@ -268,7 +272,7 @@ export default function AIAssistantPage() {
 
       if (!session?.access_token) {
         throw new Error(
-          "Please sign in again."
+          translateText("Please sign in again.")
         );
       }
 
@@ -290,7 +294,7 @@ export default function AIAssistantPage() {
             question: nextQuestion,
             mode,
             pipeline: pipelineSummary,
-            language: "en",
+            language,
           }),
         }
       );
@@ -384,18 +388,13 @@ export default function AIAssistantPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            AI Assistant
-          </p>
+            {translateText("AI Assistant")}</p>
 
           <h1 className="cf-title mt-2 text-3xl font-bold text-foreground">
-            Get AI-powered guidance for your deals
-          </h1>
+            {translateText("Get AI-powered guidance for your deals")}</h1>
 
           <p className="mt-2 text-sm text-foreground/65">
-            Ask about leads, customers, pipeline risk,
-            negotiation coaching, email drafts,
-            and forecast confidence.
-          </p>
+            {translateText("Ask about leads, customers, pipeline risk, negotiation coaching, email drafts, and forecast confidence.")}</p>
 
           {selectedLead ? (
             <div className="mt-3">
@@ -403,8 +402,7 @@ export default function AIAssistantPage() {
                 href={`/leads/${selectedLead.id}`}
                 className="inline-flex rounded-full border border-border-subtle bg-surface-2/70 px-3 py-1 text-xs font-medium text-foreground/75 transition hover:text-foreground"
               >
-                Open lead detail
-              </Link>
+                {translateText("Open lead detail")}</Link>
             </div>
           ) : null}
         </div>
@@ -426,15 +424,13 @@ export default function AIAssistantPage() {
             >
               {loadingLeads ? (
                 <option>
-                  Loading leads...
-                </option>
+                  {translateText("Loading leads...")}</option>
               ) : null}
 
               {!loadingLeads &&
               leads.length === 0 ? (
                 <option>
-                  No leads available
-                </option>
+                  {translateText("No leads available")}</option>
               ) : null}
 
               {leads.map((lead) => (
@@ -462,8 +458,8 @@ export default function AIAssistantPage() {
               className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-300 disabled:opacity-50"
             >
               {running
-                ? "Generating..."
-                : "Run Lead Analysis"}
+                ? translateText("Generating...")
+                : translateText("Run Lead Analysis")}
             </button>
           </div>
 
@@ -478,8 +474,7 @@ export default function AIAssistantPage() {
               disabled={running}
               className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5"
             >
-              Analyze my pipeline
-            </button>
+              {translateText("Analyze my pipeline")}</button>
 
             <button
               onClick={() =>
@@ -493,8 +488,7 @@ export default function AIAssistantPage() {
               }
               className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5"
             >
-              Sales coach
-            </button>
+              {translateText("Sales coach")}</button>
 
             <button
               onClick={() =>
@@ -508,8 +502,7 @@ export default function AIAssistantPage() {
               }
               className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5"
             >
-              Email generator
-            </button>
+              {translateText("Email generator")}</button>
 
             <button
               onClick={() =>
@@ -521,8 +514,7 @@ export default function AIAssistantPage() {
               disabled={running}
               className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5"
             >
-              Risk detection
-            </button>
+              {translateText("Risk detection")}</button>
 
             <button
               onClick={() =>
@@ -534,8 +526,7 @@ export default function AIAssistantPage() {
               disabled={running}
               className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-foreground/85 hover:bg-foreground/5"
             >
-              Forecast
-            </button>
+              {translateText("Forecast")}</button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
@@ -546,7 +537,7 @@ export default function AIAssistantPage() {
                   event.target.value
                 )
               }
-              placeholder="Which leads should I contact today?"
+              placeholder={translateText("Which leads should I contact today?")}
               className="w-full rounded-xl border border-border-subtle bg-surface-1 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400"
             />
 
@@ -562,18 +553,17 @@ export default function AIAssistantPage() {
               }
               className="rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background disabled:opacity-60"
             >
-              Ask AI
-            </button>
+              {translateText("Ask AI")}</button>
           </div>
 
           <p className="mt-3 text-xs text-foreground/55">
-            Leads:{" "}
+            {translateText("Leads:")}{" "}
             {pipelineSummary.totalLeads} |{" "}
-            Pipeline Value: EUR{" "}
+            {translateText("Pipeline Value: EUR")}{" "}
             {Math.round(
               pipelineSummary.totalValue
             ).toLocaleString(locale)}{" "}
-            | Revenue Closed: EUR{" "}
+            {translateText("| Revenue Closed: EUR")}{" "}
             {Math.round(
               pipelineSummary.wonRevenue
             ).toLocaleString(locale)}
@@ -588,16 +578,12 @@ export default function AIAssistantPage() {
 
         <div className="cf-card cf-enter p-5">
           <h2 className="cf-title text-lg font-semibold text-foreground">
-            Assistant Chat
-          </h2>
+            {translateText("Assistant Chat")}</h2>
 
           <div className="mt-4 space-y-3">
             {chat.length === 0 ? (
               <p className="text-sm text-foreground/55">
-                Start with a question or use a
-                quick action to generate
-                recommendations.
-              </p>
+                {translateText("Start with a question or use a quick action to generate recommendations.")}</p>
             ) : (
               chat.map((message, index) => (
                 <div
@@ -610,8 +596,8 @@ export default function AIAssistantPage() {
                 >
                   <p className="mb-1 text-xs uppercase tracking-[0.2em] text-foreground/55">
                     {message.role === "user"
-                      ? "You"
-                      : "AI"}
+                      ? translateText("You")
+                      : translateText("AI")}
                   </p>
 
                   <p className="whitespace-pre-wrap">
@@ -627,40 +613,36 @@ export default function AIAssistantPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="cf-card cf-enter p-5">
               <h2 className="cf-title text-lg font-semibold text-foreground">
-                Strategy
-              </h2>
+                {translateText("Strategy")}</h2>
 
               <p className="mt-2 text-sm text-foreground/80">
                 {result.strategy ||
-                  "No strategy returned."}
+                  translateText("No strategy returned.")}
               </p>
             </div>
 
             <div className="cf-card cf-enter p-5">
               <h2 className="cf-title text-lg font-semibold text-foreground">
-                Next Best Action
-              </h2>
+                {translateText("Next Best Action")}</h2>
 
               <p className="mt-2 text-sm text-foreground/80">
                 {result.nextBestAction ||
-                  "No action returned."}
+                  translateText("No action returned.")}
               </p>
             </div>
 
             <div className="cf-card cf-enter p-5">
               <h2 className="cf-title text-lg font-semibold text-foreground">
-                Call Preparation
-              </h2>
+                {translateText("Call Preparation")}</h2>
 
               <p className="mt-2 text-sm text-foreground/80">
-                Goal:{" "}
+                {translateText("Goal:")}{" "}
                 {result.callPreparation
                   ?.goal || "-"}
               </p>
 
               <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">
-                Talking points
-              </p>
+                {translateText("Talking points")}</p>
 
               <ul className="mt-2 space-y-1 text-sm text-foreground/80">
                 {(
@@ -674,8 +656,7 @@ export default function AIAssistantPage() {
               </ul>
 
               <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">
-                Questions
-              </p>
+                {translateText("Questions")}</p>
 
               <ul className="mt-2 space-y-1 text-sm text-foreground/80">
                 {(
@@ -691,19 +672,17 @@ export default function AIAssistantPage() {
 
             <div className="cf-card cf-enter p-5">
               <h2 className="cf-title text-lg font-semibold text-foreground">
-                Email Draft
-              </h2>
+                {translateText("Email Draft")}</h2>
 
               <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">
                 {result.emailDraft ||
-                  "No email draft returned."}
+                  translateText("No email draft returned.")}
               </p>
             </div>
 
             <div className="cf-card cf-enter p-5 md:col-span-2">
               <h2 className="cf-title text-lg font-semibold text-foreground">
-                Objections
-              </h2>
+                {translateText("Objections")}</h2>
 
               <div className="mt-3 space-y-2">
                 {(result.objections || []).map(
@@ -714,12 +693,12 @@ export default function AIAssistantPage() {
                     >
                       <p className="text-sm font-semibold text-foreground">
                         {item.objection ||
-                          "Objection"}
+                          translateText("Objection")}
                       </p>
 
                       <p className="mt-1 text-sm text-foreground/80">
                         {item.response ||
-                          "No response returned."}
+                          translateText("No response returned.")}
                       </p>
                     </div>
                   )

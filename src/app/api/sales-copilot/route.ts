@@ -12,6 +12,7 @@ import {
   getRetryableStatus,
   getUserFacingErrorMessage,
 } from "@/lib/errorRecovery";
+import { normalizeLanguage } from "@/lib/i18n";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -64,7 +65,10 @@ export async function POST(req: Request) {
       question,
       mode,
       pipeline,
+      language: requestedLanguage,
     } = await req.json();
+    const language = normalizeLanguage(requestedLanguage ?? user.user_metadata?.language);
+    const responseLanguage = language === "de" ? "German" : "English";
 
     const activityHistory = activities
       ?.map(
@@ -159,7 +163,7 @@ Focus on:
 - Account for the listed user-entered deal costs when evaluating profitability, pricing flexibility, and recommended next steps. Clearly distinguish the estimated net amount from gross deal value.
 - Treat user-entered costs as estimates and do not invent additional costs.
 - Do not expose internal costs or margins in customer-facing email drafts.
-- Write all free-text values in English
+- Write all free-text values in ${responseLanguage}
 `;
 
     const completion =
@@ -169,7 +173,7 @@ Focus on:
           {
             role: "system",
             content:
-              "You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write all text values in English.",
+              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write all text values in ${responseLanguage}.`,
           },
           {
             role: "user",

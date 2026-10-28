@@ -1,4 +1,6 @@
 ﻿"use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import {
   CartesianGrid,
@@ -25,7 +27,7 @@ export default function RevenueForecastChart({
   data,
 }: RevenueForecastChartProps) {
   const { t } = useAppPreferences();
-  const locale = "en-US";
+  const locale = getIntlLocale();
   const latest = data[data.length - 1];
 
   return (
@@ -48,9 +50,8 @@ export default function RevenueForecastChart({
           </p>
 
           <h2 className="text-lg font-semibold text-foreground">
-            Possible forecast paths
-          </h2>
-          <p className="mt-1 text-sm text-foreground/60">Cumulative estimated deal value after listed costs · next six months</p>
+            {translateText("Possible forecast paths")}</h2>
+          <p className="mt-1 text-sm text-foreground/60">{translateText("Cumulative estimated deal value after listed costs · next six months")}</p>
         </div>
 
         <div
@@ -65,14 +66,13 @@ export default function RevenueForecastChart({
             text-emerald-300
           "
         >
-          Three scenarios
-        </div>
+          {translateText("Three scenarios")}</div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <ScenarioValue title="Conservative" value={latest?.conservative ?? 0} color="text-rose-300" />
-        <ScenarioValue title="Expected" value={latest?.expected ?? 0} color="text-cyan-300" />
-        <ScenarioValue title="Optimistic" value={latest?.optimistic ?? 0} color="text-emerald-300" />
+        <ScenarioValue title={translateText("Conservative")} value={latest?.conservative ?? 0} color="text-rose-300" />
+        <ScenarioValue title={translateText("Expected")} value={latest?.expected ?? 0} color="text-cyan-300" />
+        <ScenarioValue title={translateText("Optimistic")} value={latest?.optimistic ?? 0} color="text-emerald-300" />
       </div>
 
       <div className="mt-6 h-80">
@@ -132,10 +132,10 @@ export default function RevenueForecastChart({
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="bg-surface-2/70 text-xs uppercase tracking-wide text-foreground/55">
             <tr>
-              <th className="px-4 py-3">Month</th>
-              <th className="px-4 py-3 text-rose-300">Conservative</th>
-              <th className="px-4 py-3 text-cyan-300">Expected</th>
-              <th className="px-4 py-3 text-emerald-300">Optimistic</th>
+              <th className="px-4 py-3">{translateText("Month")}</th>
+              <th className="px-4 py-3 text-rose-300">{translateText("Conservative")}</th>
+              <th className="px-4 py-3 text-cyan-300">{translateText("Expected")}</th>
+              <th className="px-4 py-3 text-emerald-300">{translateText("Optimistic")}</th>
             </tr>
           </thead>
           <tbody>
@@ -151,8 +151,8 @@ export default function RevenueForecastChart({
         </table>
       </div>
       <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4 text-sm text-foreground/65">
-        <p className="font-medium text-foreground/80">How to read these paths</p>
-        <p className="mt-1">The expected path uses each open deal&apos;s close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.</p>
+        <p className="font-medium text-foreground/80">{translateText("How to read these paths")}</p>
+        <p className="mt-1">{translateText("The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.")}</p>
       </div>
     </section>
   );
@@ -161,8 +161,8 @@ export default function RevenueForecastChart({
 function ScenarioValue({ title, value, color }: { title: string; value: number; color: string }) {
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-      <p className={`text-sm ${color}`}>{title} · month 6</p>
-      <p className="mt-1 text-xl font-semibold text-foreground">€{value.toLocaleString("en-US")}</p>
+      <p className={`text-sm ${color}`}>{title} {" "}{translateText("· month 6")}</p>
+      <p className="mt-1 text-xl font-semibold text-foreground">€{value.toLocaleString(getIntlLocale())}</p>
     </div>
   );
 }

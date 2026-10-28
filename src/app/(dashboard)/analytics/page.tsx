@@ -1,4 +1,8 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
+
+import { getIntlLocale } from "@/lib/i18n";
 import AuthGuard from "@/components/AuthGuard";
 import RevenueCard from "@/components/dashboard/RevenueCard";
 import WinRateCard from "@/components/dashboard/WinRateCard";
@@ -20,7 +24,7 @@ function MetricCard({ label, value, hint }: {
     </div>);
 }
 export default function AnalyticsPage() {
-    const locale = "en-US";
+    const locale = getIntlLocale();
     const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true });
     const metrics = useDashboardMetrics(leads);
     const revenueHistory = useRecentRevenueEvents();
@@ -28,13 +32,13 @@ export default function AnalyticsPage() {
       .filter((lead) => lead.status === "won" || lead.status === "lost")
       .map((lead) => lead.company?.trim().toLowerCase() || `private:${lead.id}`)).size;
     if (loading) {
-        return <AuthGuard><div className="text-foreground">{"Loading..."}</div></AuthGuard>;
+        return <AuthGuard><div className="text-foreground">{translateText("Loading...")}</div></AuthGuard>;
     }
     return (<AuthGuard>
       <div className="space-y-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{"Analytics"}</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground">{"Track performance across your pipeline"}</h1>
+          <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">{translateText("Analytics")}</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{translateText("Track performance across your pipeline")}</h1>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: Request, context: {
     params: Promise<{
         id: string;
@@ -13,6 +14,7 @@ export async function POST(request: Request, context: {
     if (!access.ok) return access.response;
     try {
         const { id } = await context.params;
+        const requestBody = await request.json().catch(() => ({}));
         const cookieSupabase = await createClient();
         const authorization = request.headers.get("authorization");
         const bearerToken = authorization?.startsWith("Bearer ")
@@ -39,6 +41,8 @@ export async function POST(request: Request, context: {
                 status: 401
             });
         }
+        const language = normalizeLanguage(requestBody.language ?? user.user_metadata?.language);
+        const isGerman = language === "de";
         const { data: lead, error, } = await supabase
             .from("leads")
             .select("*")
@@ -54,7 +58,7 @@ export async function POST(request: Request, context: {
         }
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
-            return NextResponse.json({ error: "AI is not configured." }, { status: 503 });
+            return NextResponse.json({ error: isGerman ? "Die KI ist nicht eingerichtet." : "AI is not configured." }, { status: 503 });
         }
         const openai = createTrackedOpenAIClient(
             apiKey,
@@ -86,7 +90,7 @@ Return JSON:
  next_action:""
 }
 
-Language: English
+Write all text values in ${isGerman ? "German" : "English"}.
 `
                 },
                 {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type ActivityInsight = {
   health: string;
@@ -15,6 +16,7 @@ export function useActivityAI(
   activities: any[],
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [insight, setInsight] = useState<ActivityInsight | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +37,7 @@ export function useActivityAI(
           body: JSON.stringify({
             lead,
             activities,
-            language: "en",
+            language,
           }),
         });
 
@@ -49,7 +51,7 @@ export function useActivityAI(
     }
 
     void analyze();
-  }, [activities, lead]);
+  }, [activities, lead, language]);
 
   return {
     insight,

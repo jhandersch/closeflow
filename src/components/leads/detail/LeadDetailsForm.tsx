@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useEffect, useState } from "react";
 import { notify } from "@/lib/notifications"
 import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
@@ -126,7 +128,7 @@ p-6
 
 
     <h2 className="text-xl font-semibold">
-        {"Lead Details"}
+        {translateText("Lead Details")}
     </h2>
 
 
@@ -151,7 +153,7 @@ md:grid-cols-2
     <div>
 
     <label className="mb-2 block text-sm text-foreground/65">
-        {"Status"}
+        {translateText("Status")}
     </label>
 
 
@@ -166,24 +168,19 @@ py-3
 ">
 
     <option value="new">
-New
-    </option>
+{translateText("New")}</option>
 
     <option value="contacted">
-Contacted
-    </option>
+{translateText("Contacted")}</option>
 
     <option value="proposal">
-Proposal
-    </option>
+{translateText("Proposal")}</option>
 
     <option value="won">
-Won
-    </option>
+{translateText("Won")}</option>
 
     <option value="lost">
-Lost
-    </option>
+{translateText("Lost")}</option>
 
     </select>
 
@@ -213,7 +210,7 @@ Lost
 
   <div>
     <label className="mb-2 block text-sm text-foreground/65">
-      {"Due Date"}
+      {translateText("Due Date")}
     </label>
 
     <input type="date" value={nextActionDate} onChange={(e) => setNextActionDate(e.target.value)} className="
@@ -247,7 +244,7 @@ Lost
     <div>
 
     <label className="mb-2 block text-sm text-foreground/65">
-        {"Notes"}
+        {translateText("Notes")}
     </label>
 
 
@@ -278,9 +275,9 @@ text-background
 
         {saving
             ?
-                ("Saving...")
+                (translateText("Saving..."))
             :
-                ("Save Changes")}
+                (translateText("Save Changes"))}
 
     </button>
 

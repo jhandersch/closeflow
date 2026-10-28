@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 export function LogoMark({
     size = 36,
     className = "",
@@ -52,7 +53,7 @@ export default function Logo({
         <span className={`inline-flex items-center gap-2.5 ${className}`}>
             <LogoMark size={size} />
             {showWordmark ? (
-                <span className={wordmarkClassName}>CloseFlow</span>
+                <span className={wordmarkClassName}>{translateText("CloseFlow")}</span>
             ) : null}
         </span>
     );

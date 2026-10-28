@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 import { useState } from "react";
 import type { LeadStatus, UpdateLeadData } from "@/types";
 import type { Lead } from "@/types";
@@ -27,7 +29,7 @@ p-6
 
 
     <h2 className="text-xl font-semibold">
-    {"Notes"}
+    {translateText("Notes")}
     </h2>
 
 
@@ -59,9 +61,9 @@ text-background
 
         {saving
             ?
-                ("Saving...")
+                (translateText("Saving..."))
             :
-                ("Save notes")}
+                (translateText("Save notes"))}
 
     </button>
 

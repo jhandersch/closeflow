@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { resolveWorkspacePlan } from "@/lib/workspaceCapacity";
@@ -7,7 +8,7 @@ const getSupabasePublicKey = () => {
     const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
     if (!key) {
-        throw new Error("Missing Supabase public key.");
+        throw new Error(translateText("Missing Supabase public key."));
     }
     return key;
 };

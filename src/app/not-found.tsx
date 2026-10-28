@@ -1,4 +1,6 @@
 ﻿"use client";
+import { translateText } from "@/lib/i18n";
+
 
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
@@ -12,26 +14,23 @@ export default function NotFound() {
           404
         </p>
 
-        <h1 className="mt-4 text-4xl font-semibold">Page not found</h1>
+        <h1 className="mt-4 text-4xl font-semibold">{translateText("Page not found")}</h1>
 
         <p className="mt-4 text-base leading-7 text-foreground/65">
-          The page you are looking for does not exist or may have been moved.
-        </p>
+          {translateText("The page you are looking for does not exist or may have been moved.")}</p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/dashboard"
             className="cf-btn-primary"
           >
-            Back to dashboard
-          </Link>
+            {translateText("Back to dashboard")}</Link>
 
           <Link
             href="/leads"
             className="rounded-xl border border-border-subtle px-4 py-2 font-semibold text-foreground/85 transition hover:bg-white/5"
           >
-            View leads
-          </Link>
+            {translateText("View leads")}</Link>
         </div>
       </div>
     </div>

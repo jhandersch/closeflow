@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ const REQUIRED_ENV = [
 async function checkDatabase() {
     try {
         const admin = createAdminClient();
-        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 4000));
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(translateText("timeout"))), 4000));
         const query = admin.from("workspaces").select("id", { head: true, count: "exact" }).limit(1);
         const result = await Promise.race([query, timeout]);
         return !result.error;

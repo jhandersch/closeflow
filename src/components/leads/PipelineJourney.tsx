@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 type PipelineJourneyProps = {
   status: string;
@@ -23,11 +25,10 @@ export default function PipelineJourney({
     <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">
-          Pipeline Journey
-        </h2>
+          {translateText("Pipeline Journey")}</h2>
 
         <span className="font-semibold text-cyan-400">
-          {status.toUpperCase()}
+          {translateText(labels[status] ?? status).toUpperCase()}
         </span>
       </div>
 
@@ -57,7 +58,7 @@ export default function PipelineJourney({
                     : "text-foreground/55"
                 }`}
               >
-                {labels[stage] ?? stage}
+                {translateText(labels[stage] ?? stage)}
               </p>
             </div>
           );

@@ -1,57 +1,50 @@
-import type { Metadata } from "next";
+"use client";
+import { translateText } from "@/lib/i18n";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
-export const metadata: Metadata = {
-    title: "Datenschutz | CloseFlow",
-    description: "Datenschutzerklaerung fuer CloseFlow gemaess DSGVO.",
-};
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 export default function DatenschutzPage() {
+    useAppPreferences();
     return (<main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-12 text-foreground sm:px-8">
       <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8">
         <LogoMark size={36} className="mb-5" />
-        <h1 className="text-3xl font-semibold">Datenschutzerklaerung</h1>
+        <h1 className="text-3xl font-semibold">{translateText("Privacy policy")}</h1>
         <p className="mt-4 text-sm leading-7 text-foreground/70">
-          This page describes how CloseFlow processes personal data. Finalize the placeholder information with legal counsel before production.
-        </p>
+          {translateText("This page describes how CloseFlow processes personal data. Finalize the placeholder information with legal counsel before production.")}</p>
 
         <section className="mt-8 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">1. Verantwortliche Stelle</h2>
-          <p className="mt-2">CloseFlow GmbH, Musterstrasse 1, 10115 Berlin, Englishland</p>
-          <p>Email: privacy@closeflow.example</p>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("1. Controller")}</h2>
+          <p className="mt-2">{translateText("CloseFlow GmbH, Sample Street 1, 10115 Berlin, Germany")}</p>
+          <p>{translateText("Email: privacy@closeflow.example")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">2. Verarbeitete Daten</h2>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("2. Data processed")}</h2>
           <p className="mt-2">
-            Wir verarbeiten insbesondere Account-Daten, Workspace-Daten, CRM-Nutzungsdaten, technische Logdaten sowie freiwillig bereitgestellte Inhalte.
-          </p>
+            {translateText("We process account data, workspace data, CRM usage data, technical log data, and content you choose to provide.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">3. Zwecke und Rechtsgrundlagen</h2>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("3. Purposes and legal bases")}</h2>
           <p className="mt-2">
-            Die Verarbeitung erfolgt zur Vertragserfuellung, zur Sicherstellung des Betriebs, zur Missbrauchspraevention sowie auf Basis berechtigter Interessen und ggf. Einwilligungen.
-          </p>
+            {translateText("We process data to perform our contract, operate the service, prevent misuse, and pursue legitimate interests or obtain consent where required.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">4. Betroffenenrechte</h2>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("4. Your rights")}</h2>
           <p className="mt-2">
-            Du hast das Recht auf Auskunft, Berichtigung, Loeschung, Einschraenkung der Verarbeitung, Datenuebertragbarkeit und Widerspruch. Zudem besteht ein Beschwerderecht bei einer Aufsichtsbehoerde.
-          </p>
+            {translateText("You have the right to access, correct, erase, and restrict the processing of your data, to data portability, and to object. You may also lodge a complaint with a supervisory authority.")}</p>
         </section>
 
         <section className="mt-6 text-sm leading-7 text-foreground/85">
-          <h2 className="text-lg font-semibold text-foreground">5. Speicherdauer</h2>
+          <h2 className="text-lg font-semibold text-foreground">{translateText("5. Data retention")}</h2>
           <p className="mt-2">
-            Daten werden nur so lange gespeichert, wie es fuer die genannten Zwecke erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen.
-          </p>
+            {translateText("We retain data only as long as necessary for these purposes or as required by statutory retention obligations.")}</p>
         </section>
 
         <div className="mt-8">
           <Link href="/" className="text-sm font-semibold text-cyan-300 hover:underline">
-            Zurueck zur Startseite
-          </Link>
+            {translateText("Back to home")}</Link>
         </div>
       </div>
     </main>);

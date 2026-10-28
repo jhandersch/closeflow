@@ -1,6 +1,9 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 export type AIInsight = {
   headline: string;
@@ -14,6 +17,7 @@ export function useAIInsight(
   fallback: AIInsight,
   ..._args: string[]
 ) {
+  const { language } = useAppPreferences();
   const [insight, setInsight] = useState<AIInsight>(fallback);
   const [loading, setLoading] = useState(false);
 
@@ -33,12 +37,12 @@ export function useAIInsight(
           },
           body: JSON.stringify({
             ...(payload as Record<string, unknown>),
-            language: "en",
+            language,
           }),
         });
 
         if (!response.ok) {
-          throw new Error("AI request failed");
+          throw new Error(translateText("AI request failed"));
         }
 
         const data = await response.json();
@@ -60,7 +64,7 @@ export function useAIInsight(
     return () => {
       cancelled = true;
     };
-  }, [payloadKey]);
+  }, [payloadKey, language]);
 
   return {
     insight,

@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
@@ -14,7 +16,7 @@ const DEFAULT_TIMEZONE = "Europe/Berlin";
 
 function isValidTimeZone(timeZone: string): boolean {
   try {
-    new Intl.DateTimeFormat("en-US", { timeZone }).format();
+    new Intl.DateTimeFormat(getIntlLocale(), { timeZone }).format();
     return true;
   } catch {
     return false;
@@ -84,14 +86,11 @@ export default function ForecastPage() {
       <div className="space-y-6">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-            Forecast
-          </p>
+            {translateText("Forecast")}</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground">
-            Project expected revenue from your pipeline
-          </h1>
+            {translateText("Project expected revenue from your pipeline")}</h1>
           <p className="mt-2 text-sm text-foreground/65">
-            Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.
-          </p>
+            {translateText("Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.")}</p>
         </div>
 
         <RevenueForecast

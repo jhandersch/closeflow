@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
             ? createdWorkspaces[0]
             : null;
         if (!createdWorkspace?.workspace_id) {
-            throw new Error("Workspace creation returned no workspace");
+            throw new Error(translateText("Workspace creation returned no workspace"));
         }
         const workspace = {
             id: createdWorkspace.workspace_id,
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
             const authorization = request.headers.get("authorization") ??
                 request.headers.get("Authorization");
             if (!authorization) {
-                throw new Error("Authorization header missing for demo seed");
+                throw new Error(translateText("Authorization header missing for demo seed"));
             }
             const origin = new URL(request.url).origin;
             const demoResponse = await fetch(`${origin}/api/demo/seed`, {

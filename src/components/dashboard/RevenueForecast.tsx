@@ -1,4 +1,6 @@
 ﻿"use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 
 type Props = {
   pipelineValue: number;
@@ -31,7 +33,7 @@ export default function RevenueForecast({
   dealsWithoutNextAction,
   nextActionCoverage,
 }: Props) {
-  const locale = "en-US";
+  const locale = getIntlLocale();
 
   return (
     <section
@@ -62,8 +64,7 @@ export default function RevenueForecast({
               text-cyan-400
             "
           >
-            Revenue Intelligence
-          </p>
+            {translateText("Revenue Intelligence")}</p>
 
           <h2
             className="
@@ -73,8 +74,7 @@ export default function RevenueForecast({
               text-foreground
             "
           >
-            Sales Forecast
-          </h2>
+            {translateText("Sales Forecast")}</h2>
 
           <p
             className="
@@ -83,14 +83,11 @@ export default function RevenueForecast({
               text-foreground/60
             "
           >
-            AI-powered forecast based on pipeline health, activity and deal probability.
-          </p>
+            {translateText("AI-powered forecast based on pipeline health, activity and deal probability.")}</p>
           <p className="mt-1 text-xs text-foreground/50">
-            Forecast values are adjusted by your saved costs for each open deal.
-          </p>
+            {translateText("Forecast values are adjusted by your saved costs for each open deal.")}</p>
           <p className="mt-1 text-xs text-foreground/50">
-            Forecast confidence measures estimate reliability; close probability is separate for each deal.
-          </p>
+            {translateText("Forecast confidence measures estimate reliability; close probability is separate for each deal.")}</p>
         </div>
 
         <div
@@ -106,8 +103,7 @@ export default function RevenueForecast({
             text-emerald-300
           "
         >
-          {confidence}% confidence
-        </div>
+          {confidence}{translateText("% confidence")}</div>
       </div>
 
       <div
@@ -157,25 +153,25 @@ export default function RevenueForecast({
         "
       >
         <InsightCard
-          title="Pipeline Health"
+          title={translateText("Pipeline Health")}
           value={`${averageHealth}%`}
           subtitle="Average health of active deals"
         />
 
         <InsightCard
-          title="Close Probability"
+          title={translateText("Close Probability")}
           value={`${averageProbability}%`}
           subtitle="Average active-deal probability"
         />
 
         <InsightCard
-          title="Active Deals"
+          title={translateText("Active Deals")}
           value={String(activeDeals)}
           subtitle="Open opportunities"
         />
 
         <InsightCard
-          title="Deal Concentration"
+          title={translateText("Deal Concentration")}
           value={`${singleDealRisk}%`}
           subtitle={
             singleDealRisk > 50
@@ -188,14 +184,14 @@ export default function RevenueForecast({
         />
 
         <InsightCard
-          title="Next Action Coverage"
+          title={translateText("Next Action Coverage")}
           value={`${nextActionCoverage}%`}
           subtitle={`${dealsWithNextAction} of ${activeDeals} active deals have a next action`}
           risk={100 - nextActionCoverage}
         />
 
         <InsightCard
-          title="Without Next Action"
+          title={translateText("Without Next Action")}
           value={String(dealsWithoutNextAction)}
           subtitle="Active deals needing follow-up"
           risk={

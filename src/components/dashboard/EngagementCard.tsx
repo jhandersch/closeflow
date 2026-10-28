@@ -1,3 +1,4 @@
+import { getIntlLocale, translateText  } from "@/lib/i18n";
 type EngagementCardProps = {
   contactedCount: number;
   proposalCount: number;
@@ -9,7 +10,7 @@ export default function EngagementCard({
   proposalCount,
   forecastDelta,
 }: EngagementCardProps) {
-  const locale = "en-US";
+  const locale = getIntlLocale();
 
   return (
     <section
@@ -22,7 +23,7 @@ export default function EngagementCard({
       "
     >
       <div>
-        <p className="text-sm text-foreground/65">Sales Engagement</p>
+        <p className="text-sm text-foreground/65">{translateText("Sales Engagement")}</p>
 
         <h2
           className="
@@ -31,8 +32,7 @@ export default function EngagementCard({
             text-foreground
           "
         >
-          Customer momentum
-        </h2>
+          {translateText("Customer momentum")}</h2>
       </div>
 
       <div className="mt-5 space-y-3">
@@ -62,8 +62,7 @@ export default function EngagementCard({
 
             <div>
               <p className="text-sm text-orange-300">
-                Follow-up required
-              </p>
+                {translateText("Follow-up required")}</p>
 
               <p
                 className="
@@ -85,8 +84,7 @@ export default function EngagementCard({
               text-foreground/70
             "
           >
-            Leads contacted but waiting for the next sales action.
-          </p>
+            {translateText("Leads contacted but waiting for the next sales action.")}</p>
         </div>
 
         <div
@@ -115,8 +113,7 @@ export default function EngagementCard({
 
             <div>
               <p className="text-sm text-cyan-300">
-                Proposal opportunities
-              </p>
+                {translateText("Proposal opportunities")}</p>
 
               <p
                 className="
@@ -138,8 +135,7 @@ export default function EngagementCard({
               text-foreground/70
             "
           >
-            Deals currently closest to conversion.
-          </p>
+            {translateText("Deals currently closest to conversion.")}</p>
         </div>
 
         <div
@@ -168,8 +164,7 @@ export default function EngagementCard({
 
             <div>
               <p className="text-sm text-emerald-300">
-                Revenue upside
-              </p>
+                {translateText("Revenue upside")}</p>
 
               <p
                 className="
@@ -191,8 +186,7 @@ export default function EngagementCard({
               text-foreground/70
             "
           >
-            Additional forecasted revenue compared to closed deals.
-          </p>
+            {translateText("Additional forecasted revenue compared to closed deals.")}</p>
         </div>
       </div>
     </section>

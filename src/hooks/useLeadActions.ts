@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase/client";
 import type { ActivityType, Lead, LeadSource, LeadStatus, } from "@/types";
 import { runLeadAutomation } from "@/lib/automation";
@@ -31,7 +32,7 @@ export function useLeadActions(onSuccess?: (newStatus: LeadStatus) => Promise<vo
             }),
         });
         if (!response.ok) {
-            throw new Error("Status update failed");
+            throw new Error(translateText("Status update failed"));
         }
         const updatedLead = (await response.json()) as Lead;
         if (onSuccess) {
@@ -66,7 +67,7 @@ export function useLeadActions(onSuccess?: (newStatus: LeadStatus) => Promise<vo
             }),
         });
         if (!response.ok) {
-            throw new Error("Lead update failed");
+            throw new Error(translateText("Lead update failed"));
         }
         const updatedLead = (await response.json()) as Lead;
         return updatedLead;

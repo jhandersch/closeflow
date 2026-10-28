@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { getIntlLocale } from "@/lib/i18n";
 
 type MonthlyRevenue = { month: string; value: number };
 const DEFAULT_TIMEZONE = "Europe/Berlin";
@@ -79,7 +80,7 @@ function buildMonths(buckets: Map<string, number>, timeZone: string) {
   }).formatToParts(now);
   const year = Number(currentParts.find((part) => part.type === "year")?.value);
   const month = Number(currentParts.find((part) => part.type === "month")?.value);
-  const labelFormatter = new Intl.DateTimeFormat("en-US", {
+  const labelFormatter = new Intl.DateTimeFormat(getIntlLocale(), {
     month: "short",
     year: "2-digit",
     timeZone: "UTC",

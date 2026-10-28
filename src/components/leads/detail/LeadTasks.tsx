@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import type { TaskPriority } from "@/types";
@@ -74,8 +76,7 @@ bg-surface-1
 p-6
 ">
             <h2 className="text-xl font-semibold">
-                Tasks
-            </h2>
+                {translateText("Tasks")}</h2>
 
             <div className="
 flex
@@ -88,7 +89,7 @@ md:flex-row
                     onChange={(event) =>
                         setTitle(event.target.value)
                     }
-                    placeholder="New task..."
+                    placeholder={translateText("New task...")}
                     className="
 flex-1
 rounded-xl
@@ -133,20 +134,16 @@ py-3
 "
                 >
                     <option value="low">
-                        Low
-                    </option>
+                        {translateText("Low")}</option>
 
                     <option value="medium">
-                        Medium
-                    </option>
+                        {translateText("Medium")}</option>
 
                     <option value="high">
-                        High
-                    </option>
+                        {translateText("High")}</option>
 
                     <option value="urgent">
-                        Urgent
-                    </option>
+                        {translateText("Urgent")}</option>
                 </select>
 
                 <button
@@ -160,8 +157,7 @@ font-semibold
 text-background
 "
                 >
-                    Add
-                </button>
+                    {translateText("Add")}</button>
             </div>
 
             <div className="space-y-3">
@@ -189,8 +185,7 @@ text-background
 
                 {tasks.length === 0 && (
                     <p className="text-sm text-foreground/55">
-                        No tasks yet.
-                    </p>
+                        {translateText("No tasks yet.")}</p>
                 )}
             </div>
         </div>

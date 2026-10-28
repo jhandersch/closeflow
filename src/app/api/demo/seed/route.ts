@@ -1,3 +1,4 @@
+import { translateText, normalizeLanguage } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { runLeadAutomation } from "@/lib/automation";
@@ -105,6 +106,19 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const language = normalizeLanguage(user.user_metadata?.language);
+    const localizedDemoLeads = demoLeads.map((lead) => ({
+        ...lead,
+        notes: translateText(lead.notes, language),
+        activities: lead.activities.map((activity) => ({
+            ...activity,
+            action: translateText(activity.action, language),
+        })),
+        tasks: lead.tasks.map((task) => ({
+            ...task,
+            title: translateText(task.title, language),
+        })),
+    }));
     const warnings: string[] = [];
     let mode: "load" | "reload" = "load";
     try {
@@ -172,7 +186,7 @@ export async function POST(request: Request) {
     let insertedLeads = 0;
     let insertedActivities = 0;
     let insertedTasks = 0;
-    for (const leadSeed of demoLeads) {
+    for (const leadSeed of localizedDemoLeads) {
         const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspaceId || "");
         if (!leadCapacity.ok) {
             return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });

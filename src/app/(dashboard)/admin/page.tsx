@@ -1,4 +1,6 @@
 "use client";
+import { getIntlLocale, translateText  } from "@/lib/i18n";
+
 import { readApiError } from "@/lib/apiError";
 
 import { useEffect, useState } from "react";
@@ -87,7 +89,7 @@ export default function AdminPage() {
 
                 try {
                     new Intl.DateTimeFormat(
-                        "en-US",
+                        getIntlLocale(),
                         {
                             timeZone: savedTimezone,
                         },
@@ -166,20 +168,16 @@ export default function AdminPage() {
             <AuthGuard>
                 <section className="mx-auto max-w-6xl rounded-2xl border border-border-subtle bg-surface-1 p-8">
                     <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        Admin
-                    </p>
+                        {translateText("Admin")}</p>
 
                     <h1 className="mt-2 text-3xl font-bold text-foreground">
-                        Access restricted
-                    </h1>
+                        {translateText("Access restricted")}</h1>
 
                     <p className="mt-3 max-w-2xl text-sm text-foreground/60">
-                        Only platform administrators can access this page.
-                    </p>
+                        {translateText("Only platform administrators can access this page.")}</p>
 
                     <Link href="/" className="cf-btn-primary mt-6">
-                        Back to dashboard
-                    </Link>
+                        {translateText("Back to dashboard")}</Link>
                 </section>
             </AuthGuard>
         );
@@ -190,23 +188,18 @@ export default function AdminPage() {
             <div className="mx-auto max-w-6xl space-y-8">
                 <div>
                     <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        Admin
-                    </p>
+                        {translateText("Admin")}</p>
 
                     <h1 className="mt-2 text-3xl font-bold text-foreground">
-                        Manage platform users and workspaces
-                    </h1>
+                        {translateText("Manage platform users and workspaces")}</h1>
 
                     <p className="mt-2 text-sm text-foreground/65">
-                        Monitor global usage, growth, users and AI demand
-                        across all workspaces.
-                    </p>
+                        {translateText("Monitor global usage, growth, users and AI demand across all workspaces.")}</p>
                 </div>
 
                 {loading ? (
                     <p className="text-sm text-foreground/60">
-                        Loading admin metrics...
-                    </p>
+                        {translateText("Loading admin metrics...")}</p>
                 ) : null}
 
                 {error ? (
@@ -219,13 +212,12 @@ export default function AdminPage() {
                                 "two-factor authentication required",
                             ) ? (
                             <p className="mt-2">
-                                Enable 2FA first in{" "}
+                                {translateText("Enable 2FA first in")}{" "}
                                 <Link
                                     href="/settings#security"
                                     className="text-cyan-200 underline"
                                 >
-                                    Settings -&gt; Security
-                                </Link>
+                                    {translateText("Settings -> Security")}</Link>
                                 .
                             </p>
                         ) : null}
@@ -292,30 +284,24 @@ export default function AdminPage() {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p className="text-xs uppercase tracking-[0.18em] text-cyan-400">
-                                User Management
-                            </p>
+                                {translateText("User Management")}</p>
 
                             <h2 className="mt-1 text-xl font-semibold text-foreground">
-                                Registered Users
-                            </h2>
+                                {translateText("Registered Users")}</h2>
 
                             <p className="mt-1 text-sm text-foreground/60">
-                                Platform-wide user accounts and authentication
-                                status.
-                            </p>
+                                {translateText("Platform-wide user accounts and authentication status.")}</p>
                         </div>
 
                         {!usersLoading ? (
                             <span className="text-sm text-foreground/50">
-                                {users.length} users
-                            </span>
+                                {users.length} {translateText("users")}</span>
                         ) : null}
                     </div>
 
                     {usersLoading ? (
                         <p className="mt-6 text-sm text-foreground/60">
-                            Loading users...
-                        </p>
+                            {translateText("Loading users...")}</p>
                     ) : null}
 
                     {usersError ? (
@@ -331,28 +317,22 @@ export default function AdminPage() {
                                 <thead>
                                     <tr className="border-b border-border-subtle text-xs uppercase tracking-[0.14em] text-foreground/45">
                                         <th className="px-3 py-3 font-medium">
-                                            User
-                                        </th>
+                                            {translateText("User")}</th>
 
                                         <th className="px-3 py-3 font-medium">
-                                            Company
-                                        </th>
+                                            {translateText("Company")}</th>
 
                                         <th className="px-3 py-3 font-medium">
-                                            Created
-                                        </th>
+                                            {translateText("Created")}</th>
 
                                         <th className="px-3 py-3 font-medium">
-                                            Last Sign In
-                                        </th>
+                                            {translateText("Last Sign In")}</th>
 
                                         <th className="px-3 py-3 font-medium">
-                                            Email
-                                        </th>
+                                            {translateText("Email")}</th>
 
                                         <th className="px-3 py-3 font-medium">
-                                            Role
-                                        </th>
+                                            {translateText("Role")}</th>
                                     </tr>
                                 </thead>
 
@@ -369,12 +349,12 @@ export default function AdminPage() {
                                                             .name ||
                                                             user.user_metadata
                                                                 .username ||
-                                                            "Unnamed user"}
+                                                            translateText("Unnamed user")}
                                                     </p>
 
                                                     <p className="mt-1 text-xs text-foreground/45">
                                                         {user.email ||
-                                                            "No email"}
+                                                            translateText("No email")}
                                                     </p>
                                                 </div>
                                             </td>
@@ -398,30 +378,26 @@ export default function AdminPage() {
                                                           user.last_sign_in_at,
                                                           timezone,
                                                       )
-                                                    : "Never"}
+                                                    : translateText("Never")}
                                             </td>
 
                                             <td className="px-3 py-4">
                                                 {user.email_confirmed_at ? (
                                                     <StatusBadge type="success">
-                                                        Confirmed
-                                                    </StatusBadge>
+                                                        {translateText("Confirmed")}</StatusBadge>
                                                 ) : (
                                                     <StatusBadge type="warning">
-                                                        Unconfirmed
-                                                    </StatusBadge>
+                                                        {translateText("Unconfirmed")}</StatusBadge>
                                                 )}
                                             </td>
 
                                             <td className="px-3 py-4">
                                                 {user.is_platform_admin ? (
                                                     <StatusBadge type="admin">
-                                                        Platform Admin
-                                                    </StatusBadge>
+                                                        {translateText("Platform Admin")}</StatusBadge>
                                                 ) : (
                                                     <StatusBadge type="neutral">
-                                                        User
-                                                    </StatusBadge>
+                                                        {translateText("User")}</StatusBadge>
                                                 )}
                                             </td>
                                         </tr>
@@ -431,21 +407,19 @@ export default function AdminPage() {
 
                             {users.length === 0 ? (
                                 <p className="py-8 text-center text-sm text-foreground/50">
-                                    No users found.
-                                </p>
+                                    {translateText("No users found.")}</p>
                             ) : null}
                         </div>
                     ) : null}
                 </section>
 
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5 text-sm text-foreground/75">
-                    Detailed workspace error log is available at{" "}
+                    {translateText("Detailed workspace error log is available at")}{" "}
                     <Link
                         href="/settings/monitoring"
                         className="text-cyan-300 underline"
                     >
-                        /settings/monitoring
-                    </Link>
+                        {translateText("/settings/monitoring")}</Link>
                     .
                 </div>
             </div>
@@ -514,7 +488,7 @@ function formatDate(
         return value;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone,

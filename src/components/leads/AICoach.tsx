@@ -1,4 +1,6 @@
 "use client";
+import { translateText } from "@/lib/i18n";
+
 
 type AICoachProps = {
   title: string;
@@ -19,13 +21,11 @@ export default function AICoach({
     <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
       <div className="flex items-start gap-4">
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-          AI
-        </div>
+          {translateText("AI")}</div>
 
         <div className="flex-1">
           <p className="text-sm uppercase tracking-widest text-cyan-400">
-            AI Coach
-          </p>
+            {translateText("AI Coach")}</p>
 
           <h2 className="mt-2 text-2xl font-bold text-foreground">
             {title}
@@ -47,15 +47,13 @@ export default function AICoach({
           <div className="mt-5 flex items-center justify-between">
             <div>
               <p className="text-xs text-foreground/55">
-                Recommended action
-              </p>
+                {translateText("Recommended action")}</p>
 
               <p className="mt-1 font-semibold text-foreground">{action}</p>
             </div>
 
             <div className="rounded-full bg-green-500/20 px-4 py-2 text-sm font-semibold text-green-400">
-              {confidence}% confidence
-            </div>
+              {confidence}{translateText("% confidence")}</div>
           </div>
         </div>
       </div>

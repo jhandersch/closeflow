@@ -1,3 +1,4 @@
+import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 
@@ -128,92 +129,92 @@ export async function GET(request: Request) {
     const pages = [
       {
         id: "dashboard",
-        title: "Dashboard",
+        title: translateText("Dashboard"),
         href: "/dashboard",
       },
       {
         id: "leads",
-        title: "Leads",
+        title: translateText("Leads"),
         href: "/leads",
       },
       {
         id: "customers",
-        title: "Customers",
+        title: translateText("Customers"),
         href: "/customers",
       },
       {
         id: "pipeline",
-        title: "Pipeline",
+        title: translateText("Pipeline"),
         href: "/pipeline",
       },
       {
         id: "activities",
-        title: "Activities",
+        title: translateText("Activities"),
         href: "/activities",
       },
       {
         id: "tasks",
-        title: "Tasks",
+        title: translateText("Tasks"),
         href: "/tasks",
       },
       {
         id: "calendar",
-        title: "Calendar",
+        title: translateText("Calendar"),
         href: "/calendar",
       },
       {
         id: "analytics",
-        title: "Analytics",
+        title: translateText("Analytics"),
         href: "/analytics",
       },
       {
         id: "forecast",
-        title: "Forecast",
+        title: translateText("Forecast"),
         href: "/forecast",
       },
       {
         id: "ai",
-        title: "AI",
+        title: translateText("AI"),
         href: "/ai",
       },
       {
         id: "automations",
-        title: "Automations",
+        title: translateText("Automations"),
         href: "/automations",
       },
       {
         id: "notifications",
-        title: "Notifications",
+        title: translateText("Notifications"),
         href: "/notifications",
       },
       {
         id: "feedback",
-        title: "Feedback",
+        title: translateText("Feedback"),
         href: "/feedback",
       },
       {
         id: "team",
-        title: "Team",
+        title: translateText("Team"),
         href: "/team",
       },
       {
         id: "settings",
-        title: "Settings",
+        title: translateText("Settings"),
         href: "/settings",
       },
       {
         id: "billing",
-        title: "Billing",
+        title: translateText("Billing"),
         href: "/billing",
       },
       {
         id: "trash",
-        title: "Trash",
+        title: translateText("Trash"),
         href: "/trash",
       },
       {
         id: "admin",
-        title: "Admin",
+        title: translateText("Admin"),
         href: "/admin",
       },
     ]

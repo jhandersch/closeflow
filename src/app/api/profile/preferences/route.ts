@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getRouteUser } from "@/lib/supabase/route";
+import { normalizeLanguage } from "@/lib/i18n";
 
 export async function PATCH(request: Request) {
   const { supabase, user, error } = await getRouteUser(request);
@@ -25,7 +26,7 @@ export async function PATCH(request: Request) {
       ? body.timezone.trim()
       : "Europe/Berlin";
 
-  const language = "en";
+  const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
 
   const { error: authError } =
     await supabase.auth.updateUser({
