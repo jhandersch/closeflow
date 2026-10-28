@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { getIntlLocale, translatePlanName, translateText  } from "@/lib/i18n";
 
 
 import { useCallback, useEffect, useState } from "react";
@@ -495,13 +495,13 @@ export default function BillingPage() {
                                             {translateText("Current plan")}</p>
 
                                         <p className="mt-1 text-2xl font-semibold text-foreground">
-                                            {currentPlan?.toUpperCase() || "—"}
+                                            {currentPlan ? translatePlanName(currentPlan) : "—"}
                                         </p>
 
                                         <p className="mt-1 text-sm text-foreground/60">
                                             {translateText("Status:")}{" "}
-                                            {billing?.status ||
-                                                translateText("inactive")}
+                                            {(billing?.status ? translateText(billing.status) : translateText("inactive"))
+                                                .replace(/^./, (letter) => letter.toLocaleUpperCase())}
                                         </p>
 
                                         {billing?.current_period_end && (

@@ -193,7 +193,7 @@ export default function RevenueForecast({
         <InsightCard
           title={translateText("Without Next Action")}
           value={String(dealsWithoutNextAction)}
-          subtitle="Active deals needing follow-up"
+          subtitle={translateText("Active deals needing follow-up")}
           risk={
             activeDeals > 0
               ? Math.round(

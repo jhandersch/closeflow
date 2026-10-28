@@ -27,14 +27,18 @@ export async function PATCH(request: Request) {
       : "Europe/Berlin";
 
   const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
+  const metadata: Record<string, unknown> = {
+    phone,
+    timezone,
+    language,
+  };
+  for (const key of ["theme", "notifications", "integrations", "session_count"] as const) {
+    if (body[key] !== undefined) metadata[key] = body[key];
+  }
 
   const { error: authError } =
     await supabase.auth.updateUser({
-      data: {
-        phone,
-        timezone,
-        language,
-      },
+      data: metadata,
     });
 
   if (authError) {

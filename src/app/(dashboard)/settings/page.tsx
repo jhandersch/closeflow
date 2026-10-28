@@ -434,39 +434,28 @@ export default function SettingsPage() {
 
     setTimezone(nextTimezone);
 
-    const { error } = await supabase.auth.updateUser({
-      data: {
+    const response = await fetch("/api/profile/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         language,
         theme,
         timezone: nextTimezone,
         notifications,
         integrations,
         session_count: sessionCount,
-      },
+      }),
     });
 
-    if (error) {
-      toast.error(error.message || "Could not save preferences");
-    } else {
-      const response = await fetch("/api/profile/preferences", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(await getAuthHeaders()),
-        },
-        body: JSON.stringify({ language, timezone: nextTimezone }),
-      });
-
-      const result = (await response.json().catch(() => null)) as { error?: string } | null;
-      if (!response.ok) {
-        toast.error(result?.error || "Could not save language preference");
-        setSavingPreferences(false);
-        return;
-      }
-
-      setAppLanguage(language);
-      toast.success(translateText("Preferences updated"));
+    const result = (await response.json().catch(() => null)) as { error?: string } | null;
+    if (!response.ok) {
+      toast.error(result?.error || "Could not save language preference");
+      setSavingPreferences(false);
+      return;
     }
+
+    setAppLanguage(language);
+    toast.success(translateText("Preferences updated"));
 
     setSavingPreferences(false);
   };
