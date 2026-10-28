@@ -131,7 +131,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
             text-xs
             ${current.color}
           `}>
-          {current.en}
+          {translateText(current.en)}
 
           {readOnly ? null : (<span className="ml-2">
             ▾
@@ -161,7 +161,7 @@ export default function LeadActions({ leadId, currentStatus, phone, email, onLea
                   hover:bg-white/10
                   ${status.color}
                 `}>
-                {status.en}
+                {translateText(status.en)}
               </button>))}
           </div>)}
       </div>
