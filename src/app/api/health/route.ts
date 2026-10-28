@@ -28,6 +28,7 @@ export async function GET() {
     return NextResponse.json({
         status: ok ? "ok" : "degraded",
         service: "closeflow",
+        version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
         checks: { database: database ? "ok" : "fail", config: config ? "ok" : "fail" },
         timestamp: new Date().toISOString(),
     }, { status: ok ? 200 : 503 });

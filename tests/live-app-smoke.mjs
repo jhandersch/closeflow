@@ -91,11 +91,83 @@ try {
   const O = await makeUser("owner"), AD = await makeUser("admin"), SM = await makeUser("salesmgr"), MEM = await makeUser("member");
   const I = await makeUser("invitee", false), X = await makeUser("stranger", false);
   const W = await makeWorkspace("team", O, "pro");
+  const XW = await makeWorkspace("other", X);
   await proSubscription(W);
   await addMember(W, AD, "admin");
   await addMember(W, SM, "sales_manager");
   await addMember(W, MEM, "sales_rep");
   const H = { "x-closeflow-workspace-id": W };
+
+  // ---------- Workspace file isolation ----------
+  const fileName = `${marker}-b17.txt`;
+  const fileContent = `${marker} file storage smoke`;
+  let filePath;
+  await check("files: upload and download preserve the marked fixture", async () => {
+    const form = new FormData();
+    form.set("file", new Blob([fileContent], { type: "text/plain" }), fileName);
+    form.set("workspaceId", W);
+    const uploaded = await fetch(new URL("/api/files", base), {
+      method: "POST",
+      headers: { authorization: `Bearer ${O.aal2}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) },
+      body: form,
+    });
+    assert.equal(uploaded.status, 201, await uploaded.text());
+
+    const listed = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(W)}`, base), {
+      headers: { authorization: `Bearer ${O.aal2}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) },
+    });
+    assert.equal(listed.status, 200);
+    const files = await listed.json();
+    const file = files.files.find((item) => item.name === fileName);
+    assert.ok(file, `marked file missing from workspace list: ${JSON.stringify(files)}`);
+    filePath = file.path;
+
+    const downloaded = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(W)}&path=${encodeURIComponent(filePath)}`, base), {
+      headers: { authorization: `Bearer ${O.aal2}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) },
+    });
+    assert.equal(downloaded.status, 200);
+    assert.equal(await downloaded.text(), fileContent);
+  });
+  await check("files: another workspace cannot list or download the marked file", async () => {
+    assert.ok(filePath, "upload fixture was not created");
+    const headers = { authorization: `Bearer ${X.aal1}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) };
+    const listed = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(XW)}`, base), { headers });
+    assert.equal(listed.status, 200);
+    const files = await listed.json();
+    assert.equal(files.workspaceId, XW);
+    assert.equal(files.files.some((item) => item.path === filePath || item.name === fileName), false);
+
+    const downloaded = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(XW)}&path=${encodeURIComponent(filePath)}`, base), { headers });
+    assert.equal(downloaded.status, 404);
+  });
+  await check("files: another workspace cannot delete the marked file", async () => {
+    assert.ok(filePath, "upload fixture was not created");
+    const denied = await fetch(new URL("/api/files", base), {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${X.aal1}`, "content-type": "application/json", ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) },
+      body: JSON.stringify({ workspaceId: XW, path: filePath }),
+    });
+    assert.equal(denied.status, 404, await denied.text());
+
+    const stillAvailable = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(W)}&path=${encodeURIComponent(filePath)}`, base), {
+      headers: { authorization: `Bearer ${O.aal2}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) },
+    });
+    assert.equal(stillAvailable.status, 200);
+    assert.equal(await stillAvailable.text(), fileContent);
+  });
+  await check("files: deleted file cannot be downloaded", async () => {
+    assert.ok(filePath, "upload fixture was not created");
+    const headers = { authorization: `Bearer ${O.aal2}`, ...(e.VERCEL_BYPASS ? { "x-vercel-protection-bypass": e.VERCEL_BYPASS } : {}) };
+    const deleted = await fetch(new URL("/api/files", base), {
+      method: "DELETE",
+      headers: { ...headers, "content-type": "application/json" },
+      body: JSON.stringify({ workspaceId: W, path: filePath }),
+    });
+    assert.equal(deleted.status, 200, await deleted.text());
+
+    const downloaded = await fetch(new URL(`/api/files?workspaceId=${encodeURIComponent(W)}&path=${encodeURIComponent(filePath)}`, base), { headers });
+    assert.equal(downloaded.status, 404);
+  });
 
   await check("invite route: unauthenticated -> 401; aal1 owner -> 403; plain member (aal2) -> 403", async () => {
     assert.equal((await call("/api/workspaces/invite", null, { workspace_id: W, email: "a@example.invalid" })).status, 401);
@@ -294,6 +366,22 @@ try {
     assert.equal(s?.plan, "business");
   });
 } finally {
+  for (const workspaceId of workspaceIds) {
+    const { data: objects, error } = await admin.storage.from("closeflow-files").list(workspaceId, { limit: 100 });
+    if (error) {
+      failures++;
+      console.log(`CLEANUP failed to list files for ${workspaceId}: ${error.message}`);
+      continue;
+    }
+    const markedPaths = (objects ?? []).filter((item) => item.name.includes(marker)).map((item) => `${workspaceId}/${item.name}`);
+    if (markedPaths.length) {
+      const { error: removeError } = await admin.storage.from("closeflow-files").remove(markedPaths);
+      if (removeError) {
+        failures++;
+        console.log(`CLEANUP failed to remove marked files for ${workspaceId}: ${removeError.message}`);
+      }
+    }
+  }
   for (const W of workspaceIds) await admin.from("workspaces").delete().eq("id", W);
   for (const id of userIds) await admin.auth.admin.deleteUser(id).catch(() => {});
   const left = await admin.from("workspaces").select("id", { count: "exact", head: true }).like("name", `${marker}%`);

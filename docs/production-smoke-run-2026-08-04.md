@@ -672,7 +672,7 @@ PASS: [x]
 
 - [x] production URL accessible
 
-- [ ] build version visible
+- [x] build version visible
 
 - [x] rollback procedure documented
 
@@ -681,6 +681,8 @@ PASS: [x]
 Production URL:
 
 https://closeflow-green.vercel.app
+
+Evidence (2026-10-28): `https://www.closeflowapp.de/api/health` returned version `3e5a97b`, database `ok`, and config `ok` after the latest Production deployment.
 
 ---
 
@@ -710,19 +712,19 @@ Layer B remains recommended hardening and does not block the current release dec
 
 ### B1) Dashboard
 
-- [ ] active lead count, pipeline value, and at-risk deal count are correct
+- [x] active lead count, pipeline value, and at-risk deal count are correct
 
-- [ ] open and overdue task counts and the next upcoming task are correct
+- [x] open and overdue task counts and the next upcoming task are correct
 
-- [ ] at-risk deals link to the correct lead and show its next action
+- [x] at-risk deals link to the correct lead and show its next action
 
-- [ ] activity trend graph shows the rolling last eight weeks with correct weekly totals
+- [x] activity trend graph shows the rolling last eight weeks with correct weekly totals
 
-- [ ] Forecast, Analytics, and Activities links open their dedicated pages
+- [x] Forecast, Analytics, and Activities links open their dedicated pages
 
-- [ ] dashboard no longer duplicates detailed forecast, analytics, or activity-feed content
+- [x] dashboard no longer duplicates detailed forecast, analytics, or activity-feed content
 
-Status: NOT YET TESTED AGAINST THE CURRENT DASHBOARD
+Status: PASS (2026-10-28, production, headless Chromium, seeded QA workspaces). Alpha: 5 active leads, pipeline 25,500, won 15,000, win rate 50.0%, 2 open and 2 overdue tasks, next action "Angebot senden", 2 at-risk deals (Greta, Fritz) with correct links. Trend series read from the chart [4,0,0,0,2,0,1,3] equals the seeded weekly totals; the 60-day-old activity is excluded. Switching to Beta and back showed the matching values each time.
 
 ### B2) Leads
 
@@ -746,11 +748,11 @@ Status: NOT YET TESTED AGAINST THE CURRENT DASHBOARD
 
 - [x] multiple personal costs can be added to one selected lead, edited, and deleted independently
 
-- [ ] the amount field allows clearing the default zero and entering values such as 100 normally
+- [x] the amount field allows clearing the default zero and entering values such as 100 normally (2026-10-28, Production: the field starts empty with placeholder 5000; typing 100 is accepted and the saved lead shows "Deal value €100")
 
 - [x] lead import guide preview and PNG download match the supported spreadsheet columns
 
-Historical lead checks passed in the 2026-08-29 run. Current cost and import-guide checks: NOT YET TESTED.
+Historical lead checks passed in the 2026-08-29 run. Current cost and import-guide checks PASS on 2026-10-28 (Production, headless Chromium): on /costs two costs (120.50 and 80) were added to one lead, persisted after reload with total €200.50, one amount was edited to 200 (total €280.00) and persisted, then both were removed independently and the total returned to €0.00. The lead guide PNG (/lead-import-guide.png, 1600 px, 200 image/png) renders and downloads, and a CSV using exactly the guide columns (name, company, status, value, source, email, phone, website, address, tags, notes) imported 2 leads with correct company, status, and value (12,500 / 0).
 
 ### B3) Customers
 
@@ -778,7 +780,7 @@ Historical lead checks passed in the 2026-08-29 run. Current cost and import-gui
 
 - [x] error state
 
-Historical customer checks passed in the 2026-08-29 run. Current customer-detail and import-guide checks: NOT YET TESTED.
+Historical customer checks passed in the 2026-08-29 run. Current import-guide check PASS on 2026-10-28 (Production): the customer guide PNG (/customer-import-guide.png, 1200 px, 200 image/png) renders and downloads, and a CSV with the guide columns (contact, company, revenue) imported 2 customers with correct revenue (€12,500.00 and €0.00) and 1 linked deal each.
 
 ### B4) Search and Filters
 
@@ -852,17 +854,17 @@ PASS: [x]
 
 - [x] Stripe Business checkout and plan change use the €149/month price, while Pro remains €49/month
 
-- [ ] plan usage overview reports active leads, AI requests, exports, and team seats accurately
+- [x] plan usage overview reports active leads, AI requests, exports, and team seats accurately (2026-10-28, Production: seeded 5 active leads, 3 AI, 2 exports, 1 member are shown as 5/50, 3/10, 2/5, 1/1; after adding one lead and running one CSV export: 6 leads and exports 3/5)
 
-- [ ] won/lost leads do not consume the active lead limit
+- [x] won/lost leads do not consume the active lead limit (2 seeded won/lost leads: 7 leads total, 5 counted)
 
-- [ ] Free limits show 50 active leads, 10 AI requests/month, 5 exports/month, and 1 seat
+- [x] Free limits show 50 active leads, 10 AI requests/month, 5 exports/month, and 1 seat
 
-- [ ] Pro limits show unlimited active leads, 500 AI requests/month, 200 exports/month, and 5 seats
+- [x] Pro limits show unlimited active leads, 500 AI requests/month, 200 exports/month, and 5 seats
 
-- [ ] Business limits show unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, and 20 seats
+- [x] Business limits show unlimited active leads, 5,000 AI requests/month, 2,000 exports/month, and 20 seats
 
-Historical billing checks passed in the 2026-08-29 run. Current price and usage-limit checks: NOT YET TESTED.
+Historical billing checks passed in the 2026-08-29 run. Usage-limit checks PASS on 2026-10-28 (plan set via DB fixture, Billing page read for Free, Pro, Business). Price display is unchanged since the 2026-08-29 run and shows Free €0, Pro €49 and Business €149 per workspace.
 
 **### B9) Performance**
 
@@ -903,11 +905,11 @@ PASS: [x]
 - [x] Chrome — confirmed working by user (2026-09-27)
 - [x] Edge — confirmed working by user (2026-09-27)
 - [x] Firefox — already working in the user's daily browser
-- [ ] Safari — deferred for a later test in actual Safari, preferably against the staging or production domain
+- [x] Safari — WebKit engine tested via Playwright on 2026-10-28 (Production, 11 routes, no layout overflow, pages render; only benign cancelled-request warnings after login redirect). Real Safari/iOS devices remain an owner check.
 
-Status: Chrome, Edge, and Firefox user-confirmed; Safari deferred.
+Status: Chrome, Edge, and Firefox user-confirmed; Chromium, Firefox (Gecko) and WebKit additionally smoke-tested headless against production on 2026-10-28: login plus dashboard, leads, customers, tasks, activities, analytics, forecast, files, billing, team, and settings all render with an h1 and without horizontal overflow. Chromium: 0 console errors. Firefox: 0 console errors with a 6 s dwell on dashboard and leads. WebKit: functional, with two "access control checks" warnings from requests cancelled by the post-login redirect.
 
-PASS: [ ]
+PASS: [x]
 
 **### B12) Accessibility**
 
@@ -979,12 +981,12 @@ Separate static check: `npm run lint` now runs but reports 16 errors and 125 war
 - [x] upload a file up to 20 MB and confirm it appears in Files
 - [x] download the file and confirm the original content and filename
 - [x] delete the file and confirm it disappears from Files
-- [ ] confirm the deleted file cannot be downloaded
-- [ ] verify a member of another workspace cannot list, download, or delete it
+- [x] confirm the deleted file cannot be downloaded
+- [x] verify a member of another workspace cannot list, download, or delete it
 
-Status: PARTIALLY VERIFIED IN PRODUCTION — 2026-10-01
+Status: PASS — fully verified in Production 2026-10-28
 
-Evidence: The deployed Files page accepted `closeflow-b17-smoke-20261001.txt` (75 bytes). The downloaded file matched the original test file by SHA-256. After explicit confirmation, production displayed `File deleted` and `No files yet`. The post-deletion download attempt and cross-workspace isolation check have not been performed, so B17 is not yet a full PASS. The user confirmed that the Supabase migration was applied before this smoke run.
+Evidence: The deployed Files page accepted `closeflow-b17-smoke-20261001.txt` (75 bytes). The downloaded file matched the original test file by SHA-256. After explicit confirmation, production displayed `File deleted` and `No files yet`. The remaining post-deletion and cross-workspace checks passed on 2026-10-28 with unique synthetic fixtures after the cache-control change was deployed. Upload/download preserved the fixture, a different workspace could not list/download/delete it, and the original workspace received 404 when downloading after deletion. The first retest before deployment exposed a stale-download response (HTTP 200 after deletion); B17 was only marked PASS after the post-deploy retest passed. Cleanup left zero fixture workspaces, users, and marked files.
 **### B18) Export Quality**
 
 - [x] CSV encoding
@@ -1067,12 +1069,12 @@ Member/User:
 - [x] admin pages blocked (API 403)
 - [x] API authorization enforced
 
-PASS: [ ]
+PASS: [x]
 
 **### B23) Workspace Switching**
 
 - [x] workspace switch (Team-Seite, Auswahl QA Alpha/QA Beta, Rückwechsel getestet)
-- [ ] dashboard updates (Dashboard-Werte pro Workspace mit echten Daten verifiziert, siehe Befund B23 unten; der UI-Wechsel zwischen zwei befüllten Workspaces direkt auf dem Dashboard wurde nicht separat belegt)
+- [x] dashboard updates (2026-10-28, UI: Alpha zeigt 5 Active leads / 25,500 Pipeline / 2 Open tasks, Beta nach Wechsel 1 / 2,500 / 0, Rückwechsel stellt Alpha-Werte wieder her; keine Konsolenfehler)
 - [x] leads update (API, Cookie-Wechsel)
 - [x] customers update (Export)
 - [x] tasks update (Tasks-Seite: Anlegen, Erledigen und Dashboard-Zähler "Open tasks" und "Overdue" aktualisieren sich, 2026-10-28; Kalender: Meeting anlegen, Persistenz nach Reload)
@@ -1080,7 +1082,7 @@ PASS: [ ]
 - [x] browser refresh after switch (Beta bleibt nach Reload aktiv)
 - [x] no data leakage (fremder Workspace per Cookie/DB-Read leer)
 
-PASS: [ ]
+PASS: [x]
 
 **### B24) Soft Delete Verification**
 
@@ -2709,3 +2711,15 @@ Aktualisierter Stand der genannten Release-Punkte:
 
 Erledigt: Duplikatschutz, Invite-Rechteeskalation und RLS-Härtung, Live-/Preview-Smoke ALL PASS, lokale Route-Integration, AI-Vertragstest, Backup/Restore getestet, B10, B14, B15, B22 und B23 weitgehend belegt (siehe Einträge).
 Offen: Monitoring-Fenster (24–48 h) mit Sign-off; Stripe Live; Kalendereintrag für das wöchentliche Backup (Samstag ca. 22:00); Test von `/admin` mit Plattform-Admin-Konto; Safari und echte Geräte; OAuth/PKCE und Mail-Zustellbarkeit über weitere Anbieter; Backup/PITR und Alerting (Supabase Free Plan, Hardening).
+
+### Production smoke after authorized deploy (2026-10-28)
+
+- Vercel deployment `closeflow-30ako5mit-jhanderschs-projects.vercel.app` reached READY and is aliased to `https://www.closeflowapp.de`.
+- Health endpoint evidence: version `3e5a97b`, database `ok`, config `ok`.
+- The extended `tests/live-app-smoke.mjs` run passed ALL checks, including B17 post-delete download denial and cross-workspace list/download/delete denial. The first B17 retest before deploying the upload cache-control change had failed; the post-deploy retest passed.
+- Cleanup completed: zero fixture workspaces and zero fixture users remained; no marked file remained.
+- Immediate read-only monitoring snapshot (`npm run monitor:snapshot -- 1`): health/login 200, zero error events, zero leftover test users, database reachable; no findings. This is an initial snapshot, not completion of the 24–48-hour window.
+- `npm run verify:release` passed before deployment. The Vercel CLI deployed the local working tree; version `3e5a97b` identifies Git HEAD but is not a clean-commit attestation.
+- Monitoring restarted after this Production deployment at approximately 2026-10-28 09:53 CET. Earliest 24-hour completion: 2026-10-29 09:53 CET; 48-hour completion: 2026-10-30 09:53 CET. This run alone does not establish a monitoring pass.
+
+Release remains **NO-GO** pending Stripe Live verification, the new monitoring window, and final commander/approver sign-off.

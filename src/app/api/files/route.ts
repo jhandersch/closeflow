@@ -119,6 +119,7 @@ export async function POST(request: Request) {
   const path = `${workspaceId}/${crypto.randomUUID()}-${safeFilename(file.name)}`;
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
     contentType: file.type || "application/octet-stream",
+    cacheControl: "0",
     upsert: false,
   });
   if (uploadError) return NextResponse.json({ error: "File upload failed." }, { status: 500 });

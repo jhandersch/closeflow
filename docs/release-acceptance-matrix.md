@@ -52,32 +52,30 @@ Use this matrix for final production release decisions.
 
 Current decision record (2026-10-28):
 
-- Release version: closeflow@0.1.0 at commit 138aa64 (race-safe lead duplicates, invite and workspace-management RLS hardening, viewer read-only UI, stale-workspace fallback)
+- Release version: closeflow@0.1.0; latest Production health version `3e5a97b` (race-safe lead duplicates, invite and workspace-management RLS hardening, viewer read-only UI, stale-workspace fallback)
 - Date/time: 2026-10-28
-- Environment: local stack, one Preview deployment and Production (only marked throwaway fixtures); monitoring window restarted 2026-10-27 ca. 23:57 CET (Production deploy closeflow-6uhqzdime)
+- Environment: local stack, one Preview deployment and Production (marked throwaway fixtures only). Latest Production deployment `closeflow-30ako5mit-jhanderschs-projects.vercel.app` is Ready and aliased to `https://www.closeflowapp.de`; health reports version `3e5a97b`, database/config OK. Monitoring window restarted 2026-10-28 ca. 09:53 CET after this deployment.
 - Incident channel: pending assignment
 - Commander: pending assignment
 - Engineering approver: pending assignment
 - Product approver: pending assignment
-- Result: **NO-GO** (only the observation window, Stripe Live and the sign-off remain)
+- Result: **NO-GO** (Production smoke now passes; the new observation window, Stripe Live verification and sign-off remain)
 - Notes:
-	- Passed 2026-10-27/28: `npm run verify:release`; `npm run test:ai-cost` (16/16); `npm run test:ai-routes` (6/6); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5); `npm run test:local-import-export` (12/12); `npm run test:local-permissions` (13/13); live app smoke against closeflow-green.vercel.app (ALL PASS after the last deploy); preview smoke (12/12); schema-health check (0 problems); browser UI run on Production for permissions, workspace switching, mobile, tasks, calendar and invitations.
+	- Passed 2026-10-28: `npm run verify:release`; extended live app smoke against `www.closeflowapp.de` (ALL PASS, including B17 post-delete and cross-workspace file isolation; fixture cleanup 0 users/0 workspaces); health endpoint reports version `3e5a97b`, database/config OK; immediate 1-hour monitoring snapshot reports zero errors/test leftovers and reachable DB (not the final 24–48-hour observation).
+	- Previously passed 2026-10-27/28: `npm run test:ai-cost` (16/16); `npm run test:ai-routes` (6/6); `npm run test:workflow-automations` (3/3); `npm run test:local-lead-duplicates` (5/5); `npm run test:local-import-export` (12/12); `npm run test:local-permissions` (13/13); preview smoke (12/12); schema-health check (0 problems); browser UI run on Production for permissions, workspace switching, mobile, tasks, calendar and invitations.
 	- Fixed: invite privilege escalation (20261027020000); workspace management RLS (20261027030000); race-safe duplicate protection (migration 10); viewer read-only UI; stale workspace fallback; mixed locale and language.
-	- Done: duplicate migration and app code deployed; preview smoke passed.
+	- Done: duplicate migration and app code deployed; preview smoke passed. The file-upload cache-control change and health version field were deployed from the local working tree for this smoke retest; the reported version is the current Git HEAD, not a clean-commit attestation.
 	- Blocking: Stripe Live configuration/payment is not verified; it needs live keys, price IDs, the live webhook, an approved amount and a refund procedure. Real paid provider calls are evidenced only for /api/ai/email-generator; the other AI routes are covered by the static contract test.
-	- Blocking: observed 24–48-hour monitoring window (restarted 2026-10-27 ca. 23:57 CET; run `npm run monitor:snapshot -- 24` and `-- 48`; the first cron run is 2026-10-28 06:00 UTC) and the final sign-off.
+	- Blocking: observe 24–48 hours after the latest deployment (restarted 2026-10-28 ca. 09:53 CET; run `npm run monitor:snapshot -- 24` and `-- 48`; next cron run in this window is 2026-10-29 06:00 UTC) and capture the final sign-off.
 	- Non-blocking, owner only: platform `/admin` check with a platform-admin account, Safari and real devices, OAuth/PKCE and mail deliverability across more providers, weekly backup calendar entry, Vercel bypass secret rotation, Backup/PITR and alerting (Supabase plan).
 
 ## Remaining Steps to Move NO-GO -> GO
 
 1. DONE 2026-10-27: migrations applied to Production (direct exception, no staging clone; schema-health 0 problems).
 2. DONE 2026-10-27: code deployed, Preview smoke and live app smoke pass.
-3. Execute the remaining release smoke test in the approved target runtime using:
+3. DONE 2026-10-28: execute the extended release smoke test in Production, including B17 file deletion and cross-workspace isolation:
 	- `docs/production-smoke-run-2026-08-04.md`
-	Evidence requirement:
-	- PASS/FAIL for each section
-	- Notes for any deviation
-	- Timestamped tester and approver fields
+	- Result: ALL PASS after the latest deployment; marked fixtures cleaned (0 users/0 workspaces). B17 failure before deployment was retested successfully after cache-control was deployed.
 4. Configure and verify Stripe Live only after the owner confirms the live amount and refund procedure; capture webhook delivery evidence.
 5. Observe a 24–48-hour monitoring window with no unresolved P0/P1 signatures.
 6. Fill commander/approver fields and change the result to `GO` only when every blocking gate is evidenced.
