@@ -389,10 +389,7 @@ export default function ActivityTimeline({
                 "Automation created task",
         };
 
-        return (
-            translations[normalized] ??
-            action
-        );
+        return translateText(translations[normalized] ?? action);
     };
 
     const getDisplayAction = (

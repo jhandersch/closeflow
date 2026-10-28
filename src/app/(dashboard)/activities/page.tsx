@@ -363,7 +363,7 @@ export default function ActivitiesPage() {
                                         {activity.description ? (
                                             <p className="mt-1 text-sm text-foreground/70">
                                                 {
-                                                    activity.description
+                                                translateText(activity.description)
                                                 }
                                             </p>
                                         ) : null}

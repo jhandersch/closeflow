@@ -300,7 +300,7 @@ text-sm
 text-foreground/65
 ">
 
-    {label}
+    {translateText(label)}
 
     </label>
 

@@ -749,9 +749,9 @@ export default function LeadsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <input value={name} onChange={(event) => setName(event.target.value)} placeholder={translateText("Name")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder={"Company"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder={translateText("Company")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={value} onChange={(event) => setValue(event.target.value)} placeholder={"Value"} type="number" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={value} onChange={(event) => setValue(event.target.value)} placeholder={translateText("Value")} type="number" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value as LeadStatus)} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none">
                 <option value="new">{translateText("New")}</option>
@@ -775,14 +775,14 @@ export default function LeadsPage() {
 
               <input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder={translateText("Website")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={"Tags (comma separated)"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder={translateText("Tags (comma separated)")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder={"Address"} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder={translateText("Address")} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
-              <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder={"Next action"} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} placeholder={translateText("Next action")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
 
               <input value={nextActionDate} onChange={(event) => setNextActionDate(event.target.value)} type="datetime-local" className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
-              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={"Notes about this lead..."} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
+              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={translateText("Notes about this lead...")} className="md:col-span-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">

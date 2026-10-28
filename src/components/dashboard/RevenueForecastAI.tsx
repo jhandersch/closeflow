@@ -178,9 +178,9 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           gap-6
           lg:grid-cols-2
         ">
-        <InsightList title={"Revenue Drivers"} items={insight.topDrivers} color="emerald" emptyText={"No drivers detected."}/>
+        <InsightList title={translateText("Revenue Drivers")} items={insight.topDrivers} color="emerald" emptyText={translateText("No drivers detected.")}/>
 
-        <InsightList title={"Risks"} items={insight.risks} color="amber" emptyText={"No risks detected."}/>
+        <InsightList title={translateText("Risks")} items={insight.risks} color="amber" emptyText={translateText("No risks detected.")}/>
       </div>
 
       {/* PIPELINE COMMENT */}

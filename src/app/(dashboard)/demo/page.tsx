@@ -15,7 +15,7 @@ export default function DemoPage() {
             setMessage(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.${warning}`);
         }
         catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to start demo");
+            setMessage(translateText(error instanceof Error ? error.message : "Failed to start demo"));
         }
         finally {
             setLoading(false);
