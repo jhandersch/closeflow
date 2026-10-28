@@ -337,21 +337,21 @@ const dictionary: DictionaryNode = {
 const germanTranslations: Record<string, string> = {
     "brand.name": "CloseFlow",
     "brand.tagline": "Umsatzplattform",
-    "nav.dashboard": "Übersicht", "nav.leads": "Leads", "nav.pipeline": "Vertriebspipeline",
+    "nav.dashboard": "Übersicht", "nav.leads": "Leads", "nav.pipeline": "Pipeline",
     "nav.customers": "Kunden", "nav.activities": "Aktivitäten", "nav.ai": "KI-Assistent",
     "nav.analytics": "Analysen", "nav.forecast": "Umsatzprognose", "nav.costs": "Kosten",
     "nav.tasks": "Aufgaben", "nav.search": "Suche", "nav.calendar": "Kalender",
     "nav.feedback": "Feedback", "nav.automations": "Automatisierungen", "nav.notifications": "Benachrichtigungen",
     "nav.team": "Team", "nav.billing": "Abrechnung", "nav.admin": "Administration",
     "nav.trash": "Papierkorb", "nav.teams": "Teams", "nav.settings": "Einstellungen", "nav.logout": "Abmelden",
-    "settings.title": "Einstellungen", "settings.subtitle": "Verwalte deinen CloseFlow-Arbeitsbereich, deine Einstellungen und deine Sicherheit.",
+    "settings.title": "Einstellungen", "settings.subtitle": "Verwalten Sie Ihren CloseFlow-Arbeitsbereich, Ihre Einstellungen und Ihre Sicherheit.",
     "settings.profileTitle": "Profil und Unternehmen", "settings.profileSave": "Profil und Unternehmen speichern",
     "settings.profileSaving": "Wird gespeichert …", "settings.preferencesTitle": "Einstellungen",
     "settings.preferencesSave": "Einstellungen speichern", "settings.preferencesSaving": "Wird gespeichert …",
     "settings.apiTitle": "API-Schlüssel", "settings.apiSubtitle": "Schlüssel werden für die Entwicklung lokal in diesem Browser gespeichert. Für den Produktivbetrieb sollte ein sicherer Backend-Tresor verwendet werden.",
     "settings.apiSave": "API-Schlüssel speichern", "settings.subscriptionTitle": "Abonnement",
-    "settings.subscriptionSubtitle": "Aktueller Tarif und Wachstumsmöglichkeiten für deinen Arbeitsbereich.",
-    "settings.integrationsTitle": "Integrationen", "settings.integrationsSubtitle": "Verbinde deine Kommunikations- und Kalenderdienste.",
+    "settings.subscriptionSubtitle": "Aktueller Tarif und Wachstumsmöglichkeiten für Ihren Arbeitsbereich.",
+    "settings.integrationsTitle": "Integrationen", "settings.integrationsSubtitle": "Verbinden Sie Ihre Kommunikations- und Kalenderdienste.",
     "settings.securityTitle": "Sicherheit", "settings.securitySubtitle": "Passwort, aktive Sitzungen und Zwei-Faktor-Authentifizierung.",
     "settings.changePassword": "Passwort ändern", "settings.updatingPassword": "Wird aktualisiert …",
     "settings.accountTitle": "Konto", "settings.accountSubtitle": "Von diesem Arbeitsbereich abmelden.",
@@ -376,54 +376,54 @@ const germanTranslations: Record<string, string> = {
     "auth.backToLogin": "Zurück zur Anmeldung", "auth.cancelReset": "Zurücksetzen abbrechen",
     "auth.magicLink": "Mit Anmeldelink anmelden", "auth.twoFactor": "Zwei-Faktor-Authentifizierung",
     "auth.recoveryCode": "Wiederherstellungscode eingeben", "auth.enterCode": "Sechsstelligen Code eingeben",
-    "auth.recoveryVerified": "Wiederherstellungslink bestätigt. Lege ein neues Passwort fest.",
+    "auth.recoveryVerified": "Wiederherstellungslink bestätigt. Legen Sie ein neues Passwort fest.",
     "auth.oauthFailed": "OAuth-Anmeldung fehlgeschlagen", "auth.emailRequired": "E-Mail-Adresse erforderlich",
-    "auth.magicLinkFailed": "Anmeldelink konnte nicht gesendet werden", "auth.magicLinkSent": "Anmeldelink gesendet. Prüfe deinen Posteingang.",
+    "auth.magicLinkFailed": "Anmeldelink konnte nicht gesendet werden", "auth.magicLinkSent": "Anmeldelink gesendet. Prüfen Sie Ihren Posteingang.",
     "auth.twoFactorNotConfigured": "2FA ist erforderlich, aber es ist kein TOTP-Faktor eingerichtet.",
-    "auth.twoFactorCodeRequired": "Zwei-Faktor-Code erforderlich. Gib den Code aus deiner Authenticator-App ein.",
-    "auth.passwordResetSent": "Link zum Zurücksetzen des Passworts gesendet. Prüfe deinen Posteingang.",
+    "auth.twoFactorCodeRequired": "Zwei-Faktor-Code erforderlich. Geben Sie den Code aus Ihrer Authenticator-App ein.",
+    "auth.passwordResetSent": "Link zum Zurücksetzen des Passworts gesendet. Prüfen Sie Ihren Posteingang.",
     "auth.passwordMinLength": "Das Passwort muss mindestens acht Zeichen lang sein.",
     "auth.passwordsMismatch": "Die Passwörter stimmen nicht überein.",
-    "auth.passwordUpdated": "Passwort erfolgreich aktualisiert. Du kannst dich jetzt anmelden.",
-    "auth.accountCreated": "Konto erstellt. Bestätige deine E-Mail-Adresse und melde dich dann an.",
-    "auth.recoverySessionMissing": "Wiederherstellungssitzung fehlt. Öffne den Link zum Zurücksetzen erneut.",
-    "auth.recoveryCodeRequired": "Wiederherstellungscode erforderlich", "auth.invalidRecoveryCode": "Ungültiger Wiederherstellungscode",
+    "auth.passwordUpdated": "Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.",
+    "auth.accountCreated": "Konto erstellt. Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich dann an.",
+    "auth.recoverySessionMissing": "Wiederherstellungssitzung fehlt. Öffnen Sie den Link zum Zurücksetzen erneut.",
+    "auth.recoveryCodeRequired": "Geben Sie Ihren Wiederherstellungscode ein.", "auth.invalidRecoveryCode": "Ungültiger Wiederherstellungscode",
     "auth.noMfaFactor": "Kein MFA-Faktor ausgewählt", "auth.authCodeRequired": "Authentifizierungscode erforderlich",
     "auth.mfaUnavailable": "MFA-Prüfung ist nicht verfügbar", "auth.authenticationFailed": "Authentifizierung fehlgeschlagen",
-    "auth.subtitleLogin": "Melde dich an, um mit deinem CRM-Arbeitsbereich fortzufahren.",
-    "auth.subtitleSignUp": "Erstelle ein Konto. Wir begleiten dich durch die ersten Schritte.",
-    "auth.subtitleMagic": "Gib deine E-Mail-Adresse ein. Wir senden dir einen sicheren Anmeldelink.",
-    "auth.subtitleMfa": "Gib den sechsstelligen Code aus deiner Authenticator-App ein.",
-    "auth.subtitleForgot": "Gib deine E-Mail-Adresse ein. Wir senden dir einen Wiederherstellungslink.",
-    "auth.subtitleReset": "Wähle ein sicheres neues Passwort für dein Konto.",
+    "auth.subtitleLogin": "Melden Sie sich an, um mit Ihrem CRM-Arbeitsbereich fortzufahren.",
+    "auth.subtitleSignUp": "Erstellen Sie ein Konto. Wir begleiten Sie durch die ersten Schritte.",
+    "auth.subtitleMagic": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen sicheren Anmeldelink.",
+    "auth.subtitleMfa": "Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein.",
+    "auth.subtitleForgot": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Wiederherstellungslink.",
+    "auth.subtitleReset": "Wählen Sie ein sicheres neues Passwort für Ihr Konto.",
     "auth.continueWithGoogle": "Mit Google fortfahren", "auth.continueWithMicrosoft": "Mit Microsoft fortfahren",
     "auth.continueWithMagicLink": "Mit Anmeldelink fortfahren", "auth.useAuthenticatorInstead": "Stattdessen Authenticator-Code verwenden",
     "auth.useRecoveryInstead": "Stattdessen Wiederherstellungscode verwenden", "auth.working": "Wird verarbeitet …",
     "onboarding.label": "Einrichtung", "onboarding.progress": "Fortschritt", "onboarding.welcomeTitle": "Willkommen bei CloseFlow",
-    "onboarding.welcomeBody": "Richte deinen CRM-Arbeitsbereich ein und starte in wenigen Minuten mit deinem ersten Lead.",
+    "onboarding.welcomeBody": "Richten Sie Ihren CRM-Arbeitsbereich ein und starten Sie in wenigen Minuten mit Ihrem ersten Lead.",
     "onboarding.setupWorkspace": "Arbeitsbereich", "onboarding.quickStart": "Schnellstart",
     "onboarding.stepWelcome": "Willkommen", "onboarding.stepCompany": "Unternehmen einrichten",
     "onboarding.stepLead": "Ersten Lead erstellen", "onboarding.stepDashboard": "Übersicht kennenlernen",
     "dashboard.conversionRate": "Konversionsrate", "dashboard.wonLost": "Gewonnen / verloren",
-    "dashboard.avgDealSize": "Durchschnittlicher Geschäftsabschluss", "dashboard.avgSalesCycle": "Durchschnittliche Verkaufsdauer",
+    "dashboard.avgDealSize": "Durchschnittlicher Deal-Wert", "dashboard.avgSalesCycle": "Durchschnittliche Verkaufsdauer",
     "dashboard.actionableInsights": "Konkrete Erkenntnisse", "dashboard.nextSteps": "Nächste Schritte",
     "dashboard.salesControlCenter": "Vertriebsübersicht", "dashboard.systemHealthy": "System ist stabil",
-    "dashboard.salesOverview": "Deine Vertriebsübersicht und KI-Empfehlungen für heute.", "dashboard.activeLeads": "Aktive Leads",
-    "dashboard.pipeline": "Vertriebspipeline", "dashboard.attention": "Aufmerksamkeit", "dashboard.newLead": "Neuer Lead",
+    "dashboard.salesOverview": "Ihre Vertriebsübersicht und KI-Empfehlungen für heute.", "dashboard.activeLeads": "Aktive Leads",
+    "dashboard.pipeline": "Pipeline", "dashboard.attention": "Aufmerksamkeit", "dashboard.newLead": "Neuer Lead",
     "dashboard.askAI": "KI fragen", "dashboard.aiRevenueForecast": "KI-Umsatzprognose", "dashboard.predictedPipelineOutcome": "Prognostiziertes Pipeline-Ergebnis",
     "dashboard.totalLeads": "Leads gesamt", "dashboard.activeOpportunities": "Aktive Verkaufschancen", "dashboard.pipelineValue": "Pipeline-Wert",
-    "dashboard.dealsInProgress": "laufende Abschlüsse", "dashboard.revenueClosed": "Abgeschlossener Umsatz", "dashboard.wonBusiness": "Gewonnene Aufträge",
-    "dashboard.winRate": "Abschlussquote", "dashboard.conversion": "Konversion", "dashboard.averageDeal": "Durchschnittlicher Abschluss",
-    "dashboard.averageOpportunitySize": "Durchschnittlicher Wert einer Verkaufschance", "dashboard.salesCycle": "Verkaufsdauer",
+    "dashboard.dealsInProgress": "laufende Deals", "dashboard.revenueClosed": "Abgeschlossener Umsatz", "dashboard.wonBusiness": "Gewonnene Aufträge",
+    "dashboard.winRate": "Abschlussquote", "dashboard.conversion": "Konversion",     "dashboard.averageDeal": "Durchschnittlicher Deal-Wert",
+    "dashboard.averageOpportunitySize": "Durchschnittlicher Deal-Wert", "dashboard.salesCycle": "Verkaufsdauer",
     "dashboard.averageClosingTime": "Durchschnittliche Abschlussdauer", "dashboard.attentionNeeded": "Erfordert Aufmerksamkeit",
     "dashboard.dealsLosingMomentum": "Abschlüsse verlieren an Dynamik", "dashboard.expectedPipeline": "Erwartete Pipeline",
     "dashboard.revenueIntelligence": "Umsatzanalyse", "dashboard.aiWeightedPrediction": "KI-Prognose auf Basis deiner aktuellen Vertriebspipeline.",
     "dashboard.confidence": "Sicherheit", "dashboard.expectedRevenue": "Erwarteter Umsatz", "dashboard.revenueAtRisk": "Gefährdeter Umsatz",
     "dashboard.forecastMomentum": "Prognosetrend", "dashboard.aiPredicted": "KI-Prognose", "dashboard.forecastRevenue": "Umsatzprognose",
     "dashboard.pipelineOverview": "Pipeline-Übersicht", "dashboard.dealDistribution": "Verteilung der Abschlüsse", "dashboard.openPipeline": "Offene Pipeline",
-    "dashboard.deals": "Abschlüsse", "dashboard.riskHigh": "Hoch", "dashboard.riskMedium": "Mittel", "dashboard.riskLow": "Niedrig",
-    "dashboard.aiPriorityScoring": "KI-Priorisierung", "dashboard.dealsToFocus": "Abschlüsse mit Handlungsbedarf", "dashboard.top": "Top",
-    "dashboard.noPriorityDeals": "Keine priorisierten Abschlüsse", "dashboard.aiRecommendation": "KI-Empfehlung",
+    "dashboard.deals": "Deals", "dashboard.riskHigh": "Hoch", "dashboard.riskMedium": "Mittel", "dashboard.riskLow": "Niedrig",
+    "dashboard.aiPriorityScoring": "KI-Priorisierung", "dashboard.dealsToFocus": "Deals mit Handlungsbedarf", "dashboard.top": "Top",
+    "dashboard.noPriorityDeals": "Keine priorisierten Deals", "dashboard.aiRecommendation": "KI-Empfehlung",
     "dashboard.analyzingPriority": "Verkaufschancen werden priorisiert …", "dashboard.why": "Warum", "dashboard.risk": "Risiko",
     "dashboard.next": "Nächster Schritt", "dashboard.healthy": "Stabil", "dashboard.watch": "Beobachten", "dashboard.atRisk": "Gefährdet",
     "dashboard.score": "Bewertung", "dashboard.aiForecastUnavailable": "Die KI-Prognose ist derzeit nicht verfügbar.",
@@ -468,7 +468,7 @@ const germanTranslations: Record<string, string> = {
     "customers.importDoneStart": "Import abgeschlossen. Hinzugefügt:", "customers.importDoneMiddle": "Kunden; übersprungen:",
     "customers.importDoneIssuesSuffix": "Problem(e) im Bericht.", "customers.loadErrorPrefix": "Kunden konnten nicht geladen werden:",
     "customers.loading": "Kunden werden geladen …", "customers.empty": "Keine Kunden für den ausgewählten Filter gefunden.",
-    "customers.contacts": "Kontakte", "customers.revenue": "Umsatz", "customers.deals": "Abschlüsse", "customers.lastContact": "Letzter Kontakt",
+    "customers.contacts": "Kontakte", "customers.revenue": "Umsatz",     "customers.deals": "Deals", "customers.lastContact": "Letzter Kontakt",
     "customers.na": "k. A.", "common.loading": "Wird geladen …",
 };
 
@@ -477,13 +477,12 @@ const buildDictionary = (source: DictionaryNode, prefix = ""): DictionaryNode =>
     for (const [key, value] of Object.entries(source)) {
         const fullKey = prefix ? `${prefix}.${key}` : key;
         result[key] = typeof value === "string"
-            ? (germanTranslations[fullKey] ?? value)
+            ? formatGermanTranslation(germanContextOverrides[fullKey] ?? germanTranslations[fullKey] ?? value)
             : buildDictionary(value, fullKey);
     }
     return result;
 };
 
-const germanDictionary = buildDictionary(dictionary);
 export const normalizeLanguage = (language: unknown): AppLanguage => language === "de" ? "de" : "en";
 export const getDictionary = (language: AppLanguage = "en"): DictionaryNode => language === "de" ? germanDictionary : dictionary;
 let activeLanguage: AppLanguage = "en";
@@ -831,13 +830,267 @@ const homeGermanTextTranslations: Record<string, string> = {
     "Add your company name and a little team context. Your workspace starts on Free.": "Ergänze deinen Unternehmensnamen und ein paar Angaben zum Team. Dein Arbeitsbereich startet mit dem kostenlosen Tarif.", "Add a real lead or load example leads, activities and tasks to explore.": "Füge einen echten Lead hinzu oder lade Beispielleads, Aktivitäten und Aufgaben zum Ausprobieren.", "Work from your pipeline, schedule follow-ups, and review analytics as your data grows.": "Arbeite mit deiner Pipeline, plane Follow-ups und prüfe die Analysen, wenn deine Daten wachsen.",
     "First Contact": "Erstkontakt", "Follow Up": "Nachfassen", "Closing": "Abschluss", "Reactivation": "Reaktivierung", "Status changed": "Status geändert", "Update": "Aktualisierung", "Could not generate AI analysis.": "Die KI-Analyse konnte nicht erstellt werden.",
 };
-const germanizeFollowUpTerms = (text: string) => text
-    .replace(/Follow-up-E-Mail/gi, "Nachfass-E-Mail")
-    .replace(/Follow-up-Entwurf/gi, "Entwurf zum Nachfassen")
-    .replace(/Follow-up-Erinnerungen/gi, "Erinnerungen zum Nachfassen")
-    .replace(/Follow-up-Abläufe/gi, "Nachfassabläufe")
-    .replace(/Follow-ups/gi, "Nachfassaktionen")
-    .replace(/Follow-up/gi, "Nachfassaktion");
+const germanContextOverrides: Record<string, string> = {
+    "dashboard.avgDealSize": "Durchschnittlicher Wert je Verkaufschance",
+    "dashboard.averageDeal": "Durchschnittlicher Wert je Verkaufschance",
+    "dashboard.averageOpportunitySize": "Durchschnittlicher Wert je Verkaufschance",
+    "dashboard.dealsInProgress": "Laufende Verkaufschancen",
+    "dashboard.dealsLosingMomentum": "Verkaufschancen verlieren an Dynamik",
+    "dashboard.dealDistribution": "Verteilung der Verkaufschancen",
+    "dashboard.deals": "Verkaufschancen",
+    "dashboard.dealsToFocus": "Verkaufschancen mit Handlungsbedarf",
+    "dashboard.noPriorityDeals": "Keine priorisierten Verkaufschancen",
+    "Health score": "Statusbewertung des Leads",
+    "Lead health": "Lead-Status",
+    "% of active deals healthy": "% der aktiven Verkaufschancen mit stabilem Status",
+    "AI deal insights": "KI-Erkenntnisse zu Verkaufschancen",
+    "Average health of active deals": "Durchschnittlicher Status aktiver Verkaufschancen",
+    "customers.deals": "Deals",
+    "settings.subtitle": "Verwalten Sie Ihren CloseFlow-Arbeitsbereich, Ihre Einstellungen und Ihre Sicherheit.",
+    "settings.subscriptionSubtitle": "Aktueller Tarif und Wachstumsmöglichkeiten für Ihren Arbeitsbereich.",
+    "settings.integrationsSubtitle": "Verbinden Sie Ihre Kommunikations- und Kalenderdienste.",
+    "Please sign in again to finish setting up your workspace.": "Melden Sie sich erneut an, um die Einrichtung Ihres Arbeitsbereichs abzuschließen.",
+    "Store and manage files shared with members of your current workspace.": "Speichern und verwalten Sie Dateien, die Sie mit Mitgliedern Ihres aktuellen Arbeitsbereichs teilen.",
+    "The AI analysis will be available again when your monthly AI request limit resets or your workspace plan is upgraded.": "Die KI-Analyse ist wieder verfügbar, sobald Ihr monatliches KI-Anfragelimit zurückgesetzt oder Ihr Arbeitsbereich auf einen höheren Tarif umgestellt wurde.",
+    "Du hast das Recht auf Auskunft, Berichtigung, Loeschung, Einschraenkung der Verarbeitung, Datenuebertragbarkeit und Widerspruch. Zudem besteht ein Beschwerderecht bei einer Aufsichtsbehoerde.": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Außerdem können Sie sich bei einer Aufsichtsbehörde beschweren.",
+    "auth.accountCreated": "Konto erstellt. Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich dann an.",
+    "auth.magicLinkSent": "Anmeldelink gesendet. Prüfen Sie Ihren Posteingang.",
+    "auth.twoFactorCodeRequired": "Zwei-Faktor-Code erforderlich. Geben Sie den Code aus Ihrer Authenticator-App ein.",
+    "auth.passwordResetSent": "Link zum Zurücksetzen des Passworts gesendet. Prüfen Sie Ihren Posteingang.",
+    "auth.passwordUpdated": "Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.",
+    "auth.subtitleLogin": "Melden Sie sich an, um mit Ihrem CRM-Arbeitsbereich fortzufahren.",
+    "auth.subtitleSignUp": "Erstellen Sie ein Konto. Wir begleiten Sie durch die ersten Schritte.",
+    "auth.subtitleMagic": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen sicheren Anmeldelink.",
+    "auth.subtitleMfa": "Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein.",
+    "auth.subtitleForgot": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Wiederherstellungslink.",
+    "auth.subtitleReset": "Wählen Sie ein sicheres neues Passwort für Ihr Konto.",
+    "onboarding.welcomeBody": "Richten Sie Ihren CRM-Arbeitsbereich ein und starten Sie in wenigen Minuten mit Ihrem ersten Lead.",
+    "Follow Up": "Follow-up",
+    "Follow up:": "Follow-up:",
+    "Follow up proposal:": "Follow-up zum Angebot:",
+    "Follow up with lead": "Follow-up mit dem Lead planen",
+    "Follow up on proposal": "Follow-up zum Angebot planen",
+    "Follow up in 3 days": "Follow-up in 3 Tagen durchführen",
+    "Follow up with VP by Friday": "Follow-up mit der Vertriebsleitung bis Freitag",
+    "Hand off to onboarding": "An das Onboarding übergeben",
+    "Review the deal and re-engage": "Prüfen Sie den Deal und nehmen Sie erneut Kontakt auf.",
+    "Following up on our conversation": "Follow-up zu unserem Gespräch",
+    "Follow-up call booked": "Follow-up-Termin vereinbart",
+    "Active deals needing follow-up": "Aktive Deals, für die ein Follow-up ansteht",
+    "Search, filter, sort, and follow up on the right opportunities.": "Suchen Sie, filtern Sie, sortieren Sie und planen Sie Follow-ups für die passenden Verkaufschancen.",
+    "Keep follow-ups with the deal": "Follow-ups beim Deal behalten",
+    "Track follow-up work across your workspace.": "Behalten Sie Follow-ups in Ihrem Arbeitsbereich im Blick.",
+    "Your follow-ups and next steps": "Ihre Follow-ups und nächsten Schritte",
+    "Write a follow-up email I can send now.": "Verfassen Sie eine Follow-up-E-Mail, die Sie sofort versenden können.",
+    "Request feedback on the decision and schedule a reactivation follow-up": "Bitten Sie um Feedback zur Entscheidung und planen Sie ein Reaktivierungs-Follow-up.",
+    "How likely are you to recommend us?": "Wie wahrscheinlich würden Sie uns weiterempfehlen?",
+    "Need more detail?": "Benötigen Sie weitere Details?",
+    "Already started? Your setup draft stays on this device until you finish.": "Haben Sie bereits begonnen? Ihr Einrichtungsentwurf bleibt auf diesem Gerät gespeichert, bis Sie die Einrichtung abgeschlossen haben.",
+    "Deal value": "Deal-Wert",
+    "Deal costs saved": "Deal-Kosten gespeichert",
+    "Keep contact details, deal value, stage, notes and activity history together. Turn a list of names into a pipeline your team can actually work.": "Bündeln Sie Kontaktdaten, Deal-Wert, Phase, Notizen und Aktivitäten. Machen Sie aus einer Namensliste eine Pipeline, mit der Ihr Team arbeiten kann.",
+    "CloseFlow brings the everyday sales workflow together: organize leads, move deals through a pipeline, plan follow-ups and review your numbers without losing the story behind each opportunity.": "CloseFlow bündelt den Vertriebsalltag: Organisieren Sie Leads, bewegen Sie Deals durch die Pipeline, planen Sie Follow-ups und behalten Sie Kennzahlen und Verlauf jeder Verkaufschance im Blick.",
+    "Keep leads, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.": "Verwalten Sie Leads, offene Deals und Follow-ups zentral. CloseFlow hilft kleinen B2B-Agenturen, Handlungsbedarf zu erkennen und die nächsten Schritte festzulegen.",
+    "Average deal size": "Durchschnittlicher Wert je Verkaufschance",
+    "Cumulative estimated deal value after listed costs – next six months": "Kumulativer geschätzter Wert der Verkaufschancen abzüglich erfasster Kosten – nächste sechs Monate",
+    "Deal-Wert (€)": "Wert der Verkaufschance (€)",
+    "Deal:": "Verkaufschance:",
+    "The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.": "Die erwartete Prognose berücksichtigt die Abschlusswahrscheinlichkeit jeder offenen Verkaufschance. Im konservativen Szenario wird sie je nach Risiko um 10–25 Punkte gesenkt, im optimistischen um denselben Wert erhöht. Für Verkaufschancen ohne zukünftiges Abschlussdatum wird die jeweilige Pipeline-Phase herangezogen. Erfasste persönliche Kosten werden vor der Gewichtung abgezogen.",
+    "AI-powered deal health monitoring": "KI-gestützte Überwachung des Status Ihrer Verkaufschancen",
+    "Confidence in this analysis, not the deal's win probability.": "Die Sicherheit dieser Analyse ist nicht mit der Abschlusswahrscheinlichkeit der Verkaufschance gleichzusetzen.",
+    "Costs are cleared automatically when a deal is marked won or lost.": "Kosten werden automatisch entfernt, sobald eine Verkaufschance als gewonnen oder verloren markiert wird.",
+    "deal": "Verkaufschance",
+    "Deal Age": "Alter der Verkaufschance",
+    "Deal Analysis": "Analyse der Verkaufschance",
+    "Deal Concentration": "Konzentration auf einzelne Verkaufschancen",
+    "Deal Costs & Expenses": "Kosten der Verkaufschance und weitere Ausgaben",
+    "Deal Information": "Angaben zur Verkaufschance",
+    "Deal stages and progress": "Phasen und Fortschritt der Verkaufschancen",
+    "Deal Strategy": "Strategie für die Verkaufschance",
+    "Deal Summary": "Zusammenfassung der Verkaufschance",
+    "Deal Value": "Wert der Verkaufschance",
+    "Estimated deal value": "Geschätzter Wert der Verkaufschance",
+    "Forecast confidence measures estimate reliability; close probability is separate for each deal.": "Die Prognosesicherheit beschreibt die Zuverlässigkeit der Schätzung. Die Abschlusswahrscheinlichkeit wird für jede Verkaufschance einzeln berechnet.",
+    "Keep contacts, deal stages and customers together.": "Führen Sie Kontakte, Verkaufschancen und Kunden übersichtlich zusammen.",
+    "Keep the next step visible: review your follow-ups and update deal activity as conversations move forward.": "Behalten Sie den nächsten Schritt im Blick: Prüfen Sie Follow-ups und aktualisieren Sie den Verlauf der Verkaufschance, sobald sich Gespräche weiterentwickeln.",
+    "My deal costs": "Kosten meiner Verkaufschancen",
+    "No deals need urgent attention.": "Keine Verkaufschance erfordert dringende Aufmerksamkeit.",
+    "Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.": "Die Szenarien zeigen konservative, erwartete und optimistische Umsatzverläufe sowie Risiken und Prognosesicherheit der Verkaufschancen.",
+    "Select a lead once, then add all costs that apply to that deal.": "Wählen Sie einen Lead aus und erfassen Sie anschließend alle Kosten, die zu dieser Verkaufschance gehören.",
+    "Sort: Net deal value": "Sortierung: Nettowert der Verkaufschance",
+    "deal value": "Wert der Verkaufschance",
+    "Save deal costs": "Deal-Kosten speichern",
+    "Single deal concentration risk:": "Konzentrationsrisiko durch eine einzelne Verkaufschance:",
+    "High deal value.": "Hoher Wert der Verkaufschance.",
+    "Above-average deal value.": "Überdurchschnittlicher Wert der Verkaufschance.",
+    "Address objections and close the deal.": "Klären Sie Einwände und führen Sie die Verkaufschance zum Abschluss.",
+    "High deal value increases opportunity score": "Ein hoher Wert der Verkaufschance steigert ihre Bewertung.",
+    "Average deal value": "Durchschnittlicher Wert der Verkaufschance",
+    "Average active-deal probability": "Durchschnittliche Abschlusswahrscheinlichkeit aktiver Verkaufschancen",
+    "Use scenario-based revenue forecasts and AI deal insights, including your recorded deal costs.": "Nutzen Sie Umsatzprognosen mit verschiedenen Szenarien und KI-Erkenntnisse zu Verkaufschancen – einschließlich der erfassten Deal-Kosten.",
+    "Give AI your recorded deal costs for more realistic profitability and prioritization insights.": "Beziehen Sie erfasste Deal-Kosten ein, um realistischere KI-Erkenntnisse zu Rentabilität und Priorisierung zu erhalten.",
+    "Lost deal": "Verlorene Verkaufschance",
+    "Won deal": "Gewonnener Auftrag",
+    "Personal deal costs": "Persönliche Kosten der Verkaufschancen",
+    "Deal-cost-aware recommendations": "Empfehlungen unter Berücksichtigung der Kosten je Verkaufschance",
+    "Deal concentration and pipeline risk": "Konzentrationsrisiken bei Verkaufschancen und Risiken in der Pipeline",
+    "Average Deal": "Durchschnittlicher Wert je Verkaufschance",
+    "deals in progress": "laufende Verkaufschancen",
+    "Deals losing momentum": "Verkaufschancen verlieren an Dynamik",
+    "Deal distribution": "Verteilung der Verkaufschancen",
+    "deals": "Verkaufschancen",
+    "Deals to focus on": "Verkaufschancen mit Handlungsbedarf",
+    "No priority deals": "Keine priorisierten Verkaufschancen",
+    "How should I negotiate this deal?": "Wie sollte ich bei diesem Deal verhandeln?",
+    "Compare value, stage, health, close probability and deal costs, then inspect an individual lead.": "Vergleichen Sie Wert, Phase, Status, Abschlusswahrscheinlichkeit und Deal-Kosten. Öffnen Sie anschließend einen einzelnen Lead.",
+    "AI-powered forecast based on pipeline health, activity and deal probability.": "KI-gestützte Prognose auf Basis des Pipeline-Zustands, der Aktivitäten und der Wahrscheinlichkeit, einen Deal zu gewinnen.",
+};
+
+const formalImperatives: Array<[string, string]> = [
+    ["Melde dich", "Melden Sie sich"],
+    ["Sieh dir", "Sehen Sie sich"],
+    ["Schau dir", "Sehen Sie sich"],
+    ["Aktiviere", "Aktivieren Sie"],
+    ["Bearbeite", "Bearbeiten Sie"],
+    ["Bestätige", "Bestätigen Sie"],
+    ["Behalte", "Behalten Sie"],
+    ["Checke", "Prüfen Sie"],
+    ["Erstelle", "Erstellen Sie"],
+    ["Füge", "Fügen Sie"],
+    ["Fülle", "Füllen Sie"],
+    ["Gib", "Geben Sie"],
+    ["Halte", "Halten Sie"],
+    ["Lade", "Laden Sie"],
+    ["Lege", "Legen Sie"],
+    ["Lösche", "Löschen Sie"],
+    ["Melde", "Melden Sie"],
+    ["Nimm", "Nehmen Sie"],
+    ["Öffne", "Öffnen Sie"],
+    ["Prüfe", "Prüfen Sie"],
+    ["Richte", "Richten Sie"],
+    ["Sammle", "Sammeln Sie"],
+    ["Scanne", "Scannen Sie"],
+    ["Schreibe", "Schreiben Sie"],
+    ["Setze", "Setzen Sie"],
+    ["Sieh", "Sehen Sie"],
+    ["Stelle", "Stellen Sie"],
+    ["Teile", "Teilen Sie"],
+    ["Verwandle", "Verwandeln Sie"],
+    ["Verwalte", "Verwalten Sie"],
+    ["Verbinde", "Verbinden Sie"],
+    ["Vergleiche", "Vergleichen Sie"],
+    ["Wähle", "Wählen Sie"],
+    ["Zeige", "Zeigen Sie"],
+    ["Ändere", "Ändern Sie"],
+    ["Ergänze", "Ergänzen Sie"],
+    ["Erkunde", "Erkunden Sie"],
+    ["Frage", "Fragen Sie"],
+    ["Klicke", "Klicken Sie"],
+    ["Nutze", "Nutzen Sie"],
+    ["Plane", "Planen Sie"],
+    ["Starte", "Starten Sie"],
+    ["Verfolge", "Verfolgen Sie"],
+    ["Versuche", "Versuchen Sie"],
+    ["Fasse", "Fassen Sie"],
+    ["Filtere", "Filtern Sie"],
+    ["Sortiere", "Sortieren Sie"],
+    ["Erfasse", "Erfassen Sie"],
+    ["Importiere", "Importieren Sie"],
+    ["Exportiere", "Exportieren Sie"],
+    ["Gestalte", "Gestalten Sie"],
+    ["Lies", "Lesen Sie"],
+    ["Mache", "Machen Sie"],
+];
+
+const formalizeGermanAddress = (text: string) => {
+    let result = text;
+
+    for (const [informal, formal] of formalImperatives) {
+        const expression = new RegExp(`\\b${informal}\\b`, "gi");
+        result = result.replace(expression, (match) =>
+            match[0] === match[0].toUpperCase()
+                ? formal
+                : `${formal[0].toLowerCase()}${formal.slice(1)}`,
+        );
+    }
+
+    const conjugations: Record<string, string> = {
+        kannst: "können",
+        hast: "haben",
+        bist: "sind",
+        möchtest: "möchten",
+        musst: "müssen",
+        brauchst: "brauchen",
+        findest: "finden",
+        bekommst: "erhalten",
+        weißt: "wissen",
+        willst: "wollen",
+        sollst: "sollen",
+        darfst: "dürfen",
+        wirst: "werden",
+        erhältst: "erhalten",
+        verstehst: "verstehen",
+        meldest: "melden",
+        fühlst: "fühlen",
+        teilst: "teilen",
+        hättest: "hätten",
+        könntest: "könnten",
+        solltest: "sollten",
+    };
+    for (const [informal, formal] of Object.entries(conjugations)) {
+        const expression = new RegExp(`\\b${informal}\\b`, "gi");
+        result = result.replace(expression, (match) =>
+            match[0] === match[0].toUpperCase()
+                ? `${formal[0].toUpperCase()}${formal.slice(1)}`
+                : formal,
+        );
+    }
+
+    result = result
+        .replace(/\bdass du dir\b/gi, "dass Sie sich")
+        .replace(/\bdu (können|haben|sind|möchten|müssen|brauchen|finden|erhalten|wissen|wollen|sollen|dürfen|werden|fühlen|melden)\s+Sie\b/gi, "Sie $1 sich")
+        .replace(/\bSie (können|haben|sind|möchten|müssen|brauchen|finden|erhalten|wissen|wollen|sollen|dürfen|werden|fühlen|melden)\s+Sie\b/gi, "Sie $1 sich");
+
+    const pronouns: Record<string, string> = {
+        deinem: "Ihrem",
+        deiner: "Ihrer",
+        deinen: "Ihren",
+        deines: "Ihres",
+        deine: "Ihre",
+        dein: "Ihr",
+        dich: "Sie",
+        dir: "Ihnen",
+        du: "Sie",
+    };
+    for (const [informal, formal] of Object.entries(pronouns)) {
+        const expression = new RegExp(`\\b${informal}\\b`, "gi");
+        result = result.replace(expression, (match) =>
+            match[0] === match[0].toUpperCase()
+                ? `${formal[0].toUpperCase()}${formal.slice(1)}`
+                : formal,
+        );
+    }
+
+    return result;
+};
+
+const preserveFollowUpTerminology = (text: string) => text
+    .replace(/\bNachfassaktionen\b/g, "Follow-ups")
+    .replace(/\bNachfassaktion\b/g, "Follow-up")
+    .replace(/\bNachfassgespräch\b/g, "Follow-up-Gespräch")
+    .replace(/\bNachfass-E-Mail\b/g, "Follow-up-E-Mail")
+    .replace(/\bNachfassabläufen\b/g, "Follow-up-Abläufen")
+    .replace(/\bNachfassabläufe\b/g, "Follow-up-Abläufe")
+    .replace(/\bNachfassen:/g, "Follow-up:")
+    .replace(/\bbeim Lead nachfassen\b/gi, "Follow-up mit dem Lead planen")
+    .replace(/\bzum Angebot nachfassen\b/gi, "Follow-up zum Angebot planen")
+    .replace(/\bin (\d+) Tagen nachfassen\b/gi, "Follow-up in $1 Tagen durchführen")
+    .replace(/\bNachfassen zu unserem Gespräch\b/g, "Follow-up zu unserem Gespräch")
+    .replace(/\bfasse gezielt nach\b/gi, "planen Sie gezielte Follow-ups");
+
+const formatGermanTranslation = (text: string) =>
+    formalizeGermanAddress(preserveFollowUpTerminology(text));
+
 const translateDynamicGermanText = (text: string): string | undefined => {
     const noActivityMatch = text.match(/^No activity for (\d+) days?\.$/);
     if (noActivityMatch) {
@@ -871,8 +1124,14 @@ const translateDynamicGermanText = (text: string): string | undefined => {
 export const translateText = (text: string, language: AppLanguage = activeLanguage): string => {
     if (language !== "de") return text;
     const key = text.trim();
-    const translated = germanTextTranslations[key] ?? additionalGermanTextTranslations[key] ?? dynamicGermanTextTranslations[key] ?? catalogGermanTextTranslations[key] ?? homeGermanTextTranslations[key] ?? translateDynamicGermanText(key) ?? text;
-    return germanizeFollowUpTerms(translated);
+    const translated = germanContextOverrides[key]
+        ?? germanTextTranslations[key]
+        ?? additionalGermanTextTranslations[key]
+        ?? dynamicGermanTextTranslations[key]
+        ?? catalogGermanTextTranslations[key]
+        ?? homeGermanTextTranslations[key]
+        ?? translateDynamicGermanText(key);
+    return translated === undefined ? text : formatGermanTranslation(translated);
 };
 export const translatePlanName = (plan: string): string => {
     const normalized = plan.trim().toLowerCase();
@@ -903,3 +1162,5 @@ export const translateKey = (dictionary: DictionaryNode, key: string, fallback?:
     }
     return typeof current === "string" ? current : fallback ? translateText(fallback) : key;
 };
+
+const germanDictionary = buildDictionary(dictionary);
