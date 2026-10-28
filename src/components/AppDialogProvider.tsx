@@ -5,6 +5,8 @@ import {
   registerDialogHandler,
   type DialogRequest,
 } from "@/lib/dialogs";
+import { translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type PendingDialog = {
   request: DialogRequest;
@@ -16,6 +18,7 @@ export default function AppDialogProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { language } = useAppPreferences();
   const [active, setActive] = useState<PendingDialog | null>(null);
   const [value, setValue] = useState("");
   const activeRef = useRef<PendingDialog | null>(null);
@@ -115,10 +118,10 @@ export default function AppDialogProvider({
             className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-2xl"
           >
             <h2 id="app-dialog-title" className="text-lg font-semibold text-foreground">
-              {active.request.title}
+              {translateText(active.request.title, language)}
             </h2>
             <p id="app-dialog-description" className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/70">
-              {active.request.message}
+              {translateText(active.request.message, language)}
             </p>
             {active.request.kind === "prompt" && (
               <input
@@ -128,7 +131,7 @@ export default function AppDialogProvider({
                 onKeyDown={(event) => {
                   if (event.key === "Enter") confirm();
                 }}
-                aria-label={active.request.title}
+                aria-label={translateText(active.request.title, language)}
                 aria-describedby="app-dialog-description"
                 inputMode={active.request.inputMode}
                 autoComplete={active.request.autoComplete}
@@ -142,14 +145,14 @@ export default function AppDialogProvider({
                 onClick={() => settle(null)}
                 className="rounded-xl border border-border-subtle px-4 py-2 text-sm font-semibold text-foreground/75 hover:bg-foreground/5"
               >
-                {active.request.cancelLabel}
+                {translateText(active.request.cancelLabel, language)}
               </button>
               <button
                 type="button"
                 onClick={confirm}
                 className={active.request.kind === "confirm" && active.request.danger ? "rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500" : "cf-btn-primary"}
               >
-                {active.request.confirmLabel}
+                {translateText(active.request.confirmLabel, language)}
               </button>
             </div>
           </section>

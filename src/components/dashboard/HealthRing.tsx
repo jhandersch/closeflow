@@ -1,8 +1,12 @@
+"use client";
+
 import { translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type HealthRingProps = {
     value: number;
 };
 export default function HealthRing({ value }: HealthRingProps) {
+    const { language } = useAppPreferences();
     const radius = 24;
     const stroke = 4;
     const normalizedRadius = radius - stroke / 2;
@@ -29,6 +33,6 @@ export default function HealthRing({ value }: HealthRingProps) {
       </svg>
 
       <p className="mt-1 text-xs text-foreground/65">
-        {translateText("Health")}</p>
+        {translateText("Health", language)}</p>
     </div>);
 }

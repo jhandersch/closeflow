@@ -15,10 +15,10 @@ type StatusFilter = "all" | "open" | "customers" | Lead["status"];
 type CostItem = { lead_id: string; name: string; amount: number };
 type LeadAnalysis = { summary?: string; risk?: string; nextAction?: string; confidence?: number };
 
-const money = (value: number) => `€${Number(value || 0).toLocaleString(getIntlLocale(), { maximumFractionDigits: 0 })}`;
-const shortDate = (value?: string | null) => value && !Number.isNaN(new Date(value).getTime())
-  ? new Intl.DateTimeFormat(getIntlLocale(), { dateStyle: "medium" }).format(new Date(value))
-  : "Not set";
+const money = (value: number, language: "en" | "de") => `€${Number(value || 0).toLocaleString(getIntlLocale(language), { maximumFractionDigits: 0 })}`;
+const shortDate = (value: string | null | undefined, language: "en" | "de") => value && !Number.isNaN(new Date(value).getTime())
+  ? new Intl.DateTimeFormat(getIntlLocale(language), { dateStyle: "medium" }).format(new Date(value))
+  : translateText("Not set", language);
 const statusLabel: Record<Lead["status"], string> = {
   new: "New",
   contacted: "Contacted",
@@ -151,14 +151,14 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
         <div className="overflow-x-auto rounded-xl border border-border-subtle">
           <table className="w-full min-w-[740px] text-left text-sm">
             <thead className="bg-surface-2/70 text-xs uppercase tracking-wide text-foreground/55">
-              <tr><th className="px-4 py-3">{translateText("Lead")}</th><th className="px-4 py-3">{translateText("Stage")}</th><th className="px-4 py-3">{translateText("Net value")}</th><th className="px-4 py-3">{translateText("Probability")}</th><th className="px-4 py-3">{translateText("Health")}</th><th className="px-4 py-3">{translateText("Inactive")}</th></tr>
+              <tr><th className="px-4 py-3">{translateText("Lead", language)}</th><th className="px-4 py-3">{translateText("Stage", language)}</th><th className="px-4 py-3">{translateText("Net value", language)}</th><th className="px-4 py-3">{translateText("Probability", language)}</th><th className="px-4 py-3">{translateText("Health", language)}</th><th className="px-4 py-3">{translateText("Inactive", language)}</th></tr>
             </thead>
             <tbody>
               {filteredLeads.map(({ lead, score, staleDays, personalCosts, netValue }) => (
                 <tr key={lead.id} role="button" tabIndex={0} aria-selected={selectedId === lead.id} onClick={() => setSelectedId(lead.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(lead.id); } }} className={`cursor-pointer border-t border-border-subtle text-foreground/75 hover:bg-foreground/[0.03] ${selectedId === lead.id ? "bg-cyan-500/[0.07]" : ""}`}>
                   <td className="px-4 py-3"><span className="font-medium text-foreground">{lead.name}</span><span className="mt-0.5 block text-xs text-foreground/50">{lead.company || translateText("No company")}</span></td>
                   <td className="px-4 py-3">{translateText(statusLabel[lead.status], language)}</td>
-                  <td className="px-4 py-3">{money(netValue)}{personalCosts > 0 ? <span className="mt-0.5 block text-xs text-foreground/45">{translateText("gross")}{" "}{money(Number(lead.value || 0))}</span> : null}</td>
+                  <td className="px-4 py-3">{money(netValue, language)}{personalCosts > 0 ? <span className="mt-0.5 block text-xs text-foreground/45">{translateText("gross", language)}{" "}{money(Number(lead.value || 0), language)}</span> : null}</td>
                   <td className="px-4 py-3">{score.probability}%</td>
                   <td className="px-4 py-3">{score.health}%</td>
                   <td className="px-4 py-3">{staleDays}{translateText("d")}</td>
@@ -176,16 +176,16 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
               <Link href={selected.lead.status === "won" || selected.lead.status === "lost" ? `/customers/${encodeURIComponent(selected.lead.company?.trim() ? selected.lead.company.trim().toLowerCase() : `private:${selected.lead.id}`)}` : `/leads/${selected.lead.id}`} className="shrink-0 rounded-lg border border-border-subtle px-3 py-2 text-xs text-foreground/75 hover:bg-foreground/5">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Open customer") : translateText("Open lead")}</Link>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <DetailMetric label="Gross value" value={money(Number(selected.lead.value || 0))} />
-              <DetailMetric label="After listed costs" value={money(selected.netValue)} />
-              <DetailMetric label="Priority" value={`${selected.score.priority}/100`} />
-              <DetailMetric label="Risk" value={`${selected.score.risk}/100`} />
-              <DetailMetric label="Time in stage" value={translateText(`${selected.stageDays} days`, language)} />
-              <DetailMetric label="Close probability" value={`${selected.score.probability}%`} />
-              <DetailMetric label="Expected close" value={shortDate(selected.lead.expected_close_at)} />
-              <DetailMetric label="Last activity" value={shortDate(selected.lead.last_activity_at || selected.lead.last_contact_at)} />
+              <DetailMetric language={language} label="Gross value" value={money(Number(selected.lead.value || 0), language)} />
+              <DetailMetric language={language} label="After listed costs" value={money(selected.netValue, language)} />
+              <DetailMetric language={language} label="Priority" value={`${selected.score.priority}/100`} />
+              <DetailMetric language={language} label="Risk" value={`${selected.score.risk}/100`} />
+              <DetailMetric language={language} label="Time in stage" value={translateText(`${selected.stageDays} days`, language)} />
+              <DetailMetric language={language} label="Close probability" value={`${selected.score.probability}%`} />
+              <DetailMetric language={language} label="Expected close" value={shortDate(selected.lead.expected_close_at, language)} />
+              <DetailMetric language={language} label="Last activity" value={shortDate(selected.lead.last_activity_at || selected.lead.last_contact_at, language)} />
             </div>
-            {selected.leadCosts.length ? <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Cost breakdown")}</p>{selected.leadCosts.map((cost, index) => <div key={`${cost.name}-${index}`} className="mt-2 flex justify-between gap-3 text-sm text-foreground/75"><span>{cost.name}</span><span>{money(cost.amount)}</span></div>)}</div> : null}
+            {selected.leadCosts.length ? <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Cost breakdown", language)}</p>{selected.leadCosts.map((cost, index) => <div key={`${cost.name}-${index}`} className="mt-2 flex justify-between gap-3 text-sm text-foreground/75"><span>{cost.name}</span><span>{money(cost.amount, language)}</span></div>)}</div> : null}
             <div className="mt-4"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Score factors")}</p><ul className="mt-2 space-y-1 text-sm text-foreground/70">{selected.reasons.length ? selected.reasons.map((reason, index) => <li key={index}>• {translateText(reason, language)}</li>) : <li>{translateText("• No additional score factors.")}</li>}</ul></div>
             <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Next action")}</p><p className="mt-1 text-sm text-foreground/80">{getVisibleLeadNextAction(selected.lead.status, selected.lead.next_action)}</p><p className="mt-2 text-xs text-foreground/50">{activities.length} {" "}{translateText("recent activities loaded for analysis.")}</p></div>
             <button type="button" onClick={() => void generateAnalysis()} disabled={loadingAnalysis} className="mt-4 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-300 disabled:opacity-50">{loadingAnalysis ? translateText("Analyzing lead...") : analysis ? translateText("Refresh AI analysis") : translateText("Generate AI lead analysis")}</button>
@@ -198,6 +198,6 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
   );
 }
 
-function DetailMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="text-xs text-foreground/50">{translateText(label)}</p><p className="mt-1 font-semibold text-foreground">{value}</p></div>;
+function DetailMetric({ language, label, value }: { language: "en" | "de"; label: string; value: string }) {
+  return <div className="min-w-0 rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="break-words text-xs text-foreground/50 [overflow-wrap:anywhere]">{translateText(label, language)}</p><p className="mt-1 break-words font-semibold text-foreground [overflow-wrap:anywhere]">{value}</p></div>;
 }

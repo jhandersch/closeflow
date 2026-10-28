@@ -26,7 +26,7 @@ type RevenueForecastChartProps = {
 export default function RevenueForecastChart({
   data,
 }: RevenueForecastChartProps) {
-  const { t } = useAppPreferences();
+  const { t, language } = useAppPreferences();
   const locale = getIntlLocale();
   const latest = data[data.length - 1];
 
@@ -50,8 +50,8 @@ export default function RevenueForecastChart({
           </p>
 
           <h2 className="text-lg font-semibold text-foreground">
-            {translateText("Possible forecast paths")}</h2>
-          <p className="mt-1 text-sm text-foreground/60">{translateText("Cumulative estimated deal value after listed costs · next six months")}</p>
+            {translateText("Possible forecast paths", language)}</h2>
+          <p className="mt-1 text-sm text-foreground/60">{translateText("Cumulative estimated deal value after listed costs · next six months", language)}</p>
         </div>
 
         <div
@@ -66,13 +66,13 @@ export default function RevenueForecastChart({
             text-emerald-300
           "
         >
-          {translateText("Three scenarios")}</div>
+          {translateText("Three scenarios", language)}</div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <ScenarioValue title={translateText("Conservative")} value={latest?.conservative ?? 0} color="text-rose-300" />
-        <ScenarioValue title={translateText("Expected")} value={latest?.expected ?? 0} color="text-cyan-300" />
-        <ScenarioValue title={translateText("Optimistic")} value={latest?.optimistic ?? 0} color="text-emerald-300" />
+        <ScenarioValue title={translateText("Conservative", language)} value={latest?.conservative ?? 0} color="text-rose-300" />
+        <ScenarioValue title={translateText("Expected", language)} value={latest?.expected ?? 0} color="text-cyan-300" />
+        <ScenarioValue title={translateText("Optimistic", language)} value={latest?.optimistic ?? 0} color="text-emerald-300" />
       </div>
 
       <div className="mt-6 h-80">
@@ -122,9 +122,9 @@ export default function RevenueForecastChart({
               ]}
             />
             <Legend wrapperStyle={{ color: "var(--chart-text)", fontSize: 12, paddingTop: 8 }} />
-            <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#fb7185" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={900} />
-            <Line type="monotone" dataKey="expected" name="Expected" stroke="#22d3ee" strokeWidth={3} dot={false} activeDot={{ r: 5 }} animationDuration={1100} />
-            <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="#34d399" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={1300} />
+            <Line type="monotone" dataKey="conservative" name={translateText("Conservative", language)} stroke="#fb7185" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={900} />
+            <Line type="monotone" dataKey="expected" name={translateText("Expected", language)} stroke="#22d3ee" strokeWidth={3} dot={false} activeDot={{ r: 5 }} animationDuration={1100} />
+            <Line type="monotone" dataKey="optimistic" name={translateText("Optimistic", language)} stroke="#34d399" strokeWidth={2} dot={false} activeDot={{ r: 5 }} animationDuration={1300} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -132,10 +132,10 @@ export default function RevenueForecastChart({
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="bg-surface-2/70 text-xs uppercase tracking-wide text-foreground/55">
             <tr>
-              <th className="px-4 py-3">{translateText("Month")}</th>
-              <th className="px-4 py-3 text-rose-300">{translateText("Conservative")}</th>
-              <th className="px-4 py-3 text-cyan-300">{translateText("Expected")}</th>
-              <th className="px-4 py-3 text-emerald-300">{translateText("Optimistic")}</th>
+              <th className="px-4 py-3">{translateText("Month", language)}</th>
+              <th className="px-4 py-3 text-rose-300">{translateText("Conservative", language)}</th>
+              <th className="px-4 py-3 text-cyan-300">{translateText("Expected", language)}</th>
+              <th className="px-4 py-3 text-emerald-300">{translateText("Optimistic", language)}</th>
             </tr>
           </thead>
           <tbody>
@@ -151,8 +151,8 @@ export default function RevenueForecastChart({
         </table>
       </div>
       <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4 text-sm text-foreground/65">
-        <p className="font-medium text-foreground/80">{translateText("How to read these paths")}</p>
-        <p className="mt-1">{translateText("The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.")}</p>
+        <p className="font-medium text-foreground/80">{translateText("How to read these paths", language)}</p>
+        <p className="mt-1">{translateText("The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.", language)}</p>
       </div>
     </section>
   );

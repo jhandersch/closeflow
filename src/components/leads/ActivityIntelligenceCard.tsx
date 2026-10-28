@@ -1,5 +1,6 @@
 "use client";
 import { translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type Props = {
     insight: {
@@ -12,6 +13,7 @@ type Props = {
     loading: boolean;
 };
 export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
+    const { language } = useAppPreferences();
     if (loading) {
         return (<div className="
         rounded-2xl
@@ -87,7 +89,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
         ">
 
           <p className="text-sm text-foreground/55">
-            {translateText("Health")}</p>
+            {translateText("Health", language)}</p>
 
           <p className="
             mt-2
@@ -95,7 +97,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-emerald-400
           ">
-            {translateText(insight.health)}
+            {translateText(insight.health, language)}
           </p>
 
         </div>

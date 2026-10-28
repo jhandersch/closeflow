@@ -793,7 +793,7 @@ export default function CustomersPage() {
               return (
                 <section key={section} className="space-y-3">
                   <h2 className="text-xl font-semibold text-foreground">
-                    {section}
+                    {translateText(section)}
                   </h2>
 
                   {sectionCustomers.map((customer) => (

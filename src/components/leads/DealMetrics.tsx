@@ -1,5 +1,6 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 
 type DealMetricsProps = {
@@ -17,7 +18,8 @@ export default function DealMetrics({
   value,
   stageAge,
 }: DealMetricsProps) {
-  const locale = getIntlLocale();
+  const { language } = useAppPreferences();
+  const locale = getIntlLocale(language);
 
   return (
     <div className="rounded-xl bg-surface-1 p-6">
@@ -50,10 +52,10 @@ export default function DealMetrics({
 
         <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-foreground/55">
-            {translateText("Health")}</p>
+            {translateText("Health", language)}</p>
 
           <p className="mt-3 text-sm text-foreground/55">
-            {translateText("Health")}</p>
+            {translateText("Health", language)}</p>
 
           <p className="mt-1 text-2xl font-bold text-cyan-400">
             {healthScore}/100

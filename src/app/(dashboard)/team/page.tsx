@@ -596,7 +596,7 @@ export default function TeamPage() {
                   />
 
                   <StatCard
-                    label="Invites"
+                    label={translateText("Invites")}
                     value={String(
                       selectedWorkspace.invites.length,
                     )}
