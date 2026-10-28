@@ -1,3 +1,5 @@
+import { translateText } from "@/lib/i18n";
+
 type KpiCardProps = {
     label: string;
     value: string;
@@ -60,6 +62,3 @@ export default function KpiCard({ label, value, hint, accent = "cyan", }: KpiCar
 
     </div>);
 }
-import { translateText } from "@/lib/i18n";
-
-\n
