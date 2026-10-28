@@ -98,13 +98,13 @@ export default function SearchPage() {
               setCustomersPage(1);
               setTasksPage(1);
               setPagesPage(1);
-          }} placeholder={"Search leads, customers, tasks, and pages..."} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
+          }} placeholder={translateText("Search leads, customers, tasks, and pages...")} className="w-full bg-transparent text-foreground outline-none focus-visible:outline-none placeholder:text-foreground/40"/>
           {loading ? <span className="text-xs text-foreground/45">{translateText("Search...")}</span> : null}
         </div>
 
-        {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+        {error ? <p className="text-sm text-rose-300">{translateText(error)}</p> : null}
 
-        {query.trim().length >= 2 && !loading && !error && total === 0 ? (<p className="text-sm text-foreground/55">{`No results found for "${query.trim()}".`}</p>) : null}
+        {query.trim().length >= 2 && !loading && !error && total === 0 ? (<p className="text-sm text-foreground/55">{translateText('No results found for "{query}".').replace("{query}", query.trim())}</p>) : null}
 
         {leads.length > 0 ? (<section>
             <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Active Leads")} ({leads.length})</p>

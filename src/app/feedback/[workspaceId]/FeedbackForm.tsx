@@ -19,7 +19,7 @@ export default function FeedbackForm({ workspaceId, feedbackToken, companyName }
     const [error, setError] = useState<string | null>(null);
     const handleSubmit = async () => {
         if (rating === 0) {
-            setError("Please choose a rating.");
+            setError(translateText("Please choose a rating."));
             return;
         }
         setError(null);
@@ -43,7 +43,7 @@ export default function FeedbackForm({ workspaceId, feedbackToken, companyName }
             const data = (await response.json()) as {
                 error?: string;
             };
-            setError(data.error || "Something went wrong. Please try again.");
+            setError(translateText(data.error || "Something went wrong. Please try again."));
         }
         setSubmitting(false);
     };
@@ -53,7 +53,8 @@ export default function FeedbackForm({ workspaceId, feedbackToken, companyName }
           <p className="text-4xl">{translateText(":tada:")}</p>
           <h1 className="mt-4 text-2xl font-bold text-foreground">{translateText("Thank you!")}</h1>
           <p className="mt-3 text-sm leading-7 text-foreground/65">
-            {translateText("Your feedback has been received")}{companyName ? ` about ${companyName}` : ""}{translateText(". We appreciate you taking the time.")}</p>
+            {translateText("Thank you. Your feedback has been received.")}</p>
+          {companyName ? <p className="mt-2 text-sm text-foreground/65">{translateText("Your feedback helps {company} improve.").replace("{company}", companyName)}</p> : null}
         </div>
       </div>);
     }
@@ -67,7 +68,7 @@ export default function FeedbackForm({ workspaceId, feedbackToken, companyName }
         <div className="text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-cyan-400">{translateText("Feedback")}</p>
           <h1 className="mt-3 text-3xl font-bold text-foreground">
-            {companyName ? `How was your experience with ${companyName}?` : translateText("Share your feedback")}
+            {companyName ? translateText("How was your experience with {company}?").replace("{company}", companyName) : translateText("Share your feedback")}
           </h1>
           <p className="mt-2 text-sm text-foreground/60">{translateText("It only takes a minute and helps us improve.")}</p>
         </div>
@@ -84,7 +85,7 @@ export default function FeedbackForm({ workspaceId, feedbackToken, companyName }
                   {n}
                 </button>))}
             </div>
-            {ratingLabel ? <p className="mt-2 text-sm font-medium text-cyan-300">{ratingLabel}</p> : null}
+            {ratingLabel ? <p className="mt-2 text-sm font-medium text-cyan-300">{translateText(ratingLabel)}</p> : null}
           </div>
 
           <div className="mb-4">

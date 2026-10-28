@@ -87,7 +87,7 @@ export default function FilesPage() {
   };
 
   const deleteFile = async (file: StoredFile) => {
-    if (!await appConfirm(`Delete “${file.name}”? This cannot be undone.`)) return;
+    if (!await appConfirm(translateText("Delete “{file}”? This cannot be undone.").replace("{file}", file.name))) return;
     setBusy(true);
     try {
       const response = await fetch("/api/files", {
@@ -156,8 +156,8 @@ export default function FilesPage() {
                   <p className="mt-1 text-xs text-foreground/50">{formatSize(file.size)}{file.createdAt ? ` · ${new Date(file.createdAt).toLocaleDateString(getIntlLocale())}` : ""}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <button type="button" onClick={() => downloadFile(file)} title={translateText("Download file")} aria-label={`Download ${file.name}`} className="rounded-lg border border-border-subtle p-2 text-foreground/65 transition hover:bg-foreground/5 hover:text-foreground"><Download size={16} /></button>
-                  <button type="button" disabled={busy} onClick={() => void deleteFile(file)} title={translateText("Delete file")} aria-label={`Delete ${file.name}`} className="rounded-lg border border-border-subtle p-2 text-foreground/65 transition hover:border-red-400/30 hover:bg-red-400/5 hover:text-red-200 disabled:opacity-50"><Trash2 size={16} /></button>
+                  <button type="button" onClick={() => downloadFile(file)} title={translateText("Download file")} aria-label={`${translateText("Download")} ${file.name}`} className="rounded-lg border border-border-subtle p-2 text-foreground/65 transition hover:bg-foreground/5 hover:text-foreground"><Download size={16} /></button>
+                  <button type="button" disabled={busy} onClick={() => void deleteFile(file)} title={translateText("Delete file")} aria-label={`${translateText("Delete")} ${file.name}`} className="rounded-lg border border-border-subtle p-2 text-foreground/65 transition hover:border-red-400/30 hover:bg-red-400/5 hover:text-red-200 disabled:opacity-50"><Trash2 size={16} /></button>
                 </div>
               </div>
             ))}

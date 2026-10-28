@@ -353,7 +353,7 @@ export default function FeedbackInboxPage() {
                       <span
                         className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${category.color}`}
                       >
-                        {category.label}
+                        {translateText(category.label)}
                       </span>
 
                       {item.contact_name ? (

@@ -1,4 +1,5 @@
 "use client";
+import { translateText } from "@/lib/i18n";
 type Tab = "overview" | "activities" | "notes" | "tasks" | "meetings";
 type Props = {
     active: Tab;
@@ -54,7 +55,7 @@ export default function LeadTabs({ active, setActive, }: Props) {
 
             `}>
 
-            {tab.label}
+            {translateText(tab.label)}
 
           </button>))}
 

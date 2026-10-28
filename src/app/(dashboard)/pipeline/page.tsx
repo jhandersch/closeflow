@@ -191,7 +191,7 @@ export default function PipelinePage() {
 
                               <h2 className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-foreground/75">
                                 <span className={`h-2 w-2 rounded-full ${stageStyles[stage.key].dot}`} />
-                                {stage.label}
+                                {translateText(stage.label.toLowerCase())}
 
                               </h2>
 

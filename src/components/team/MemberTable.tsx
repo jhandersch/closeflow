@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { translateTeamRole, translateText } from "@/lib/i18n";
 
 import RoleSelector from "@/components/team/RoleSelector";
 import type { WorkspaceMember, WorkspaceRole } from "@/types";
@@ -33,7 +33,7 @@ export default function MemberTable({ members, currentUserId, canManage = true, 
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-foreground/5 px-3 py-1 text-xs text-foreground/65">{member.role}</span>
+                <span className="rounded-full bg-foreground/5 px-3 py-1 text-xs text-foreground/65">{translateTeamRole(member.role)}</span>
                 {canManage ? (<>
                 <RoleSelector value={member.role} onChange={(role) => void onUpdateRole(member.user_id, role)} disabled={isOwner || isCurrentUser}/>
                 <button type="button" onClick={() => void onRemoveMember(member.user_id)} disabled={isOwner || isCurrentUser} className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-300 disabled:opacity-50">

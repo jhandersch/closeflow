@@ -33,7 +33,7 @@ export default function KpiCard({ label, value, hint, accent = "cyan", }: KpiCar
           `}/>
 
         <p className="cf-label">
-          {label}
+          {translateText(label)}
         </p>
 
       </div>
@@ -55,8 +55,11 @@ export default function KpiCard({ label, value, hint, accent = "cyan", }: KpiCar
             text-sm
             ${accentColors[accent]}
           `}>
-          {hint}
+          {translateText(hint)}
         </p>)}
 
     </div>);
 }
+import { translateText } from "@/lib/i18n";
+
+\n

@@ -18,9 +18,9 @@ function MetricCard({ label, value, hint }: {
     hint: string;
 }) {
     return (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-      <p className="text-xs uppercase tracking-[0.25em] text-foreground/55">{label}</p>
+      <p className="text-xs uppercase tracking-[0.25em] text-foreground/55">{translateText(label)}</p>
       <p className="mt-3 text-2xl font-semibold text-foreground">{value}</p>
-      <p className="mt-2 text-sm text-foreground/60">{hint}</p>
+      <p className="mt-2 text-sm text-foreground/60">{translateText(hint)}</p>
     </div>);
 }
 export default function AnalyticsPage() {

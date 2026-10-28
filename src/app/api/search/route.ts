@@ -1,4 +1,4 @@
-import { translateText } from "@/lib/i18n";
+import { normalizeLanguage, translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 
@@ -65,6 +65,13 @@ export async function GET(request: Request) {
   if (!workspace?.id) {
     return NextResponse.json({ leads: [], customers: [], tasks: [], pages: [] });
   }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("language")
+    .eq("id", user.id)
+    .maybeSingle();
+  const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
+  const t = (text: string) => translateText(text, language);
   const { searchParams } = new URL(request.url);
   const query = searchParams
     .get("q")
@@ -95,8 +102,8 @@ export async function GET(request: Request) {
 
     const leads: SearchResult[] = activeLeadRows.map((lead) => ({
       id: lead.id,
-      title: lead.name || "Untitled lead",
-      subtitle: lead.company || lead.email || lead.phone || "Active lead",
+      title: lead.name || t("Untitled lead"),
+      subtitle: lead.company || lead.email || lead.phone || t("Active lead"),
       href: `/leads/${lead.id}`,
     }));
     const customersById = new Map<string, SearchResult>();
@@ -109,10 +116,10 @@ export async function GET(request: Request) {
 
       customersById.set(customerId, {
         id: customerId,
-        title: company || lead.name || "Untitled customer",
+        title: company || lead.name || t("Untitled customer"),
         subtitle: isPrivateCustomer
-          ? `${lead.status === "won" ? "Won" : "Lost"} private customer`
-          : `${lead.name || "Unknown contact"} · ${lead.status === "won" ? "Won" : "Lost"}`,
+          ? `${t(lead.status === "won" ? "Won" : "Lost")} ${t("Private customer")}`
+          : `${lead.name || t("Unknown contact")} · ${t(lead.status === "won" ? "Won" : "Lost")}`,
         href: `/customers/${encodeURIComponent(customerId)}`,
       });
     }
@@ -120,7 +127,7 @@ export async function GET(request: Request) {
     const tasks: SearchResult[] = (taskResult.data ?? []).map((task) => ({
       id: task.id,
       title: task.title,
-      subtitle: "Task",
+      subtitle: t("Task"),
       href: `/leads/${task.lead_id}`,
     }));
     /*
@@ -129,92 +136,92 @@ export async function GET(request: Request) {
     const pages = [
       {
         id: "dashboard",
-        title: translateText("Dashboard"),
+        title: t("Dashboard"),
         href: "/dashboard",
       },
       {
         id: "leads",
-        title: translateText("Leads"),
+        title: t("Leads"),
         href: "/leads",
       },
       {
         id: "customers",
-        title: translateText("Customers"),
+        title: t("Customers"),
         href: "/customers",
       },
       {
         id: "pipeline",
-        title: translateText("Pipeline"),
+        title: t("Pipeline"),
         href: "/pipeline",
       },
       {
         id: "activities",
-        title: translateText("Activities"),
+        title: t("Activities"),
         href: "/activities",
       },
       {
         id: "tasks",
-        title: translateText("Tasks"),
+        title: t("Tasks"),
         href: "/tasks",
       },
       {
         id: "calendar",
-        title: translateText("Calendar"),
+        title: t("Calendar"),
         href: "/calendar",
       },
       {
         id: "analytics",
-        title: translateText("Analytics"),
+        title: t("Analytics"),
         href: "/analytics",
       },
       {
         id: "forecast",
-        title: translateText("Forecast"),
+        title: t("Forecast"),
         href: "/forecast",
       },
       {
         id: "ai",
-        title: translateText("AI"),
+        title: t("AI"),
         href: "/ai",
       },
       {
         id: "automations",
-        title: translateText("Automations"),
+        title: t("Automations"),
         href: "/automations",
       },
       {
         id: "notifications",
-        title: translateText("Notifications"),
+        title: t("Notifications"),
         href: "/notifications",
       },
       {
         id: "feedback",
-        title: translateText("Feedback"),
+        title: t("Feedback"),
         href: "/feedback",
       },
       {
         id: "team",
-        title: translateText("Team"),
+        title: t("Team"),
         href: "/team",
       },
       {
         id: "settings",
-        title: translateText("Settings"),
+        title: t("Settings"),
         href: "/settings",
       },
       {
         id: "billing",
-        title: translateText("Billing"),
+        title: t("Billing"),
         href: "/billing",
       },
       {
         id: "trash",
-        title: translateText("Trash"),
+        title: t("Trash"),
         href: "/trash",
       },
       {
         id: "admin",
-        title: translateText("Admin"),
+        title: t("Admin"),
         href: "/admin",
       },
     ]
@@ -226,7 +233,7 @@ export async function GET(request: Request) {
       .map((page) => ({
         id: page.id,
         title: page.title,
-        subtitle: "Page",
+        subtitle: t("Page"),
         href: page.href,
       }))
     return NextResponse.json({ leads, customers, tasks, pages });

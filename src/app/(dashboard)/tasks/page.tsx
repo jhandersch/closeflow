@@ -378,7 +378,7 @@ export default function TasksPage() {
         if (!removedTask || !userId) {
             return;
         }
-        if (!await appConfirm(`Delete task "${removedTask.title}"?`)) {
+        if (!await appConfirm(translateText("Delete task “{task}”?").replace("{task}", removedTask.title))) {
             return;
         }
         const previous = tasks;
@@ -512,7 +512,7 @@ export default function TasksPage() {
               xl:grid-cols-4
             ">
 
-            <input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder={"Title"} className="
+            <input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder={translateText("Title")} className="
                 w-full
                 rounded-xl
                 border

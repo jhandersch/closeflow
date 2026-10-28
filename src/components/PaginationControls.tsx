@@ -25,17 +25,18 @@ export default function PaginationControls({
     const currentPage = Math.min(Math.max(page, 1), totalPages);
     const firstItem = (currentPage - 1) * pageSize + 1;
     const lastItem = Math.min(currentPage * pageSize, totalItems);
+    const translatedLabel = translateText(label ? `${label[0].toUpperCase()}${label.slice(1)}` : label);
     const buttonClassName =
         "rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground/80 transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40";
 
     return (
         <nav
-            aria-label={`${label} pagination`}
+            aria-label={`${translateText("Page navigation for")} ${translateText(label ? `${label[0].toUpperCase()}${label.slice(1)}` : label)}`}
             className="flex flex-wrap items-center justify-between gap-3 text-sm"
         >
             {showSummary ? (
                 <p aria-live="polite" className="text-foreground/60">
-                    {translateText("Showing")}{firstItem}–{lastItem} {" "}{translateText("of")}{" "}{totalItems} {label} {" "}{translateText("· Page")}{" "}{currentPage} {" "}{translateText("of")}{" "}{totalPages}
+                    {translateText("Showing")} {firstItem}–{lastItem} {translateText("of")} {totalItems} {translatedLabel} {translateText("· Page")} {currentPage} {translateText("of")} {totalPages}
                 </p>
             ) : null}
             <div className="flex items-center gap-2">

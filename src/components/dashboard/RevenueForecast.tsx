@@ -155,13 +155,13 @@ export default function RevenueForecast({
         <InsightCard
           title={translateText("Pipeline Health")}
           value={`${averageHealth}%`}
-          subtitle="Average health of active deals"
+          subtitle={translateText("Average health of active deals")}
         />
 
         <InsightCard
           title={translateText("Close Probability")}
           value={`${averageProbability}%`}
-          subtitle="Average active-deal probability"
+          subtitle={translateText("Average active-deal probability")}
         />
 
         <InsightCard
@@ -228,7 +228,7 @@ function Metric({
       `}
     >
       <p className="text-sm text-foreground/55">
-        {label}
+        {translateText(label)}
       </p>
 
       <p
@@ -302,7 +302,7 @@ function InsightCard({
 
       {subtitle ? (
         <p className="mt-1 text-xs text-foreground/45">
-          {subtitle}
+          {translateText(subtitle)}
         </p>
       ) : null}
     </div>

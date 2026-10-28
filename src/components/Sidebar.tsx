@@ -99,7 +99,7 @@ export default function Sidebar() {
         { href: "/costs", label: t("nav.costs", "Costs"), icon: Receipt },
         { href: "/tasks", label: t("nav.tasks", "Tasks"), icon: ListTodo },
         { href: "/calendar", label: t("nav.calendar", "Calendar"), icon: Calendar },
-        { href: "/files", label: "Files", icon: FolderOpen },
+        { href: "/files", label: translateText("Files"), icon: FolderOpen },
         { href: "/automations", label: t("nav.automations", "Automations"), icon: ListRestart },
         { href: "/notifications", label: t("nav.notifications", "Notifications"), icon: Bell },
         ...(canManageBilling

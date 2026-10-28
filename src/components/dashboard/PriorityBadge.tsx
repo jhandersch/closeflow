@@ -15,7 +15,7 @@ export default function PriorityBadge({ score, }: PriorityBadgeProps) {
             : "Low";
     return (<div className="flex flex-col items-center">
       <span className={`rounded-full border px-4 py-2 text-sm font-semibold ${color}`}>
-        {label}
+        {translateText(label)}
       </span>
 
       <p className="mt-2 text-2xl font-bold text-foreground">

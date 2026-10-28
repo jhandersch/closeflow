@@ -1,4 +1,5 @@
 "use client";
+import { translateText } from "@/lib/i18n";
 
 type TaskFiltersProps = {
   value: string;
@@ -29,7 +30,7 @@ export default function TaskFilters({
               : "border-border-subtle bg-surface-1 text-foreground/70 hover:bg-foreground/5"
           }`}
         >
-          {filter.label}
+          {translateText(filter.label)}
         </button>
       ))}
     </div>

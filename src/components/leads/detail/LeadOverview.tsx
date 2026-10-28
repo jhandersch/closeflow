@@ -74,7 +74,7 @@ p-5
 
     <p>
 {translateText("Status:")}{" "}
-    {lead.status}
+    {translateText(lead.status)}
     </p>
 
 

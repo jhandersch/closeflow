@@ -33,7 +33,7 @@ export default function SearchResults({ leads, customers, tasks, pages, selected
             tracking-[0.25em]
             text-foreground/40
           ">
-          {title}
+          {translateText(title)}
         </p>
 
 
@@ -45,7 +45,7 @@ export default function SearchResults({ leads, customers, tasks, pages, selected
                 const index = currentIndex;
                 return (<div key={item.id} onMouseEnter={() => onSelect(index)}>
 
-                <SearchResult title={item.title} subtitle={item.subtitle} href={item.href} icon={icon} active={active} onClick={() => {
+                <SearchResult title={item.title} subtitle={item.subtitle ? translateText(item.subtitle) : undefined} href={item.href} icon={icon} active={active} onClick={() => {
                         onClose();
                     }}/>
 

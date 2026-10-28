@@ -38,11 +38,11 @@ function DashboardStat({ label, value, hint, icon: Icon, accent = "cyan" }: {
     return (
         <section className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-medium uppercase tracking-[0.12em] text-foreground/50">{label}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-foreground/50">{translateText(label)}</p>
                 <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${accentStyles[accent]}`}><Icon className="h-4 w-4" /></span>
             </div>
             <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-            <p className="mt-1 text-xs text-foreground/50">{hint}</p>
+            <p className="mt-1 text-xs text-foreground/50">{translateText(hint)}</p>
         </section>
     );
 }
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                                     setDemoLoading(true);
                                     try {
                                         const result = await loadDemoData({ reload: true });
-                                        notify.info(`${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.`, { id: "dashboard-demo-data-loaded" });
+                                        notify.info(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.`, { id: "dashboard-demo-data-loaded" });
                                         if (result.warnings?.length) notify.warning(`Warnings: ${result.warnings.join(" ")}`, { id: "dashboard-demo-load-warning" });
                                         await refresh();
                                     } catch (loadError) {
@@ -195,10 +195,10 @@ export default function DashboardPage() {
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <DashboardStat label="Won revenue" value={`€${metrics.revenue.toLocaleString(getIntlLocale())}`} hint={`${metrics.won} closed won ${metrics.won === 1 ? "deal" : "deals"}`} icon={CircleDollarSign} accent="emerald" />
-                    <DashboardStat label="Win rate" value={`${metrics.winRate}%`} hint={`${metrics.wonLostLabel} won / lost deals`} icon={Percent} accent="cyan" />
-                    <DashboardStat label="Average deal value" value={`€${metrics.averageDealValue.toLocaleString(getIntlLocale())}`} hint={metrics.won ? "Across won deals" : "Across open opportunities"} icon={BarChart3} accent="violet" />
-                    <DashboardStat label="Open tasks" value={tasksLoading ? "—" : String(taskSummary.open)} hint={taskSummary.overdue ? `${taskSummary.overdue} overdue — needs a look` : "No overdue tasks"} icon={BadgeCheck} accent={taskSummary.overdue ? "amber" : "emerald"} />
+                    <DashboardStat label="Won revenue" value={`€${metrics.revenue.toLocaleString(getIntlLocale())}`} hint={`${metrics.won} ${translateText("closed won deals")}`} icon={CircleDollarSign} accent="emerald" />
+                    <DashboardStat label="Win rate" value={`${metrics.winRate}%`} hint={`${metrics.wonLostLabel} ${translateText("won / lost deals")}`} icon={Percent} accent="cyan" />
+                    <DashboardStat label="Average deal value" value={`€${metrics.averageDealValue.toLocaleString(getIntlLocale())}`} hint={translateText(metrics.won ? "Across won deals" : "Across open opportunities")} icon={BarChart3} accent="violet" />
+                    <DashboardStat label="Open tasks" value={tasksLoading ? "—" : String(taskSummary.open)} hint={taskSummary.overdue ? `${taskSummary.overdue} ${translateText("overdue — needs a look")}` : translateText("No overdue tasks")} icon={BadgeCheck} accent={taskSummary.overdue ? "amber" : "emerald"} />
                 </div>
 
                 <div className="grid gap-6 xl:grid-cols-2">

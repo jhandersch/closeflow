@@ -512,9 +512,9 @@ export default function TrashPage() {
                       </p>
 
                       <p className="mt-2 text-xs text-foreground/40">
-                        {customer.deals} {translateText("deal")}{customer.deals === 1 ? "" : translateText("s")}
+                        {customer.deals} {translateText(customer.deals === 1 ? "deal" : "deals")}
                         {customer.deleted_at
-                          ? ` • Deleted on ${formatDateTime(
+                          ? ` • ${translateText("Deleted on")} ${formatDateTime(
                               customer.deleted_at,
                               timezone
                             )}`
@@ -569,7 +569,7 @@ export default function TrashPage() {
 
                       <p className="mt-2 text-xs text-foreground/40">
                         {lead.deleted_at
-                          ? `Deleted on ${formatDateTime(
+                          ? `${translateText("Deleted on")} ${formatDateTime(
                               lead.deleted_at,
                               timezone
                             )}`
@@ -622,13 +622,13 @@ export default function TrashPage() {
 
                       <p className="mt-2 text-xs text-foreground/40">
                         {task.due_date
-                          ? `Due ${formatDate(
+                          ? `${translateText("Due")} ${formatDate(
                               task.due_date,
                               timezone
                             )}`
                           : translateText("No due date")}
                         {task.deleted_at
-                          ? ` • Deleted on ${formatDateTime(
+                          ? ` • ${translateText("Deleted on")} ${formatDateTime(
                               task.deleted_at,
                               timezone
                             )}`
@@ -664,11 +664,11 @@ export default function TrashPage() {
                 {calendarEvents.map((event) => (
                   <div key={event.id} className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-1 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="font-semibold text-foreground">{event.title}</p>
+                      <p className="font-semibold text-foreground">{translateText(event.title)}</p>
                       {event.description ? <p className="mt-1 text-sm text-foreground/55">{event.description}</p> : null}
                       <p className="mt-2 text-xs text-foreground/40">
                         {translateText("Scheduled")}{formatDateTime(event.scheduled_at, timezone)}
-                        {` • Deleted on ${formatDateTime(event.deleted_at, timezone)}`}
+                        {` • ${translateText("Deleted on")} ${formatDateTime(event.deleted_at, timezone)}`}
                       </p>
                     </div>
                     <button

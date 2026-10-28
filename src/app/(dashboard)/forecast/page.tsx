@@ -11,6 +11,7 @@ import { useLeadsData } from "@/hooks/useLeadsData";
 import { useRevenueForecastAI } from "@/hooks/useRevenueForecastAI";
 import { calculateForecast } from "@/lib/forecast";
 import { supabase } from "@/lib/supabase/client";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
@@ -24,6 +25,7 @@ function isValidTimeZone(timeZone: string): boolean {
 }
 
 export default function ForecastPage() {
+  const { language } = useAppPreferences();
   const [timeZone, setTimeZone] = useState(DEFAULT_TIMEZONE);
   const [personalCostsByLead, setPersonalCostsByLead] = useState<Record<string, number>>({});
 
@@ -77,7 +79,7 @@ export default function ForecastPage() {
     insight,
     loading: insightLoading,
     error: insightError,
-  } = useRevenueForecastAI(leads, forecast, "en");
+  } = useRevenueForecastAI(leads, forecast, language);
 
   const forecastSeries = forecast.scenarioForecast;
 

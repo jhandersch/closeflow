@@ -196,7 +196,7 @@ export default function OnboardingPage() {
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">
                                 {translateText("A couple of details, then choose whether to add your first lead or explore a ready-made workspace.")}</p>
                         </div>
-                        <div className="w-full md:max-w-xs" aria-label={`Step ${step + 1} of ${steps.length}`}>
+                        <div className="w-full md:max-w-xs" aria-label={`${translateText("Step")} ${step + 1} ${translateText("of")} ${steps.length}`}>
                             <div className="flex justify-between text-sm text-foreground/65">
                                 <span>{steps[step]}</span><span>{translateText("Step")}{" "}{step + 1} {" "}{translateText("of")}{" "}{steps.length}</span>
                             </div>

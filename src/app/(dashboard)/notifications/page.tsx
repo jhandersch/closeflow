@@ -130,7 +130,7 @@ function NotificationCard({
   timeZone: string;
 }) {
   const cfg = levelConfig[item.level] || levelConfig.info;
-  const levelLabel = cfg.label;
+  const levelLabel = translateText(cfg.label);
 
   return (
     <div className={`rounded-2xl border p-5 ${cfg.color}`}>
@@ -142,9 +142,9 @@ function NotificationCard({
             {levelLabel}
           </span>
           <p className="mt-1 font-semibold text-foreground leading-snug">
-            {item.title}
+            {translateText(item.title)}
           </p>
-          <p className="mt-1 text-sm text-foreground/65">{item.message}</p>
+          <p className="mt-1 text-sm text-foreground/65">{translateText(item.message)}</p>
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-2">
@@ -221,8 +221,8 @@ export default function NotificationsPage() {
             <h1 className="mt-2 text-3xl font-bold text-foreground">
               {translateText("Review updates that need your attention")}</h1>
             <p className="mt-1 text-sm text-foreground/65">
-              {notifications.length} {translateText("active")}{criticalCount > 0 ? `, ${criticalCount} critical` : ""}
-              {warningCount > 0 ? `, ${warningCount} warnings` : ""}
+              {notifications.length} {translateText("active")}{criticalCount > 0 ? `, ${criticalCount} ${translateText(criticalCount === 1 ? "critical alert" : "critical alerts")}` : ""}
+              {warningCount > 0 ? `, ${warningCount} ${translateText(warningCount === 1 ? "warning" : "warnings")}` : ""}
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export default function NotificationsPage() {
                     : "border-border-subtle bg-surface-1 text-foreground/60 hover:text-foreground"
                 }`}
               >
-                {f}
+                {translateText(f === "all" ? "All" : `${f[0].toUpperCase()}${f.slice(1)}`)}
               </button>
             )
           )}

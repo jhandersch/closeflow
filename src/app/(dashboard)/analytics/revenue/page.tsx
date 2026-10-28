@@ -264,7 +264,7 @@ function Card({
     return (
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-foreground/55">
-                {label}
+                {translateText(label)}
             </p>
 
             <p className="mt-3 text-2xl font-semibold text-foreground">

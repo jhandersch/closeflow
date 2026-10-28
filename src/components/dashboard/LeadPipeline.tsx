@@ -1,7 +1,7 @@
 "use client";
 
 
-import { getIntlLocale } from "@/lib/i18n";
+import { getIntlLocale, translateText } from "@/lib/i18n";
 import Link from "next/link";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export default function LeadPipeline({ leads }: { leads: Lead[] }) {
           key={stage.id}
           className="rounded-2xl border border-border-subtle bg-surface-1 p-4"
         >
-          <h3 className="mb-4 font-semibold">{stage.label}</h3>
+          <h3 className="mb-4 font-semibold">{translateText(stage.label)}</h3>
 
           <div className="space-y-3">
             {leads

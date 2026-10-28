@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { translatePlanName, translateText } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import Link from "next/link";
 import Logo, { LogoMark } from "@/components/Logo";
@@ -166,7 +166,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{translateText("Straightforward plans")}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{translateText("Start free. Grow at your pace.")}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-foreground/60">{translateText("Start with one person, then choose a plan when you need more capacity.")}</p></div><Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">{translateText("Compare every feature")}{" "}<ArrowRight className="h-4 w-4" /></Link></div>
           <div className="mt-9 grid gap-4 md:grid-cols-3">
             {plans.map((plan) => <article key={plan.name} className={`rounded-2xl border bg-surface-1 p-6 ${plan.featured ? "border-cyan-400/40 shadow-[0_0_35px_-20px_rgba(34,211,238,0.25)]" : "border-border-subtle"}`}>
-              <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{plan.name}</h3><p className="mt-1 text-xs text-foreground/50">{translateText(plan.description)}</p></div>{plan.featured && <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">{translateText("Popular")}</span>}</div>
+              <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{translatePlanName(plan.name)}</h3><p className="mt-1 text-xs text-foreground/50">{translateText(plan.description)}</p></div>{plan.featured && <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">{translateText("Popular")}</span>}</div>
               <p className="mt-6"><span className="text-3xl font-semibold tracking-tight">{plan.price}</span><span className="ml-1 text-xs text-foreground/45">{translateText(plan.period)}</span></p>
               <ul className="mt-5 space-y-2.5">{plan.points.map((point) => <li key={point} className="flex items-center gap-2 text-xs text-foreground/65"><Check className="h-3.5 w-3.5 shrink-0 text-cyan-300" />{translateText(point)}</li>)}</ul>
             </article>)}

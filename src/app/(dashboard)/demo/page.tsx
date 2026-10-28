@@ -11,8 +11,8 @@ export default function DemoPage() {
         setLoading(true);
         try {
             const result = await loadDemoData({ reload });
-            const warning = result.warnings?.length ? ` Warnings: ${result.warnings.join(" ")}` : "";
-            setMessage(`${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.${warning}`);
+            const warning = result.warnings?.length ? ` ${translateText("Warnings:")} ${result.warnings.map((item) => translateText(item)).join(" ")}` : "";
+            setMessage(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.${warning}`);
         }
         catch (error) {
             setMessage(error instanceof Error ? error.message : "Failed to start demo");

@@ -1118,7 +1118,7 @@ export default function LeadsPage() {
                                 : lead.status === "won"
                                     ? "bg-green-500/15 text-green-300"
                                     : "bg-red-500/15 text-red-300"}`}>
-                        {lead.status}
+                        {translateText(lead.status)}
                       </span>
                     </div>
                   </div>

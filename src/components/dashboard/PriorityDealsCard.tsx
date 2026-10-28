@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale } from "@/lib/i18n";
+import { getIntlLocale, translateText } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { usePriorityAI } from "@/hooks/usePriorityAI";
@@ -12,8 +12,8 @@ type PriorityDealsCardProps = {
 };
 export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
     const router = useRouter();
-    const { t } = useAppPreferences();
-    const aiAnalysis = usePriorityAI(leads, "en");
+    const { t, language } = useAppPreferences();
+    const aiAnalysis = usePriorityAI(leads, language);
     const translateRisk = (risk: string) => {
         if (risk === "High")
             return t("dashboard.riskHigh", "High");
@@ -292,7 +292,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
                     text-foreground/80
                     ">
 
-                    {lead.status}
+                    {translateText(lead.status)}
 
                   </span>
 

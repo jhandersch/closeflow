@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { normalizeLanguage } from "@/lib/i18n";
 type Notification = {
     id: string;
     title: string;
@@ -17,6 +18,12 @@ export async function GET(request: Request) {
     if (!workspace?.id) {
         return NextResponse.json([]);
     }
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("language")
+        .eq("id", user.id)
+        .maybeSingle();
+    const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
     const [{ data: leads, error: leadsError }, { data: activities, error: activitiesError }] = await Promise.all([
         supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]),
         supabase.from("activities").select("lead_id, created_at").eq("workspace_id", workspace.id),
@@ -43,8 +50,12 @@ export async function GET(request: Request) {
         }
         return {
             id: lead.id,
-            title: `Lead ${lead.name || lead.company || "Unknown"} needs attention`,
-            message: `${idleDays} days without activity`,
+            title: language === "de"
+                ? `Lead ${lead.name || lead.company || "Unbekannt"} benötigt Aufmerksamkeit`
+                : `Lead ${lead.name || lead.company || "Unknown"} needs attention`,
+            message: language === "de"
+                ? `Seit ${idleDays} Tagen ohne Aktivität`
+                : `${idleDays} days without activity`,
             level: idleDays >= 14 ? "critical" : "warning",
             leadId: lead.id,
             createdAt: new Date().toISOString(),

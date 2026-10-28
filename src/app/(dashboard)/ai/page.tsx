@@ -439,7 +439,7 @@ export default function AIAssistantPage() {
                   value={lead.id}
                 >
                   {lead.name} - {lead.company} (
-                  {lead.status})
+                  {translateText(lead.status)})
                 </option>
               ))}
             </select>

@@ -18,9 +18,9 @@ function UsageMeter({ label, used, limit, suffix, detail }: { label: string; use
     return (
         <div className="rounded-xl border border-border-subtle bg-surface-2/30 p-4">
             <div className="flex items-center justify-between gap-3">
-                <span className="text-sm text-foreground/65">{label}</span>
+                <span className="text-sm text-foreground/65">{translateText(label)}</span>
                 <span className="text-sm font-semibold text-foreground">
-                    {used.toLocaleString(getIntlLocale())} / {unlimited ? translateText("Unlimited") : limit?.toLocaleString(getIntlLocale())} {suffix}
+                    {used.toLocaleString(getIntlLocale())} / {unlimited ? translateText("Unlimited") : limit?.toLocaleString(getIntlLocale())} {translateText(suffix)}
                 </span>
             </div>
             {detail ? <p className="mt-1 text-xs text-foreground/50">{detail}</p> : null}
@@ -77,7 +77,7 @@ export default function BillingUsageOverview() {
                         used={data.seats.members + data.seats.pending_invites}
                         limit={data.limits.team_seats}
                         suffix="seats"
-                        detail={`${data.seats.members} members · ${data.seats.pending_invites} pending invites`}
+                        detail={`${data.seats.members} ${translateText("members")} · ${data.seats.pending_invites} ${translateText("pending invites")}`}
                     />
                 </div>
             ) : (

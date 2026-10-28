@@ -437,7 +437,7 @@ function Stat({
     return (
         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
             <p className="text-xs text-foreground/60">
-                {label}
+                {translateText(label)}
             </p>
 
             <p className="mt-2 text-2xl font-semibold text-foreground">

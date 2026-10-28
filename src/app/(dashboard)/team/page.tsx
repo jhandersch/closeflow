@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { translatePlanName, translateTeamRole, translateText } from "@/lib/i18n";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -62,7 +62,7 @@ export default function TeamPage() {
       return;
     }
 
-    toast.error(message);
+    toast.error(translateText(message));
   };
 
   /**
@@ -585,7 +585,7 @@ export default function TeamPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <StatCard
                     label="Plan"
-                    value={selectedWorkspace.workspace.plan}
+                    value={translatePlanName(selectedWorkspace.workspace.plan)}
                   />
 
                   <StatCard
@@ -636,7 +636,7 @@ export default function TeamPage() {
                           className="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-3 text-sm text-foreground/80"
                         >
                           <span>
-                            {invite.email} · {invite.role}
+                            {invite.email} · {translateTeamRole(invite.role)}
                           </span>
                           {canInvite ? (
                             <button
@@ -675,7 +675,7 @@ function StatCard({
 }) {
   return (
     <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
-      <p className="text-sm text-foreground/60">{label}</p>
+      <p className="text-sm text-foreground/60">{translateText(label)}</p>
 
       <p className="mt-2 text-2xl font-bold text-foreground">
         {value}

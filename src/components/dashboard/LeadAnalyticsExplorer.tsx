@@ -199,5 +199,5 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
 }
 
 function DetailMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="text-xs text-foreground/50">{label}</p><p className="mt-1 font-semibold text-foreground">{value}</p></div>;
+  return <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="text-xs text-foreground/50">{translateText(label)}</p><p className="mt-1 font-semibold text-foreground">{value}</p></div>;
 }
