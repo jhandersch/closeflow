@@ -131,12 +131,7 @@ export function usePriorityAI(
             translateText("Review your highest-value deals manually."),
 
           priorityReason: highest
-            ? analyzeLead(highest).reasons.map((reason) => {
-                const inactive = reason.match(/^No activity for (\d+) days\.$/);
-                return inactive && language === "de"
-                  ? `Seit ${inactive[1]} Tagen keine Aktivität.`
-                  : translateText(reason);
-              }).join(" ")
+          ? analyzeLead(highest).reasons.map((reason) => translateText(reason, language)).join(" ")
             : translateText("No AI data available."),
 
           riskLevel: highest

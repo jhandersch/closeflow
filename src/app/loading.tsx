@@ -12,8 +12,10 @@ export default function LoadingPage() {
     ? t("auth.sessionLoading", "Loading session...")
     : "Loading session...";
 
-  const loadingBody =
-    "We are loading your data and restoring the page cleanly.";
+  const loadingBody = t(
+    "common.loadingDescription",
+    "We are loading your data and restoring the page cleanly.",
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">

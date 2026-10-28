@@ -145,6 +145,8 @@ const dictionary: DictionaryNode = {
         progress: "Progress",
         welcomeTitle: "Welcome to CloseFlow",
         welcomeBody: "Let\'s set up your CRM workspace and create your first momentum in just a few minutes.",
+        setupWorkspace: "Workspace",
+        quickStart: "Quick start",
         stepWelcome: "Welcome",
         stepCompany: "Set up company",
         stepLead: "Create first lead",
@@ -328,6 +330,7 @@ const dictionary: DictionaryNode = {
     },
     common: {
         loading: "Loading...",
+        loadingDescription: "We are loading your data and restoring the page cleanly.",
     },
 };
 
@@ -398,6 +401,7 @@ const germanTranslations: Record<string, string> = {
     "auth.useRecoveryInstead": "Stattdessen Wiederherstellungscode verwenden", "auth.working": "Wird verarbeitet …",
     "onboarding.label": "Einrichtung", "onboarding.progress": "Fortschritt", "onboarding.welcomeTitle": "Willkommen bei CloseFlow",
     "onboarding.welcomeBody": "Richte deinen CRM-Arbeitsbereich ein und starte in wenigen Minuten mit deinem ersten Lead.",
+    "onboarding.setupWorkspace": "Arbeitsbereich", "onboarding.quickStart": "Schnellstart",
     "onboarding.stepWelcome": "Willkommen", "onboarding.stepCompany": "Unternehmen einrichten",
     "onboarding.stepLead": "Ersten Lead erstellen", "onboarding.stepDashboard": "Übersicht kennenlernen",
     "dashboard.conversionRate": "Konversionsrate", "dashboard.wonLost": "Gewonnen / verloren",
@@ -431,6 +435,7 @@ const germanTranslations: Record<string, string> = {
     "dashboard.warnings": "Warnungen", "dashboard.leads": "Leads", "dashboard.activities": "Aktivitäten",
     "dashboard.tasks": "Aufgaben", "dashboard.failed": "Fehlgeschlagen", "dashboard.loadDemoData": "Beispieldaten laden",
     "dashboard.daysAverage": "Tage im Durchschnitt", "dashboard.lowRisk": "Geringes Risiko",
+    "common.loadingDescription": "Deine Daten werden geladen und die Seite wird wiederhergestellt.",
     "pipeline.new": "Neu", "pipeline.contacted": "Kontaktiert", "pipeline.qualified": "Qualifiziert",
     "pipeline.proposal": "Angebot", "pipeline.won": "Gewonnen", "pipeline.lost": "Verloren",
     "ai.subtitle": "Frage zu Leads, Kunden, Pipeline-Risiken, Verhandlungen, E-Mail-Entwürfen und Umsatzprognosen.",
@@ -833,9 +838,40 @@ const germanizeFollowUpTerms = (text: string) => text
     .replace(/Follow-up-Abläufe/gi, "Nachfassabläufe")
     .replace(/Follow-ups/gi, "Nachfassaktionen")
     .replace(/Follow-up/gi, "Nachfassaktion");
+const translateDynamicGermanText = (text: string): string | undefined => {
+    const noActivityMatch = text.match(/^No activity for (\d+) days?\.$/);
+    if (noActivityMatch) {
+        const days = Number(noActivityMatch[1]);
+        return `Seit ${days} ${days === 1 ? "Tag" : "Tagen"} keine Aktivität.`;
+    }
+
+    const daysAgoMatch = text.match(/^(\d+) days? ago$/);
+    if (daysAgoMatch) {
+        const days = Number(daysAgoMatch[1]);
+        return `vor ${days} ${days === 1 ? "Tag" : "Tagen"}`;
+    }
+
+    const durationMatch = text.match(/^(\d+) days?$/);
+    if (durationMatch) {
+        const days = Number(durationMatch[1]);
+        return `${days} ${days === 1 ? "Tag" : "Tage"}`;
+    }
+
+    const importMatch = text.match(/^Import done\. Added (\d+) leads, updated (\d+), unchanged (\d+), skipped (\d+)(?:\. (\d+) issue\(s\) available in report)?\.$/);
+    if (importMatch) {
+        const [, added, updated, unchanged, skipped, issueCount] = importMatch;
+        const issueSummary = issueCount
+            ? ` ${issueCount} ${issueCount === "1" ? "Problem ist" : "Probleme sind"} im Bericht verfügbar.`
+            : "";
+        return `Import abgeschlossen: ${added} Leads hinzugefügt, ${updated} aktualisiert, ${unchanged} unverändert und ${skipped} übersprungen.${issueSummary}`;
+    }
+
+    return undefined;
+};
 export const translateText = (text: string, language: AppLanguage = activeLanguage): string => {
     if (language !== "de") return text;
-    const translated = germanTextTranslations[text.trim()] ?? additionalGermanTextTranslations[text.trim()] ?? dynamicGermanTextTranslations[text.trim()] ?? catalogGermanTextTranslations[text.trim()] ?? homeGermanTextTranslations[text.trim()] ?? text;
+    const key = text.trim();
+    const translated = germanTextTranslations[key] ?? additionalGermanTextTranslations[key] ?? dynamicGermanTextTranslations[key] ?? catalogGermanTextTranslations[key] ?? homeGermanTextTranslations[key] ?? translateDynamicGermanText(key) ?? text;
     return germanizeFollowUpTerms(translated);
 };
 export const translatePlanName = (plan: string): string => {

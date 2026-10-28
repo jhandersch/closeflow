@@ -101,7 +101,7 @@ export function useLeadAI(lead: any): LeadAIResult {
         ? {
             level: "high",
             title: translateText("Lead going cold"),
-            message: getIntlLocale() === "de-DE" ? `Seit ${staleDays} Tagen keine Aktivität.` : `No activity for ${staleDays} days.`,
+            message: translateText(`No activity for ${staleDays} days.`),
             icon: "ALERT",
         }
         :

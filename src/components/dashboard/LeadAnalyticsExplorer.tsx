@@ -180,13 +180,13 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
               <DetailMetric label="After listed costs" value={money(selected.netValue)} />
               <DetailMetric label="Priority" value={`${selected.score.priority}/100`} />
               <DetailMetric label="Risk" value={`${selected.score.risk}/100`} />
-              <DetailMetric label="Time in stage" value={`${selected.stageDays} days`} />
+              <DetailMetric label="Time in stage" value={translateText(`${selected.stageDays} days`, language)} />
               <DetailMetric label="Close probability" value={`${selected.score.probability}%`} />
               <DetailMetric label="Expected close" value={shortDate(selected.lead.expected_close_at)} />
               <DetailMetric label="Last activity" value={shortDate(selected.lead.last_activity_at || selected.lead.last_contact_at)} />
             </div>
             {selected.leadCosts.length ? <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Cost breakdown")}</p>{selected.leadCosts.map((cost, index) => <div key={`${cost.name}-${index}`} className="mt-2 flex justify-between gap-3 text-sm text-foreground/75"><span>{cost.name}</span><span>{money(cost.amount)}</span></div>)}</div> : null}
-            <div className="mt-4"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Score factors")}</p><ul className="mt-2 space-y-1 text-sm text-foreground/70">{selected.reasons.length ? selected.reasons.map((reason, index) => <li key={index}>• {reason}</li>) : <li>{translateText("• No additional score factors.")}</li>}</ul></div>
+            <div className="mt-4"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Score factors")}</p><ul className="mt-2 space-y-1 text-sm text-foreground/70">{selected.reasons.length ? selected.reasons.map((reason, index) => <li key={index}>• {translateText(reason, language)}</li>) : <li>{translateText("• No additional score factors.")}</li>}</ul></div>
             <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Next action")}</p><p className="mt-1 text-sm text-foreground/80">{getVisibleLeadNextAction(selected.lead.status, selected.lead.next_action)}</p><p className="mt-2 text-xs text-foreground/50">{activities.length} {" "}{translateText("recent activities loaded for analysis.")}</p></div>
             <button type="button" onClick={() => void generateAnalysis()} disabled={loadingAnalysis} className="mt-4 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-300 disabled:opacity-50">{loadingAnalysis ? translateText("Analyzing lead...") : analysis ? translateText("Refresh AI analysis") : translateText("Generate AI lead analysis")}</button>
             {analysisError ? <p className="mt-3 text-sm text-rose-300">{analysisError}</p> : null}

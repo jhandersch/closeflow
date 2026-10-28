@@ -741,7 +741,7 @@ export default function LeadsPage() {
         </div>
 
         {importMessage ? (<div className="w-full rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-    {importMessage}
+    {translateText(importMessage)}
   </div>) : null}
 
         {showForm ? (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
@@ -1272,7 +1272,7 @@ export default function LeadsPage() {
                         {staleDays === 0
                         ? (translateText("Today"))
                         :
-                            `${staleDays} days ago`}
+                            translateText(`${staleDays} days ago`)}
                       </span>
                     </div>
 

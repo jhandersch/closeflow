@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import {
     ArrowRight,
     BarChart3,
@@ -32,7 +33,7 @@ type OnboardingDraft = {
 };
 
 const ONBOARDING_DRAFT_KEY = "closeflow-onboarding-draft-v1";
-const steps = ["Workspace", "Quick start"];
+const steps = ["onboarding.setupWorkspace", "onboarding.quickStart"];
 
 const sanitizeNextPath = (nextPath: string | null) => {
     if (!nextPath?.startsWith("/") || nextPath.startsWith("//")) return null;
@@ -40,6 +41,7 @@ const sanitizeNextPath = (nextPath: string | null) => {
 };
 
 export default function OnboardingPage() {
+    const { t } = useAppPreferences();
     const router = useRouter();
     const searchParams = useSearchParams();
     const nextPath = sanitizeNextPath(searchParams.get("next"));
@@ -198,7 +200,7 @@ export default function OnboardingPage() {
                         </div>
                         <div className="w-full md:max-w-xs" aria-label={`${translateText("Step")} ${step + 1} ${translateText("of")} ${steps.length}`}>
                             <div className="flex justify-between text-sm text-foreground/65">
-                                <span>{steps[step]}</span><span>{translateText("Step")}{" "}{step + 1} {" "}{translateText("of")}{" "}{steps.length}</span>
+                                <span>{t(steps[step])}</span><span>{translateText("Step")}{" "}{step + 1} {" "}{translateText("of")}{" "}{steps.length}</span>
                             </div>
                             <div className="mt-3 h-2 rounded-full bg-foreground/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
                                 <div className="h-2 rounded-full bg-cyan-400 transition-all" style={{ width: `${progress}%` }} />

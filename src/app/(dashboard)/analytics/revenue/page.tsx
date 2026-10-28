@@ -233,7 +233,7 @@ export default function RevenueAnalyticsPage() {
 
                     <Card
                         label="Sales cycle"
-                        value={`${metrics.averageSalesCycle} days`}
+                        value={translateText(`${metrics.averageSalesCycle} days`)}
                     />
 
                     <Card
