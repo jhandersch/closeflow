@@ -1,4 +1,3 @@
-import { translateText } from "@/lib/i18n";
 export type AppLanguage = "en" | "de";
 type DictionaryLeaf = string;
 type DictionaryNode = {
