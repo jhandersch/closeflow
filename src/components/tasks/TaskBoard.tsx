@@ -8,6 +8,7 @@ import {
     translateTaskStatus,
 } from "@/lib/translations/task";
 import type { Task, TaskPriority } from "@/types";
+import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
 
 type TaskBoardProps = {
     tasks: Task[];
@@ -71,7 +72,7 @@ export default function TaskBoard({
 
     const startEditing = (task: Task) => {
         setEditingTaskId(task.id);
-        setEditTitle(task.title);
+        setEditTitle(translateFollowUpTaskTitle(task.title));
         setEditPriority(task.priority as TaskPriority);
         setEditDueDate(
             task.due_date
@@ -196,7 +197,7 @@ export default function TaskBoard({
                                 className="rounded-xl border border-border-subtle bg-surface-2/70 p-4"
                             >
                                 <p className="font-medium text-foreground">
-                                    {task.title}
+                                    {translateFollowUpTaskTitle(task.title)}
                                 </p>
 
                                 <p className="mt-1 text-xs text-foreground/55">
@@ -269,7 +270,7 @@ export default function TaskBoard({
                                 className="rounded-xl border border-border-subtle bg-surface-2/70 p-4"
                             >
                                 <p className="font-medium text-foreground">
-                                    {task.title}
+                                    {translateFollowUpTaskTitle(task.title)}
                                 </p>
 
                                 <p className="mt-1 text-xs text-foreground/55">

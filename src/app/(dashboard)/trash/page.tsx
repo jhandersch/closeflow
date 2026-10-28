@@ -1,5 +1,6 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
 
 import { toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
@@ -611,7 +612,7 @@ export default function TrashPage() {
                   >
                     <div>
                       <p className="font-semibold text-foreground">
-                        {task.title}
+                        {translateFollowUpTaskTitle(task.title)}
                       </p>
 
                       <p className="mt-1 text-sm text-foreground/55">

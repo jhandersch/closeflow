@@ -1,5 +1,6 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
 
 
 import { useState } from "react";
@@ -85,7 +86,7 @@ export default function TaskCard({
     onEdit,
 }: Props) {
     const [editing, setEditing] = useState(false);
-    const [editTitle, setEditTitle] = useState(title);
+    const [editTitle, setEditTitle] = useState(translateFollowUpTaskTitle(title));
     const [editDueDate, setEditDueDate] = useState(
         dueDate ? dueDate.slice(0, 10) : "",
     );
@@ -134,7 +135,7 @@ export default function TaskCard({
     };
 
     const cancelEdit = () => {
-        setEditTitle(title);
+        setEditTitle(translateFollowUpTaskTitle(title));
         setEditDueDate(
             dueDate ? dueDate.slice(0, 10) : "",
         );
@@ -224,7 +225,7 @@ export default function TaskCard({
                                 : "text-foreground"
                         }
                     >
-                        {title}
+                        {translateFollowUpTaskTitle(title)}
                     </p>
 
                     <div className="mt-1 flex items-center gap-2">

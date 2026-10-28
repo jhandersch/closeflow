@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUpRight, CircleAlert } from "lucide-react";
 import type { Lead } from "@/types";
 import { leadCompany, leadDisplayName } from "@/lib/utils";
+import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
 
 type DealsNeedingAttentionProps = { leads: Lead[] };
 
@@ -39,7 +40,7 @@ export default function DealsNeedingAttention({ leads }: DealsNeedingAttentionPr
                                 <span className="shrink-0 text-sm font-semibold text-foreground">€{Number(lead.value || 0).toLocaleString(getIntlLocale())}</span>
                             </div>
                             <div className="mt-3 flex items-start justify-between gap-3">
-                                <p className="line-clamp-2 text-xs text-foreground/60">{lead.next_action?.trim() || translateText("Add a next action")}</p>
+                                <p className="line-clamp-2 text-xs text-foreground/60">{lead.next_action?.trim() ? getVisibleLeadNextAction(lead.status, lead.next_action) : translateText("Add a next action")}</p>
                                 <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-foreground/35 transition group-hover:text-cyan-300" aria-hidden="true" />
                             </div>
                         </Link>

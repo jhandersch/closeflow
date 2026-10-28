@@ -1,4 +1,5 @@
 import type { LeadStatus } from "@/types";
+import { translateText } from "@/lib/i18n";
 
 export type StatusNextAction = {
   action: string;
@@ -45,10 +46,23 @@ export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: str
   ]);
 
   if (status === "won" && (!action || outdatedWonActions.has(action))) {
-    return "Ask the customer for feedback";
+    return translateLeadNextAction("Ask the customer for feedback");
   }
   if (status === "lost" && (!action || outdatedLostActions.has(action))) {
-    return "Request feedback on the decision and schedule a reactivation follow-up";
+    return translateLeadNextAction("Request feedback on the decision and schedule a reactivation follow-up");
   }
-  return action || getDefaultStatusNextAction(status).action;
+  return translateLeadNextAction(action || getDefaultStatusNextAction(status).action);
+}
+
+export function translateLeadNextAction(action: string) {
+  const trimmed = action.trim();
+  const followUp = /^Follow up:\s*(.+)$/i.exec(trimmed);
+  if (followUp) return `${translateText("Follow up:")} ${followUp[1]}`;
+  const proposal = /^Follow up proposal:\s*(.+)$/i.exec(trimmed);
+  if (proposal) return `${translateText("Follow up proposal:")} ${proposal[1]}`;
+  return translateText(trimmed);
+}
+
+export function translateFollowUpTaskTitle(title: string) {
+  return translateLeadNextAction(title);
 }

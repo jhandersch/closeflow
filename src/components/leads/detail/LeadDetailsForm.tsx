@@ -3,7 +3,7 @@ import { translateText } from "@/lib/i18n";
 
 import { useEffect, useState } from "react";
 import { notify } from "@/lib/notifications"
-import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
+import { getDefaultStatusNextAction, translateLeadNextAction } from "@/lib/leadNextAction";
 import type { Lead, LeadSource, LeadStatus, UpdateLeadData } from "@/types";
 type Props = {
     lead: Lead;
@@ -24,7 +24,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const [phone, setPhone] = useState(lead.phone ?? "");
     const [website, setWebsite] = useState(lead.website ?? "");
     const [address, setAddress] = useState(lead.address ?? "");
-    const [nextAction, setNextAction] = useState(lead.next_action ?? "");
+    const [nextAction, setNextAction] = useState(lead.next_action ? translateLeadNextAction(lead.next_action) : "");
     const [nextActionDate, setNextActionDate] = useState(lead.next_action_date
         ? lead.next_action_date.slice(0, 10)
         : "");
@@ -35,7 +35,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const handleStatusChange = (nextStatus: LeadStatus) => {
         setStatus(nextStatus);
         const statusNextAction = getDefaultStatusNextAction(nextStatus);
-        setNextAction(statusNextAction.action);
+        setNextAction(translateLeadNextAction(statusNextAction.action));
         setNextActionDate(statusNextAction.actionDate
             ? statusNextAction.actionDate.slice(0, 10)
             : "");
@@ -49,7 +49,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
         setPhone(lead.phone ?? "");
         setWebsite(lead.website ?? "");
         setAddress(lead.address ?? "");
-        setNextAction(lead.next_action ?? "");
+        setNextAction(lead.next_action ? translateLeadNextAction(lead.next_action) : "");
         setNextActionDate(lead.next_action_date
             ? lead.next_action_date.slice(0, 10)
             : "");
@@ -94,12 +94,12 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
                 ? {
                     ...updatedLead,
                     status,
-                    next_action: statusNextAction.action,
+                    next_action: translateLeadNextAction(statusNextAction.action),
                     next_action_date: statusNextAction.actionDate,
                 }
                 : updatedLead;
             if (statusNextAction) {
-                setNextAction(statusNextAction.action);
+                setNextAction(translateLeadNextAction(statusNextAction.action));
                 setNextActionDate(statusNextAction.actionDate
                     ? statusNextAction.actionDate.slice(0, 10)
                     : "");

@@ -1,5 +1,6 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
 
 import { readApiError } from "@/lib/apiError";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1207,8 +1208,7 @@ export default function LeadsPage() {
                       </p>
 
                       <p className="mt-1 truncate text-sm font-medium text-foreground">
-                        {lead.next_action ||
-                        (translateText("No action planned"))}
+                        {getVisibleLeadNextAction(lead.status, lead.next_action)}
                       </p>
                     </div>
 

@@ -1,5 +1,6 @@
 "use client";
 import { translateText } from "@/lib/i18n";
+import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -132,7 +133,7 @@ export default function SearchPage() {
             <p className="mb-3 text-xs uppercase tracking-[0.3em] text-foreground/50">{translateText("Tasks")} ({tasks.length})</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {visibleResults(tasks, tasksPage).map((task) => (<Link key={task.id} href={task.href} className="rounded-2xl border border-border-subtle bg-surface-1 p-4 transition hover:bg-foreground/5">
-                  <p className="font-semibold text-foreground">{task.title}</p>
+                  <p className="font-semibold text-foreground">{translateFollowUpTaskTitle(task.title)}</p>
                   <p className="mt-0.5 text-xs text-foreground/50">{task.subtitle}</p>
                 </Link>))}
             </div>

@@ -1,5 +1,6 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
 
 
 type TaskCalendarProps = {
@@ -62,7 +63,7 @@ export default function TaskCalendar({
                             className="rounded-xl border border-border-subtle bg-surface-2/70 p-4 text-sm text-foreground/80"
                         >
                             <p className="font-medium text-foreground">
-                                {task.title}
+                                {translateFollowUpTaskTitle(task.title)}
                             </p>
 
                             <p className="mt-1 text-xs text-foreground/55">

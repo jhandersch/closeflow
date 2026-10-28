@@ -1,5 +1,6 @@
 "use client";
 import { translateText } from "@/lib/i18n";
+import { translateLeadNextAction } from "@/lib/leadNextAction";
 
 import { toDisplayMessage } from "@/lib/apiError";
 
@@ -201,7 +202,7 @@ export default function AILeadSummary({
             <p>
               <span className="font-semibold text-foreground">
                 {translateText("Next action:")}</span>{" "}
-              {followUp.next_action}
+              {translateLeadNextAction(followUp.next_action)}
             </p>
           </div>
 

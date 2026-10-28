@@ -542,6 +542,12 @@ const dynamicGermanTextTranslations: Record<string, string> = {
     "Executive sponsor requested a follow-up before Friday.": "Der Sponsor auf Führungsebene hat um eine Rückmeldung bis Freitag gebeten.", "Demo completed with VP of Revenue": "Produktdemo mit der Vertriebsleitung abgeschlossen", "Proposal sent and awaiting sign-off": "Angebot versendet; Freigabe steht noch aus", "Follow up with VP by Friday": "Bis Freitag bei der Vertriebsleitung nachfassen", "Prepare revised proposal": "Überarbeitetes Angebot vorbereiten", "Interested in automation and forecasting.": "Interesse an Automatisierung und Prognosen.", "Discovery call completed": "Erstgespräch abgeschlossen", "Shared pricing overview": "Preisübersicht geteilt", "Send ROI one-pager": "Einseitige ROI-Übersicht senden", "Book solution workshop": "Lösungsworkshop vereinbaren", "New inbound inquiry from PLG team.": "Neue eingehende Anfrage des PLG-Teams.", "Inbound lead captured via website": "Eingehenden Lead über die Website erfasst", "Sent welcome email": "Begrüßungs-E-Mail gesendet", "Qualify inbound requirements": "Anforderungen der eingehenden Anfrage qualifizieren", "Signed contract and onboarding started.": "Vertrag unterschrieben und Einrichtung begonnen.", "Signed contract": "Vertrag unterschrieben", "Onboarding kickoff completed": "Auftakt der Einführung abgeschlossen", "Collect onboarding checklist": "Checkliste zur Einführung zusammenstellen", "Asked for expanded trial for three teams.": "Um eine erweiterte Testphase für drei Teams gebeten.", "Follow-up call booked": "Nachfassgespräch vereinbart", "Product tour delivered": "Produktvorstellung durchgeführt", "Send trial expansion terms": "Bedingungen für die erweiterte Testphase senden", "Gather procurement timeline": "Zeitplan der Beschaffung erfragen",
 };
 const catalogGermanTextTranslations: Record<string, string> = {
+    "Follow up with lead": "Beim Lead nachfassen",
+    "Follow up on proposal": "Zum Angebot nachfassen",
+    "Ask the customer for feedback": "Den Kunden um Feedback bitten",
+    "Request feedback on the decision and schedule a reactivation follow-up": "Feedback zur Entscheidung erfragen und eine erneute Kontaktaufnahme planen",
+    "Follow up:": "Nachfassen:",
+    "Follow up proposal:": "Zum Angebot nachfassen:",
     "Good": "Gut",
     "Okay": "In Ordnung",
     "Poor": "Schlecht",
@@ -817,8 +823,18 @@ const homeGermanTextTranslations: Record<string, string> = {
     "Add your company name and a little team context. Your workspace starts on Free.": "Ergänze deinen Unternehmensnamen und ein paar Angaben zum Team. Dein Arbeitsbereich startet mit dem kostenlosen Tarif.", "Add a real lead or load example leads, activities and tasks to explore.": "Füge einen echten Lead hinzu oder lade Beispielleads, Aktivitäten und Aufgaben zum Ausprobieren.", "Work from your pipeline, schedule follow-ups, and review analytics as your data grows.": "Arbeite mit deiner Pipeline, plane Follow-ups und prüfe die Analysen, wenn deine Daten wachsen.",
     "First Contact": "Erstkontakt", "Follow Up": "Nachfassen", "Closing": "Abschluss", "Reactivation": "Reaktivierung", "Status changed": "Status geändert", "Update": "Aktualisierung", "Could not generate AI analysis.": "Die KI-Analyse konnte nicht erstellt werden.",
 };
-export const translateText = (text: string, language: AppLanguage = activeLanguage): string =>
-    language === "de" ? (germanTextTranslations[text.trim()] ?? additionalGermanTextTranslations[text.trim()] ?? dynamicGermanTextTranslations[text.trim()] ?? catalogGermanTextTranslations[text.trim()] ?? homeGermanTextTranslations[text.trim()] ?? text) : text;
+const germanizeFollowUpTerms = (text: string) => text
+    .replace(/Follow-up-E-Mail/gi, "Nachfass-E-Mail")
+    .replace(/Follow-up-Entwurf/gi, "Entwurf zum Nachfassen")
+    .replace(/Follow-up-Erinnerungen/gi, "Erinnerungen zum Nachfassen")
+    .replace(/Follow-up-Abläufe/gi, "Nachfassabläufe")
+    .replace(/Follow-ups/gi, "Nachfassaktionen")
+    .replace(/Follow-up/gi, "Nachfassaktion");
+export const translateText = (text: string, language: AppLanguage = activeLanguage): string => {
+    if (language !== "de") return text;
+    const translated = germanTextTranslations[text.trim()] ?? additionalGermanTextTranslations[text.trim()] ?? dynamicGermanTextTranslations[text.trim()] ?? catalogGermanTextTranslations[text.trim()] ?? homeGermanTextTranslations[text.trim()] ?? text;
+    return germanizeFollowUpTerms(translated);
+};
 export const translatePlanName = (plan: string): string => {
     const normalized = plan.trim().toLowerCase();
     if (normalized === "free") return translateText("Free");
