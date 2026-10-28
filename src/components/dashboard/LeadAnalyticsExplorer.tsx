@@ -175,7 +175,7 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
               <div><p className="text-xs uppercase tracking-wide text-cyan-300">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Selected customer") : translateText("Selected lead")}</p><h3 className="mt-1 text-lg font-semibold text-foreground">{selected.lead.name}</h3><p className="text-sm text-foreground/55">{selected.lead.company || translateText("No company")} · {translateText(statusLabel[selected.lead.status], language)}</p></div>
               <Link href={selected.lead.status === "won" || selected.lead.status === "lost" ? `/customers/${encodeURIComponent(selected.lead.company?.trim() ? selected.lead.company.trim().toLowerCase() : `private:${selected.lead.id}`)}` : `/leads/${selected.lead.id}`} className="shrink-0 rounded-lg border border-border-subtle px-3 py-2 text-xs text-foreground/75 hover:bg-foreground/5">{selected.lead.status === "won" || selected.lead.status === "lost" ? translateText("Open customer") : translateText("Open lead")}</Link>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
               <DetailMetric language={language} label="Gross value" value={money(Number(selected.lead.value || 0), language)} />
               <DetailMetric language={language} label="After listed costs" value={money(selected.netValue, language)} />
               <DetailMetric language={language} label="Priority" value={`${selected.score.priority}/100`} />
@@ -199,5 +199,5 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
 }
 
 function DetailMetric({ language, label, value }: { language: "en" | "de"; label: string; value: string }) {
-  return <div className="min-w-0 rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="break-words text-xs text-foreground/50 [overflow-wrap:anywhere]">{translateText(label, language)}</p><p className="mt-1 break-words font-semibold text-foreground [overflow-wrap:anywhere]">{value}</p></div>;
+  return <div className="min-w-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-1/70 p-3"><p className="break-words text-xs text-foreground/50 [overflow-wrap:anywhere]">{translateText(label, language)}</p><p className="mt-1 break-words font-semibold text-foreground [overflow-wrap:anywhere]">{value}</p></div>;
 }

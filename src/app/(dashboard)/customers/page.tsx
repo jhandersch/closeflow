@@ -12,6 +12,7 @@ import { notify } from "@/lib/notifications";
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase/client";
 import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type CustomerFilter = "all" | "active" | "lost" | "vip";
 type CustomerTypeFilter = "all" | "companies" | "private";
@@ -78,6 +79,7 @@ const formatDate = (value: string, timeZone: string) => {
 };
 
 export default function CustomersPage() {
+  const { language } = useAppPreferences();
   const { leads, loading, error, refresh } = useLeadsData({
     activityLimit: 0,
     includeCompleted: true,
@@ -627,7 +629,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          {translateText("Companies")}</button>
+          {translateText("Companies", language)}</button>
 
         <button
           onClick={() =>
@@ -641,7 +643,7 @@ export default function CustomersPage() {
               : "border-border-subtle text-foreground/80"
           }`}
         >
-          {translateText("Private Customers")}</button>
+          {translateText("Private Customers", language)}</button>
 
         <button
           onClick={() => {
@@ -793,7 +795,7 @@ export default function CustomersPage() {
               return (
                 <section key={section} className="space-y-3">
                   <h2 className="text-xl font-semibold text-foreground">
-                    {translateText(section)}
+                    {translateText(section, language)}
                   </h2>
 
                   {sectionCustomers.map((customer) => (

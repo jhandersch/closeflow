@@ -1,5 +1,6 @@
 "use client";
 import { translatePlanName, translateTeamRole, translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -28,6 +29,7 @@ type WorkspaceBundle = {
 };
 
 export default function TeamPage() {
+  const { language } = useAppPreferences();
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   const [workspaces, setWorkspaces] = useState<WorkspaceBundle[]>([]);
@@ -596,7 +598,7 @@ export default function TeamPage() {
                   />
 
                   <StatCard
-                    label={translateText("Invites")}
+                    label={translateText("Invites", language)}
                     value={String(
                       selectedWorkspace.invites.length,
                     )}
