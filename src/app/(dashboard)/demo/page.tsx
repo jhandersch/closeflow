@@ -4,13 +4,15 @@ import { translateText } from "@/lib/i18n";
 import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { loadDemoData } from "@/lib/demoData";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 export default function DemoPage() {
+    const { language } = useAppPreferences();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const startDemo = async (reload = false) => {
         setLoading(true);
         try {
-            const result = await loadDemoData({ reload });
+            const result = await loadDemoData({ reload, language });
             const warning = result.warnings?.length ? ` ${translateText("Warnings:")} ${result.warnings.map((item) => translateText(item)).join(" ")}` : "";
             setMessage(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.${warning}`);
         }

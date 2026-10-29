@@ -1,4 +1,5 @@
 import { translateText } from "@/lib/i18n";
+import type { AppLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase/client";
 type DemoSeedResponse = {
     mode: "load" | "reload";
@@ -11,6 +12,7 @@ type DemoSeedResponse = {
 };
 type LoadDemoOptions = {
     reload?: boolean;
+    language?: AppLanguage;
 };
 export async function loadDemoData(options: LoadDemoOptions = {}) {
     const { data: { session }, } = await supabase.auth.getSession();
@@ -23,7 +25,7 @@ export async function loadDemoData(options: LoadDemoOptions = {}) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ mode: options.reload ? "reload" : "load" }),
+        body: JSON.stringify({ mode: options.reload ? "reload" : "load", language: options.language }),
     });
     const payload = (await response.json().catch(() => null)) as DemoSeedResponse | {
         error?: string;

@@ -668,7 +668,7 @@ export default function LeadsPage() {
 
         </div>
 
-        <details open={language === "de"} className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+        <details className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
           <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
             {translateText("Excel import guide")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
           </summary>
@@ -886,7 +886,7 @@ export default function LeadsPage() {
                 setDemoLoading(true);
                 setDemoMessage(null);
                 try {
-                    const result = await loadDemoData({ reload: true });
+                    const result = await loadDemoData({ reload: true, language });
                     const warning = result.warnings?.length
                         ? ` ${translateText("Warnings:")} ${result.warnings.join(" ")}`
                         : "";

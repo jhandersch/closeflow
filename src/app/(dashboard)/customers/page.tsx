@@ -710,7 +710,7 @@ export default function CustomersPage() {
         ) : null}
       </div>
 
-      <details open={language === "de"} className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
+      <details className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
         <summary className="cursor-pointer list-none text-sm font-semibold text-foreground marker:hidden">
           {translateText("Excel import guide")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
         </summary>

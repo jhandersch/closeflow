@@ -113,24 +113,22 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    let body: { mode?: unknown; language?: unknown } = {};
+    try {
+        body = await request.json();
+    }
+    catch {
+        body = {};
+    }
     const { data: profile } = await supabase.from("profiles").select("language").eq("id", user.id).maybeSingle();
-    const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
+    const language = normalizeLanguage(body.language ?? profile?.language ?? user.user_metadata?.language);
     const localizedDemoLeads = language === "de" ? germanDemoLeads : demoLeads;
     const demoError = (detail: unknown, status = 500) => {
         console.error("Demo seed failed", detail);
         return NextResponse.json({ error: translateText("Could not load demo data.", language) }, { status });
     };
     const warnings: string[] = [];
-    let mode: "load" | "reload" = "load";
-    try {
-        const body = await request.json();
-        if (body?.mode === "reload") {
-            mode = "reload";
-        }
-    }
-    catch {
-        mode = "load";
-    }
+    const mode: "load" | "reload" = body.mode === "reload" ? "reload" : "load";
     let workspaceId: string | null = null;
     try {
         const { workspace } = await loadWorkspaceForUser(supabase, user.id);

@@ -177,7 +177,7 @@ export default function DashboardPage() {
                                 onClick={async () => {
                                     setDemoLoading(true);
                                     try {
-                                        const result = await loadDemoData({ reload: true });
+                                        const result = await loadDemoData({ reload: true, language });
                                         notify.info(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.`, { id: "dashboard-demo-data-loaded" });
                                         if (result.warnings?.length) notify.warning(`${translateText("Warnings:")} ${result.warnings.join(" ")}`, { id: "dashboard-demo-load-warning" });
                                         await refresh();
