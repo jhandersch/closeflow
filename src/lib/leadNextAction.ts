@@ -57,9 +57,9 @@ export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: str
 export function translateLeadNextAction(action: string) {
   const trimmed = action.trim();
   const followUp = /^Follow up:\s*(.+)$/i.exec(trimmed);
-  if (followUp) return `${translateText("Follow up:")} ${translateText(followUp[1])}`;
+  if (followUp) return `${translateText("Follow up:")} ${followUp[1]}`;
   const proposal = /^Follow up proposal:\s*(.+)$/i.exec(trimmed);
-  if (proposal) return `${translateText("Follow up proposal:")} ${translateText(proposal[1])}`;
+  if (proposal) return `${translateText("Follow up proposal:")} ${proposal[1]}`;
   return translateText(trimmed);
 }
 

@@ -533,7 +533,7 @@ export default function CustomerDetailPage() {
                     isVip: editIsVip,
                 });
 
-                notify.success("Customer saved", {
+                notify.success(translateText("Customer saved"), {
                     id: "customer-saved",
                 });
 

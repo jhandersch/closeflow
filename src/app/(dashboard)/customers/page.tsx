@@ -329,7 +329,7 @@ export default function CustomersPage() {
         return next;
       });
 
-      notify.success("Customer deleted", {
+      notify.success(translateText("Customer deleted"), {
         id: "customer-deleted",
       });
     } catch (deleteError) {
@@ -720,7 +720,7 @@ export default function CustomersPage() {
         </summary>
         <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
           <Image
-            src="/customer-import-guide.png"
+            src={language === "de" ? "/customer-import-guide-de.png" : "/customer-import-guide.png"}
             alt={translateText("Spreadsheet template with contact, company, and revenue columns. Contact is required; company and revenue are optional.")}
             width={1200}
             height={720}
@@ -728,7 +728,7 @@ export default function CustomersPage() {
             unoptimized
           />
         </div>
-        <a href="/customer-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
+        <a href={language === "de" ? "/customer-import-guide-de.png" : "/customer-import-guide.png"} download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
           {translateText("Download PNG guide")}</a>
       </details>
 

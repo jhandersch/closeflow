@@ -468,7 +468,7 @@ export default function AIAssistantPage() {
               onClick={() =>
                 void runCopilot(
                   "pipeline-analysis",
-                  "Analyze my pipeline and tell me what to focus on today."
+                  translateText("Analyze my pipeline and tell me what to focus on today.")
                 )
               }
               disabled={running}
@@ -480,7 +480,7 @@ export default function AIAssistantPage() {
               onClick={() =>
                 void runCopilot(
                   "sales-coach",
-                  "How should I negotiate this deal?"
+                  translateText("How should I negotiate this deal?")
                 )
               }
               disabled={
@@ -494,7 +494,7 @@ export default function AIAssistantPage() {
               onClick={() =>
                 void runCopilot(
                   "email-generator",
-                  "Write a follow-up email I can send now."
+                  translateText("Write a follow-up email I can send now.")
                 )
               }
               disabled={
@@ -508,7 +508,7 @@ export default function AIAssistantPage() {
               onClick={() =>
                 void runCopilot(
                   "risk-detection",
-                  "Which deals are dying and why?"
+                  translateText("Which deals are dying and why?")
                 )
               }
               disabled={running}
@@ -520,7 +520,7 @@ export default function AIAssistantPage() {
               onClick={() =>
                 void runCopilot(
                   "pipeline-analysis",
-                  "Will I hit my revenue target this month?"
+                  translateText("Will I hit my revenue target this month?")
                 )
               }
               disabled={running}

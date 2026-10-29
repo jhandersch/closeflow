@@ -3,6 +3,7 @@ import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { normalizeLanguage } from "@/lib/i18n";
 
 const rolePattern = /^(owner|admin|member|viewer)$/i;
 
@@ -137,6 +138,7 @@ export async function POST(request: Request) {
       to: email,
       inviteUrl,
       workspaceName: "CloseFlow",
+      language: normalizeLanguage(user.user_metadata?.language),
     });
   } catch (emailError) {
     console.error("INVITE EMAIL ERROR:", emailError);

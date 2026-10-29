@@ -63,16 +63,16 @@ export default function SearchResults({ leads, customers, tasks, pages, selected
         pr-1
       ">
 
-      {renderGroup("Active Leads", leads, Users)}
+      {renderGroup(translateText("Active Leads"), leads, Users)}
 
 
-      {renderGroup("Customers", customers, Users)}
+      {renderGroup(translateText("Customers"), customers, Users)}
 
 
-      {renderGroup("Tasks", tasks, ListTodo)}
+      {renderGroup(translateText("Tasks"), tasks, ListTodo)}
 
 
-      {renderGroup("Pages", pages, FileText)}
+      {renderGroup(translateText("Pages"), pages, FileText)}
 
 
       {leads.length === 0 &&

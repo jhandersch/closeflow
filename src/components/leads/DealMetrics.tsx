@@ -52,7 +52,7 @@ export default function DealMetrics({
 
         <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-foreground/55">
-            Status</p>
+            {translateText("Status", language)}</p>
 
           <p className="mt-3 text-2xl font-bold text-cyan-400">
             {healthScore}/100

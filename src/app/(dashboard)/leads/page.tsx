@@ -1,6 +1,7 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
 import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 import { readApiError } from "@/lib/apiError";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -177,6 +178,7 @@ const formatDateTime = (
 };
 
 export default function LeadsPage() {
+    const { language } = useAppPreferences();
     const { leads, setLeads, loading, refreshing, error, refresh } =
     useLeadsData({ activityLimit: 0 });
     const { readOnly } = usePermissions();
@@ -668,7 +670,7 @@ export default function LeadsPage() {
             </summary>
             <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
               <Image
-                src="/lead-import-guide.png"
+                src={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"}
                 alt={translateText("Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format.")}
                 width={1600}
                 height={900}
@@ -676,7 +678,7 @@ export default function LeadsPage() {
                 unoptimized
               />
             </div>
-            <a href="/lead-import-guide.png" download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
+            <a href={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"} download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
               {translateText("Download PNG guide")}</a>
           </details>
           
@@ -1143,7 +1145,7 @@ export default function LeadsPage() {
                     {/* HEALTH */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        Status</p>
+                        {translateText("Status")}</p>
 
                       <div className="mt-1">
                         <HealthRing value={health}/>

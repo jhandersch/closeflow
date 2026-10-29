@@ -1,5 +1,6 @@
 ﻿"use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 
 type Props = {
@@ -34,6 +35,7 @@ export default function RevenueForecast({
   nextActionCoverage,
 }: Props) {
   const locale = getIntlLocale();
+  const { language } = useAppPreferences();
 
   return (
     <section
@@ -167,7 +169,7 @@ export default function RevenueForecast({
         <InsightCard
           title={translateText("Active Deals")}
           value={String(activeDeals)}
-          subtitle="Open opportunities"
+          subtitle={translateText("Open opportunities")}
         />
 
         <InsightCard
@@ -175,10 +177,10 @@ export default function RevenueForecast({
           value={`${singleDealRisk}%`}
           subtitle={
             singleDealRisk > 50
-              ? "High concentration risk"
+              ? translateText("High concentration risk")
               : singleDealRisk >= 30
-                ? "Watch concentration"
-                : "Healthy distribution"
+                ? translateText("Watch concentration")
+                : translateText("Healthy distribution")
           }
           risk={singleDealRisk}
         />
@@ -186,7 +188,9 @@ export default function RevenueForecast({
         <InsightCard
           title={translateText("Next Action Coverage")}
           value={`${nextActionCoverage}%`}
-          subtitle={`${dealsWithNextAction} of ${activeDeals} active deals have a next action`}
+          subtitle={language === "de"
+            ? `${dealsWithNextAction} von ${activeDeals} aktiven Abschlüssen haben eine nächste Maßnahme`
+            : `${dealsWithNextAction} of ${activeDeals} active deals have a next action`}
           risk={100 - nextActionCoverage}
         />
 

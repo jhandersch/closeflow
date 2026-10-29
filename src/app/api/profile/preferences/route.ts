@@ -18,7 +18,9 @@ export async function PATCH(request: Request) {
   const phone =
     typeof body.phone === "string"
       ? body.phone.trim()
-      : "";
+      : typeof user.user_metadata?.phone === "string"
+        ? user.user_metadata.phone
+        : "";
 
   const timezone =
     typeof body.timezone === "string" &&

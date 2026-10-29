@@ -60,11 +60,11 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const handleSave = async () => {
         const dealValue = Number(value);
         if (!name.trim()) {
-            notify.error("Name required");
+            notify.error(translateText("Name required"));
             return;
         }
         if (Number.isNaN(dealValue)) {
-            notify.error("Invalid value");
+            notify.error(translateText("Invalid value"));
             return;
         }
         setSaving(true);
@@ -105,13 +105,13 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
                     : "");
             }
             await onSaved(displayedLead);
-            notify.success("Lead saved", {
+            notify.success(translateText("Lead saved"), {
                 id: "lead-saved",
                 })
         }
         catch (error) {
             console.error(error);
-            notify.error("Save failed");
+            notify.error(translateText("Save failed"));
         }
         finally {
             setSaving(false);
