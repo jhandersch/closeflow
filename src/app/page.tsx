@@ -63,20 +63,22 @@ export default function HomePage() {
       </div>
 
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
-        <Link href="/" className="flex items-center" aria-label={translateText("CloseFlow home")}>
-          <Logo size={36} />
-        </Link>
+        <div className="flex flex-col items-start gap-2">
+          <Link href="/" className="flex items-center" aria-label={translateText("CloseFlow home")}>
+            <Logo size={36} />
+          </Link>
+          <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
+          <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-cyan-400">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+        </div>
         <nav aria-label={translateText("Main navigation")} className="hidden items-center gap-7 text-sm text-foreground/60 md:flex">
           <a href="#platform" className="transition hover:text-foreground">{translateText("Platform")}</a>
           <a href="#how-it-works" className="transition hover:text-foreground">{translateText("How it works")}</a>
           <Link href="/pricing" className="transition hover:text-foreground">{translateText("Pricing")}</Link>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
-          <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
-          <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2 text-sm text-foreground outline-none focus:border-cyan-400">
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-          </select>
           <Link href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/70 transition hover:text-foreground">{translateText("Log in")}</Link>
           <Link href="/login?mode=signup" className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">{translateText("Start free")}{" "}<ArrowRight className="ml-1 inline h-4 w-4" /></Link>
         </div>
