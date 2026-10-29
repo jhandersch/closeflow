@@ -8,6 +8,7 @@ type DemoLeadSeed = {
     status: "new" | "contacted" | "proposal" | "won" | "lost";
     value: number;
     notes: string;
+    nextAction: string;
     activities: Array<{
         action: string;
         type?: string;
@@ -26,6 +27,7 @@ const demoLeads: DemoLeadSeed[] = [
         status: "proposal",
         value: 18500,
         notes: "Executive sponsor requested a follow-up before Friday.",
+        nextAction: "Confirm the proposal approval with the revenue lead by Friday",
         activities: [
             { action: "Demo completed with VP of Revenue", type: "ai" },
             { action: "Proposal sent and awaiting sign-off", type: "note_added" },
@@ -41,6 +43,7 @@ const demoLeads: DemoLeadSeed[] = [
         status: "contacted",
         value: 9200,
         notes: "Interested in automation and forecasting.",
+        nextAction: "Prepare an automation savings estimate for the solution workshop",
         activities: [
             { action: "Discovery call completed", type: "created" },
             { action: "Shared pricing overview", type: "note_added" },
@@ -56,6 +59,7 @@ const demoLeads: DemoLeadSeed[] = [
         status: "new",
         value: 6400,
         notes: "New inbound inquiry from PLG team.",
+        nextAction: "Clarify the product team's requirements in an initial call",
         activities: [
             { action: "Inbound lead captured via website", type: "created" },
             { action: "Sent welcome email", type: "email_sent" },
@@ -70,6 +74,7 @@ const demoLeads: DemoLeadSeed[] = [
         status: "won",
         value: 24300,
         notes: "Signed contract and onboarding started.",
+        nextAction: "Coordinate the next onboarding milestone with the project team",
         activities: [
             { action: "Signed contract", type: "status_changed" },
             { action: "Onboarding kickoff completed", type: "ai" },
@@ -84,6 +89,7 @@ const demoLeads: DemoLeadSeed[] = [
         status: "contacted",
         value: 11100,
         notes: "Asked for expanded trial for three teams.",
+        nextAction: "Send the expanded trial terms for all three teams",
         activities: [
             { action: "Follow-up call booked", type: "call_completed" },
             { action: "Product tour delivered", type: "ai" },
@@ -95,11 +101,11 @@ const demoLeads: DemoLeadSeed[] = [
     },
 ];
 const germanDemoLeads: DemoLeadSeed[] = [
-    { name: "Maya Chen", company: "Nordstern Labs", status: "proposal", value: 18500, notes: "Die Geschäftsführung bittet um Rückmeldung bis Freitag.", activities: [{ action: "Produktvorführung mit der Vertriebsleitung abgeschlossen", type: "ai" }, { action: "Angebot versendet; Freigabe steht noch aus", type: "note_added" }], tasks: [{ title: "Bis Freitag bei der Vertriebsleitung nachfassen", priority: "high", dueInDays: 2 }, { title: "Überarbeitetes Angebot vorbereiten", priority: "medium", dueInDays: 4 }] },
-    { name: "Darius Bell", company: "Helio Cloud", status: "contacted", value: 9200, notes: "Interessiert an Automatisierung und Umsatzprognosen.", activities: [{ action: "Erstgespräch abgeschlossen", type: "created" }, { action: "Preisübersicht geteilt", type: "note_added" }], tasks: [{ title: "Übersicht zum möglichen Einsparpotenzial senden", priority: "medium", dueInDays: 1 }, { title: "Lösungsworkshop vereinbaren", priority: "high", dueInDays: 3 }] },
-    { name: "Nina Alvarez", company: "Foundry KI", status: "new", value: 6400, notes: "Neue Anfrage über das Webformular des Produktteams.", activities: [{ action: "Neue Anfrage über die Website erfasst", type: "created" }, { action: "Begrüßungs-E-Mail gesendet", type: "email_sent" }], tasks: [{ title: "Anforderungen der Anfrage klären", priority: "medium", dueInDays: 2 }] },
-    { name: "Marcus Reed", company: "Crestline Gesundheit", status: "won", value: 24300, notes: "Vertrag unterzeichnet; die Einführung hat begonnen.", activities: [{ action: "Vertrag unterzeichnet", type: "status_changed" }, { action: "Auftakt zur Einführung abgeschlossen", type: "ai" }], tasks: [{ title: "Checkliste für die Einführung zusammenstellen", priority: "low", dueInDays: 5 }] },
-    { name: "Sofia Patel", company: "Lumen Technik", status: "contacted", value: 11100, notes: "Wünscht eine erweiterte Testphase für drei Teams.", activities: [{ action: "Rückruf vereinbart", type: "call_completed" }, { action: "Produktvorführung durchgeführt", type: "ai" }], tasks: [{ title: "Bedingungen für die erweiterte Testphase senden", priority: "high", dueInDays: 2 }, { title: "Zeitplan für die Beschaffung erfragen", priority: "medium", dueInDays: 4 }] },
+    { name: "Anna Schuster", company: "Nordstern Vertriebsdaten GmbH", status: "proposal", value: 18500, notes: "Die Geschäftsführung bittet um Rückmeldung bis Freitag.", nextAction: "Bis Freitag die Freigabe des Angebots mit der Vertriebsleitung klären", activities: [{ action: "Produktvorführung mit der Vertriebsleitung abgeschlossen", type: "ai" }, { action: "Angebot versendet; Freigabe steht noch aus", type: "note_added" }], tasks: [{ title: "Freigabe des Angebots bis Freitag bei der Vertriebsleitung klären", priority: "high", dueInDays: 2 }, { title: "Überarbeitetes Angebot für die Geschäftsführung vorbereiten", priority: "medium", dueInDays: 4 }] },
+    { name: "Tobias Weber", company: "Sonnenkern Datenlösungen GmbH", status: "contacted", value: 9200, notes: "Interessiert an Automatisierung und Umsatzprognosen.", nextAction: "Einsparpotenzial durch Automatisierung für den Lösungsworkshop berechnen", activities: [{ action: "Erstgespräch abgeschlossen", type: "created" }, { action: "Preisübersicht geteilt", type: "note_added" }], tasks: [{ title: "Einsparpotenzial durch Automatisierung berechnen", priority: "medium", dueInDays: 1 }, { title: "Lösungsworkshop zu Automatisierung und Umsatzprognosen vereinbaren", priority: "high", dueInDays: 3 }] },
+    { name: "Nina Fischer", company: "Formwerk KI GmbH", status: "new", value: 6400, notes: "Neue Anfrage über das Webformular des Produktteams.", nextAction: "Im Erstgespräch die Anforderungen des Produktteams klären", activities: [{ action: "Neue Anfrage über die Website erfasst", type: "created" }, { action: "Begrüßungs-E-Mail gesendet", type: "email_sent" }], tasks: [{ title: "Anforderungen des Produktteams im Erstgespräch klären", priority: "medium", dueInDays: 2 }] },
+    { name: "Markus Bauer", company: "Gesundheitsnetz Mitte GmbH", status: "won", value: 24300, notes: "Vertrag unterzeichnet; die Einführung hat begonnen.", nextAction: "Den nächsten Einführungsschritt mit dem Projektteam abstimmen", activities: [{ action: "Vertrag unterzeichnet", type: "status_changed" }, { action: "Auftakt zur Einführung abgeschlossen", type: "ai" }], tasks: [{ title: "Nächsten Schritt der Einführung mit dem Projektteam abstimmen", priority: "low", dueInDays: 5 }] },
+    { name: "Sophie Lehmann", company: "Lichtwerk Systemtechnik GmbH", status: "contacted", value: 11100, notes: "Wünscht eine erweiterte Testphase für drei Teams.", nextAction: "Die Bedingungen der erweiterten Testphase für alle drei Teams senden", activities: [{ action: "Rückruf vereinbart", type: "call_completed" }, { action: "Produktvorführung durchgeführt", type: "ai" }], tasks: [{ title: "Bedingungen der erweiterten Testphase für drei Teams senden", priority: "high", dueInDays: 2 }, { title: "Beschaffungszeitplan der drei Teams erfragen", priority: "medium", dueInDays: 4 }] },
 ];
 const isMissingSchemaError = (message: string) => /column .* does not exist|relation .* does not exist|schema cache/i.test(message);
 export async function POST(request: Request) {
@@ -145,9 +151,9 @@ export async function POST(request: Request) {
         return demoError(existingDemoLeadsResult.error);
     }
     const existingDemoLeads = existingDemoLeadsResult.data || [];
-    const existingDemoDataUsesAnotherLanguage = existingDemoLeads.some((existingLead) => {
+    const existingDemoDataUsesAnotherLanguage = existingDemoLeads.length !== localizedDemoLeads.length || existingDemoLeads.some((existingLead) => {
         const expectedLead = localizedDemoLeads.find((lead) => lead.name === existingLead.name);
-        return expectedLead && expectedLead.company !== existingLead.company;
+        return !expectedLead || expectedLead.company !== existingLead.company;
     });
     if (mode === "load" && existingDemoLeads.length > 0 && !existingDemoDataUsesAnotherLanguage) {
         return NextResponse.json({
@@ -204,7 +210,7 @@ export async function POST(request: Request) {
             company: leadSeed.company,
             status: leadSeed.status,
             value: leadSeed.value,
-            next_action: firstTask?.title || null,
+            next_action: leadSeed.nextAction,
             next_action_date: firstTask
                 ? new Date(Date.now() + firstTask.dueInDays * 24 * 60 * 60 * 1000).toISOString()
                 : null,
