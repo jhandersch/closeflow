@@ -139,7 +139,7 @@ export async function POST(request: Request) {
     }
     const existingDemoLeadsResult = await supabase
         .from("leads")
-        .select("id")
+        .select("id,name,company")
         .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
         .is("deleted_at", null)
         .ilike("notes", `${DEMO_MARKER}%`);
@@ -147,7 +147,11 @@ export async function POST(request: Request) {
         return demoError(existingDemoLeadsResult.error);
     }
     const existingDemoLeads = existingDemoLeadsResult.data || [];
-    if (mode === "load" && existingDemoLeads.length > 0) {
+    const existingDemoDataUsesAnotherLanguage = existingDemoLeads.some((existingLead) => {
+        const expectedLead = localizedDemoLeads.find((lead) => lead.name === existingLead.name);
+        return expectedLead && expectedLead.company !== existingLead.company;
+    });
+    if (mode === "load" && existingDemoLeads.length > 0 && !existingDemoDataUsesAnotherLanguage) {
         return NextResponse.json({
             mode,
             inserted_leads: 0,
@@ -158,7 +162,7 @@ export async function POST(request: Request) {
             warnings,
         });
     }
-    if (mode === "reload" && existingDemoLeads.length > 0) {
+    if ((mode === "reload" || existingDemoDataUsesAnotherLanguage) && existingDemoLeads.length > 0) {
         const leadIds = existingDemoLeads.map((lead) => lead.id);
         const deleteActivities = await supabase.from("activities").delete().in("lead_id", leadIds);
         if (deleteActivities.error && !isMissingSchemaError(deleteActivities.error.message || "")) {
