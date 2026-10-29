@@ -40,11 +40,11 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     const hasHighValue = highValueDeals > 0;
     if (activeLeads.length === 0) {
         return {
-            headline: isGerman ? "Keine aktiven Verkaufschancen." : "No active opportunities.",
-            detail: isGerman ? "Deine Pipeline enthält derzeit keine offenen Abschlüsse. Konzentriere dich auf neue Verkaufschancen." : "Your pipeline currently has no open deals. Focus on creating new opportunities.",
+            headline: isGerman ? "Keine aktiven Leads." : "No active opportunities.",
+            detail: isGerman ? "Deine Pipeline enthält derzeit keine offenen Leads. Konzentriere dich auf neue Leads." : "Your pipeline currently has no open deals. Focus on creating new opportunities.",
             actions: isGerman ? [
                 "Füge neue Leads hinzu, um die Pipeline wieder aufzubauen.",
-                "Lege klare nächste Maßnahmen für neue Verkaufschancen fest.",
+                "Lege klare nächste Maßnahmen für neue Leads fest.",
             ] : [
                 "Add new leads to rebuild the pipeline.",
                 "Define clear next actions for new opportunities.",
@@ -54,12 +54,12 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     if (hasRisk) {
         return {
-            headline: isGerman ? "Mehrere Verkaufschancen erfordern Aufmerksamkeit." : "Several opportunities need attention.",
-            detail: isGerman ? `${atRiskDeals} aktive Verkaufschance(n) weisen ein erhöhtes Risiko auf und erfordern möglicherweise eine zeitnahe Nachfassaktion.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
+            headline: isGerman ? "Mehrere Leads erfordern Aufmerksamkeit." : "Several opportunities need attention.",
+            detail: isGerman ? `${atRiskDeals} aktive ${atRiskDeals === 1 ? "Lead weist" : "Leads weisen"} ein erhöhtes Risiko auf und erfordern möglicherweise eine zeitnahe Nachfassaktion.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
             actions: isGerman ? [
-                `Prüfe die ${atRiskDeals} gefährdeten Abschlüsse.`,
-                "Lege klare nächste Maßnahmen für alle aktiven Verkaufschancen fest.",
-                "Priorisiere wertvolle Verkaufschancen, die kurz vor dem nächsten Schritt stehen.",
+                `Prüfe die ${atRiskDeals} gefährdeten Leads.`,
+                "Lege klare nächste Maßnahmen für alle aktiven Leads fest.",
+                "Priorisiere wertvolle Leads, bei denen der nächste Schritt ansteht.",
             ] : [
                 `Review ${atRiskDeals} at-risk ${atRiskDeals === 1 ? "deal" : "deals"}.`,
                 "Define clear next actions for all active opportunities.",
@@ -70,8 +70,8 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     if (hasProposals) {
         return {
-            headline: isGerman ? "Bei Verkaufschancen mit Angebot ist eine Nachfassaktion erforderlich." : "Proposal-stage opportunities need follow-up.",
-            detail: isGerman ? `${proposalLeads} aktive Verkaufschance(n) befinden sich bei einem Pipeline-Wert von ${pipeline} in der Angebotsphase. Die durchschnittliche Abschlusswahrscheinlichkeit beträgt ${forecast.averageProbability}%.` : `${proposalLeads} active ${proposalLeads === 1 ? "deal is" : "deals are"} currently in proposal stage within a €${activePipeline.toLocaleString(getIntlLocale())} active pipeline. Average close probability is ${forecast.averageProbability}%.`,
+            headline: isGerman ? "Bei Leads mit Angebot ist eine Nachfassaktion erforderlich." : "Proposal-stage opportunities need follow-up.",
+            detail: isGerman ? `${proposalLeads} aktive ${proposalLeads === 1 ? "Lead befindet sich" : "Leads befinden sich"} bei einem Pipeline-Wert von ${pipeline} in der Angebotsphase. Die durchschnittliche Abschlusswahrscheinlichkeit beträgt ${forecast.averageProbability}%.` : `${proposalLeads} active ${proposalLeads === 1 ? "deal is" : "deals are"} currently in proposal stage within a €${activePipeline.toLocaleString(getIntlLocale())} active pipeline. Average close probability is ${forecast.averageProbability}%.`,
             actions: isGerman ? [
                 `Fasse bei ${proposalLeads === 1 ? "dem Angebot" : "den Angeboten"} nach.`,
                 "Lege die nächste Maßnahme und den erwarteten Abschlussschritt fest.",
@@ -86,11 +86,11 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     if (hasHighValue) {
         return {
-            headline: isGerman ? "Wertvolle Verkaufschancen sind in der Pipeline." : "High-value opportunities are in the pipeline.",
-            detail: isGerman ? `${highValueDeals} aktive ${highValueDeals === 1 ? "Verkaufschance überschreitet" : "Verkaufschancen überschreiten"} 5.000 € und sollten gezielt nachverfolgt werden.` : `${highValueDeals} active ${highValueDeals === 1 ? "deal exceeds" : "deals exceed"} €5,000 and should receive focused follow-up.`,
+            headline: isGerman ? "Wertvolle Leads sind in der Pipeline." : "High-value opportunities are in the pipeline.",
+            detail: isGerman ? `${highValueDeals} aktive ${highValueDeals === 1 ? "Lead überschreitet" : "Leads überschreiten"} 5.000 € und sollten gezielt nachverfolgt werden.` : `${highValueDeals} active ${highValueDeals === 1 ? "deal exceeds" : "deals exceed"} €5,000 and should receive focused follow-up.`,
             actions: isGerman ? [
-                "Priorisiere die wertvollsten aktiven Verkaufschancen.",
-                "Lege für jede priorisierte Verkaufschance konkrete nächste Maßnahmen fest.",
+                "Priorisiere die wertvollsten aktiven Leads.",
+                "Lege für jeden priorisierten Lead konkrete nächste Maßnahmen fest.",
             ] : [
                 "Prioritize the highest-value active opportunities.",
                 "Define concrete next actions for each priority deal.",
@@ -100,11 +100,11 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     return {
         headline: isGerman ? "Die Pipeline entwickelt sich stabil." : "Pipeline momentum is steady.",
-        detail: isGerman ? `Deine Pipeline umfasst ${forecast.activeDeals} aktive Abschlüsse im Wert von ${pipeline}, bei einem durchschnittlichen Status von ${forecast.averageHealth}% und einer Abschlusswahrscheinlichkeit von ${forecast.averageProbability}%.` : `Your active pipeline contains ${forecast.activeDeals} ${forecast.activeDeals === 1
+        detail: isGerman ? `Deine Pipeline umfasst ${forecast.activeDeals} aktive Leads im Wert von ${pipeline}, bei einem durchschnittlichen Status von ${forecast.averageHealth}% und einer Abschlusswahrscheinlichkeit von ${forecast.averageProbability}%.` : `Your active pipeline contains ${forecast.activeDeals} ${forecast.activeDeals === 1
             ? "opportunity"
             : "opportunities"} worth €${activePipeline.toLocaleString(getIntlLocale())}, with ${forecast.averageHealth}% average health and ${forecast.averageProbability}% average close probability.`,
         actions: isGerman ? [
-            "Führe aktive Verkaufschancen zur nächsten Phase.",
+            "Führe aktive Leads zur nächsten Phase.",
             "Lege klare nächste Maßnahmen fest, um Inaktivität zu vermeiden.",
         ] : [
             "Keep active opportunities moving to the next stage.",

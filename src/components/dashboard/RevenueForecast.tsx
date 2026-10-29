@@ -189,7 +189,7 @@ export default function RevenueForecast({
           title={translateText("Next Action Coverage")}
           value={`${nextActionCoverage}%`}
           subtitle={language === "de"
-            ? `${dealsWithNextAction} von ${activeDeals} aktiven Abschlüssen haben eine nächste Maßnahme`
+            ? `${dealsWithNextAction} von ${activeDeals} aktiven Leads haben eine nächste Maßnahme`
             : `${dealsWithNextAction} of ${activeDeals} active deals have a next action`}
           risk={100 - nextActionCoverage}
         />

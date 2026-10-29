@@ -551,13 +551,18 @@ export default function CustomerDetailPage() {
             }
         };
 
+    if (loading) {
+        return (
+            <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8">
+                {translateText("Loading...")}
+            </div>
+        );
+    }
+
     return (
         <div className="mx-auto max-w-6xl space-y-6">
             <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                    <p className="text-sm uppercase tracking-[0.24em] text-cyan-400">
-                        {translateText("Customer")}</p>
-
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                         <h1 className="truncate text-3xl font-bold tracking-tight text-foreground">
                             {customer?.company ||
@@ -616,10 +621,7 @@ export default function CustomerDetailPage() {
                 </div>
             ) : null}
 
-            {loading ? (
-                <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground">
-                    {translateText("Loading customer...")}</div>
-            ) : !customer ? (
+            {!customer ? (
                 <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 text-foreground/65">
                     {translateText("Customer not found.")}</div>
             ) : (

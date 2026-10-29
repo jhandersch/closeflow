@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatEuro, translateText } from "@/lib/i18n";
 
 
 import React from "react";
@@ -28,7 +28,7 @@ const comparisonRows = [
             { label: "Automations", values: { free: true, pro: true, business: true } },
             { label: "Lead and customer next actions", values: { free: true, pro: true, business: true } },
             { label: "Activity history", values: { free: "All available activity", pro: "All available activity", business: "All available activity" } },
-            { label: "Personal deal costs", values: { free: "Included", pro: "Included", business: "Included" } },
+            { label: "Personal lead costs", values: { free: "Included", pro: "Included", business: "Included" } },
         ],
     },
     {
@@ -41,7 +41,7 @@ const comparisonRows = [
             { label: "Risk Detection", values: { free: true, pro: true, business: true } },
             { label: "Email Generator", values: { free: true, pro: true, business: true  } },
             { label: "Revenue Forecast AI", values: { free: true, pro: true, business: true } },
-            { label: "Deal-cost-aware recommendations", values: { free: true, pro: true, business: true } },
+            { label: "Lead-cost-aware recommendations", values: { free: true, pro: true, business: true } },
         ],
     },
     {
@@ -59,7 +59,7 @@ const comparisonRows = [
             { label: "Pipeline forecasting", values: { free: true, pro: true, business: true } },
             { label: "Revenue forecasting", values: { free: true, pro: true, business: true } },
             { label: "Conservative, expected, and optimistic scenarios", values: { free: true, pro: true, business: true } },
-            { label: "Deal concentration and pipeline risk", values: { free: true, pro: true, business: true } },
+            { label: "Lead concentration and pipeline risk", values: { free: true, pro: true, business: true } },
         ],
     },
     {
@@ -167,13 +167,8 @@ export default function PlanDetailsModal({
                                                 </div>
 
                                                 <p className="mt-2 text-xl font-bold text-foreground">
-                                                    {
-                                                        planDetails[
-                                                            currentPlan
-                                                        ].price
-                                                    }
-                                                    {currentPlan !== "free" &&
-                                                        translateText("per workspace")}
+                                                    {formatEuro(Number(planDetails[currentPlan].price.match(/\d+(?:\.\d+)?/)?.[0] ?? 0), undefined, { maximumFractionDigits: 0 })}
+                                                    {currentPlan !== "free" && ` ${translateText("/ month per workspace")}`}
                                                 </p>
 
                                                 <p className="mt-1 text-xs font-normal text-foreground/45">

@@ -32,9 +32,9 @@ export const planDetails: Record<Plan, PlanInfo> = {
         features: ["One owned workspace", "Up to 50 active leads", "10 AI requests per month", "5 exports per month", "1 team member", "Lead analytics and six-month revenue history", "Scenario-based forecasts and cost-aware AI insights"],
         benefits: [
             "Manage leads and customers in one organized workspace.",
-            "Track deals with pipeline stages, tasks, calendar events, and next actions.",
+            "Track leads with pipeline stages, tasks, calendar events, and next actions.",
             "Review lead-level analytics and a six-month revenue history.",
-            "Use scenario-based revenue forecasts and AI deal insights, including your recorded deal costs.",
+            "Use scenario-based revenue forecasts and AI lead insights, including your recorded costs per lead.",
             "Import lead and customer records, then export workspace data within your monthly allowance.",
         ],
     },
@@ -52,7 +52,7 @@ export const planDetails: Record<Plan, PlanInfo> = {
             "Share your workspace with up to five team members.",
             "Run up to 500 AI requests and 200 exports each month.",
             "Use the full lead analytics, six-month revenue history, and scenario-based forecasting tools.",
-            "Give AI your recorded deal costs for more realistic profitability and prioritization insights.",
+            "Give AI the recorded costs per lead for more realistic profitability and prioritization insights.",
         ],
     },
     business: {
@@ -68,7 +68,7 @@ export const planDetails: Record<Plan, PlanInfo> = {
             "Own up to five workspaces; each workspace has its own plan and billing.",
             "Run up to 5,000 AI requests and 2,000 exports each month.",
             "Keep larger teams aligned with shared pipeline, activities, tasks, and customer next actions.",
-            "Use the same complete analytics, revenue forecasting, and deal-cost-aware AI tools at higher volume.",
+            "Use the same complete analytics, revenue forecasting, and lead-cost-aware AI tools at higher volume.",
         ],
     },
 };

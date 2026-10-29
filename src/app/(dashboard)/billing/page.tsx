@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translatePlanName, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translatePlanName, translateText  } from "@/lib/i18n";
 
 
 import { useCallback, useEffect, useState } from "react";
@@ -564,7 +564,7 @@ export default function BillingPage() {
                                                     </h2>
 
                                                     <p className="mt-2 text-3xl font-bold text-foreground">
-                                                        {plan.price.replace(/\/month$/, "")}
+                                                        {formatEuro(Number(plan.price.match(/\d+(?:\.\d+)?/)?.[0] ?? 0), undefined, { maximumFractionDigits: 0 })}
 
                                                         {!isFree && (
                                                             <span className="text-sm font-normal text-foreground/50">
