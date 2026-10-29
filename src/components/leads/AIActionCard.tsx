@@ -1,14 +1,16 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type Props = {
     leadId: string;
     action: string;
     description: string;
 };
 export default function AIActionCard({ leadId, action, description, }: Props) {
+    const { language } = useAppPreferences();
     const [done, setDone] = useState(false);
     const [loading, setLoading] = useState(false);
     const completeAction = async () => {
@@ -53,12 +55,12 @@ export default function AIActionCard({ leadId, action, description, }: Props) {
 
 
       <h3 className="mt-2 text-xl font-bold text-foreground">
-        {action}
+        {formatTextForLanguage(action, language)}
       </h3>
 
 
       <p className="mt-2 text-sm text-foreground/65">
-        {description}
+        {formatTextForLanguage(description, language)}
       </p>
 
 

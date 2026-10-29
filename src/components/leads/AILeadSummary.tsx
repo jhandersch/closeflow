@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 import { translateLeadNextAction } from "@/lib/leadNextAction";
 
 import { toDisplayMessage } from "@/lib/apiError";
@@ -123,7 +123,9 @@ export default function AILeadSummary({
     }
 
     try {
-      await copyTextToClipboard(`${followUp.subject}\n\n${followUp.email}`);
+      await copyTextToClipboard(
+        `${formatTextForLanguage(followUp.subject, language)}\n\n${formatTextForLanguage(followUp.email, language)}`,
+      );
       setFollowCopied(true);
     } catch {
       toast.error(translateText("Could not copy the email. Please copy it manually."));
@@ -173,7 +175,7 @@ export default function AILeadSummary({
       <div className="mt-5 rounded-xl border border-border-subtle bg-surface-2/60 p-4">
         {analysis ? (
           <p className="whitespace-pre-line text-sm leading-7 text-foreground/80">
-            {analysis}
+            {formatTextForLanguage(analysis, language)}
           </p>
         ) : (
           <p className="text-sm text-foreground/50">
@@ -188,7 +190,7 @@ export default function AILeadSummary({
               {translateText("Follow-up draft")}</p>
 
             <h3 className="mt-2 text-base font-semibold text-foreground">
-              {followUp.subject}
+              {formatTextForLanguage(followUp.subject, language)}
             </h3>
           </div>
 
@@ -196,19 +198,19 @@ export default function AILeadSummary({
             <p>
               <span className="font-semibold text-foreground">
                 {translateText("Reason:")}</span>{" "}
-              {followUp.reason}
+              {formatTextForLanguage(followUp.reason, language)}
             </p>
 
             <p>
               <span className="font-semibold text-foreground">
                 {translateText("Next action:")}</span>{" "}
-              {translateLeadNextAction(followUp.next_action)}
+              {formatTextForLanguage(translateLeadNextAction(followUp.next_action), language)}
             </p>
           </div>
 
           <textarea
             readOnly
-            value={followUp.email}
+            value={formatTextForLanguage(followUp.email, language)}
             className="h-48 w-full rounded-xl border border-border-subtle bg-surface-1 p-4 text-sm leading-7 text-foreground"
           />
 

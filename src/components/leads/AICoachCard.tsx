@@ -1,4 +1,7 @@
-import { translateText } from "@/lib/i18n";
+"use client";
+
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type AICoach = {
     title: string;
     message: string;
@@ -9,6 +12,7 @@ type AICoach = {
 export default function AICoachCard({ aiCoach, }: {
     aiCoach: AICoach;
 }) {
+    const { language } = useAppPreferences();
     return (<div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent p-6">
 
       <div className="flex items-start gap-4">
@@ -22,17 +26,17 @@ export default function AICoachCard({ aiCoach, }: {
             {translateText("AI Coach")}</p>
 
           <h2 className="mt-2 text-2xl font-bold text-foreground">
-            {aiCoach.title}
+            {formatTextForLanguage(aiCoach.title, language)}
           </h2>
 
           <p className="mt-3 text-foreground/80">
-            {aiCoach.message}
+            {formatTextForLanguage(aiCoach.message, language)}
           </p>
 
 
           <div className="mt-4 space-y-2">
             {aiCoach.reasons.map((reason) => (<div key={reason} className="rounded-xl border border-border-subtle bg-surface-2/70 px-4 py-2 text-sm text-foreground/80">
-                {reason}
+                {formatTextForLanguage(reason, language)}
               </div>))}
           </div>
 
@@ -44,7 +48,7 @@ export default function AICoachCard({ aiCoach, }: {
                 {translateText("Recommended action")}</p>
 
               <p className="mt-1 font-semibold text-foreground">
-                {aiCoach.action}
+                {formatTextForLanguage(aiCoach.action, language)}
               </p>
             </div>
 

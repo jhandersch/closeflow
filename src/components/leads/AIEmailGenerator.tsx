@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -59,7 +59,7 @@ export default function AIEmailGenerator({ lead }: Props) {
         </label>
       </div>
 
-      {subject ? <p className="mt-4 font-semibold text-foreground">{subject}</p> : null}
-      {body ? <textarea readOnly value={body} className="mt-3 h-48 w-full rounded-xl border border-border-subtle bg-surface-2 p-4 text-sm text-foreground"/> : null}
+      {subject ? <p className="mt-4 font-semibold text-foreground">{formatTextForLanguage(subject, language)}</p> : null}
+      {body ? <textarea readOnly value={formatTextForLanguage(body, language)} className="mt-3 h-48 w-full rounded-xl border border-border-subtle bg-surface-2 p-4 text-sm text-foreground"/> : null}
     </section>);
 }

@@ -87,8 +87,8 @@ export function AppPreferencesProvider({
     setLanguageState(savedLanguage);
     document.documentElement.setAttribute("lang", savedLanguage);
 
-    // The account profile is authoritative across devices. Local storage keeps
-    // the selected language available before this request completes.
+    // Resolve the profile language before mounting translated content to avoid
+    // rendering English loading labels before the saved language is applied.
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
@@ -100,9 +100,12 @@ export function AppPreferencesProvider({
         window.localStorage.setItem(STORAGE_KEYS.language, profileLanguage);
         document.documentElement.setAttribute("lang", profileLanguage);
       })
-      .catch(() => undefined);
-
-    setHydrated(true);
+      .catch((error: unknown) => {
+        console.error("Could not load the saved language preference.", error);
+      })
+      .finally(() => {
+        setHydrated(true);
+      });
   }, []);
 
   const setTheme = useCallback(
@@ -150,6 +153,10 @@ export function AppPreferencesProvider({
       }),
       [hydrated, language, theme, setLanguage, setTheme],
     );
+
+  if (!hydrated) {
+    return null;
+  }
 
   return (
     <AppPreferencesContext.Provider

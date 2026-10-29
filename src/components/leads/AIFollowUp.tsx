@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 
 import { useState } from "react";
@@ -55,7 +55,9 @@ export default function AIFollowUp({
     }
 
     try {
-      await copyTextToClipboard(`${mail.subject}\n\n${mail.email}`);
+      await copyTextToClipboard(
+        `${formatTextForLanguage(mail.subject, language)}\n\n${formatTextForLanguage(mail.email, language)}`,
+      );
       setCopied(true);
     } catch {
       toast.error(translateText("Could not copy the email. Please copy it manually."));
@@ -82,12 +84,12 @@ export default function AIFollowUp({
       {mail && (
         <div className="mt-5 space-y-3">
           <h3 className="font-bold text-foreground">
-            {mail.subject}
+            {formatTextForLanguage(mail.subject, language)}
           </h3>
 
           <textarea
             readOnly
-            value={mail.email}
+            value={formatTextForLanguage(mail.email, language)}
             className="h-48 w-full rounded-xl bg-surface-2 p-4 text-foreground"
           />
 

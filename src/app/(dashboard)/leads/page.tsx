@@ -1151,7 +1151,7 @@ export default function LeadsPage() {
                     </div>
 
                     {/* PROBABILITY */}
-                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3 text-center">
+                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
                         {translateText("Close chance")}
                       </p>
