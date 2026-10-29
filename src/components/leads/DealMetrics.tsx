@@ -24,7 +24,7 @@ export default function DealMetrics({
   return (
     <div className="rounded-xl bg-surface-1 p-6">
       <h2 className="mb-4 text-xl font-semibold">
-        {translateText("Deal Information")}</h2>
+        {translateText("Lead Information")}</h2>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
@@ -32,7 +32,7 @@ export default function DealMetrics({
             {translateText("Age")}</p>
 
           <p className="mt-3 text-sm text-foreground/55">
-            {translateText("Deal Age")}</p>
+            {translateText("Lead Age")}</p>
 
           <p className="mt-1 text-2xl font-bold text-foreground">
             {dealAge} {translateText("days")}</p>
@@ -67,7 +67,7 @@ export default function DealMetrics({
             {translateText("Value")}</p>
 
           <p className="mt-3 text-sm text-foreground/55">
-            {translateText("Deal Value")}</p>
+            {translateText("Lead Value")}</p>
 
           <p className="mt-1 text-2xl font-bold text-purple-400">
             €{value.toLocaleString(locale)}

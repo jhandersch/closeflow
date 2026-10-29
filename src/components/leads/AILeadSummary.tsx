@@ -145,7 +145,7 @@ export default function AILeadSummary({
             {translateText("AI Insights")}</p>
 
           <h2 className="mt-2 text-xl font-bold text-foreground">
-            {translateText("Deal Analysis")}</h2>
+            {translateText("Lead Analysis")}</h2>
 
           <p className="mt-2 text-sm text-foreground/70">
             {translateText("Get AI-powered recommendations for this opportunity.")}</p>

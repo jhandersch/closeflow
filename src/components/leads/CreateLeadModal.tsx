@@ -280,7 +280,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
                 text-sm
                 text-foreground/65
               ">
-              {translateText("Deal-Wert (€)")}</label>
+              {translateText("Lead Value (€)")}</label>
 
 
             <input value={value} onChange={(event) => setValue(event.target.value)} type="number" placeholder="5000" className="

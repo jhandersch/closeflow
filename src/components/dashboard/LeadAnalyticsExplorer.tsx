@@ -144,7 +144,7 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
           <option value="all">{translateText("Leads & customers")}</option><option value="open">{translateText("Active leads")}</option><option value="customers">{translateText("Customers (won & lost)")}</option><option value="new">{translateText("New leads")}</option><option value="contacted">{translateText("Contacted leads")}</option><option value="proposal">{translateText("Proposal leads")}</option><option value="won">{translateText("Won customers")}</option><option value="lost">{translateText("Lost customers")}</option>
         </select>
         <select aria-label={translateText("Sort leads")} value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-sm text-foreground outline-none focus:border-cyan-400">
-          <option value="priority">{translateText("Sort: Priority")}</option><option value="value">{translateText("Sort: Net deal value")}</option><option value="probability">{translateText("Sort: Close probability")}</option><option value="health">{translateText("Sort: Health")}</option><option value="stale">{translateText("Sort: Days inactive")}</option>
+          <option value="priority">{translateText("Sort: Priority")}</option><option value="value">{translateText("Sort: Net lead value")}</option><option value="probability">{translateText("Sort: Close probability")}</option><option value="health">{translateText("Sort: Health")}</option><option value="stale">{translateText("Sort: Days inactive")}</option>
         </select>
       </div>
 

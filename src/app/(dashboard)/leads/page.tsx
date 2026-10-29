@@ -1107,7 +1107,7 @@ export default function LeadsPage() {
                     <div className="flex shrink-0 items-center gap-3">
                       <div className="text-right">
                         <p className="text-xs text-foreground/45">
-                          {translateText("Deal value")}
+                          {translateText("Lead value")}
                         </p>
 
                         <p className="mt-0.5 text-base font-bold text-foreground">

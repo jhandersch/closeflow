@@ -60,7 +60,7 @@ p-5
 
 
     <h2 className="text-lg font-semibold">
-    {translateText("Deal")}
+    {translateText("Lead")}
     </h2>
 
 

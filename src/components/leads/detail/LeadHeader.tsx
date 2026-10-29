@@ -48,7 +48,7 @@ mt-2
 text-sm
 text-foreground/65
 ">
-{translateText("Deal:")}{" "}
+{translateText("Lead:")} {" "}
 {translateText("EUR")}{" "}
     {(lead.value ?? 0).toLocaleString(getIntlLocale())}
     </p>

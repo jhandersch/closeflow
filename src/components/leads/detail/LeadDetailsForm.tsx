@@ -146,7 +146,7 @@ md:grid-cols-2
     <Input label={"Company"} value={company} setValue={setCompany}/>
 
 
-    <Input label={"Deal Value"} value={value} setValue={setValue}/>
+    <Input label={"Lead Value"} value={value} setValue={setValue}/>
 
 
 

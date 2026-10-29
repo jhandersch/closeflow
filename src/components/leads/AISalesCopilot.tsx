@@ -141,7 +141,7 @@ export default function AISalesCopilot({
           {data.strategy && (
             <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
               <h3 className="font-semibold text-cyan-300">
-                {translateText("Deal Strategy")}</h3>
+                {translateText("Lead Strategy")}</h3>
 
               <p className="mt-2 text-sm text-foreground/85">
                 {formatTextForLanguage(data.strategy, language)}
@@ -169,7 +169,7 @@ export default function AISalesCopilot({
         {data.dealSummary && (
           <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
             <h3 className="font-semibold text-foreground">
-              {translateText("Deal Summary")}</h3>
+              {translateText("Lead Summary")}</h3>
 
             <p className="mt-2 text-sm text-foreground/80">
               {formatTextForLanguage(data.dealSummary, language)}

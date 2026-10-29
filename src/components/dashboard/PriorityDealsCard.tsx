@@ -49,7 +49,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
             font-semibold
             text-foreground
             ">
-            {t("dashboard.dealsToFocus", "Deals to focus on")}
+            {t("dashboard.leadsToFocus", "Leads to focus on")}
           </h2>
 
         </div>
@@ -60,7 +60,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
 
           {leads.length > 0
             ? `${t("dashboard.top", "Top")} ${leads.length}`
-            : t("dashboard.noPriorityDeals", "No priority deals")}
+            : t("dashboard.noPriorityLeads", "No priority leads")}
 
         </div>
 

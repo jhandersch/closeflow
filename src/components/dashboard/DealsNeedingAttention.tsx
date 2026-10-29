@@ -20,8 +20,8 @@ export default function DealsNeedingAttention({ leads }: DealsNeedingAttentionPr
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <p className="text-sm text-foreground/55">{translateText("Pipeline")}</p>
-                    <h2 id="attention-deals-heading" className="mt-1 text-lg font-semibold text-foreground">{translateText("Deals needing attention")}</h2>
-                    <p className="mt-1 text-sm text-foreground/55">{translateText("Open opportunities that may need a follow-up.")}</p>
+                    <h2 id="attention-deals-heading" className="mt-1 text-lg font-semibold text-foreground">{translateText("Leads needing attention")}</h2>
+                    <p className="mt-1 text-sm text-foreground/55">{translateText("Open leads that may need a next action.")}</p>
                 </div>
                 <CircleAlert className="mt-1 h-5 w-5 shrink-0 text-amber-300" aria-hidden="true" />
             </div>
@@ -50,8 +50,8 @@ export default function DealsNeedingAttention({ leads }: DealsNeedingAttentionPr
                 </div>
             ) : (
                 <div className="mt-5 rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-4">
-                    <p className="text-sm font-medium text-emerald-200">{translateText("No deals need urgent attention.")}</p>
-                    <p className="mt-1 text-xs text-foreground/55">{translateText("Keep your open opportunities moving with clear next actions.")}</p>
+                    <p className="text-sm font-medium text-emerald-200">{translateText("No leads need urgent attention.")}</p>
+                    <p className="mt-1 text-xs text-foreground/55">{translateText("Keep your open leads moving with clear next actions.")}</p>
                 </div>
             )}
 
