@@ -119,6 +119,7 @@ export default function SettingsPage() {
 
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
   const [theme, setTheme] = useState<ThemeOption>(appTheme);
+  const [savedLanguage, setSavedLanguage] = useState<AppLanguage>(appLanguage);
   const [languageDraft, setLanguageDraft] = useState<AppLanguage>(appLanguage);
 
   const [notifications, setNotifications] =
@@ -275,6 +276,7 @@ export default function SettingsPage() {
       const profileResponse = await fetch("/api/profile", { cache: "no-store" });
       const profileData = profileResponse.ok ? await profileResponse.json() : null;
       const storedLanguage = normalizeLanguage(profileData?.language ?? metadata.language);
+      setSavedLanguage(storedLanguage);
       setLanguageDraft(storedLanguage);
       setAppLanguage(storedLanguage);
       setName(metadata.name || "");
@@ -454,6 +456,7 @@ export default function SettingsPage() {
     }
 
     setAppLanguage(languageDraft);
+    setSavedLanguage(languageDraft);
     toast.success(translateText("Preferences updated"));
 
     setSavingPreferences(false);
@@ -1007,7 +1010,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            {appLanguage === "de" ? "Sprache" : "Language"}<select
+            {savedLanguage === "de" ? "Sprache" : "Language"}<select
               value={languageDraft}
               onChange={(event) => setLanguageDraft(normalizeLanguage(event.target.value))}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
