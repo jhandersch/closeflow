@@ -452,3 +452,8 @@ html[data-theme="light"] .cf-card-soft {
     outline-color: Highlight;
   }
 }
+
+/* Keep German ß intact: CSS uppercase transforms it to SS in several browsers. */
+html[lang="de"] .uppercase {
+  text-transform: none;
+}
