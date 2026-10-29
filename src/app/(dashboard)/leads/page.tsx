@@ -23,6 +23,7 @@ import type { LeadSource, LeadStatus, LeadSortBy } from "@/types";
 import { Plus, Star } from "lucide-react";
 import { loadDemoData } from "@/lib/demoData";
 import { notify } from "@/lib/notifications";
+import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 type ImportIssue = {
     row: number;
@@ -605,6 +606,7 @@ export default function LeadsPage() {
         setLeadStatus("new");
         setShowForm(false);
         setSubmitting(false);
+        toast.success(translateText("Lead created"));
         await refresh();
     };
     return (<AuthGuard>
