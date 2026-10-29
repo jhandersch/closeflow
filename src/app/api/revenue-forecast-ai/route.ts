@@ -6,252 +6,281 @@ import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 type LeadPayload = {
-    id?: string;
-    name?: string;
-    company?: string;
-    status?: string;
-    value?: number;
-    created_at?: string;
-    stage_changed_at?: string | null;
-    notes?: string | null;
-    next_action?: string | null;
-    next_action_due?: string | null;
+  id?: string;
+  name?: string;
+  company?: string;
+  status?: string;
+  value?: number;
+  created_at?: string;
+  stage_changed_at?: string | null;
+  notes?: string | null;
+  next_action?: string | null;
+  next_action_due?: string | null;
 };
 type ForecastPayload = {
-    pipelineValue?: number;
-    weightedRevenue?: number;
-    revenueAtRisk?: number;
-    commitRevenue?: number;
-    bestCaseRevenue?: number;
-    confidence?: number;
-    averageHealth?: number;
-    averageProbability?: number;
-    activeDeals?: number;
-    singleDealRisk?: number;
-    dealsWithNextAction?: number;
-    dealsWithoutNextAction?: number;
-    nextActionCoverage?: number;
-    pipelineCoverage?: number;
+  pipelineValue?: number;
+  weightedRevenue?: number;
+  revenueAtRisk?: number;
+  commitRevenue?: number;
+  bestCaseRevenue?: number;
+  confidence?: number;
+  averageHealth?: number;
+  averageProbability?: number;
+  activeDeals?: number;
+  singleDealRisk?: number;
+  dealsWithNextAction?: number;
+  dealsWithoutNextAction?: number;
+  nextActionCoverage?: number;
+  pipelineCoverage?: number;
 };
 type RevenueForecastAIResponse = {
-    confidence: number;
-    health: "Excellent" | "Healthy" | "Warning" | "Critical";
-    headline: string;
-    summary: string;
-    topDrivers: string[];
-    risks: string[];
-    recommendations: string[];
-    pipelineComment: string;
-    singleDealRisk: number;
+  confidence: number;
+  health: "Excellent" | "Healthy" | "Warning" | "Critical";
+  headline: string;
+  summary: string;
+  topDrivers: string[];
+  risks: string[];
+  recommendations: string[];
+  pipelineComment: string;
+  singleDealRisk: number;
 };
-function fallbackInsight(locale: AppLanguage, forecastConfidence?: number): RevenueForecastAIResponse {
-    const confidence = typeof forecastConfidence === "number"
-        ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
-        : 20;
-    if (locale === "de") {
-        return {
-            confidence,
-            health: "Warning",
-            headline: "Umsatzanalyse vorübergehend nicht verfügbar",
-            summary: "Die KI-Analyse konnte gerade nicht erstellt werden. Deine Prognosedaten sind weiterhin verfügbar.",
-            topDrivers: [],
-            risks: ["Die KI-Analyse ist vorübergehend nicht verfügbar."],
-            recommendations: ["Prüfe deine größten offenen Verkaufschancen manuell.", "Prüfe Abschlüsse mit niedrigem Statuswert oder ohne nächste Maßnahme."],
-            pipelineComment: "Die Pipeline ist weiterhin verfügbar und kann manuell geprüft werden.",
-            singleDealRisk: 0,
-        };
-    }
-    if (locale === "en") {
-        return {
-            confidence,
-            health: "Warning",
-            headline: "Revenue analysis temporarily unavailable",
-            summary: "The AI analysis could not be generated right now. Your forecast data is still available.",
-            topDrivers: [],
-            risks: [
-                "AI analysis is temporarily unavailable.",
-            ],
-            recommendations: [
-                "Review your largest open opportunities manually.",
-                "Check deals with low health scores or missing next actions.",
-            ],
-            pipelineComment: "The pipeline remains available and can be reviewed manually.",
-            singleDealRisk: 0,
-        };
-    }
+function fallbackInsight(
+  locale: AppLanguage,
+  forecastConfidence?: number,
+): RevenueForecastAIResponse {
+  const confidence =
+    typeof forecastConfidence === "number"
+      ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
+      : 20;
+  if (locale === "de") {
     return {
-        confidence,
-        health: "Warning",
-        headline: "Revenue analysis temporarily unavailable",
-        summary: "The AI analysis could not be generated right now. Your forecast data is still available.",
-        topDrivers: [],
-        risks: [
-            "AI analysis is temporarily unavailable.",
-        ],
-        recommendations: [
-            "Review your largest open opportunities manually.",
-            "Review deals with a low health score or missing next action.",
-        ],
-        pipelineComment: "The pipeline remains available and can be reviewed manually.",
-        singleDealRisk: 0,
+      confidence,
+      health: "Warning",
+      headline: "Umsatzanalyse vorübergehend nicht verfügbar",
+      summary:
+        "Die KI-Analyse konnte gerade nicht erstellt werden. Deine Prognosedaten sind weiterhin verfügbar.",
+      topDrivers: [],
+      risks: ["Die KI-Analyse ist vorübergehend nicht verfügbar."],
+      recommendations: [
+        "Prüfe deine größten offenen Verkaufschancen manuell.",
+        "Prüfe Leads mit niedrigem Statuswert oder ohne nächste Maßnahme.",
+      ],
+      pipelineComment:
+        "Die Pipeline ist weiterhin verfügbar und kann manuell geprüft werden.",
+      singleDealRisk: 0,
     };
+  }
+  if (locale === "en") {
+    return {
+      confidence,
+      health: "Warning",
+      headline: "Revenue analysis temporarily unavailable",
+      summary:
+        "The AI analysis could not be generated right now. Your forecast data is still available.",
+      topDrivers: [],
+      risks: ["AI analysis is temporarily unavailable."],
+      recommendations: [
+        "Review your largest open opportunities manually.",
+        "Check deals with low health scores or missing next actions.",
+      ],
+      pipelineComment:
+        "The pipeline remains available and can be reviewed manually.",
+      singleDealRisk: 0,
+    };
+  }
+  return {
+    confidence,
+    health: "Warning",
+    headline: "Revenue analysis temporarily unavailable",
+    summary:
+      "The AI analysis could not be generated right now. Your forecast data is still available.",
+    topDrivers: [],
+    risks: ["AI analysis is temporarily unavailable."],
+    recommendations: [
+      "Review your largest open opportunities manually.",
+      "Review deals with a low health score or missing next action.",
+    ],
+    pipelineComment:
+      "The pipeline remains available and can be reviewed manually.",
+    singleDealRisk: 0,
+  };
 }
-function normalizeResponse(value: Partial<RevenueForecastAIResponse>, locale: AppLanguage, forecastConfidence?: number, forecastSingleDealRisk?: number): RevenueForecastAIResponse {
-    const validHealth = value.health === "Excellent" ||
-        value.health === "Healthy" ||
-        value.health === "Warning" ||
-        value.health === "Critical"
-        ? value.health
-        : "Warning";
-    return {
-        /*
-         * Confidence is authoritative from calculateForecast();
-         * the model's own confidence guess is never used when
-         * a forecast confidence value was supplied.
-         */
-        confidence: typeof forecastConfidence === "number"
-            ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
-            : typeof value.confidence === "number"
-                ? Math.max(0, Math.min(100, value.confidence))
-                : 50,
-        health: validHealth,
-        headline: typeof value.headline === "string" &&
-            value.headline.trim()
-            ? value.headline.trim()
-            :
-                "Pipeline analysis completed.",
-        summary: typeof value.summary === "string" &&
-            value.summary.trim()
-            ? value.summary.trim()
-            :
-                "No summary available.",
-        topDrivers: Array.isArray(value.topDrivers)
-            ? value.topDrivers.filter((item): item is string => typeof item === "string")
-            : [],
-        risks: Array.isArray(value.risks)
-            ? value.risks.filter((item): item is string => typeof item === "string")
-            : [],
-        recommendations: Array.isArray(value.recommendations)
-            ? value.recommendations.filter((item): item is string => typeof item === "string")
-            : [],
-        pipelineComment: typeof value.pipelineComment === "string"
-            ? value.pipelineComment
-            : "",
-        singleDealRisk: typeof forecastSingleDealRisk === "number"
-            ? Math.max(0, Math.min(100, Math.round(forecastSingleDealRisk)))
-            : typeof value.singleDealRisk === "number"
-                ? Math.max(0, Math.min(100, Math.round(value.singleDealRisk)))
-                : 0,
-    };
+function normalizeResponse(
+  value: Partial<RevenueForecastAIResponse>,
+  locale: AppLanguage,
+  forecastConfidence?: number,
+  forecastSingleDealRisk?: number,
+): RevenueForecastAIResponse {
+  const validHealth =
+    value.health === "Excellent" ||
+    value.health === "Healthy" ||
+    value.health === "Warning" ||
+    value.health === "Critical"
+      ? value.health
+      : "Warning";
+  return {
+    /*
+     * Confidence is authoritative from calculateForecast();
+     * the model's own confidence guess is never used when
+     * a forecast confidence value was supplied.
+     */
+    confidence:
+      typeof forecastConfidence === "number"
+        ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
+        : typeof value.confidence === "number"
+          ? Math.max(0, Math.min(100, value.confidence))
+          : 50,
+    health: validHealth,
+    headline:
+      typeof value.headline === "string" && value.headline.trim()
+        ? value.headline.trim()
+        : "Pipeline analysis completed.",
+    summary:
+      typeof value.summary === "string" && value.summary.trim()
+        ? value.summary.trim()
+        : "No summary available.",
+    topDrivers: Array.isArray(value.topDrivers)
+      ? value.topDrivers.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [],
+    risks: Array.isArray(value.risks)
+      ? value.risks.filter((item): item is string => typeof item === "string")
+      : [],
+    recommendations: Array.isArray(value.recommendations)
+      ? value.recommendations.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [],
+    pipelineComment:
+      typeof value.pipelineComment === "string" ? value.pipelineComment : "",
+    singleDealRisk:
+      typeof forecastSingleDealRisk === "number"
+        ? Math.max(0, Math.min(100, Math.round(forecastSingleDealRisk)))
+        : typeof value.singleDealRisk === "number"
+          ? Math.max(0, Math.min(100, Math.round(value.singleDealRisk)))
+          : 0,
+  };
 }
 export async function POST(req: Request) {
-    const supabase = await createClient();
-    let locale: AppLanguage = "en";
+  const supabase = await createClient();
+  let locale: AppLanguage = "en";
+  /*
+   * AUTHENTICATION
+   */
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
     /*
-     * AUTHENTICATION
+     * REQUEST
      */
-    try {
-        const { data: { user }, error: userError, } = await supabase.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({
-                error: "Unauthorized",
-            }, {
-                status: 401,
-            });
-        }
-        /*
-         * REQUEST
-         */
-        const body = (await req.json()) as {
-            leads?: LeadPayload[];
-            forecast?: ForecastPayload;
-            language?: AppLanguage;
-        };
-        locale = normalizeLanguage(body.language ?? user.user_metadata?.language);
-        const responseLanguage = locale === "de" ? "German" : "English";
-        const leads = body.leads ?? [];
-        const forecast = body.forecast ?? {};
-        if (!Array.isArray(leads) ||
-            leads.length === 0) {
-            return NextResponse.json({
-                error: "No leads available for forecast analysis.",
-            }, {
-                status: 400,
-            });
-        }
-        /*
-         * AI USAGE LIMIT
-         *
-         * This checks the user's workspace and
-         * monthly AI allowance.
-         */
-        const usageCheck = await enforceAndTrackUsageLimit(
-            supabase,
-            user.id,
-            "ai",
-            req.headers.get("x-closeflow-workspace-id"),
-        );
-        if (!usageCheck.ok) {
-            return NextResponse.json({
-                error: usageCheck.message,
-            }, {
-                status: usageCheck.status,
-            });
-        }
-        /*
-         * OPENAI KEY
-         */
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-            console.error("Revenue Forecast AI: OPENAI_API_KEY is missing.");
-            return NextResponse.json({
-                error: "AI is currently unavailable.",
-            }, {
-                status: 503,
-            });
-        }
-        /*
-         * LIMIT INPUT SIZE
-         *
-         * Prevent unnecessarily large AI requests.
-         */
-        const formatLead = (lead: LeadPayload) => [
-            `Lead: ${lead.name ?? "Unknown"}`,
-            `Company: ${lead.company ?? "Unknown"}`,
-            `Stage: ${lead.status ?? "Unknown"}`,
-            `Value: €${Number(lead.value ?? 0)}`,
-            `User-entered costs and estimated net value: ${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value ?? 0))}`,
-            `Notes: ${lead.notes ?? "None"}`,
-            `Next action: ${lead.next_action ?? "None"}`,
-        ].join("\n");
-        /*
-         * Won/lost deals are closed revenue, not
-         * active opportunities. Keep them separate
-         * so the AI cannot call a won deal an
-         * "opportunity".
-         */
-        const activeLeads = leads
-            .slice(0, 20)
-            .filter((lead) => lead.status !== "won" &&
-            lead.status !== "lost");
-        const closedLeads = leads
-            .slice(0, 20)
-            .filter((lead) => lead.status === "won" ||
-            lead.status === "lost");
-        const activeLeadSummary = activeLeads.length > 0
-            ? activeLeads
-                .map(formatLead)
-                .join("\n\n")
-            : "None";
-        const closedLeadSummary = closedLeads.length > 0
-            ? closedLeads
-                .map(formatLead)
-                .join("\n\n")
-            : "None";
-        /*
-         * PROMPT
-         */
-        const prompt = `
+    const body = (await req.json()) as {
+      leads?: LeadPayload[];
+      forecast?: ForecastPayload;
+      language?: AppLanguage;
+    };
+    locale = normalizeLanguage(body.language ?? user.user_metadata?.language);
+    const responseLanguage = locale === "de" ? "German" : "English";
+    const leads = body.leads ?? [];
+    const forecast = body.forecast ?? {};
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return NextResponse.json(
+        {
+          error: "No leads available for forecast analysis.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+    /*
+     * AI USAGE LIMIT
+     *
+     * This checks the user's workspace and
+     * monthly AI allowance.
+     */
+    const usageCheck = await enforceAndTrackUsageLimit(
+      supabase,
+      user.id,
+      "ai",
+      req.headers.get("x-closeflow-workspace-id"),
+    );
+    if (!usageCheck.ok) {
+      return NextResponse.json(
+        {
+          error: usageCheck.message,
+        },
+        {
+          status: usageCheck.status,
+        },
+      );
+    }
+    /*
+     * OPENAI KEY
+     */
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      console.error("Revenue Forecast AI: OPENAI_API_KEY is missing.");
+      return NextResponse.json(
+        {
+          error: "AI is currently unavailable.",
+        },
+        {
+          status: 503,
+        },
+      );
+    }
+    /*
+     * LIMIT INPUT SIZE
+     *
+     * Prevent unnecessarily large AI requests.
+     */
+    const formatLead = (lead: LeadPayload) =>
+      [
+        `Lead: ${lead.name ?? "Unknown"}`,
+        `Company: ${lead.company ?? "Unknown"}`,
+        `Stage: ${lead.status ?? "Unknown"}`,
+        `Value: €${Number(lead.value ?? 0)}`,
+        `User-entered costs and estimated net value: ${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value ?? 0))}`,
+        `Notes: ${lead.notes ?? "None"}`,
+        `Next action: ${lead.next_action ?? "None"}`,
+      ].join("\n");
+    /*
+     * Won/lost deals are closed revenue, not
+     * active opportunities. Keep them separate
+     * so the AI cannot call a won deal an
+     * "opportunity".
+     */
+    const activeLeads = leads
+      .slice(0, 20)
+      .filter((lead) => lead.status !== "won" && lead.status !== "lost");
+    const closedLeads = leads
+      .slice(0, 20)
+      .filter((lead) => lead.status === "won" || lead.status === "lost");
+    const activeLeadSummary =
+      activeLeads.length > 0
+        ? activeLeads.map(formatLead).join("\n\n")
+        : "None";
+    const closedLeadSummary =
+      closedLeads.length > 0
+        ? closedLeads.map(formatLead).join("\n\n")
+        : "None";
+    /*
+     * PROMPT
+     */
+    const prompt = `
 You are an enterprise CRM Revenue Intelligence AI.
 
 Analyze this sales pipeline like a VP of Sales.
@@ -370,127 +399,128 @@ Rules:
 Language:
 ${responseLanguage}
 `;
-        const openai = new OpenAI({
-            apiKey,
-        });
-        /*
-         * OPENAI REQUEST
-         */
-        let completion;
-        try {
-            completion =
-                await openai.chat.completions.create({
-                    model: "gpt-4.1-mini",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "You are a CRM revenue intelligence assistant. Return valid JSON only.",
-                        },
-                        {
-                            role: "user",
-                            content: prompt,
-                        },
-                    ],
-                    response_format: {
-                        type: "json_object",
-                    },
-                    temperature: 0.2,
-                });
-        }
-        catch (openaiError) {
-            console.error("Revenue Forecast AI: OpenAI request failed", openaiError);
-            /*
-             * CONTROLLED FALLBACK
-             */
-            return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-                status: 200,
-                headers: {
-                    "X-AI-Fallback": "true",
-                },
-            });
-        }
-        /*
-         * TOKEN / COST TRACKING
-         */
-        if (usageCheck.context) {
-            if (!completion.usage) {
-                console.error("Revenue Forecast AI: provider did not return token usage.");
-                return NextResponse.json(
-                    { error: "AI usage could not be verified. Please try again later." },
-                    { status: 503 },
-                );
-            }
-            try {
-                await recordAiUsageEvent(
-                    usageCheck.context.workspaceId,
-                    user.id,
-                    "revenue_forecast",
-                    "gpt-4.1-mini",
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                );
-            }
-            catch (usageError) {
-                console.error("Revenue Forecast AI: usage tracking failed", usageError);
-                return NextResponse.json(
-                    { error: "AI usage could not be recorded. Please try again later." },
-                    { status: 503 },
-                );
-            }
-        }
-        /*
-         * RESPONSE
-         */
-        const raw = completion.choices[0]
-            ?.message
-            ?.content;
-        if (!raw) {
-            console.error("Revenue Forecast AI: empty response");
-            return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-                status: 200,
-                headers: {
-                    "X-AI-Fallback": "true",
-                },
-            });
-        }
-        /*
-         * JSON PARSING
-         */
-        let parsed: Partial<RevenueForecastAIResponse>;
-        try {
-            parsed = JSON.parse(raw);
-        }
-        catch (parseError) {
-            console.error("Revenue Forecast AI: invalid JSON", {
-                parseError,
-            });
-            return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-                status: 200,
-                headers: {
-                    "X-AI-Fallback": "true",
-                },
-            });
-        }
-        /*
-         * NORMALIZE
-         */
-        const result = normalizeResponse(parsed, locale, forecast.confidence, forecast.singleDealRisk);
-        console.log("Revenue Forecast AI: response received");
-        return NextResponse.json(result);
+    const openai = new OpenAI({
+      apiKey,
+    });
+    /*
+     * OPENAI REQUEST
+     */
+    let completion;
+    try {
+      completion = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a CRM revenue intelligence assistant. Return valid JSON only.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        response_format: {
+          type: "json_object",
+        },
+        temperature: 0.2,
+      });
+    } catch (openaiError) {
+      console.error("Revenue Forecast AI: OpenAI request failed", openaiError);
+      /*
+       * CONTROLLED FALLBACK
+       */
+      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
+        status: 200,
+        headers: {
+          "X-AI-Fallback": "true",
+        },
+      });
     }
-    catch (error) {
-        console.error("Revenue forecast AI failed:", error);
-        /*
-         * FINAL FALLBACK
-         *
-         * Even unexpected errors do not
-         * destroy the dashboard.
-         */
-        return NextResponse.json(fallbackInsight(locale), {
-            status: 200,
-            headers: {
-                "X-AI-Fallback": "true",
-            },
-        });
+    /*
+     * TOKEN / COST TRACKING
+     */
+    if (usageCheck.context) {
+      if (!completion.usage) {
+        console.error(
+          "Revenue Forecast AI: provider did not return token usage.",
+        );
+        return NextResponse.json(
+          { error: "AI usage could not be verified. Please try again later." },
+          { status: 503 },
+        );
+      }
+      try {
+        await recordAiUsageEvent(
+          usageCheck.context.workspaceId,
+          user.id,
+          "revenue_forecast",
+          "gpt-4.1-mini",
+          completion.usage.prompt_tokens,
+          completion.usage.completion_tokens,
+        );
+      } catch (usageError) {
+        console.error("Revenue Forecast AI: usage tracking failed", usageError);
+        return NextResponse.json(
+          { error: "AI usage could not be recorded. Please try again later." },
+          { status: 503 },
+        );
+      }
     }
+    /*
+     * RESPONSE
+     */
+    const raw = completion.choices[0]?.message?.content;
+    if (!raw) {
+      console.error("Revenue Forecast AI: empty response");
+      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
+        status: 200,
+        headers: {
+          "X-AI-Fallback": "true",
+        },
+      });
+    }
+    /*
+     * JSON PARSING
+     */
+    let parsed: Partial<RevenueForecastAIResponse>;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseError) {
+      console.error("Revenue Forecast AI: invalid JSON", {
+        parseError,
+      });
+      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
+        status: 200,
+        headers: {
+          "X-AI-Fallback": "true",
+        },
+      });
+    }
+    /*
+     * NORMALIZE
+     */
+    const result = normalizeResponse(
+      parsed,
+      locale,
+      forecast.confidence,
+      forecast.singleDealRisk,
+    );
+    console.log("Revenue Forecast AI: response received");
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Revenue forecast AI failed:", error);
+    /*
+     * FINAL FALLBACK
+     *
+     * Even unexpected errors do not
+     * destroy the dashboard.
+     */
+    return NextResponse.json(fallbackInsight(locale), {
+      status: 200,
+      headers: {
+        "X-AI-Fallback": "true",
+      },
+    });
+  }
 }

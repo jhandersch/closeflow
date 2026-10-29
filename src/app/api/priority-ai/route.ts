@@ -7,9 +7,9 @@ import { createTrackedOpenAIFetch } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 
 export async function POST(request: NextRequest) {
-    const access = await requireAiWorkspaceQuota(request);
-    if (!access.ok) return access.response;
-    let language = normalizeLanguage(undefined);
+  const access = await requireAiWorkspaceQuota(request);
+  if (!access.ok) return access.response;
+  let language = normalizeLanguage(undefined);
   try {
     const { user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -17,7 +17,9 @@ export async function POST(request: NextRequest) {
     }
     const payload = await request.json();
     const { leads } = payload;
-    language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
+    language = normalizeLanguage(
+      payload.language ?? user.user_metadata?.language,
+    );
     const responseLanguage = language === "de" ? "German" : "English";
     const leadsWithCosts = Array.isArray(leads)
       ? leads.map((lead: any) => ({
@@ -38,14 +40,22 @@ export async function POST(request: NextRequest) {
      */
     if (!apiKey) {
       return NextResponse.json({
-        headline: language === "de" ? "Priorisierung abgeschlossen" : "Priority analysis ready",
-        explanation: language === "de"
-          ? "Die wichtigsten Abschlüsse werden anhand von Wert, Pipeline-Phase, Aktivität und Abschlusswahrscheinlichkeit priorisiert."
-          : "The most important deals are prioritized using value, pipeline stage, activity and close probability.",
-        nextAction: language === "de" ? "Beginne mit hochwertigen Abschlüssen in fortgeschrittenen Phasen." : "Start with high-value deals in advanced stages.",
-        priorityReason: language === "de"
-          ? "Verkaufschancen mit hohem Wert und guter Abschlusschance sollten zuerst bearbeitet werden."
-          : "High-value opportunities with strong closing potential should be handled first.",
+        headline:
+          language === "de"
+            ? "Priorisierung abgeschlossen"
+            : "Priority analysis ready",
+        explanation:
+          language === "de"
+            ? "Die wichtigsten Leads werden anhand von Wert, Pipeline-Phase, Aktivität und Abschlusswahrscheinlichkeit priorisiert."
+            : "The most important leads are prioritized using value, pipeline stage, activity and close probability.",
+        nextAction:
+          language === "de"
+            ? "Beginne mit hochwertigen Leads in fortgeschrittenen Phasen."
+            : "Start with high-value leads in advanced stages.",
+        priorityReason:
+          language === "de"
+            ? "Leads mit hohem Wert und guter Abschlusschance sollten zuerst bearbeitet werden."
+            : "High-value leads with strong closing potential should be handled first.",
         riskLevel: "Medium",
       });
     }
@@ -173,8 +183,7 @@ Keep answers concise.
      * =========================
      */
     const result = await response.json();
-    const content =
-      result?.choices?.[0]?.message?.content;
+    const content = result?.choices?.[0]?.message?.content;
 
     if (!content) {
       throw new Error(translateText("No AI response"));
@@ -187,15 +196,9 @@ Keep answers concise.
      * VALIDATE RESPONSE
      * =========================
      */
-    const validRiskLevels = [
-      "Low",
-      "Medium",
-      "High",
-    ];
+    const validRiskLevels = ["Low", "Medium", "High"];
 
-    const riskLevel = validRiskLevels.includes(
-      parsed?.riskLevel,
-    )
+    const riskLevel = validRiskLevels.includes(parsed?.riskLevel)
       ? parsed.riskLevel
       : "Medium";
 
@@ -203,22 +206,18 @@ Keep answers concise.
       headline:
         typeof parsed?.headline === "string"
           ? parsed.headline
-          : language === "de" ? "Verkaufschancen brauchen Aufmerksamkeit" : "Deals need attention",
+          : language === "de"
+            ? "Verkaufschancen brauchen Aufmerksamkeit"
+            : "Deals need attention",
 
       explanation:
-        typeof parsed?.explanation === "string"
-          ? parsed.explanation
-          : "",
+        typeof parsed?.explanation === "string" ? parsed.explanation : "",
 
       nextAction:
-        typeof parsed?.nextAction === "string"
-          ? parsed.nextAction
-          : "",
+        typeof parsed?.nextAction === "string" ? parsed.nextAction : "",
 
       priorityReason:
-        typeof parsed?.priorityReason === "string"
-          ? parsed.priorityReason
-          : "",
+        typeof parsed?.priorityReason === "string" ? parsed.priorityReason : "",
 
       riskLevel,
     });
@@ -231,7 +230,10 @@ Keep answers concise.
      * =========================
      */
     return NextResponse.json({
-      headline: language === "de" ? "Verkaufschancen brauchen Aufmerksamkeit" : "Deals need attention",
+      headline:
+        language === "de"
+          ? "Verkaufschancen brauchen Aufmerksamkeit"
+          : "Deals need attention",
       explanation:
         language === "de"
           ? "Prüfen Sie die Pipeline anhand von Wert, Aktivität und Abschlusswahrscheinlichkeit."
