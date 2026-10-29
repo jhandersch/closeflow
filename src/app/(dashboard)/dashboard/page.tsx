@@ -20,6 +20,7 @@ import { useLeadsData } from "@/hooks/useLeadsData";
 import { loadDemoData } from "@/lib/demoData";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { notify } from "@/lib/notifications";
+import { toDisplayMessage } from "@/lib/apiError";
 
 function DashboardStat({ label, value, hint, icon: Icon, accent = "cyan" }: {
     label: string;
@@ -130,7 +131,7 @@ export default function DashboardPage() {
                     </p>
 
                     <p className="mt-2 text-sm text-rose-200/80">
-                        {error}
+                        {translateText(error)}
                     </p>
 
                     <button
@@ -181,7 +182,7 @@ export default function DashboardPage() {
                                         if (result.warnings?.length) notify.warning(`Warnings: ${result.warnings.join(" ")}`, { id: "dashboard-demo-load-warning" });
                                         await refresh();
                                     } catch (loadError) {
-                                        notify.error(loadError instanceof Error ? loadError.message : "Could not load demo data", { id: "dashboard-demo-load-error" });
+                                        notify.error(toDisplayMessage(loadError, "Could not load demo data"), { id: "dashboard-demo-load-error" });
                                     } finally {
                                         setDemoLoading(false);
                                     }

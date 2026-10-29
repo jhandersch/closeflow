@@ -1,4 +1,4 @@
-import { getIntlLocale } from "@/lib/i18n";
+import { getIntlLocale, type AppLanguage } from "@/lib/i18n";
 
 export type DashboardInsight = {
     headline: string;
@@ -28,8 +28,8 @@ type InsightInput = {
     atRiskDeals: number;
     highValueDeals: number;
 };
-export function generateDashboardInsight({ leads, forecast, proposalLeads, atRiskDeals, highValueDeals, }: InsightInput): DashboardInsight {
-    const isGerman = getIntlLocale() === "de-DE";
+export function generateDashboardInsight({ leads, forecast, proposalLeads, atRiskDeals, highValueDeals, }: InsightInput, language: AppLanguage): DashboardInsight {
+    const isGerman = language === "de";
     const pipeline = activePipelineFormatter(forecast.pipelineValue, isGerman);
     const activeLeads = leads.filter((lead) => lead.status !== "won" &&
         lead.status !== "lost");
@@ -55,7 +55,7 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     if (hasRisk) {
         return {
             headline: isGerman ? "Mehrere Verkaufschancen erfordern Aufmerksamkeit." : "Several opportunities need attention.",
-            detail: isGerman ? `${atRiskDeals} aktive Verkaufschance(n) weisen ein erhöhtes Risiko auf und erfordern möglicherweise ein zeitnahes Follow-up.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
+            detail: isGerman ? `${atRiskDeals} aktive Verkaufschance(n) weisen ein erhöhtes Risiko auf und erfordern möglicherweise eine zeitnahe Nachfassaktion.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
             actions: isGerman ? [
                 `Prüfe die ${atRiskDeals} gefährdeten Abschlüsse.`,
                 "Lege klare nächste Maßnahmen für alle aktiven Verkaufschancen fest.",
@@ -70,7 +70,7 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     if (hasProposals) {
         return {
-            headline: isGerman ? "Bei Verkaufschancen mit Angebot ist ein Follow-up nötig." : "Proposal-stage opportunities need follow-up.",
+            headline: isGerman ? "Bei Verkaufschancen mit Angebot ist eine Nachfassaktion erforderlich." : "Proposal-stage opportunities need follow-up.",
             detail: isGerman ? `${proposalLeads} aktive Verkaufschance(n) befinden sich bei einem Pipeline-Wert von ${pipeline} in der Angebotsphase. Die durchschnittliche Abschlusswahrscheinlichkeit beträgt ${forecast.averageProbability}%.` : `${proposalLeads} active ${proposalLeads === 1 ? "deal is" : "deals are"} currently in proposal stage within a €${activePipeline.toLocaleString(getIntlLocale())} active pipeline. Average close probability is ${forecast.averageProbability}%.`,
             actions: isGerman ? [
                 `Fasse bei ${proposalLeads === 1 ? "dem Angebot" : "den Angeboten"} nach.`,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Activity, Lead } from "@/types";
-import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { toDisplayMessage } from "@/lib/apiError";
 type UseLeadsDataOptions = {
     activityLimit?: number | null;
     activityFilter?: "today" | "week" | "month" | "all" | "8weeks";
@@ -38,7 +38,7 @@ export function useLeadsData({ activityLimit = 6, activityFilter = "month", incl
             const leadsJson = await leadsResponse.json();
             if (!leadsResponse.ok) {
                 throw new Error(leadsJson.error ||
-                    "Failed loading leads");
+                    "Could not load leads");
             }
             const activityJson = activityResponse?.ok
                 ? await activityResponse.json().catch(() => [])
@@ -55,7 +55,7 @@ export function useLeadsData({ activityLimit = 6, activityFilter = "month", incl
         }
         catch (error) {
             console.error("DASHBOARD DATA ERROR:", error);
-            setError(getUserFacingErrorMessage(error));
+            setError(toDisplayMessage(error, "Could not load leads"));
             // Bestehende Daten bei einem Refresh behalten.
             if (!isRefresh) {
                 setLeads([]);

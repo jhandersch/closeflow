@@ -136,7 +136,7 @@ export default function PipelinePage() {
                 throw new Error(result?.error || `Pipeline update failed (${response.status})`);
             }
             await refresh();
-            if (result?.warning) toast.error(result.warning);
+            if (result?.warning) toast.error(translateText(result.warning));
         }
         catch (error) {
             console.error("Pipeline update error", error);

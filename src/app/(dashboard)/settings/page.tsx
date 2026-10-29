@@ -1,7 +1,7 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
 
-import { readApiError } from "@/lib/apiError";
+import { readApiError, toDisplayMessage } from "@/lib/apiError";
 import { appPrompt } from "@/lib/dialogs";
 
 import { useEffect, useState } from "react";
@@ -410,7 +410,7 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not save profile");
+      toast.error(toDisplayMessage(error, "Could not save profile"));
     } else {
       toast.success(translateText("Profile and company settings updated"));
     }
@@ -447,9 +447,8 @@ export default function SettingsPage() {
       }),
     });
 
-    const result = (await response.json().catch(() => null)) as { error?: string } | null;
     if (!response.ok) {
-      toast.error(result?.error || "Could not save language preference");
+      toast.error(await readApiError(response, "Could not save language preference"));
       setSavingPreferences(false);
       return;
     }
@@ -478,7 +477,7 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not change password");
+      toast.error(toDisplayMessage(error, "Could not change password"));
     } else {
       toast.success(translateText("Password updated"));
       setNewPassword("");
@@ -558,7 +557,7 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not send magic link");
+      toast.error(toDisplayMessage(error, "Could not send magic link"));
     } else {
       toast.success(translateText("Magic link sent"));
     }
@@ -585,7 +584,7 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not start 2FA setup");
+      toast.error(toDisplayMessage(error, "Could not start 2FA setup"));
       setMfaBusy(false);
       return;
     }
@@ -626,7 +625,7 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Could not verify 2FA code");
+      toast.error(toDisplayMessage(error, "Could not verify 2FA code"));
       setMfaBusy(false);
       return;
     }

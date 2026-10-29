@@ -1,6 +1,7 @@
 "use client";
 import { translateText } from "@/lib/i18n";
 import { translateFollowUpTaskTitle } from "@/lib/leadNextAction";
+import { toDisplayMessage } from "@/lib/apiError";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -70,7 +71,7 @@ export default function SearchPage() {
                     return;
                 }
                 console.error("Search failed:", error);
-                setError(error instanceof Error ? error.message : "Could not complete search");
+                setError(toDisplayMessage(error, "Could not complete search"));
             }
             finally {
                 if (!controller.signal.aborted) {

@@ -1,5 +1,6 @@
 "use client";
 import { translateText } from "@/lib/i18n";
+import { toDisplayMessage } from "@/lib/apiError";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -166,7 +167,7 @@ export default function OnboardingPage() {
             try { localStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* Ignore unavailable storage. */ }
             router.replace(nextPath || "/dashboard");
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong while finishing setup.");
+            setError(toDisplayMessage(err, "Something went wrong while finishing setup."));
         } finally {
             setSaving(false);
         }
@@ -280,7 +281,7 @@ export default function OnboardingPage() {
                             </div>
                         )}
 
-                        {error && <div role="alert" className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>}
+                        {error && <div role="alert" className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{translateText(error)}</div>}
                         <div className="mt-8 flex items-center justify-between gap-3 border-t border-border-subtle pt-5">
                             <button type="button" onClick={() => { setError(null); setStep(0); }} disabled={step === 0 || saving} className="rounded-2xl border border-border-subtle px-4 py-2.5 text-sm font-medium transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40">{translateText("Back")}</button>
                             {step === 0 ? (

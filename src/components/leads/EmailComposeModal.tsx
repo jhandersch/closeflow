@@ -6,6 +6,7 @@ import { useState } from "react";
 import { X, Send, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase/client";
+import { toDisplayMessage } from "@/lib/apiError";
 
 type EmailComposeModalProps = {
   leadId: string;
@@ -72,11 +73,11 @@ export function EmailComposeModal({
           error?: string;
         };
 
-        toast.error(data.error || "Could not log email.");
+        toast.error(toDisplayMessage(data.error || "Could not log email.", "Could not log email."));
         return;
       }
 
-      toast.success(`Email logged: "${trimmedSubject}"`);
+      toast.success(translateText('Email logged: "{subject}"').replace("{subject}", trimmedSubject));
       onSent?.();
       onClose();
     } catch {

@@ -1040,7 +1040,7 @@ export default function LoginPage() {
 
                 {error ? (
                     <div className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                        {error}
+                        {t(error, error)}
                     </div>
                 ) : null}
 

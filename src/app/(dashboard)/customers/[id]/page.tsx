@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useLeadsData } from "@/hooks/useLeadsData";
 import { notify } from "@/lib/notifications";
 import { supabase } from "@/lib/supabase/client";
+import { toDisplayMessage } from "@/lib/apiError";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
@@ -435,12 +436,7 @@ export default function CustomerDetailPage() {
             } catch (deleteError) {
                 setDeleting(false);
 
-                setEditError(
-                    deleteError instanceof
-                        Error
-                        ? deleteError.message
-                        : "Delete failed.",
-                );
+                setEditError(toDisplayMessage(deleteError, "Could not delete customer."));
             }
         };
 
@@ -549,12 +545,7 @@ export default function CustomerDetailPage() {
                     );
                 }
             } catch (saveError) {
-                setEditError(
-                    saveError instanceof
-                        Error
-                        ? saveError.message
-                        : "Save failed.",
-                );
+                setEditError(toDisplayMessage(saveError, "Could not save customer."));
             } finally {
                 setSaving(false);
             }
@@ -764,7 +755,7 @@ export default function CustomerDetailPage() {
 
                             {editError ? (
                                 <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">
-                                    {editError}
+                                    {translateText(editError)}
                                 </div>
                             ) : null}
 

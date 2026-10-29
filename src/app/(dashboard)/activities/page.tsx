@@ -8,6 +8,7 @@ import AuthGuard from "@/components/AuthGuard";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase/client";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { toDisplayMessage } from "@/lib/apiError";
 
 type ActivityItem = {
     id: string;
@@ -112,10 +113,10 @@ export default function ActivitiesPage() {
                     );
                 } else {
                     const result = await response.json().catch(() => null);
-                    setLoadError(result?.error || "Could not load activities.");
+                    setLoadError(toDisplayMessage(result?.error, "Could not load activities."));
                 }
             } catch (error) {
-                setLoadError(error instanceof Error ? error.message : "Could not load activities.");
+                setLoadError(toDisplayMessage(error, "Could not load activities."));
             } finally {
                 setLoading(false);
             }
@@ -312,7 +313,7 @@ export default function ActivitiesPage() {
                         {translateText("30 days")}</button>
                 </div>
 
-                {loadError ? <p role="alert" className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">{loadError}</p> : null}
+                {loadError ? <p role="alert" className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">{translateText(loadError)}</p> : null}
 
                 <div className="flex items-center justify-between text-sm text-foreground/55">
                     <span>{activities.length.toLocaleString(locale)} {" "}{translateText("activities loaded")}</span>

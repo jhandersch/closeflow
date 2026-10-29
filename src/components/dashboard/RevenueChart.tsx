@@ -26,9 +26,9 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               contentStyle={{ background: "var(--surface-1)", border: "1px solid var(--border-subtle)", borderRadius: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.35)" }}
               labelStyle={{ color: "var(--foreground)", fontWeight: 600, marginBottom: 4 }}
               itemStyle={{ color: "var(--chart-accent-text)" }}
-              formatter={(value) => [`€${Number(value).toLocaleString(getIntlLocale())}`, "Revenue"]}
+              formatter={(value) => [`€${Number(value).toLocaleString(getIntlLocale())}`, translateText("Revenue")]}
             />
-            <Bar dataKey="value" name="Revenue" fill="#22d3ee" radius={[6, 6, 0, 0]} maxBarSize={44} activeBar={{ fill: "#67e8f9", stroke: "#a5f3fc", strokeWidth: 1 }} />
+            <Bar dataKey="value" name={translateText("Revenue")} fill="#22d3ee" radius={[6, 6, 0, 0]} maxBarSize={44} activeBar={{ fill: "#67e8f9", stroke: "#a5f3fc", strokeWidth: 1 }} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { toDisplayMessage } from "@/lib/apiError";
 import type { ForecastSummary } from "@/types/forecast";
 
 type RevenueForecastInsight = {
@@ -129,11 +130,7 @@ export function useRevenueForecastAI(
 
         setInsight(null);
 
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Revenue analysis could not be generated.",
-        );
+        setError(toDisplayMessage(error, "Revenue analysis could not be generated."));
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);

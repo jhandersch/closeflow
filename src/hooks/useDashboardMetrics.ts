@@ -3,6 +3,7 @@ import { generateDashboardInsight } from "@/lib/openai";
 import { analyzeLead, getHealthScore } from "@/lib/scoring";
 import type { Lead } from "@/types";
 import { calculateForecast } from "@/lib/forecast";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 const stageOrder = [
     "new",
     "contacted",
@@ -11,6 +12,7 @@ const stageOrder = [
     "lost",
 ] as const;
 export function useDashboardMetrics(leads: Lead[]) {
+    const { language } = useAppPreferences();
     return useMemo(() => {
         /*
          * BASIC METRICS
@@ -133,7 +135,7 @@ export function useDashboardMetrics(leads: Lead[]) {
             proposalLeads: proposalLeads.length,
             atRiskDeals: atRiskDeals.length,
             highValueDeals: highValueDeals.length,
-        });
+        }, language);
         /*
        * =========================
        * SINGLE DEAL CONCENTRATION
@@ -228,5 +230,5 @@ export function useDashboardMetrics(leads: Lead[]) {
             insight,
             currentMonthRevenue: forecastData.monthlyForecast[forecastData.monthlyForecast.length - 1]?.value || 0,
         };
-    }, [leads]);
+    }, [leads, language]);
 }

@@ -747,7 +747,7 @@ export default function LeadsPage() {
   </div>) : null}
 
         {showForm ? (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 shadow-sm shadow-black/10">
-            {formError ? <p className="mb-3 text-sm text-rose-300">{formError}</p> : null}
+            {formError ? <p className="mb-3 text-sm text-rose-300">{translateText(formError)}</p> : null}
 
             <div className="grid gap-4 md:grid-cols-2">
               <input value={name} onChange={(event) => setName(event.target.value)} placeholder={translateText("Name")} className="w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-2 text-foreground outline-none"/>

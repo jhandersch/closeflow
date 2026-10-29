@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, File, FileUp, LoaderCircle, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { appConfirm } from "@/lib/dialogs";
+import { toDisplayMessage } from "@/lib/apiError";
 
 type StoredFile = {
   name: string;
@@ -46,7 +47,7 @@ export default function FilesPage() {
       setWorkspaceId(data.workspaceId);
       setFiles(data.files || []);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load files.");
+      setError(toDisplayMessage(loadError, "Could not load files."));
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function FilesPage() {
       toast.success(translateText("File uploaded"));
       await loadFiles();
     } catch (uploadError) {
-      toast.error(uploadError instanceof Error ? uploadError.message : "File upload failed.");
+      toast.error(toDisplayMessage(uploadError, "File upload failed."));
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -100,7 +101,7 @@ export default function FilesPage() {
       setFiles((current) => current.filter((item) => item.path !== file.path));
       toast.success(translateText("File deleted"));
     } catch (deleteError) {
-      toast.error(deleteError instanceof Error ? deleteError.message : "File deletion failed.");
+      toast.error(toDisplayMessage(deleteError, "File deletion failed."));
     } finally {
       setBusy(false);
     }
@@ -135,7 +136,7 @@ export default function FilesPage() {
         </div>
         {error ? (
           <div className="m-5 rounded-xl border border-red-400/25 bg-red-400/5 p-4 text-sm text-red-200">
-            <p>{error}</p>
+            <p>{translateText(error)}</p>
             <button type="button" onClick={() => void loadFiles()} className="mt-2 font-medium underline underline-offset-2">{translateText("Retry")}</button>
           </div>
         ) : loading ? (

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
         if (!apiKey) {
             return NextResponse.json({
                 explanation: language === "de" ? "Konzentriere dich auf hochwertige Abschlüsse mit hoher Abschlusschance." : "Focus on high-value deals and opportunities that are close to conversion.",
-                nextAction: language === "de" ? "Prüfe priorisierte Leads und plane Follow-ups." : "Review priority leads and schedule follow-ups.",
+                nextAction: language === "de" ? "Prüfe priorisierte Leads und plane Nachfassaktionen." : "Review priority leads and schedule follow-ups.",
             });
         }
         const trackedFetch = createTrackedOpenAIFetch(

@@ -592,7 +592,7 @@ export default function TasksPage() {
                   text-sm
                   text-rose-300
                 ">
-                {taskError}
+                {translateText(taskError)}
               </p>) : null}
 
 

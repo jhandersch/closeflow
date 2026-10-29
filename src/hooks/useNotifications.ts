@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { translateText } from "@/lib/i18n";
 export type NotificationItem = {
     id: string;
     title: string;
@@ -24,7 +25,7 @@ export function useNotifications() {
         }
         const response = await fetch("/api/notifications");
         if (!response.ok) {
-            setError("Could not load notifications");
+            setError(translateText("Could not load notifications"));
             setLoading(false);
             return;
         }

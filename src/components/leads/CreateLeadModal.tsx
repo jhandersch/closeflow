@@ -642,7 +642,7 @@ export default function CreateLeadModal({ open, onClose, onCreated, }: CreateLea
             text-sm
             text-rose-200
           ">
-          {error}
+          {translateText(error)}
         </div>)}
 
 

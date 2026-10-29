@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 import type { Task, TaskPriority } from "@/types";
+import { toDisplayMessage } from "@/lib/apiError";
 
 type DashboardTask = Task & {
     status: "open" | "completed" | "overdue";
@@ -107,7 +108,7 @@ export function useDashboardTasks(activeLeadIds: string[]) {
             });
 
         if (tasksError) {
-            setError(tasksError.message);
+            setError(toDisplayMessage(tasksError, "Could not load tasks"));
             setTasks([]);
             setLoading(false);
             return;

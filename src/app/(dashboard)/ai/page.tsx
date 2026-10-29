@@ -345,7 +345,7 @@ export default function AIAssistantPage() {
         {
           role: "assistant",
           content:
-            "I could not generate a response. Please try again.",
+            translateText("I could not generate a response. Please try again."),
         },
       ]);
     } finally {
@@ -571,7 +571,7 @@ export default function AIAssistantPage() {
 
           {error ? (
             <p className="mt-3 text-sm text-rose-300">
-              {error}
+              {translateText(error)}
             </p>
           ) : null}
         </div>

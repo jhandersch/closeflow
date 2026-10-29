@@ -1,7 +1,7 @@
 "use client";
 import { getIntlLocale, translateText  } from "@/lib/i18n";
 
-import { readApiError } from "@/lib/apiError";
+import { readApiError, toDisplayMessage } from "@/lib/apiError";
 import { appConfirm } from "@/lib/dialogs";
 
 import Link from "next/link";
@@ -334,9 +334,7 @@ export default function CustomersPage() {
       });
     } catch (deleteError) {
       notify.error(
-        deleteError instanceof Error
-          ? deleteError.message
-          : "Delete failed.",
+        toDisplayMessage(deleteError, "Delete failed."),
         {
           id: "customer-delete-error",
         }
@@ -481,9 +479,7 @@ export default function CustomersPage() {
       await refresh();
     } catch (importError) {
       const message =
-        importError instanceof Error
-          ? importError.message
-          : "Import failed.";
+        toDisplayMessage(importError, "Import failed.");
 
       setImportError(message);
 
@@ -709,7 +705,7 @@ export default function CustomersPage() {
 
         {importError ? (
           <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300">
-            {importError}
+            {translateText(importError)}
           </div>
         ) : null}
       </div>
