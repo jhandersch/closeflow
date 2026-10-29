@@ -23,7 +23,7 @@ export default function LeadPipeline({ leads }: { leads: Lead[] }) {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+    <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
       {stages.map((stage) => (
         <div
           key={stage.id}

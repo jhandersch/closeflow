@@ -96,6 +96,13 @@ const demoLeads: DemoLeadSeed[] = [
         ],
     },
 ];
+const germanDemoLeads: DemoLeadSeed[] = [
+    { name: "Maya Chen", company: "Nordstern Labs", status: "proposal", value: 18500, notes: "Die Geschäftsführung bittet um Rückmeldung bis Freitag.", activities: [{ action: "Produktvorführung mit der Vertriebsleitung abgeschlossen", type: "ai" }, { action: "Angebot versendet; Freigabe steht noch aus", type: "note_added" }], tasks: [{ title: "Bis Freitag bei der Vertriebsleitung nachfassen", priority: "high", dueInDays: 2 }, { title: "Überarbeitetes Angebot vorbereiten", priority: "medium", dueInDays: 4 }] },
+    { name: "Darius Bell", company: "Helio Cloud", status: "contacted", value: 9200, notes: "Interessiert an Automatisierung und Umsatzprognosen.", activities: [{ action: "Erstgespräch abgeschlossen", type: "created" }, { action: "Preisübersicht geteilt", type: "note_added" }], tasks: [{ title: "Übersicht zum möglichen Einsparpotenzial senden", priority: "medium", dueInDays: 1 }, { title: "Lösungsworkshop vereinbaren", priority: "high", dueInDays: 3 }] },
+    { name: "Nina Alvarez", company: "Foundry KI", status: "new", value: 6400, notes: "Neue Anfrage über das Webformular des Produktteams.", activities: [{ action: "Neue Anfrage über die Website erfasst", type: "created" }, { action: "Begrüßungs-E-Mail gesendet", type: "email_sent" }], tasks: [{ title: "Anforderungen der Anfrage klären", priority: "medium", dueInDays: 2 }] },
+    { name: "Marcus Reed", company: "Crestline Gesundheit", status: "won", value: 24300, notes: "Vertrag unterzeichnet; die Einführung hat begonnen.", activities: [{ action: "Vertrag unterzeichnet", type: "status_changed" }, { action: "Auftakt zur Einführung abgeschlossen", type: "ai" }], tasks: [{ title: "Checkliste für die Einführung zusammenstellen", priority: "low", dueInDays: 5 }] },
+    { name: "Sofia Patel", company: "Lumen Technik", status: "contacted", value: 11100, notes: "Wünscht eine erweiterte Testphase für drei Teams.", activities: [{ action: "Rückruf vereinbart", type: "call_completed" }, { action: "Produktvorführung durchgeführt", type: "ai" }], tasks: [{ title: "Bedingungen für die erweiterte Testphase senden", priority: "high", dueInDays: 2 }, { title: "Zeitplan für die Beschaffung erfragen", priority: "medium", dueInDays: 4 }] },
+];
 const isMissingSchemaError = (message: string) => /column .* does not exist|relation .* does not exist|schema cache/i.test(message);
 export async function POST(request: Request) {
     const readOnlyDenied = await denyReadOnlyWrite(request);
@@ -106,19 +113,13 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const language = normalizeLanguage(user.user_metadata?.language);
-    const localizedDemoLeads = demoLeads.map((lead) => ({
-        ...lead,
-        notes: translateText(lead.notes, language),
-        activities: lead.activities.map((activity) => ({
-            ...activity,
-            action: translateText(activity.action, language),
-        })),
-        tasks: lead.tasks.map((task) => ({
-            ...task,
-            title: translateText(task.title, language),
-        })),
-    }));
+    const { data: profile } = await supabase.from("profiles").select("language").eq("id", user.id).maybeSingle();
+    const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
+    const localizedDemoLeads = language === "de" ? germanDemoLeads : demoLeads;
+    const demoError = (detail: unknown, status = 500) => {
+        console.error("Demo seed failed", detail);
+        return NextResponse.json({ error: translateText("Could not load demo data.", language) }, { status });
+    };
     const warnings: string[] = [];
     let mode: "load" | "reload" = "load";
     try {
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
         .is("deleted_at", null)
         .ilike("notes", `${DEMO_MARKER}%`);
     if (existingDemoLeadsResult.error) {
-        return NextResponse.json({ error: existingDemoLeadsResult.error.message }, { status: 500 });
+        return demoError(existingDemoLeadsResult.error);
     }
     const existingDemoLeads = existingDemoLeadsResult.data || [];
     if (mode === "load" && existingDemoLeads.length > 0) {
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
             inserted_activities: 0,
             inserted_tasks: 0,
             skipped: existingDemoLeads.length,
-            message: "Demo data already exists. Use reload to refresh the demo workspace.",
+            message: translateText("Demo data already exists. Use reload to refresh the demo workspace.", language),
             warnings,
         });
     }
@@ -163,7 +164,7 @@ export async function POST(request: Request) {
         const leadIds = existingDemoLeads.map((lead) => lead.id);
         const deleteActivities = await supabase.from("activities").delete().in("lead_id", leadIds);
         if (deleteActivities.error && !isMissingSchemaError(deleteActivities.error.message || "")) {
-            return NextResponse.json({ error: deleteActivities.error.message }, { status: 500 });
+            return demoError(deleteActivities.error);
         }
         const deleteTasks = await supabase
             .from("tasks")
@@ -171,16 +172,17 @@ export async function POST(request: Request) {
             .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
             .ilike("title", `${DEMO_MARKER}%`);
         if (deleteTasks.error && !isMissingSchemaError(deleteTasks.error.message || "")) {
-            return NextResponse.json({ error: deleteTasks.error.message }, { status: 500 });
+            return demoError(deleteTasks.error);
         }
         if (deleteTasks.error && isMissingSchemaError(deleteTasks.error.message || "")) {
-            if (!warnings.includes("Tasks table not available in this environment, demo tasks were skipped.")) {
-                warnings.push("Tasks table not available in this environment, demo tasks were skipped.");
+            const taskWarning = translateText("Tasks table not available in this environment, demo tasks were skipped.", language);
+            if (!warnings.includes(taskWarning)) {
+                warnings.push(taskWarning);
             }
         }
         const deleteLeads = await supabase.from("leads").delete().in("id", leadIds);
         if (deleteLeads.error) {
-            return NextResponse.json({ error: deleteLeads.error.message }, { status: 500 });
+            return demoError(deleteLeads.error);
         }
     }
     let insertedLeads = 0;
@@ -189,7 +191,7 @@ export async function POST(request: Request) {
     for (const leadSeed of localizedDemoLeads) {
         const leadCapacity = await enforceLeadCapacityLimit(supabase, user.id, workspaceId || "");
         if (!leadCapacity.ok) {
-            return NextResponse.json({ error: leadCapacity.message }, { status: leadCapacity.status });
+            return NextResponse.json({ error: translateText(leadCapacity.message, language) }, { status: leadCapacity.status });
         }
         const leadInsert = await supabase
             .from("leads")
@@ -207,7 +209,7 @@ export async function POST(request: Request) {
             .select("id")
             .single();
         if (leadInsert.error || !leadInsert.data?.id) {
-            return NextResponse.json({ error: leadInsert.error?.message || "Failed to insert demo lead" }, { status: 500 });
+            return demoError(leadInsert.error || "Failed to insert demo lead");
         }
         insertedLeads += 1;
         if (leadSeed.status === "contacted" ||
@@ -238,7 +240,7 @@ export async function POST(request: Request) {
         if (activityRows.length > 0) {
             const activityInsert = await supabase.from("activities").insert(activityRows);
             if (activityInsert.error) {
-                return NextResponse.json({ error: activityInsert.error.message }, { status: 500 });
+                return demoError(activityInsert.error);
             }
             insertedActivities += activityRows.length;
         }
@@ -249,7 +251,7 @@ export async function POST(request: Request) {
                 lead_id: leadInsert.data.id,
                 user_id: user.id,
                 title: `${DEMO_MARKER} ${task.title}`,
-                description: "Demo task generated by CloseFlow seed.",
+                description: translateText("Demo task generated by CloseFlow seed.", language),
                 completed: false,
                 priority: task.priority,
                 due_date: new Date(Date.now() + task.dueInDays * 24 * 60 * 60 * 1000).toISOString(),
@@ -258,11 +260,12 @@ export async function POST(request: Request) {
         if (taskRows.length > 0) {
             const taskInsert = await supabase.from("tasks").insert(taskRows);
             if (taskInsert.error && !isMissingSchemaError(taskInsert.error.message || "")) {
-                return NextResponse.json({ error: taskInsert.error.message }, { status: 500 });
+                return demoError(taskInsert.error);
             }
             if (taskInsert.error && isMissingSchemaError(taskInsert.error.message || "")) {
-                if (!warnings.includes("Tasks table not available in this environment, demo tasks were skipped.")) {
-                warnings.push("Tasks table not available in this environment, demo tasks were skipped.");
+                const taskWarning = translateText("Tasks table not available in this environment, demo tasks were skipped.", language);
+                if (!warnings.includes(taskWarning)) {
+                warnings.push(taskWarning);
             }
             }
             else {
@@ -277,8 +280,8 @@ export async function POST(request: Request) {
         inserted_tasks: insertedTasks,
         skipped: 0,
         message: mode === "reload"
-            ? "Demo workspace reloaded successfully."
-            : "Demo workspace loaded successfully.",
+            ? translateText("Demo workspace reloaded successfully.", language)
+            : translateText("Demo workspace loaded successfully.", language),
         warnings,
     });
 }

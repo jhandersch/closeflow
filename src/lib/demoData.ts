@@ -29,7 +29,7 @@ export async function loadDemoData(options: LoadDemoOptions = {}) {
         error?: string;
     } | null;
     if (!response.ok) {
-        throw new Error(payload && "error" in payload && payload.error ? payload.error : "Failed to load demo data");
+        throw new Error(translateText(payload && "error" in payload && payload.error ? payload.error : "Failed to load demo data"));
     }
     if (!payload || !("message" in payload)) {
         throw new Error(translateText("Demo response was invalid"));

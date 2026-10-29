@@ -1007,7 +1007,7 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            {translateText("Language / Sprache")}<select
+            {language === "de" ? "Sprache" : "Language"}<select
               value={language}
               onChange={(event) => setLanguage(normalizeLanguage(event.target.value))}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"

@@ -179,10 +179,10 @@ export default function DashboardPage() {
                                     try {
                                         const result = await loadDemoData({ reload: true });
                                         notify.info(`${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.`, { id: "dashboard-demo-data-loaded" });
-                                        if (result.warnings?.length) notify.warning(`Warnings: ${result.warnings.join(" ")}`, { id: "dashboard-demo-load-warning" });
+                                        if (result.warnings?.length) notify.warning(`${translateText("Warnings:")} ${result.warnings.join(" ")}`, { id: "dashboard-demo-load-warning" });
                                         await refresh();
                                     } catch (loadError) {
-                                        notify.error(toDisplayMessage(loadError, "Could not load demo data"), { id: "dashboard-demo-load-error" });
+                                        notify.error(toDisplayMessage(loadError, translateText("Could not load demo data.")), { id: "dashboard-demo-load-error" });
                                     } finally {
                                         setDemoLoading(false);
                                     }

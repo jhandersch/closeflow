@@ -888,17 +888,17 @@ export default function LeadsPage() {
                 try {
                     const result = await loadDemoData({ reload: true });
                     const warning = result.warnings?.length
-                        ? ` ${"Warnings"}: ${result.warnings.join(" ")}`
+                        ? ` ${translateText("Warnings:")} ${result.warnings.join(" ")}`
                         : "";
                     notify.info(
-                      `${result.message} Leads: ${result.inserted_leads}, Activities: ${result.inserted_activities}, Tasks: ${result.inserted_tasks}.`,
+                      `${translateText(result.message)} ${translateText("Leads:")} ${result.inserted_leads}, ${translateText("Activities:")} ${result.inserted_activities}, ${translateText("Tasks:")} ${result.inserted_tasks}.${warning}`,
                       {
                         id: "demo-data-loaded",
                       }
                                         );
                     if (result.warnings?.length) {
                       notify.warning(
-                        `Warnings: ${result.warnings.join(" ")}`,
+                        `${translateText("Warnings:")} ${result.warnings.join(" ")}`,
                         {
                           id: "demo-load-warning",
                         }
@@ -910,7 +910,7 @@ export default function LeadsPage() {
                     setDemoMessage(error instanceof Error
                         ? error.message
                         :
-                            "Could not load demo data");
+                            translateText("Could not load demo data."));
                 }
                 finally {
                     setDemoLoading(false);
