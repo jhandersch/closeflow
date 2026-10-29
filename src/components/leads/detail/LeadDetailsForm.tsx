@@ -24,7 +24,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
     const [phone, setPhone] = useState(lead.phone ?? "");
     const [website, setWebsite] = useState(lead.website ?? "");
     const [address, setAddress] = useState(lead.address ?? "");
-    const [nextAction, setNextAction] = useState(lead.next_action ? translateLeadNextAction(lead.next_action) : "");
+    const [nextAction, setNextAction] = useState(lead.next_action ?? "");
     const [nextActionDate, setNextActionDate] = useState(lead.next_action_date
         ? lead.next_action_date.slice(0, 10)
         : "");
@@ -49,7 +49,7 @@ export default function LeadDetailsForm({ lead, saveLead, onSaved, }: Props) {
         setPhone(lead.phone ?? "");
         setWebsite(lead.website ?? "");
         setAddress(lead.address ?? "");
-        setNextAction(lead.next_action ? translateLeadNextAction(lead.next_action) : "");
+        setNextAction(lead.next_action ?? "");
         setNextActionDate(lead.next_action_date
             ? lead.next_action_date.slice(0, 10)
             : "");

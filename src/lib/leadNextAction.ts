@@ -51,6 +51,9 @@ export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: str
   if (status === "lost" && (!action || outdatedLostActions.has(action))) {
     return translateLeadNextAction("Request feedback on the decision and schedule a reactivation follow-up", language);
   }
+  if (action && action !== actionByStatus[status]) {
+    return action;
+  }
   return translateLeadNextAction(action || getDefaultStatusNextAction(status).action, language);
 }
 
