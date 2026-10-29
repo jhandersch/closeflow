@@ -862,7 +862,7 @@ export default function CustomersPage() {
                           </div>
                           {customer.nextActions.length ? (
                             <div className="mt-4 border-t border-border-subtle pt-3">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Next actions")}</p>
+                              <p className={`text-xs font-semibold tracking-wide text-foreground/55 ${language === "de" ? "normal-case" : "uppercase"}`}>{translateText("Next actions")}</p>
                               <ul className="mt-2 space-y-1 text-sm text-foreground/75">
                                 {customer.nextActions.map((item, index) => (
                                   <li key={`${customer.id}-${item.deal}-${index}`}>

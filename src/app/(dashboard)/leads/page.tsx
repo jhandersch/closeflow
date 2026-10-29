@@ -1137,7 +1137,7 @@ export default function LeadsPage() {
 
                     {/* PRIORITY */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
+                      <p className={`text-[11px] font-medium tracking-wide text-foreground/40 ${language === "de" ? "normal-case" : "uppercase"}`}>
                         {translateText("Priority")}</p>
 
                       <div className="mt-2">
