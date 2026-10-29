@@ -174,6 +174,7 @@ export async function POST(request: Request) {
                 },
                 body: JSON.stringify({
                     mode: "load",
+                    language: body.language,
                 }),
                 cache: "no-store",
             });

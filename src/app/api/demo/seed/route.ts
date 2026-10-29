@@ -1,9 +1,7 @@
 import { translateText, normalizeLanguage } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
-import { runLeadAutomation } from "@/lib/automation";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
-import type { Lead } from "@/types";
 type DemoLeadSeed = {
     name: string;
     company: string;
@@ -171,8 +169,7 @@ export async function POST(request: Request) {
         const deleteTasks = await supabase
             .from("tasks")
             .delete()
-            .eq(workspaceId ? "workspace_id" : "user_id", workspaceId || user.id)
-            .ilike("title", `${DEMO_MARKER}%`);
+            .in("lead_id", leadIds);
         if (deleteTasks.error && !isMissingSchemaError(deleteTasks.error.message || "")) {
             return demoError(deleteTasks.error);
         }
@@ -195,6 +192,9 @@ export async function POST(request: Request) {
         if (!leadCapacity.ok) {
             return NextResponse.json({ error: translateText(leadCapacity.message, language) }, { status: leadCapacity.status });
         }
+        const firstTask = leadSeed.status === "won" || leadSeed.status === "lost"
+            ? undefined
+            : leadSeed.tasks[0];
         const leadInsert = await supabase
             .from("leads")
             .insert({
@@ -204,6 +204,10 @@ export async function POST(request: Request) {
             company: leadSeed.company,
             status: leadSeed.status,
             value: leadSeed.value,
+            next_action: firstTask?.title || null,
+            next_action_date: firstTask
+                ? new Date(Date.now() + firstTask.dueInDays * 24 * 60 * 60 * 1000).toISOString()
+                : null,
             notes: `${DEMO_MARKER} ${leadSeed.notes}`,
             stage_changed_at: new Date().toISOString(),
             last_activity_at: new Date().toISOString(),
@@ -214,20 +218,6 @@ export async function POST(request: Request) {
             return demoError(leadInsert.error || "Failed to insert demo lead");
         }
         insertedLeads += 1;
-        if (leadSeed.status === "contacted" ||
-            leadSeed.status === "proposal") {
-            const automatedLead = {
-                id: leadInsert.data.id,
-                name: leadSeed.name,
-                company: leadSeed.company,
-                status: leadSeed.status,
-                value: leadSeed.value,
-            } as Lead;
-            const previousStatus = leadSeed.status === "contacted"
-                ? "new"
-                : "contacted";
-            await runLeadAutomation(supabase, user.id, workspaceId || "", automatedLead, previousStatus);
-        }
         const activityRows = leadSeed.activities.map((activity, index) => ({
             workspace_id: workspaceId,
             lead_id: leadInsert.data.id,

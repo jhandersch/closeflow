@@ -42,7 +42,7 @@ const sanitizeNextPath = (nextPath: string | null) => {
 };
 
 export default function OnboardingPage() {
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
     const router = useRouter();
     const searchParams = useSearchParams();
     const nextPath = sanitizeNextPath(searchParams.get("next"));
@@ -148,6 +148,7 @@ export default function OnboardingPage() {
                 },
                 body: JSON.stringify({
                     companyName: companyName.trim(),
+                    language,
                     industry: industry.trim(),
                     teamSize: teamSize.trim(),
                     quickStartMode,
