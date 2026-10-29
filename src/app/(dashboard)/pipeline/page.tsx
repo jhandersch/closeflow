@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 import { toDisplayMessage } from "@/lib/apiError";
 import { useEffect, useMemo, useState } from "react";
@@ -166,7 +166,7 @@ export default function PipelinePage() {
           </div>
         <div className="rounded-xl border border-border-subtle bg-surface-1 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-foreground/50">{translateText("Total value")}</p>
-          <p className="mt-1 text-lg font-semibold text-foreground">€{totalValue.toLocaleString(getIntlLocale())}</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{formatEuro(totalValue)}</p>
         </div>
         </div>
 
@@ -210,7 +210,7 @@ export default function PipelinePage() {
                             </div>
 
                             <p className="-mt-2 mb-4 px-1 text-xs text-foreground/50">
-                              €{columns[stage.key].reduce((sum, lead) => sum + Number(lead.value || 0), 0).toLocaleString(getIntlLocale())} {translateText("total value")}</p>
+                              {formatEuro(columns[stage.key].reduce((sum, lead) => sum + Number(lead.value || 0), 0))} {translateText("total value")}</p>
 
 
 
@@ -243,7 +243,7 @@ export default function PipelinePage() {
 
 
 
-                                            <p className={`mt-3 inline-flex rounded-lg border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>€{Number(lead.value || 0).toLocaleString(getIntlLocale())}</p>
+                                            <p className={`mt-3 inline-flex rounded-lg border px-2 py-1 text-xs font-semibold ${stageStyles[stage.key].badge}`}>{formatEuro(Number(lead.value || 0))}</p>
 
                                             {lead.next_action || lead.status === "won" || lead.status === "lost" ? (
                                               <div className="mt-3 rounded-lg border border-border-subtle/70 bg-surface-1/60 px-3 py-2">

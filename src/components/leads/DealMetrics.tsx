@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, translateText  } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 
@@ -19,7 +19,6 @@ export default function DealMetrics({
   stageAge,
 }: DealMetricsProps) {
   const { language } = useAppPreferences();
-  const locale = getIntlLocale(language);
 
   return (
     <div className="rounded-xl bg-surface-1 p-6">
@@ -70,7 +69,7 @@ export default function DealMetrics({
             {translateText("Lead Value")}</p>
 
           <p className="mt-1 text-2xl font-bold text-purple-400">
-            €{value.toLocaleString(locale)}
+            {formatEuro(value, language)}
           </p>
         </div>
 

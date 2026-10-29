@@ -838,7 +838,7 @@ export default function CustomersPage() {
 
                               <div>
                                 <p className="text-foreground/55">
-                                  {translateText("Deals")}</p>
+                                  {translateText("Leads")}</p>
 
                                 <p className="font-semibold text-foreground">
                                   {customer.deals}

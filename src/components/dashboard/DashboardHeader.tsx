@@ -1,7 +1,7 @@
 "use client";
 
 
-import { getIntlLocale } from "@/lib/i18n";
+import { formatEuro, getIntlLocale } from "@/lib/i18n";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -54,7 +54,6 @@ export default function DashboardHeader({
   const [timezone, setTimezone] =
     useState(DEFAULT_TIMEZONE);
 
-  const locale = getIntlLocale();
 
   const hour = Number(
     new Intl.DateTimeFormat(getIntlLocale(), {
@@ -219,7 +218,7 @@ export default function DashboardHeader({
               </p>
 
               <p className="mt-1 text-xl font-bold text-foreground">
-                €{pipelineValue.toLocaleString(locale)}
+                {formatEuro(pipelineValue)}
               </p>
             </div>
 

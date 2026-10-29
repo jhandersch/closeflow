@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 import { readApiError } from "@/lib/apiError";
 
@@ -249,7 +249,7 @@ export default function AdminPage() {
 
                         <Stat
                             label="MRR"
-                            value={`€${overview.mrr}`}
+                            value={formatEuro(Number(overview.mrr))}
                         />
 
                         <Stat

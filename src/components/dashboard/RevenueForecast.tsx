@@ -1,5 +1,5 @@
 ﻿"use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 
@@ -317,5 +317,5 @@ function formatMoney(
   value: number,
   locale: string
 ) {
-  return `€${Math.round(value).toLocaleString(locale)}`;
+  return formatEuro(Math.round(value), locale === "de-DE" ? "de" : "en");
 }

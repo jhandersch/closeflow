@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
@@ -184,7 +184,6 @@ export default function LeadsPage() {
     useLeadsData({ activityLimit: 0 });
     const { readOnly } = usePermissions();
 
-    const locale = getIntlLocale();
     const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
     const todayKey = getDateKey(new Date(), timezone);
     const router = useRouter();
@@ -713,10 +712,7 @@ export default function LeadsPage() {
           <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">
             <p className="text-sm text-foreground/65">{translateText("Pipeline Value")}</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">
-              €
-              {filteredLeads
-            .reduce((sum, lead) => sum + (lead.value || 0), 0)
-            .toLocaleString(locale)}
+              {formatEuro(filteredLeads.reduce((sum, lead) => sum + (lead.value || 0), 0))}
             </p>
           </div>
 
@@ -731,13 +727,10 @@ export default function LeadsPage() {
             <p className="text-sm text-foreground/65">{translateText("Forecast Revenue")}</p>
 
             <p className="mt-2 text-3xl font-bold text-purple-400">
-              €
-              {filteredLeads
-            .reduce((sum, lead) => {
+              {formatEuro(filteredLeads.reduce((sum, lead) => {
             const salesScore = calculateSalesScore(lead, getStaleDays(lead));
             return sum + (lead.value * salesScore.probability) / 100;
-        }, 0)
-            .toLocaleString(locale, {
+        }, 0), undefined, {
             maximumFractionDigits: 0,
         })}
             </p>
@@ -1111,7 +1104,7 @@ export default function LeadsPage() {
                         </p>
 
                         <p className="mt-0.5 text-base font-bold text-foreground">
-                          €{lead.value.toLocaleString(locale)}
+                          {formatEuro(lead.value)}
                         </p>
                       </div>
 

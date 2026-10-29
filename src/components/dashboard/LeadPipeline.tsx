@@ -1,7 +1,7 @@
 "use client";
 
 
-import { getIntlLocale, translateText } from "@/lib/i18n";
+import { formatEuro, translateText } from "@/lib/i18n";
 import Link from "next/link";
 import { leadDisplayName, leadCompany } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ export default function LeadPipeline({ leads }: { leads: Lead[] }) {
                   </p>
 
                   <p className="mt-2 text-xs text-green-400">
-                    €{lead.value.toLocaleString(getIntlLocale())}
+                    {formatEuro(lead.value)}
                   </p>
                 </Link>
               ))}

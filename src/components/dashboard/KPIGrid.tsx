@@ -1,4 +1,4 @@
-import { getIntlLocale } from "@/lib/i18n";
+import { formatEuro } from "@/lib/i18n";
 ﻿import KpiCard from "@/components/dashboard/KpiCard";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
@@ -22,7 +22,6 @@ export default function KPIGrid({
   openTasks,
 }: KPIGridProps) {
   const { t } = useAppPreferences();
-  const locale = getIntlLocale();
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -34,7 +33,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.pipelineValue", "Pipeline Value")}
-        value={`€${pipelineValue.toLocaleString(locale)}`}
+        value={formatEuro(pipelineValue)}
         hint={t("dashboard.totalOpenDealValue", "Total open deal value")}
         accent="amber"
       />
@@ -48,7 +47,7 @@ export default function KPIGrid({
 
       <KpiCard
         label={t("dashboard.revenueClosed", "Revenue Closed")}
-        value={`€${revenue.toLocaleString(locale)}`}
+        value={formatEuro(revenue)}
         hint={t("dashboard.wonBusiness", "Won business")}
         accent="emerald"
       />

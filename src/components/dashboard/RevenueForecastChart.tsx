@@ -1,5 +1,5 @@
 ﻿"use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import {
@@ -98,9 +98,9 @@ export default function RevenueForecastChart({
               stroke="var(--chart-muted)"
               tick={{ fill: "var(--chart-muted)", fontSize: 12 }}
               tickLine={false}
-              tickFormatter={(value) =>
-                `€${value / 1000}k`
-              }
+              tickFormatter={(value) => language === "de"
+                ? `${Number(value / 1000).toLocaleString(locale)}k €`
+                : `€${value / 1000}k`}
             />
 
             <Tooltip
@@ -115,9 +115,7 @@ export default function RevenueForecastChart({
               labelStyle={{ color: "var(--foreground)", fontWeight: 600, marginBottom: 4 }}
               itemStyle={{ color: "var(--chart-text)" }}
               formatter={(value, name) => [
-                `€${Number(value ?? 0).toLocaleString(
-                  locale
-                )}`,
+                formatEuro(Number(value ?? 0), language),
                 String(name),
               ]}
             />
@@ -142,9 +140,9 @@ export default function RevenueForecastChart({
             {data.map((row) => (
               <tr key={row.month} className="border-t border-border-subtle text-foreground/75">
                 <td className="px-4 py-3 font-medium text-foreground">{row.month}</td>
-                <td className="px-4 py-3">€{Number(row.conservative || 0).toLocaleString(locale)}</td>
-                <td className="px-4 py-3">€{Number(row.expected || 0).toLocaleString(locale)}</td>
-                <td className="px-4 py-3">€{Number(row.optimistic || 0).toLocaleString(locale)}</td>
+                <td className="px-4 py-3">{formatEuro(Number(row.conservative || 0), language)}</td>
+                <td className="px-4 py-3">{formatEuro(Number(row.expected || 0), language)}</td>
+                <td className="px-4 py-3">{formatEuro(Number(row.optimistic || 0), language)}</td>
               </tr>
             ))}
           </tbody>
@@ -162,7 +160,7 @@ function ScenarioValue({ title, value, color }: { title: string; value: number; 
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-2/70 p-4">
       <p className={`text-sm ${color}`}>{title} {" "}{translateText("· month 6")}</p>
-      <p className="mt-1 text-xl font-semibold text-foreground">€{value.toLocaleString(getIntlLocale())}</p>
+      <p className="mt-1 text-xl font-semibold text-foreground">{formatEuro(value)}</p>
     </div>
   );
 }

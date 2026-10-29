@@ -1,5 +1,5 @@
 "use client";
-import { formatTextForLanguage, getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, formatTextForLanguage, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -16,7 +16,7 @@ type StatusFilter = "all" | "open" | "customers" | Lead["status"];
 type CostItem = { lead_id: string; name: string; amount: number };
 type LeadAnalysis = { summary?: string; risk?: string; nextAction?: string; confidence?: number };
 
-const money = (value: number, language: "en" | "de") => `€${Number(value || 0).toLocaleString(getIntlLocale(language), { maximumFractionDigits: 0 })}`;
+const money = (value: number, language: "en" | "de") => formatEuro(Number(value || 0), language, { maximumFractionDigits: 0 });
 const shortDate = (value: string | null | undefined, language: "en" | "de") => value && !Number.isNaN(new Date(value).getTime())
   ? new Intl.DateTimeFormat(getIntlLocale(language), { dateStyle: "medium" }).format(new Date(value))
   : translateText("Not set", language);

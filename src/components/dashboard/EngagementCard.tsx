@@ -1,4 +1,4 @@
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, translateText  } from "@/lib/i18n";
 type EngagementCardProps = {
   contactedCount: number;
   proposalCount: number;
@@ -10,8 +10,6 @@ export default function EngagementCard({
   proposalCount,
   forecastDelta,
 }: EngagementCardProps) {
-  const locale = getIntlLocale();
-
   return (
     <section
       className="
@@ -174,7 +172,7 @@ export default function EngagementCard({
                   text-foreground
                 "
               >
-                €{forecastDelta.toLocaleString(locale)}
+                {formatEuro(forecastDelta)}
               </p>
             </div>
           </div>

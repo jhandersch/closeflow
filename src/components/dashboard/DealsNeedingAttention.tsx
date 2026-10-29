@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, translateText  } from "@/lib/i18n";
 
 
 import Link from "next/link";
@@ -39,7 +39,7 @@ export default function DealsNeedingAttention({ leads }: DealsNeedingAttentionPr
                                     <p className="truncate text-sm font-semibold text-foreground">{leadDisplayName(lead)}</p>
                                     <p className="mt-0.5 truncate text-xs text-foreground/55">{leadCompany(lead)}</p>
                                 </div>
-                                <span className="shrink-0 text-sm font-semibold text-foreground">€{Number(lead.value || 0).toLocaleString(getIntlLocale())}</span>
+                                <span className="shrink-0 text-sm font-semibold text-foreground">{formatEuro(Number(lead.value || 0))}</span>
                             </div>
                             <div className="mt-3 flex items-start justify-between gap-3">
                                 <p className="line-clamp-2 text-xs text-foreground/60">{lead.next_action?.trim() ? getVisibleLeadNextAction(lead.status, lead.next_action, language) : translateText("Add a next action")}</p>

@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 import { toDisplayMessage } from "@/lib/apiError";
 
@@ -206,7 +206,7 @@ export default function CostsPage() {
                 <div className="mt-2 rounded-xl border border-border-subtle bg-surface-2 px-3.5 py-1.5 text-xs text-foreground/75 sm:mt-0">
                   {translateText("Total recorded costs across deals:")}{" "}
                   <span className="font-semibold text-foreground">
-                    €{totalAllCosts.toLocaleString(getIntlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatEuro(totalAllCosts, undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}
@@ -324,7 +324,7 @@ export default function CostsPage() {
 
             {selectedCostLeadId ? (
               <p className="mt-3 text-xs text-foreground/55">
-                {translateText("Selected lead total: €")}{selectedLeadTotal.toLocaleString(getIntlLocale(), {
+                {translateText("Selected lead total:")} {formatEuro(selectedLeadTotal, undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

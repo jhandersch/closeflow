@@ -1,5 +1,5 @@
 "use client";
-import { translatePlanName, translateText } from "@/lib/i18n";
+import { formatEuro, translatePlanName, translateText } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import Link from "next/link";
 import Logo, { LogoMark } from "@/components/Logo";
@@ -42,19 +42,19 @@ const capabilities = [
 ];
 
 const plans = [
-  { name: "Free", price: "€0", period: "forever", description: "Start organizing leads and follow-ups in one workspace.", points: ["1 owned workspace", "1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
-  { name: "Pro", price: "€49", period: "/ month per workspace", description: "For small agencies coordinating sales across a team.", points: ["1 owned workspace", "Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
-  { name: "Business", price: "€149", period: "/ month per workspace", description: "For teams managing up to five workspaces, each billed separately.", points: ["Up to 5 owned workspaces", "Up to 20 team members per workspace", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
+  { name: "Free", price: 0, period: "forever", description: "Start organizing leads and follow-ups in one workspace.", points: ["1 owned workspace", "1 team member", "50 active leads", "10 AI requests / month", "5 exports / month"] },
+  { name: "Pro", price: 49, period: "/ month per workspace", description: "For small agencies coordinating sales across a team.", points: ["1 owned workspace", "Up to 5 team members", "Unlimited active leads", "500 AI requests / month", "200 exports / month"], featured: true },
+  { name: "Business", price: 149, period: "/ month per workspace", description: "For teams managing up to five workspaces, each billed separately.", points: ["Up to 5 owned workspaces", "Up to 20 team members per workspace", "Unlimited active leads", "5,000 AI requests / month", "2,000 exports / month"] },
 ];
 
 const exampleDeals = [
-  { name: "Northstar Studio", person: "Jordan Lee", value: "€12,000", stage: "Proposal", tone: "bg-violet-400" },
-  { name: "Lumen Works", person: "Alex Morgan", value: "€8,400", stage: "Contacted", tone: "bg-cyan-400" },
-  { name: "Fieldnote", person: "Sam Rivera", value: "€5,200", stage: "New", tone: "bg-amber-300" },
+  { name: "Northstar Studio", person: "Jordan Lee", value: 12000, stage: "Proposal", tone: "bg-violet-400" },
+  { name: "Lumen Works", person: "Alex Morgan", value: 8400, stage: "Contacted", tone: "bg-cyan-400" },
+  { name: "Fieldnote", person: "Sam Rivera", value: 5200, stage: "New", tone: "bg-amber-300" },
 ];
 
 export default function HomePage() {
-  useAppPreferences();
+  const { language, setLanguage } = useAppPreferences();
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -72,6 +72,11 @@ export default function HomePage() {
           <Link href="/pricing" className="transition hover:text-foreground">{translateText("Pricing")}</Link>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
+          <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
+          <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2 text-sm text-foreground outline-none focus:border-cyan-400">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
           <Link href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-foreground/70 transition hover:text-foreground">{translateText("Log in")}</Link>
           <Link href="/login?mode=signup" className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">{translateText("Start free")}{" "}<ArrowRight className="ml-1 inline h-4 w-4" /></Link>
         </div>
@@ -120,11 +125,11 @@ export default function HomePage() {
                     <span className="rounded-lg bg-cyan-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-950">{translateText("+ Add lead")}</span>
                   </div>
                   <div className="mt-4 grid grid-cols-3 gap-2">
-                    {[["Open leads", "12"], ["Pipeline value", "€68.4k"], ["Follow-ups", "4 due"]].map(([name, value]) => <div key={name} className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5 sm:p-3"><p className="text-[8px] text-white/40 sm:text-[9px]">{translateText(name)}</p><p className="mt-1 text-xs font-semibold text-white/85 sm:text-sm">{translateText(value)}</p></div>)}
+                    {[["Open leads", "12"], ["Pipeline value", formatEuro(68400)], ["Follow-ups", "4 due"]].map(([name, value]) => <div key={name} className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5 sm:p-3"><p className="text-[8px] text-white/40 sm:text-[9px]">{translateText(name)}</p><p className="mt-1 text-xs font-semibold text-white/85 sm:text-sm">{translateText(value)}</p></div>)}
                   </div>
                   <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.07]">
                     <div className="grid grid-cols-[1.4fr_0.9fr_0.7fr] gap-2 bg-white/[0.035] px-3 py-2 text-[8px] font-medium uppercase tracking-wider text-white/35 sm:text-[9px]"><span>{translateText("Lead")}</span><span>{translateText("Stage")}</span><span className="text-right">{translateText("Value")}</span></div>
-                    {exampleDeals.map((deal, index) => <div key={deal.name} className={`grid grid-cols-[1.4fr_0.9fr_0.7fr] items-center gap-2 px-3 py-3 ${index > 0 ? "border-t border-white/[0.06]" : ""}`}><div className="flex min-w-0 items-center gap-2"><span className={`h-6 w-6 shrink-0 rounded-lg ${deal.tone}/15 flex items-center justify-center text-[8px] font-semibold text-white`}>{deal.name.slice(0, 1)}</span><span className="min-w-0"><span className="block truncate text-[9px] font-medium text-white/80 sm:text-[10px]">{deal.name}</span><span className="block truncate text-[8px] text-white/35">{deal.person}</span></span></div><span className="flex items-center gap-1.5 text-[8px] text-white/55 sm:text-[9px]"><span className={`h-1.5 w-1.5 rounded-full ${deal.tone}`} />{translateText(deal.stage)}</span><span className="text-right text-[9px] text-white/65 sm:text-[10px]">{deal.value}</span></div>)}
+                    {exampleDeals.map((deal, index) => <div key={deal.name} className={`grid grid-cols-[1.4fr_0.9fr_0.7fr] items-center gap-2 px-3 py-3 ${index > 0 ? "border-t border-white/[0.06]" : ""}`}><div className="flex min-w-0 items-center gap-2"><span className={`h-6 w-6 shrink-0 rounded-lg ${deal.tone}/15 flex items-center justify-center text-[8px] font-semibold text-white`}>{deal.name.slice(0, 1)}</span><span className="min-w-0"><span className="block truncate text-[9px] font-medium text-white/80 sm:text-[10px]">{deal.name}</span><span className="block truncate text-[8px] text-white/35">{deal.person}</span></span></div><span className="flex items-center gap-1.5 text-[8px] text-white/55 sm:text-[9px]"><span className={`h-1.5 w-1.5 rounded-full ${deal.tone}`} />{translateText(deal.stage)}</span><span className="text-right text-[9px] text-white/65 sm:text-[10px]">{formatEuro(deal.value)}</span></div>)}
                   </div>
                   <div className="mt-3 flex items-center gap-2 rounded-xl border border-cyan-400/15 bg-cyan-400/[0.055] p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-200"><Sparkles className="h-3.5 w-3.5" /></span><p className="text-[9px] leading-4 text-white/60 sm:text-[10px]">{translateText("Keep the next step visible: review your follow-ups and update deal activity as conversations move forward.")}</p></div>
                 </div>
@@ -167,7 +172,7 @@ export default function HomePage() {
           <div className="mt-9 grid gap-4 md:grid-cols-3">
             {plans.map((plan) => <article key={plan.name} className={`rounded-2xl border bg-surface-1 p-6 ${plan.featured ? "border-cyan-400/40 shadow-[0_0_35px_-20px_rgba(34,211,238,0.25)]" : "border-border-subtle"}`}>
               <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{translatePlanName(plan.name)}</h3><p className="mt-1 text-xs text-foreground/50">{translateText(plan.description)}</p></div>{plan.featured && <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">{translateText("Popular")}</span>}</div>
-              <p className="mt-6"><span className="text-3xl font-semibold tracking-tight">{plan.price}</span><span className="ml-1 text-xs text-foreground/45">{translateText(plan.period)}</span></p>
+              <p className="mt-6"><span className="text-3xl font-semibold tracking-tight">{formatEuro(plan.price, language, { maximumFractionDigits: 0 })}</span><span className="ml-1 text-xs text-foreground/45">{translateText(plan.period)}</span></p>
               <ul className="mt-5 space-y-2.5">{plan.points.map((point) => <li key={point} className="flex items-center gap-2 text-xs text-foreground/65"><Check className="h-3.5 w-3.5 shrink-0 text-cyan-300" />{translateText(point)}</li>)}</ul>
             </article>)}
           </div>

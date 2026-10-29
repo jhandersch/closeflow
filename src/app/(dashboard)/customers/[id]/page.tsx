@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 import { appConfirm } from "@/lib/dialogs";
 
@@ -801,10 +801,7 @@ export default function CustomerDetailPage() {
                                 {translateText("Revenue History")}</p>
 
                             <p className="mt-2 text-2xl font-semibold text-emerald-300">
-                                {translateText("EUR")}{" "}
-                                {customer.revenue.toLocaleString(
-                                    locale,
-                                )}
+                                {formatEuro(customer.revenue)}
                             </p>
                         </div>
 
@@ -813,14 +810,11 @@ export default function CustomerDetailPage() {
                                 {translateText("Purchased Products")}</p>
 
                             <p className="mt-2 text-2xl font-semibold text-foreground">
-                                {
-                                    customer.leads.filter(
-                                        (lead) =>
-                                            lead.status ===
-                                            "won",
-                                    ).length
-                                }{" "}
-                                {translateText("deals won")}</p>
+                                {(() => {
+                                    const wonLeadCount = customer.leads.filter((lead) => lead.status === "won").length;
+                                    const wonLeadLabel = wonLeadCount === 1 ? "won lead" : "won leads";
+                                    return `${wonLeadCount} ${translateText(wonLeadLabel)}`;
+                                })()}</p>
                         </div>
 
                         <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5">

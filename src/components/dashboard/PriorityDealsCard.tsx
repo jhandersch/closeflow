@@ -1,5 +1,5 @@
 "use client";
-import { formatTextForLanguage, getIntlLocale, translateText } from "@/lib/i18n";
+import { formatEuro, formatTextForLanguage, translateText } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { usePriorityAI } from "@/hooks/usePriorityAI";
@@ -304,7 +304,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
 
                   <span className="font-semibold text-purple-400">
 
-                    €{lead.value.toLocaleString(getIntlLocale())}
+                    {formatEuro(lead.value)}
 
                   </span>
 

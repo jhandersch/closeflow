@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -219,16 +219,12 @@ export default function RevenueAnalyticsPage() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <Card
                         label="Revenue"
-                        value={`€${metrics.revenue.toLocaleString(
-                            locale,
-                        )}`}
+                        value={formatEuro(metrics.revenue)}
                     />
 
                     <Card
                         label="Average deal size"
-                        value={`€${metrics.averageDealValue.toLocaleString(
-                            locale,
-                        )}`}
+                        value={formatEuro(metrics.averageDealValue)}
                     />
 
                     <Card

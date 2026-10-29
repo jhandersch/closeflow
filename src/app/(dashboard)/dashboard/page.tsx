@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatEuro, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import { useMemo, useState } from "react";
@@ -196,9 +196,9 @@ export default function DashboardPage() {
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <DashboardStat label="Won revenue" value={`€${metrics.revenue.toLocaleString(getIntlLocale())}`} hint={`${metrics.won} ${translateText("closed won deals")}`} icon={CircleDollarSign} accent="emerald" />
+                    <DashboardStat label="Won revenue" value={formatEuro(metrics.revenue)} hint={`${metrics.won} ${translateText("closed won deals")}`} icon={CircleDollarSign} accent="emerald" />
                     <DashboardStat label="Win rate" value={`${metrics.winRate}%`} hint={`${metrics.wonLostLabel} ${translateText("won / lost deals")}`} icon={Percent} accent="cyan" />
-                    <DashboardStat label="Average deal value" value={`€${metrics.averageDealValue.toLocaleString(getIntlLocale())}`} hint={translateText(metrics.won ? "Across won deals" : "Across open opportunities")} icon={BarChart3} accent="violet" />
+                    <DashboardStat label="Average deal value" value={formatEuro(metrics.averageDealValue)} hint={translateText(metrics.won ? "Across won deals" : "Across open opportunities")} icon={BarChart3} accent="violet" />
                     <DashboardStat label="Open tasks" value={tasksLoading ? "—" : String(taskSummary.open)} hint={taskSummary.overdue ? `${taskSummary.overdue} ${translateText("overdue — needs a look")}` : translateText("No overdue tasks")} icon={BadgeCheck} accent={taskSummary.overdue ? "amber" : "emerald"} />
                 </div>
 
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                             <div className="rounded-xl border border-rose-500/15 bg-rose-500/[0.05] p-4"><p className="text-xs text-foreground/55">{translateText("At risk")}</p><p className="mt-2 text-2xl font-semibold text-rose-300">{metrics.atRiskDeals.length}</p><p className="mt-1 text-xs text-foreground/45">{translateText("Review these opportunities")}</p></div>
                         </div>
                         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4">
-                            <div className="flex items-center justify-between gap-3"><p className="text-sm font-medium">{translateText("Open pipeline value")}</p><p className="text-lg font-semibold">€{metrics.pipelineValue.toLocaleString(getIntlLocale())}</p></div>
+                            <div className="flex items-center justify-between gap-3"><p className="text-sm font-medium">{translateText("Open pipeline value")}</p><p className="text-lg font-semibold">{formatEuro(metrics.pipelineValue)}</p></div>
                             <div className="mt-3 h-2 overflow-hidden rounded-full bg-foreground/10" role="progressbar" aria-label={translateText("At-risk share of open opportunities")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={metrics.openPipeline ? Math.round((metrics.atRiskDeals.length / metrics.openPipeline) * 100) : 0}><div className="h-full rounded-full bg-rose-400 transition-all" style={{ width: `${metrics.openPipeline ? Math.max(5, (metrics.atRiskDeals.length / metrics.openPipeline) * 100) : 0}%` }} /></div>
                             <p className="mt-2 text-xs text-foreground/45">{metrics.openPipeline ? language === "de" ? `${metrics.openPipeline} aktive Verkaufschancen · ${metrics.atRiskDeals.length} davon aktuell gefährdet` : `${metrics.openPipeline} active opportunities · ${metrics.atRiskDeals.length} currently at risk` : translateText("Add leads to build your pipeline health overview.", language)}</p>
                         </div>

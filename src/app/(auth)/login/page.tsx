@@ -47,7 +47,7 @@ type MfaApi = {
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
 
     const nextPath = sanitizeNextPath(searchParams.get("next"));
 
@@ -275,6 +275,7 @@ export default function LoginPage() {
             provider,
             options: {
                 redirectTo: getAuthRedirectPath(),
+                data: { language },
             },
         });
 
@@ -303,6 +304,7 @@ export default function LoginPage() {
             email: email.trim(),
             options: {
                 emailRedirectTo: getAuthRedirectPath(),
+                data: { language },
             },
         });
 
@@ -568,6 +570,7 @@ export default function LoginPage() {
                         data: {
                         name: fullName.trim(),
                         username: username.trim().toLowerCase(),
+                        language,
                         },
                     },
                     })

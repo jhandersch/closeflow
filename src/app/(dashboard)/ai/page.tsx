@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatTextForLanguage, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -601,7 +601,7 @@ export default function AIAssistantPage() {
                   </p>
 
                   <p className="whitespace-pre-wrap">
-                    {message.content}
+                    {formatTextForLanguage(message.content, language)}
                   </p>
                 </div>
               ))
@@ -616,8 +616,7 @@ export default function AIAssistantPage() {
                 {translateText("Strategy")}</h2>
 
               <p className="mt-2 text-sm text-foreground/80">
-                {result.strategy ||
-                  translateText("No strategy returned.")}
+                {formatTextForLanguage(result.strategy || translateText("No strategy returned."), language)}
               </p>
             </div>
 
@@ -626,8 +625,7 @@ export default function AIAssistantPage() {
                 {translateText("Next Best Action")}</h2>
 
               <p className="mt-2 text-sm text-foreground/80">
-                {result.nextBestAction ||
-                  translateText("No action returned.")}
+                {formatTextForLanguage(result.nextBestAction || translateText("No action returned."), language)}
               </p>
             </div>
 
@@ -637,8 +635,7 @@ export default function AIAssistantPage() {
 
               <p className="mt-2 text-sm text-foreground/80">
                 {translateText("Goal:")}{" "}
-                {result.callPreparation
-                  ?.goal || "-"}
+                {formatTextForLanguage(result.callPreparation?.goal || "-", language)}
               </p>
 
               <p className="mt-3 text-xs uppercase tracking-[0.2em] text-foreground/55">
@@ -650,7 +647,7 @@ export default function AIAssistantPage() {
                     ?.talkingPoints || []
                 ).map((item, index) => (
                   <li key={`tp-${index}`}>
-                    - {item}
+                    - {formatTextForLanguage(item, language)}
                   </li>
                 ))}
               </ul>
@@ -664,7 +661,7 @@ export default function AIAssistantPage() {
                     ?.questions || []
                 ).map((item, index) => (
                   <li key={`q-${index}`}>
-                    - {item}
+                    - {formatTextForLanguage(item, language)}
                   </li>
                 ))}
               </ul>
@@ -675,8 +672,7 @@ export default function AIAssistantPage() {
                 {translateText("Email Draft")}</h2>
 
               <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">
-                {result.emailDraft ||
-                  translateText("No email draft returned.")}
+                {formatTextForLanguage(result.emailDraft || translateText("No email draft returned."), language)}
               </p>
             </div>
 
@@ -692,13 +688,11 @@ export default function AIAssistantPage() {
                       className="cf-card-soft p-3"
                     >
                       <p className="text-sm font-semibold text-foreground">
-                        {item.objection ||
-                          translateText("Objection")}
+                        {formatTextForLanguage(item.objection || translateText("Objection"), language)}
                       </p>
 
                       <p className="mt-1 text-sm text-foreground/80">
-                        {item.response ||
-                          translateText("No response returned.")}
+                        {formatTextForLanguage(item.response || translateText("No response returned."), language)}
                       </p>
                     </div>
                   )

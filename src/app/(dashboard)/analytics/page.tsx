@@ -1,8 +1,7 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatEuro, translateText } from "@/lib/i18n";
 
 
-import { getIntlLocale } from "@/lib/i18n";
 import AuthGuard from "@/components/AuthGuard";
 import RevenueCard from "@/components/dashboard/RevenueCard";
 import WinRateCard from "@/components/dashboard/WinRateCard";
@@ -24,7 +23,6 @@ function MetricCard({ label, value, hint }: {
     </div>);
 }
 export default function AnalyticsPage() {
-    const locale = getIntlLocale();
     const { leads, loading } = useLeadsData({ activityLimit: 5, includeCompleted: true });
     const metrics = useDashboardMetrics(leads);
     const revenueHistory = useRecentRevenueEvents();
@@ -44,7 +42,7 @@ export default function AnalyticsPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label={"Active Leads"} value={metrics.total.toString()} hint={"Open opportunities"}/>
           <MetricCard label={"Customers"} value={customerCount.toString()} hint={"Accounts with won or lost deals"}/>
-          <MetricCard label={"Revenue"} value={`€${metrics.revenue.toLocaleString(locale)}`} hint={"Won revenue"}/>
+          <MetricCard label={"Revenue"} value={formatEuro(metrics.revenue)} hint={"Won revenue"}/>
           <MetricCard label={"Conversion Rate"} value={`${metrics.conversionRate}%`} hint={"Won / won + lost"}/>
         </div>
 
