@@ -119,7 +119,7 @@ export default function SettingsPage() {
 
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
   const [theme, setTheme] = useState<ThemeOption>(appTheme);
-  const [language, setLanguage] = useState<AppLanguage>(appLanguage);
+  const [languageDraft, setLanguageDraft] = useState<AppLanguage>(appLanguage);
 
   const [notifications, setNotifications] =
     useState<NotificationSettings>({
@@ -275,7 +275,7 @@ export default function SettingsPage() {
       const profileResponse = await fetch("/api/profile", { cache: "no-store" });
       const profileData = profileResponse.ok ? await profileResponse.json() : null;
       const storedLanguage = normalizeLanguage(profileData?.language ?? metadata.language);
-      setLanguage(storedLanguage);
+      setLanguageDraft(storedLanguage);
       setAppLanguage(storedLanguage);
       setName(metadata.name || "");
       setUsername(metadata.username || "");
@@ -438,7 +438,7 @@ export default function SettingsPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        language,
+        language: languageDraft,
         theme,
         timezone: nextTimezone,
         notifications,
@@ -453,7 +453,7 @@ export default function SettingsPage() {
       return;
     }
 
-    setAppLanguage(language);
+    setAppLanguage(languageDraft);
     toast.success(translateText("Preferences updated"));
 
     setSavingPreferences(false);
@@ -1007,9 +1007,9 @@ export default function SettingsPage() {
           </label>
 
           <label className="text-sm text-foreground/70">
-            {language === "de" ? "Sprache" : "Language"}<select
-              value={language}
-              onChange={(event) => setLanguage(normalizeLanguage(event.target.value))}
+            {appLanguage === "de" ? "Sprache" : "Language"}<select
+              value={languageDraft}
+              onChange={(event) => setLanguageDraft(normalizeLanguage(event.target.value))}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             >
               <option value="de">{translateText("Deutsch")}</option>
