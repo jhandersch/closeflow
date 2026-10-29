@@ -1213,7 +1213,7 @@ export default function LeadsPage() {
                       </p>
 
                       <p className="mt-1 truncate text-sm font-medium text-foreground">
-                        {getVisibleLeadNextAction(lead.status, lead.next_action)}
+                        {getVisibleLeadNextAction(lead.status, lead.next_action, language)}
                       </p>
                     </div>
 

@@ -1,5 +1,5 @@
 import type { LeadStatus } from "@/types";
-import { translateText } from "@/lib/i18n";
+import { translateText, type AppLanguage } from "@/lib/i18n";
 
 export type StatusNextAction = {
   action: string;
@@ -30,7 +30,7 @@ export function getDefaultStatusNextAction(status: LeadStatus, now = new Date())
   return { action: actionByStatus[status], actionDate: actionDate.toISOString() };
 }
 
-export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: string | null) {
+export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: string | null, language?: AppLanguage) {
   const action = currentAction?.trim();
   const outdatedWonActions = new Set([
     "Follow up on proposal",
@@ -46,23 +46,23 @@ export function getVisibleLeadNextAction(status: LeadStatus, currentAction?: str
   ]);
 
   if (status === "won" && (!action || outdatedWonActions.has(action))) {
-    return translateLeadNextAction("Ask the customer for feedback");
+    return translateLeadNextAction("Ask the customer for feedback", language);
   }
   if (status === "lost" && (!action || outdatedLostActions.has(action))) {
-    return translateLeadNextAction("Request feedback on the decision and schedule a reactivation follow-up");
+    return translateLeadNextAction("Request feedback on the decision and schedule a reactivation follow-up", language);
   }
-  return translateLeadNextAction(action || getDefaultStatusNextAction(status).action);
+  return translateLeadNextAction(action || getDefaultStatusNextAction(status).action, language);
 }
 
-export function translateLeadNextAction(action: string) {
+export function translateLeadNextAction(action: string, language?: AppLanguage) {
   const trimmed = action.trim();
   const followUp = /^Follow up:\s*(.+)$/i.exec(trimmed);
-  if (followUp) return `${translateText("Follow up:")} ${followUp[1]}`;
+  if (followUp) return `${translateText("Follow up:", language)} ${translateText(followUp[1], language)}`;
   const proposal = /^Follow up proposal:\s*(.+)$/i.exec(trimmed);
-  if (proposal) return `${translateText("Follow up proposal:")} ${proposal[1]}`;
-  return translateText(trimmed);
+  if (proposal) return `${translateText("Follow up proposal:", language)} ${translateText(proposal[1], language)}`;
+  return translateText(trimmed, language);
 }
 
-export function translateFollowUpTaskTitle(title: string) {
-  return translateLeadNextAction(title);
+export function translateFollowUpTaskTitle(title: string, language?: AppLanguage) {
+  return translateLeadNextAction(title, language);
 }

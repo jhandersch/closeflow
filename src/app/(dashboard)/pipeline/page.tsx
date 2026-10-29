@@ -10,6 +10,7 @@ import { useLeadsData } from "@/hooks/useLeadsData";
 import { getVisibleLeadNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
 import toast from "react-hot-toast";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type StageKey = "new" | "contacted" | "proposal" | "won" | "lost";
 const stageOrder: Array<{
     key: StageKey;
@@ -55,6 +56,7 @@ const stageStyles: Record<StageKey, { dot: string; badge: string }> = {
     lost: { dot: "bg-rose-400", badge: "border-rose-400/20 bg-rose-400/10 text-rose-300" },
 };
 export default function PipelinePage() {
+    const { language } = useAppPreferences();
     const { leads, loading, refresh, } = useLeadsData({
         activityLimit: 5,
         includeCompleted: true,
@@ -246,7 +248,7 @@ export default function PipelinePage() {
                                             {lead.next_action || lead.status === "won" || lead.status === "lost" ? (
                                               <div className="mt-3 rounded-lg border border-border-subtle/70 bg-surface-1/60 px-3 py-2">
                                                 <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45">{translateText("Next action")}</p>
-                                                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/75">{getVisibleLeadNextAction(lead.status, lead.next_action)}</p>
+                                                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/75">{getVisibleLeadNextAction(lead.status, lead.next_action, language)}</p>
                                               </div>
                                             ) : null}
 

@@ -182,7 +182,7 @@ export default function CustomersPage() {
           wonDeals: lead.status === "won" ? 1 : 0,
           lostDeals: lead.status === "lost" ? 1 : 0,
           lastContactAt: lastActivity,
-          nextActions: [{ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action) }],
+          nextActions: [{ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action, language) }],
           isVip: lead.is_vip === true,
         });
 
@@ -194,7 +194,7 @@ export default function CustomersPage() {
       }
 
       existing.deals += 1;
-      existing.nextActions.push({ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action) });
+      existing.nextActions.push({ deal: lead.name || company || "Deal", status: lead.status, action: getVisibleLeadNextAction(lead.status, lead.next_action, language) });
       existing.wonDeals += lead.status === "won" ? 1 : 0;
       existing.lostDeals += lead.status === "lost" ? 1 : 0;
 

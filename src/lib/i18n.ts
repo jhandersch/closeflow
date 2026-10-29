@@ -1385,8 +1385,7 @@ const formalizeGermanAddress = (text: string) => {
 
 const germanizeFollowUpTerms = (text: string) => {
     const contextual = text
-        .replace(/\bmassnahmen\b/gi, "Maßnahmen")
-        .replace(/\bmassnahme\b/gi, "Maßnahme")
+        .replace(/massnahmen?/gi, (word) => word.toLowerCase().endsWith("n") ? "Maßnahmen" : "Maßnahme")
         .replace(/Vom Arbeitsbereich zum ersten Follow-up in wenigen Minuten\./gi, "Vom Arbeitsbereich zur ersten Nachfassaktion in wenigen Minuten.")
         .replace(/Offene Verkaufschancen, bei denen ein Follow-up anstehen könnte\./gi, "Offene Verkaufschancen, bei denen eine Nachfassaktion anstehen könnte.")
         .replace(/Aktive Deals, für die ein Follow-up ansteht/gi, "Aktive Abschlüsse mit ausstehender Nachfassaktion")
