@@ -710,10 +710,11 @@ export default function CustomersPage() {
         ) : null}
       </div>
 
-      <details className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
+      <details open={language === "de"} className="group rounded-2xl border border-border-subtle bg-surface-1 p-4">
         <summary className="cursor-pointer list-none text-sm font-semibold text-foreground marker:hidden">
-          {translateText("Spreadsheet import format")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
+          {translateText("Excel import guide")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
         </summary>
+        <p className="mt-2 text-sm text-foreground/65">{translateText("Use the exact column names shown below; CloseFlow needs them to read your spreadsheet.")}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
           <Image
             src={language === "de" ? "/customer-import-guide-de.png" : "/customer-import-guide.png"}
@@ -725,7 +726,7 @@ export default function CustomersPage() {
           />
         </div>
         <a href={language === "de" ? "/customer-import-guide-de.png" : "/customer-import-guide.png"} download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
-          {translateText("Download PNG guide")}</a>
+          {translateText("Download Excel import guide")}</a>
       </details>
 
       {error ? (

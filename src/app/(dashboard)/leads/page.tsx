@@ -666,25 +666,26 @@ export default function LeadsPage() {
 
           </div>
 
-          <details className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
-            <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
-              {translateText("Spreadsheet import format")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
-            </summary>
-            <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
-              <Image
-                src={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"}
-                alt={translateText("Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format.")}
-                width={1600}
-                height={900}
-                className="h-auto w-full"
-                unoptimized
-              />
-            </div>
-            <a href={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"} download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
-              {translateText("Download PNG guide")}</a>
-          </details>
-          
         </div>
+
+        <details open={language === "de"} className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
+            {translateText("Excel import guide")}<span className="ml-2 text-xs font-normal text-foreground/50">{translateText("View required columns and examples")}</span>
+          </summary>
+          <p className="mt-2 text-sm text-foreground/65">{translateText("Use the exact column names shown below; CloseFlow needs them to read your spreadsheet.")}</p>
+          <div className="mt-4 overflow-hidden rounded-xl border border-border-subtle">
+            <Image
+              src={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"}
+              alt={translateText("Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format.")}
+              width={1600}
+              height={900}
+              className="h-auto w-full"
+              unoptimized
+            />
+          </div>
+          <a href={language === "de" ? "/lead-import-guide-de.png" : "/lead-import-guide.png"} download className="mt-3 inline-flex text-sm font-medium text-cyan-300 hover:text-cyan-200">
+            {translateText("Download Excel import guide")}</a>
+        </details>
 
         {error ? (<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
             <span>{translateText("We couldn’t load your leads.")} {error}</span>

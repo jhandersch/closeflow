@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText } from "@/lib/i18n";
+import { formatTextForLanguage, getIntlLocale, translateText } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { getHealthScore, getPriorityScore } from "@/lib/scoring";
 import { usePriorityAI } from "@/hooks/usePriorityAI";
@@ -99,7 +99,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
               font-semibold
               text-foreground
               ">
-              {aiAnalysis.headline}
+              {formatTextForLanguage(aiAnalysis.headline, language)}
             </h3>)}
 
 
@@ -110,7 +110,9 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
           text-sm
           text-foreground/85
           ">
-          {aiAnalysis.explanation ||
+          {aiAnalysis.explanation
+            ? formatTextForLanguage(aiAnalysis.explanation, language)
+            :
             t("dashboard.analyzingPriority", "Analyzing priority opportunities...")}
         </p>
 
@@ -128,7 +130,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
                 {t("dashboard.why", "Why")}:
               </span>{" "}
 
-              {aiAnalysis.priorityReason}
+              {formatTextForLanguage(aiAnalysis.priorityReason, language)}
 
             </p>)}
 
@@ -180,7 +182,7 @@ export default function PriorityDealsCard({ leads, }: PriorityDealsCardProps) {
               {t("dashboard.next", "Next")}:
 
               <span className="ml-1 text-foreground">
-                {aiAnalysis.nextAction}
+                {formatTextForLanguage(aiAnalysis.nextAction, language)}
               </span>
 
 
