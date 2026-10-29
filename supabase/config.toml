@@ -251,6 +251,10 @@ otp_expiry = 3600
 subject = "{{ if eq .Data.language \"de\" }}Bestätigen Sie Ihre E-Mail-Adresse für CloseFlow{{ else }}Confirm your email for CloseFlow{{ end }}"
 content_path = "./supabase/templates/confirmation.html"
 
+[auth.email.template.invite]
+subject = "{{ if eq .Data.language \"de\" }}Sie wurden zu CloseFlow eingeladen{{ else }}You've been invited to CloseFlow{{ end }}"
+content_path = "./supabase/templates/invite.html"
+
 [auth.email.template.recovery]
 subject = "{{ if eq .Data.language \"de\" }}CloseFlow-Passwort zurücksetzen{{ else }}Reset your CloseFlow password{{ end }}"
 content_path = "./supabase/templates/recovery.html"

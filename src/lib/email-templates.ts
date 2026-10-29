@@ -102,7 +102,7 @@ export const buildInviteEmail = (
     };
 };
 
-type AuthTemplateKind = "confirmation" | "recovery" | "magic_link" | "email_change";
+type AuthTemplateKind = "confirmation" | "invite" | "recovery" | "magic_link" | "email_change";
 
 // Supabase Auth templates are rendered by Go templates; the language comes from user_metadata.language.
 const authContent: Record<AuthTemplateKind, { url: string; de: Omit<EmailContent, "footer">; en: Omit<EmailContent, "footer"> }> = {
@@ -119,6 +119,21 @@ const authContent: Record<AuthTemplateKind, { url: string; de: Omit<EmailContent
             paragraphs: ["Welcome to CloseFlow! Please confirm your email address to activate your account."],
             cta: { label: "Confirm email", url: "" },
             note: "If you did not create an account, you can safely ignore this email.",
+        },
+    },
+    invite: {
+        url: "{{ .ConfirmationURL }}",
+        de: {
+            title: "Einladung zu CloseFlow",
+            paragraphs: ["Sie wurden eingeladen, CloseFlow beizutreten. Nehmen Sie die Einladung an, um Ihr Konto zu erstellen."],
+            cta: { label: "Einladung annehmen", url: "" },
+            note: "Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.",
+        },
+        en: {
+            title: "You're invited to CloseFlow",
+            paragraphs: ["You have been invited to join CloseFlow. Accept the invitation to create your account."],
+            cta: { label: "Accept invitation", url: "" },
+            note: "If you did not expect this invitation, you can safely ignore this email.",
         },
     },
     recovery: {
@@ -170,6 +185,7 @@ const authContent: Record<AuthTemplateKind, { url: string; de: Omit<EmailContent
 
 const subjects: Record<AuthTemplateKind, Record<EmailLanguage, string>> = {
     confirmation: { de: "Bestätigen Sie Ihre E-Mail-Adresse für CloseFlow", en: "Confirm your email for CloseFlow" },
+    invite: { de: "Sie wurden zu CloseFlow eingeladen", en: "You've been invited to CloseFlow" },
     recovery: { de: "CloseFlow-Passwort zurücksetzen", en: "Reset your CloseFlow password" },
     magic_link: { de: "Ihr CloseFlow-Anmeldelink", en: "Your CloseFlow sign-in link" },
     email_change: { de: "Neue E-Mail-Adresse für CloseFlow bestätigen", en: "Confirm your new CloseFlow email address" },
