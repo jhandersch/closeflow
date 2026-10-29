@@ -262,6 +262,7 @@ export default function LoginPage() {
         if (nextPath) {
             callbackUrl.searchParams.set("next", nextPath);
         }
+        callbackUrl.searchParams.set("language", language);
 
         return callbackUrl.toString();
     };
@@ -275,7 +276,6 @@ export default function LoginPage() {
             provider,
             options: {
                 redirectTo: getAuthRedirectPath(),
-                data: { language },
             },
         });
 

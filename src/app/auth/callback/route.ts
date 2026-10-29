@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
     const oauthError = requestUrl.searchParams.get("error");
     const oauthErrorDescription = requestUrl.searchParams.get("error_description");
     const nextPath = sanitizeNextPath(requestUrl.searchParams.get("next"), request.url);
+    const requestedLanguage = requestUrl.searchParams.get("language");
     if (oauthError) {
         return toLoginRedirect(request, nextPath, oauthErrorDescription ||
             oauthError);
@@ -97,8 +98,17 @@ export async function GET(request: NextRequest) {
     if (type === "recovery" || nextPath === "/login?mode=reset") {
         return NextResponse.redirect(new URL("/login?mode=reset", request.url));
     }
+    let profileUser = user;
+    if (requestedLanguage === "de" || requestedLanguage === "en") {
+        const updatedUser = await supabase.auth.updateUser({
+            data: { language: requestedLanguage },
+        });
+        if (!updatedUser.error && updatedUser.data.user) {
+            profileUser = updatedUser.data.user;
+        }
+    }
     if (user) {
-        await syncProfile(supabase, user);
+        await syncProfile(supabase, profileUser);
     }
     /*
      * Normal OAuth / authentication flow.
