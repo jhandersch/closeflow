@@ -247,7 +247,7 @@ export default function PipelinePage() {
 
                                             {lead.next_action || lead.status === "won" || lead.status === "lost" ? (
                                               <div className="mt-3 rounded-lg border border-border-subtle/70 bg-surface-1/60 px-3 py-2">
-                                                <p className={`text-[10px] font-semibold tracking-wide text-foreground/45 ${language === "de" ? "normal-case" : "uppercase"}`}>{translateText("Next action")}</p>
+                                                <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45">{translateText("Next action")}</p>
                                                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/75">{getVisibleLeadNextAction(lead.status, lead.next_action, language)}</p>
                                               </div>
                                             ) : null}
