@@ -1,0 +1,47 @@
+{{ if eq .Data.language "de" }}<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Passwort zurücksetzen</title>
+</head>
+<body style="margin:0;padding:0;background:#090d12;font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#090d12;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+<tr><td style="padding:0 0 20px;font-size:22px;font-weight:700;letter-spacing:-0.01em;color:#e8edf4;">Close<span style="color:#38bdf8;">Flow</span></td></tr>
+<tr><td style="background:#111823;border:1px solid #243044;border-radius:16px;padding:32px;">
+<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#e8edf4;">Passwort zurücksetzen</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#e8edf4;">Wir haben eine Anfrage erhalten, das Passwort für Ihr CloseFlow-Konto zurückzusetzen.</p><table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:10px;background:#38bdf8;"><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:600;color:#04121c;text-decoration:none;border-radius:10px;">Neues Passwort festlegen</a></td></tr></table><p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#94a3b8;">Wenn Sie dies nicht angefordert haben, können Sie diese E-Mail ignorieren. Ihr Passwort bleibt unverändert.</p>
+</td></tr>
+<tr><td style="padding:20px 8px 0;font-size:12px;line-height:1.5;color:#94a3b8;">Diese Nachricht wurde automatisch von CloseFlow versendet. Bitte antworten Sie nicht auf diese E-Mail.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+{{ else }}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Reset your password</title>
+</head>
+<body style="margin:0;padding:0;background:#090d12;font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#090d12;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+<tr><td style="padding:0 0 20px;font-size:22px;font-weight:700;letter-spacing:-0.01em;color:#e8edf4;">Close<span style="color:#38bdf8;">Flow</span></td></tr>
+<tr><td style="background:#111823;border:1px solid #243044;border-radius:16px;padding:32px;">
+<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#e8edf4;">Reset your password</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#e8edf4;">We received a request to reset the password for your CloseFlow account.</p><table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:10px;background:#38bdf8;"><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:600;color:#04121c;text-decoration:none;border-radius:10px;">Set a new password</a></td></tr></table><p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#94a3b8;">If you did not request this, you can safely ignore this email. Your password will stay the same.</p>
+</td></tr>
+<tr><td style="padding:20px 8px 0;font-size:12px;line-height:1.5;color:#94a3b8;">This message was sent automatically by CloseFlow. Please do not reply to this email.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+{{ end }}
