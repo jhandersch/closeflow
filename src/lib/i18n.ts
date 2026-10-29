@@ -1112,6 +1112,9 @@ const homeGermanTextTranslations: Record<string, string> = {
     "First Contact": "Erstkontakt", "Follow Up": "Nachfassen", "Closing": "Abschluss", "Reactivation": "Reaktivierung", "Status changed": "Status geändert", "Update": "Aktualisierung", "Could not generate AI analysis.": "Die KI-Analyse konnte nicht erstellt werden.",
 };
 const germanContextOverrides: Record<string, string> = {
+    "Meetings": "Termine",
+    "Meeting-Vorbereitung": "Terminvorbereitung",
+    "Meeting vorbereiten": "Termin vorbereiten",
     "dashboard.avgDealSize": "Durchschnittlicher Wert je Verkaufschance",
     "dashboard.averageDeal": "Durchschnittlicher Wert je Verkaufschance",
     "dashboard.averageOpportunitySize": "Durchschnittlicher Wert je Verkaufschance",
