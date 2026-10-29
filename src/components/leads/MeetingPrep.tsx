@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -37,11 +37,11 @@ export default function MeetingPrep({ lead }: Props) {
       </div>
 
       {result ? (<div className="mt-4 space-y-3 text-sm text-foreground/80">
-          <p><span className="font-semibold text-foreground">{translateText("Summary:")}</span> {result.customer_summary}</p>
-          <p><span className="font-semibold text-foreground">{translateText("Important points:")}</span> {(result.important_points || []).join(", ")}</p>
-          <p><span className="font-semibold text-foreground">{translateText("Questions:")}</span> {(result.questions || []).join(", ")}</p>
-          <p><span className="font-semibold text-foreground">{translateText("Risks:")}</span> {(result.risks || []).join(", ")}</p>
-          <p><span className="font-semibold text-foreground">{translateText("Next steps:")}</span> {(result.next_steps || []).join(", ")}</p>
+          <p><span className="font-semibold text-foreground">{translateText("Summary:")}</span> {formatTextForLanguage(result.customer_summary || "", language)}</p>
+          <p><span className="font-semibold text-foreground">{translateText("Important points:")}</span> {(result.important_points || []).map((item: string) => formatTextForLanguage(item, language)).join(", ")}</p>
+          <p><span className="font-semibold text-foreground">{translateText("Questions:")}</span> {(result.questions || []).map((item: string) => formatTextForLanguage(item, language)).join(", ")}</p>
+          <p><span className="font-semibold text-foreground">{translateText("Risks:")}</span> {(result.risks || []).map((item: string) => formatTextForLanguage(item, language)).join(", ")}</p>
+          <p><span className="font-semibold text-foreground">{translateText("Next steps:")}</span> {(result.next_steps || []).map((item: string) => formatTextForLanguage(item, language)).join(", ")}</p>
         </div>) : null}
     </section>);
 }

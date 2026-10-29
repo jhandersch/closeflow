@@ -1,4 +1,5 @@
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import type { RevenueForecastInsight } from "@/types";
 type Props = {
     insight: RevenueForecastInsight | null;
@@ -6,6 +7,7 @@ type Props = {
     error?: string | null;
 };
 export default function RevenueForecastAI({ insight = null, loading = false, error = null, }: Props) {
+    const { language } = useAppPreferences();
     if (error) {
         return (<section className="rounded-3xl border border-border-subtle bg-surface-1 p-6">
         <div className="flex items-start gap-4">
@@ -17,7 +19,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
               {translateText("AI request limit reached")}</h3>
 
             <p className="mt-1 text-sm text-amber-200/70">
-              {error}
+              {formatTextForLanguage(error, language)}
             </p>
 
             <p className="mt-3 text-sm text-foreground/60">
@@ -119,7 +121,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
               font-bold
               text-foreground
             ">
-            {insight.headline}
+            {formatTextForLanguage(insight.headline, language)}
           </h2>
         </div>
 
@@ -166,7 +168,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
             leading-7
             text-foreground/80
           ">
-          {insight.summary}
+          {formatTextForLanguage(insight.summary, language)}
         </p>
       </div>
 
@@ -178,9 +180,9 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
           gap-6
           lg:grid-cols-2
         ">
-        <InsightList title={translateText("Revenue Drivers")} items={insight.topDrivers} color="emerald" emptyText={translateText("No drivers detected.")}/>
+        <InsightList title={translateText("Revenue Drivers")} items={insight.topDrivers.map((item) => formatTextForLanguage(item, language))} color="emerald" emptyText={translateText("No drivers detected.")}/>
 
-        <InsightList title={translateText("Risks")} items={insight.risks} color="amber" emptyText={translateText("No risks detected.")}/>
+        <InsightList title={translateText("Risks")} items={insight.risks.map((item) => formatTextForLanguage(item, language))} color="amber" emptyText={translateText("No risks detected.")}/>
       </div>
 
       {/* PIPELINE COMMENT */}
@@ -233,7 +235,7 @@ export default function RevenueForecastAI({ insight = null, loading = false, err
                   text-sm
                   text-foreground/80
                 ">
-                → {item}
+                → {formatTextForLanguage(item, language)}
               </li>))) : (<li className="text-sm text-foreground/60">
               {translateText("No recommendations available.")}
             </li>)}

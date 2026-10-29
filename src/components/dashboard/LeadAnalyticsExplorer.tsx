@@ -1,5 +1,5 @@
 "use client";
-import { getIntlLocale, translateText  } from "@/lib/i18n";
+import { formatTextForLanguage, getIntlLocale, translateText  } from "@/lib/i18n";
 
 
 import { useEffect, useMemo, useState } from "react";
@@ -190,7 +190,7 @@ export default function LeadAnalyticsExplorer({ leads }: { leads: Lead[] }) {
             <div className="mt-4 rounded-lg border border-border-subtle p-3"><p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">{translateText("Next action")}</p><p className="mt-1 text-sm text-foreground/80">{getVisibleLeadNextAction(selected.lead.status, selected.lead.next_action)}</p><p className="mt-2 text-xs text-foreground/50">{activities.length} {" "}{translateText("recent activities loaded for analysis.")}</p></div>
             <button type="button" onClick={() => void generateAnalysis()} disabled={loadingAnalysis} className="mt-4 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-300 disabled:opacity-50">{loadingAnalysis ? translateText("Analyzing lead...") : analysis ? translateText("Refresh AI analysis") : translateText("Generate AI lead analysis")}</button>
             {analysisError ? <p className="mt-3 text-sm text-rose-300">{analysisError}</p> : null}
-            {analysis ? <div className="mt-4 space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.04] p-3 text-sm"><p className="font-semibold text-cyan-200">{translateText("AI assessment ·")}{" "}{Math.round(Number(analysis.confidence || 0) * 100)}{translateText("% confidence")}</p><p className="text-foreground/75">{analysis.summary}</p><p><span className="font-medium text-foreground">{translateText("Risk:")}</span> <span className="text-foreground/70">{analysis.risk}</span></p><p><span className="font-medium text-foreground">{translateText("Recommended next step:")}</span> <span className="text-foreground/70">{analysis.nextAction}</span></p></div> : null}
+            {analysis ? <div className="mt-4 space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.04] p-3 text-sm"><p className="font-semibold text-cyan-200">{translateText("AI assessment ·")}{" "}{Math.round(Number(analysis.confidence || 0) * 100)}{translateText("% confidence")}</p><p className="text-foreground/75">{analysis.summary ? formatTextForLanguage(analysis.summary, language) : null}</p><p><span className="font-medium text-foreground">{translateText("Risk:")}</span> <span className="text-foreground/70">{analysis.risk ? formatTextForLanguage(analysis.risk, language) : null}</span></p><p><span className="font-medium text-foreground">{translateText("Recommended next step:")}</span> <span className="text-foreground/70">{analysis.nextAction ? formatTextForLanguage(analysis.nextAction, language) : null}</span></p></div> : null}
           </div>
         ) : <div className="rounded-xl border border-border-subtle p-8 text-center text-sm text-foreground/55">{translateText("Select a lead to see its detail.")}</div>}
       </div>

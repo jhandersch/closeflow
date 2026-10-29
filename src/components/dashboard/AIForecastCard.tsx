@@ -1,4 +1,5 @@
 "use client";
+import { formatTextForLanguage } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type Props = {
     analysis: {
@@ -10,7 +11,7 @@ type Props = {
     loading: boolean;
 };
 export default function AIForecastCard({ analysis, loading, }: Props) {
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
     if (loading) {
         return (<div className="
         rounded-2xl
@@ -126,7 +127,7 @@ export default function AIForecastCard({ analysis, loading, }: Props) {
           leading-7
           text-foreground/80
         ">
-          {analysis.summary}
+          {formatTextForLanguage(analysis.summary, language)}
         </p>
 
       </div>
@@ -142,10 +143,10 @@ export default function AIForecastCard({ analysis, loading, }: Props) {
         md:grid-cols-2
         ">
 
-        <AISection title={t("dashboard.positiveFactors", "Positive Factors")} color="emerald" items={analysis.positiveFactors}/>
+        <AISection title={t("dashboard.positiveFactors", "Positive Factors")} color="emerald" items={analysis.positiveFactors.map((item) => formatTextForLanguage(item, language))}/>
 
 
-        <AISection title={t("dashboard.risks", "Risks")} color="red" items={analysis.risks}/>
+        <AISection title={t("dashboard.risks", "Risks")} color="red" items={analysis.risks.map((item) => formatTextForLanguage(item, language))}/>
 
 
       </div>
@@ -177,7 +178,7 @@ export default function AIForecastCard({ analysis, loading, }: Props) {
           mt-2
           text-foreground
           ">
-          {analysis.recommendation}
+          {formatTextForLanguage(analysis.recommendation, language)}
         </p>
 
 

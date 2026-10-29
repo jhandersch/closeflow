@@ -48,7 +48,7 @@ function DashboardStat({ label, value, hint, icon: Icon, accent = "cyan" }: {
 }
 
 export default function DashboardPage() {
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
 
     const [demoLoading, setDemoLoading] =
         useState(false);
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                         <div className="mt-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4">
                             <div className="flex items-center justify-between gap-3"><p className="text-sm font-medium">{translateText("Open pipeline value")}</p><p className="text-lg font-semibold">€{metrics.pipelineValue.toLocaleString(getIntlLocale())}</p></div>
                             <div className="mt-3 h-2 overflow-hidden rounded-full bg-foreground/10" role="progressbar" aria-label={translateText("At-risk share of open opportunities")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={metrics.openPipeline ? Math.round((metrics.atRiskDeals.length / metrics.openPipeline) * 100) : 0}><div className="h-full rounded-full bg-rose-400 transition-all" style={{ width: `${metrics.openPipeline ? Math.max(5, (metrics.atRiskDeals.length / metrics.openPipeline) * 100) : 0}%` }} /></div>
-                            <p className="mt-2 text-xs text-foreground/45">{metrics.openPipeline ? `${metrics.openPipeline} active opportunities · ${metrics.atRiskDeals.length} currently at risk` : translateText("Add leads to build your pipeline health overview.")}</p>
+                            <p className="mt-2 text-xs text-foreground/45">{metrics.openPipeline ? language === "de" ? `${metrics.openPipeline} aktive Verkaufschancen · ${metrics.atRiskDeals.length} davon aktuell gefährdet` : `${metrics.openPipeline} active opportunities · ${metrics.atRiskDeals.length} currently at risk` : translateText("Add leads to build your pipeline health overview.", language)}</p>
                         </div>
                     </section>
                 </div>

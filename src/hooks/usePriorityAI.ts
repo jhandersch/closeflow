@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 
 import { useEffect, useState } from "react";
@@ -36,10 +36,10 @@ export function usePriorityAI(
   useEffect(() => {
     if (!leads.length) {
       setData({
-        headline: translateText("No priorities available"),
-        explanation: translateText("Add leads to receive AI recommendations."),
-        nextAction: translateText("Create new opportunities."),
-        priorityReason: translateText("No data available."),
+        headline: translateText("No priorities available", language),
+        explanation: translateText("Add leads to receive AI recommendations.", language),
+        nextAction: translateText("Create new opportunities.", language),
+        priorityReason: translateText("No data available.", language),
         riskLevel: "Low",
       });
       return;
@@ -96,10 +96,10 @@ export function usePriorityAI(
         const result = await response.json();
 
         setData({
-          headline: result.headline ?? "",
-          explanation: result.explanation ?? "",
-          nextAction: result.nextAction ?? "",
-          priorityReason: result.priorityReason ?? "",
+          headline: formatTextForLanguage(result.headline ?? "", language),
+          explanation: formatTextForLanguage(result.explanation ?? "", language),
+          nextAction: formatTextForLanguage(result.nextAction ?? "", language),
+          priorityReason: formatTextForLanguage(result.priorityReason ?? "", language),
           riskLevel: result.riskLevel ?? "Medium",
         });
       } catch (error) {
@@ -120,19 +120,19 @@ export function usePriorityAI(
         setData({
           headline: highest
             ? language === "de" ? `${leadDisplayName(highest)} benötigt Aufmerksamkeit` : `${leadDisplayName(highest)} needs attention`
-            : translateText("AI analysis unavailable"),
+            : translateText("AI analysis unavailable", language),
 
           explanation: highest
-            ? translateText("This opportunity was prioritized using value, stage and activity signals.")
-            : translateText("Unable to analyze opportunities right now."),
+            ? translateText("This opportunity was prioritized using value, stage and activity signals.", language)
+            : translateText("Unable to analyze opportunities right now.", language),
 
           nextAction:
-            highest?.next_action ??
-            translateText("Review your highest-value deals manually."),
+            (highest?.next_action && translateText(highest.next_action, language)) ||
+            translateText("Review your highest-value deals manually.", language),
 
           priorityReason: highest
           ? analyzeLead(highest).reasons.map((reason) => translateText(reason, language)).join(" ")
-            : translateText("No AI data available."),
+            : translateText("No AI data available.", language),
 
           riskLevel: highest
             ? getHealthScore(highest) < 50

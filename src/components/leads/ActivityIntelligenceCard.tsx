@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 
 type Props = {
@@ -97,7 +97,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-emerald-400
           ">
-            {translateText(insight.health, language)}
+            {formatTextForLanguage(insight.health, language)}
           </p>
 
         </div>
@@ -119,7 +119,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
             font-bold
             text-yellow-400
           ">
-            {translateText(insight.risk)}
+            {formatTextForLanguage(insight.risk, language)}
           </p>
 
         </div>
@@ -146,7 +146,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
           mt-2
           text-foreground
         ">
-          {insight.summary}
+          {formatTextForLanguage(insight.summary, language)}
         </p>
 
 
@@ -175,7 +175,7 @@ export default function ActivityIntelligenceCard({ insight, loading, }: Props) {
           font-semibold
           text-foreground
         ">
-          {insight.recommendation}
+          {formatTextForLanguage(insight.recommendation, language)}
         </p>
 
 

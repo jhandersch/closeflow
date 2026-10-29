@@ -1,4 +1,5 @@
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type LeadMemory = {
     summary: string;
     risk: string;
@@ -10,6 +11,7 @@ type Props = {
     loading: boolean;
 };
 export default function LeadMemoryCard({ memory, loading, }: Props) {
+    const { language } = useAppPreferences();
     if (loading) {
         return (<div className="rounded-2xl border border-border-subtle bg-surface-1 p-6 animate-pulse">
         <div className="h-5 w-40 rounded bg-white/10"/>
@@ -39,7 +41,7 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
           <p className="text-sm text-foreground/55">{translateText("Summary")}</p>
 
           <p className="mt-1 text-foreground">
-            {memory.summary}
+            {formatTextForLanguage(memory.summary, language)}
           </p>
         </div>
 
@@ -47,7 +49,7 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
           <p className="text-sm text-foreground/55">{translateText("Risk")}</p>
 
           <p className="mt-1 text-yellow-300">
-            {translateText(memory.risk)}
+            {formatTextForLanguage(memory.risk, language)}
           </p>
         </div>
 
@@ -55,7 +57,7 @@ export default function LeadMemoryCard({ memory, loading, }: Props) {
           <p className="text-sm text-foreground/55">{translateText("Next Action")}</p>
 
           <p className="mt-1 text-cyan-300 font-semibold">
-            {memory.nextAction}
+            {formatTextForLanguage(memory.nextAction, language)}
           </p>
         </div>
 

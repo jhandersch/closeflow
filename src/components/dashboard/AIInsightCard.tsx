@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type AIInsightCardProps = {
@@ -11,7 +11,7 @@ type AIInsightCardProps = {
     };
 };
 export default function AIInsightCard({ insight }: AIInsightCardProps) {
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
     const confidenceColor = insight.confidence === "High"
         ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20"
         : insight.confidence === "Medium"
@@ -36,12 +36,12 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
 
             <h2 id="ai-insight-heading" className="mt-2 text-2xl font-bold text-foreground">
-              {insight.headline}
+              {formatTextForLanguage(insight.headline, language)}
             </h2>
 
 
             <p className="mt-2 max-w-2xl text-sm text-foreground/80">
-              {insight.detail}
+              {formatTextForLanguage(insight.detail, language)}
             </p>
 
           </div>
@@ -76,7 +76,7 @@ export default function AIInsightCard({ insight }: AIInsightCardProps) {
 
 
               <p className="text-sm text-foreground/85">
-                {action}
+                {formatTextForLanguage(action, language)}
               </p>
 
 

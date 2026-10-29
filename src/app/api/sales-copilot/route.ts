@@ -164,6 +164,7 @@ Focus on:
 - Treat user-entered costs as estimates and do not invent additional costs.
 - Do not expose internal costs or margins in customer-facing email drafts.
 - Write all free-text values in ${responseLanguage}
+- Write every user-visible value entirely in ${responseLanguage}; never switch languages mid-response.
 `;
 
     const completion =
@@ -173,7 +174,7 @@ Focus on:
           {
             role: "system",
             content:
-              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write all text values in ${responseLanguage}.`,
+              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write every text value entirely in ${responseLanguage}, without mixing languages.`,
           },
           {
             role: "user",

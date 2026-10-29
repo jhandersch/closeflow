@@ -129,6 +129,8 @@ Language:
 
 ${responseLanguage}
 
+Every user-visible text value must be written entirely in ${responseLanguage}. Do not mix languages. Keep JSON keys and the riskLevel enum in English.
+
 Return ONLY valid JSON:
 
 {
@@ -201,7 +203,7 @@ Keep answers concise.
       headline:
         typeof parsed?.headline === "string"
           ? parsed.headline
-          : "Deals need attention",
+          : language === "de" ? "Verkaufschancen brauchen Aufmerksamkeit" : "Deals need attention",
 
       explanation:
         typeof parsed?.explanation === "string"
@@ -229,13 +231,19 @@ Keep answers concise.
      * =========================
      */
     return NextResponse.json({
-      headline: "Deals need attention",
+      headline: language === "de" ? "Verkaufschancen brauchen Aufmerksamkeit" : "Deals need attention",
       explanation:
-        "The pipeline should be reviewed using value, activity and closing probability.",
+        language === "de"
+          ? "Prüfen Sie die Pipeline anhand von Wert, Aktivität und Abschlusswahrscheinlichkeit."
+          : "The pipeline should be reviewed using value, activity and closing probability.",
       nextAction:
-        "Review your highest-value opportunities.",
+        language === "de"
+          ? "Prüfen Sie zuerst Ihre wertvollsten Verkaufschancen."
+          : "Review your highest-value opportunities.",
       priorityReason:
-        "High-potential opportunities should be handled first.",
+        language === "de"
+          ? "Verkaufschancen mit hohem Potenzial sollten zuerst bearbeitet werden."
+          : "High-potential opportunities should be handled first.",
       riskLevel: "Medium",
     });
   }

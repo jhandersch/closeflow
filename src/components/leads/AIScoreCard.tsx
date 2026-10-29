@@ -1,5 +1,5 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatTextForLanguage, translateText } from "@/lib/i18n";
 
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 type AIScoreCardProps = {
@@ -10,7 +10,7 @@ type AIScoreCardProps = {
     recommendation: string;
 };
 export default function AIScoreCard({ score, health, probability, risk, recommendation, }: AIScoreCardProps) {
-    const { t } = useAppPreferences();
+    const { t, language } = useAppPreferences();
     return (<div className="
       rounded-2xl
       border
@@ -97,7 +97,7 @@ export default function AIScoreCard({ score, health, probability, risk, recommen
           font-semibold
           text-foreground
         ">
-          {recommendation}
+          {formatTextForLanguage(recommendation, language)}
         </p>
 
       </div>

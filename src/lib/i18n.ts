@@ -1149,7 +1149,12 @@ const preserveFollowUpTerminology = (text: string) => text
     .replace(/\bfasse gezielt nach\b/gi, "planen Sie gezielte Follow-ups");
 
 const formatGermanTranslation = (text: string) =>
-    formalizeGermanAddress(preserveFollowUpTerminology(text));
+    formalizeGermanAddress(preserveFollowUpTerminology(text))
+        .replace(/\bmassnahmen\b/gi, (match) => match[0] === match[0].toUpperCase() ? "Maßnahmen" : "maßnahmen")
+        .replace(/\bmassnahme\b/gi, (match) => match[0] === match[0].toUpperCase() ? "Maßnahme" : "maßnahme");
+
+export const formatTextForLanguage = (text: string, language: AppLanguage): string =>
+    language === "de" ? formatGermanTranslation(text) : text;
 
 const translateDynamicGermanText = (text: string): string | undefined => {
     const noActivityMatch = text.match(/^No activity for (\d+) days?\.$/);
@@ -1191,7 +1196,7 @@ export const translateText = (text: string, language: AppLanguage = activeLangua
         ?? catalogGermanTextTranslations[key]
         ?? homeGermanTextTranslations[key]
         ?? translateDynamicGermanText(key);
-    return translated === undefined ? text : formatGermanTranslation(translated);
+    return translated === undefined ? formatGermanTranslation(text) : formatGermanTranslation(translated);
 };
 export const translatePlanName = (plan: string): string => {
     const normalized = plan.trim().toLowerCase();

@@ -1143,7 +1143,7 @@ export default function LeadsPage() {
                     {/* HEALTH */}
                     <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
-                        {translateText("Health")}</p>
+                        Status</p>
 
                       <div className="mt-1">
                         <HealthRing value={health}/>
@@ -1151,12 +1151,12 @@ export default function LeadsPage() {
                     </div>
 
                     {/* PROBABILITY */}
-                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3">
+                    <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-3 text-center">
                       <p className="text-[11px] font-medium uppercase tracking-wide text-foreground/40">
                         {translateText("Close chance")}
                       </p>
 
-                      <div className="mt-2 flex items-end gap-2">
+                      <div className="mt-2 flex items-end justify-center gap-2">
                         <span className="text-2xl font-bold text-cyan-400">
                           {probability}%
                         </span>

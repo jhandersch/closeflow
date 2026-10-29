@@ -2,11 +2,12 @@
 import { translateText } from "@/lib/i18n";
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import toast from "react-hot-toast";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
+import { formatTextForLanguage } from "@/lib/i18n";
 
 type Props = {
   lead: any;
@@ -28,14 +29,18 @@ export default function AISalesCopilot({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const requestSequence = useRef(0);
 
   async function copyEmail() {
-    if (!data?.emailDraft) {
+    const emailDraft = typeof data?.emailDraft === "string"
+      ? formatTextForLanguage(data.emailDraft, language)
+      : "";
+    if (!emailDraft) {
       return;
     }
 
     try {
-      await copyTextToClipboard(data.emailDraft);
+      await copyTextToClipboard(emailDraft);
       setCopied(true);
     } catch {
       toast.error(translateText("Could not copy the email. Please copy it manually."));
@@ -48,10 +53,7 @@ export default function AISalesCopilot({
   }
 
   async function generateCopilot() {
-    if (loading) {
-      return;
-    }
-
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError(null);
 
@@ -61,7 +63,7 @@ export default function AISalesCopilot({
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error(translateText("Please sign in again."));
+        throw new Error(translateText("Please sign in again.", language));
       }
 
       const response = await fetch("/api/sales-copilot", {
@@ -82,18 +84,22 @@ export default function AISalesCopilot({
       });
 
       if (!response.ok) {
-        throw new Error(translateText("Copilot failed"));
+        throw new Error(translateText("Copilot failed", language));
       }
 
       const result = await response.json();
-      setData(result);
+      if (requestId === requestSequence.current) {
+        setData(result);
+      }
     } catch (error) {
       console.error(error);
-      setError(
-        "AI Sales Copilot could not generate recommendations.",
-      );
+      if (requestId === requestSequence.current) {
+        setError(translateText("AI Sales Copilot could not generate recommendations.", language));
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -101,7 +107,10 @@ export default function AISalesCopilot({
     if (lead) {
       void generateCopilot();
     }
-  }, [lead.id]);
+    return () => {
+      requestSequence.current += 1;
+    };
+  }, [lead.id, language]);
 
   if (loading) {
     return (
@@ -135,7 +144,7 @@ export default function AISalesCopilot({
                 {translateText("Deal Strategy")}</h3>
 
               <p className="mt-2 text-sm text-foreground/85">
-                {data.strategy}
+                {formatTextForLanguage(data.strategy, language)}
               </p>
             </div>
           )}
@@ -163,13 +172,15 @@ export default function AISalesCopilot({
               {translateText("Deal Summary")}</h3>
 
             <p className="mt-2 text-sm text-foreground/80">
-              {data.dealSummary}
+              {formatTextForLanguage(data.dealSummary, language)}
             </p>
           </div>
         )}
 
         <p className="mt-2 text-foreground">
-          {data.callPreparation?.goal}
+          {typeof data.callPreparation?.goal === "string"
+            ? formatTextForLanguage(data.callPreparation.goal, language)
+            : null}
         </p>
 
         <ul className="mt-3 space-y-2">
@@ -179,7 +190,7 @@ export default function AISalesCopilot({
                 key={point}
                 className="text-sm text-foreground/80"
               >
-                - {point}
+                - {formatTextForLanguage(point, language)}
               </li>
             ),
           )}
@@ -197,7 +208,7 @@ export default function AISalesCopilot({
                 key={question}
                 className="text-sm text-foreground/80"
               >
-                - {question}
+                - {formatTextForLanguage(question, language)}
               </li>
             ),
           )}
@@ -215,11 +226,11 @@ export default function AISalesCopilot({
               className="rounded-xl border border-border-subtle p-4"
             >
               <p className="font-medium text-foreground">
-                {item.objection}
+                {formatTextForLanguage(item.objection, language)}
               </p>
 
               <p className="mt-2 text-sm text-foreground/65">
-                {item.response}
+                {formatTextForLanguage(item.response, language)}
               </p>
             </div>
           ))}
@@ -232,7 +243,9 @@ export default function AISalesCopilot({
 
         <div className="mt-2 rounded-xl bg-surface-2/70 p-4 text-sm text-foreground/80">
           <textarea
-            value={data.emailDraft || ""}
+            value={typeof data.emailDraft === "string"
+              ? formatTextForLanguage(data.emailDraft, language)
+              : ""}
             readOnly
             className="min-h-48 w-full rounded-xl border border-border-subtle bg-surface-2 p-4 text-sm text-foreground/85 outline-none"
           />

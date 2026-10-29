@@ -242,6 +242,8 @@ Low
 
 Language:
 ${responseLanguage}
+
+Write every user-visible value entirely in ${responseLanguage}. Do not mix languages. Keep JSON keys and confidence values in English.
 `,
                     },
                     {
@@ -325,8 +327,8 @@ ${responseLanguage}
          */
         return NextResponse.json({
             headline: language === "de" ? "Pipelineanalyse verfügbar" : "Pipeline analysis available",
-            detail: language === "de" ? "Deine aktuellen CRM-Daten wurden analysiert." : "Your current CRM data has been analyzed.",
-            actions: language === "de" ? ["Prüfe deine wichtigsten aktiven Verkaufschancen.", "Lege klare nächste Schritte fest."] : ["Review your most important active opportunities.", "Define clear next steps."],
+            detail: language === "de" ? "Ihre aktuellen CRM-Daten wurden analysiert." : "Your current CRM data has been analyzed.",
+            actions: language === "de" ? ["Prüfen Sie Ihre wichtigsten aktiven Verkaufschancen.", "Legen Sie klare nächste Schritte fest."] : ["Review your most important active opportunities.", "Define clear next steps."],
             confidence: "Medium",
         });
     }
