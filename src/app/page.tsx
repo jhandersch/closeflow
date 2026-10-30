@@ -92,7 +92,7 @@ export default function HomePage() {
             {translateText("Every opportunity.")}<br /><span className="bg-gradient-to-r from-cyan-200 via-sky-300 to-blue-400 bg-clip-text text-transparent">{translateText("One clear next step.")}</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-foreground/65 sm:text-lg sm:leading-8">
-            {translateText("Keep leads, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.")}</p>
+            {translateText("Keep customers, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.")}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/login?mode=signup" className="inline-flex items-center justify-center rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">{translateText("Create your free workspace")}{" "}<ArrowRight className="ml-2 h-4 w-4" /></Link>
             <a href="#platform" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-white/[0.02] px-5 py-3 text-sm font-medium text-foreground/80 transition hover:bg-white/[0.06]">{translateText("Explore the platform")}{" "}<ArrowDown className="h-4 w-4" /></a>
