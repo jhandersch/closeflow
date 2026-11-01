@@ -76,6 +76,7 @@ Current decision record (2026-10-28):
 - Passed: `npm run test:cross-tenant:suite` (7/7 isolation checks; local app against Production with marked fixtures, cleaned up, monitoring shows 0 leftover test users).
 - Production: health OK, `monitor:snapshot -- 1` reports no findings; manual live test of the AI routes OK (owner, 2026-11-01).
 - Open: monitoring window (`-- 24` on 2026-11-02 21:00, `-- 48` on 2026-11-03 21:00), Stripe Live and legal page details (blocked until the company exists), Azure price check against the official page, sign-off.
+- Done 2026-11-01: Azure prices verified against the official Azure Retail Prices API (Germany West Central, gpt-4.1-mini Global Standard: 0.40 USD input / 1.60 USD output per 1M tokens; matches the configured values). Data Zone would be 0.44 / 1.76 USD per 1M tokens.
 - Done 2026-11-01: Azure budget `closeflow-monatlich` (20 EUR/month, email alerts at 50% and 100%, owner-configured; alerts only, no spending cap).
 
 ## Remaining Steps to Move NO-GO -> GO
