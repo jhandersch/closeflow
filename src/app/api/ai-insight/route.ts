@@ -9,6 +9,7 @@ import {
   getAzureOpenAIConfig,
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 type InsightResponse = {
   headline: string;
@@ -174,6 +175,7 @@ export async function POST(request: NextRequest) {
               role: "system",
               content: `
 You are the AI sales intelligence engine inside a professional CRM.
+${aiTerminologyRules(language)}
 
 Analyze the provided CRM data and produce a concise dashboard insight.
 

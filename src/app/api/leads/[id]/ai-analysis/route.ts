@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, context: {
         const analysis = isGerman ? `
 KI-Abschlussanalyse
 
-Deal economics:
+Wirtschaftlichkeit:
 Brutto-Abschlusswert: ${Number(lead.value ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}
 ${(() => {
             const costs = getPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, id);
@@ -79,7 +79,7 @@ ${lead.status === "new"
             ? "Mittel"
             : "Niedrig"}
 
-Verkaufschance:
+Potenzial:
 Dieser Lead hat Potenzial und sollte aktiv betreut werden.
 ` : `
 AI Deal Analysis

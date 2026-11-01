@@ -5,6 +5,7 @@ import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 export async function POST(request: Request, context: {
     params: Promise<{
         id: string;
@@ -73,6 +74,7 @@ export async function POST(request: Request, context: {
                     role: "system",
                     content: `
 You are an expert sales assistant.
+${aiTerminologyRules(language)}
 
 Create a follow-up email for a sales representative.
 Use the listed costs to guide commercially sound wording, but do not disclose internal costs or margins to the customer.

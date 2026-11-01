@@ -4,6 +4,7 @@ import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 export async function POST(request: Request) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `Create a sales email. Return JSON with subject and body. Write the email in ${isGerman ? "German" : "English"}. Tone: ${tone}. Goal: ${goal}. Use any provided deal-cost context only to guide commercially sound wording; do not disclose the user's internal costs or margins to the customer.`,
+                    content: `Create a sales email. Return JSON with subject and body. Write the email in ${isGerman ? "German" : "English"}. Tone: ${tone}. Goal: ${goal}. Use any provided deal-cost context only to guide commercially sound wording; do not disclose the user's internal costs or margins to the customer.${aiTerminologyRules(language)}`,
                 },
                 {
                     role: "user",

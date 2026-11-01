@@ -4,6 +4,7 @@ import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 export async function POST(req: Request) {
     const access = await requireAiWorkspaceQuota(req);
@@ -84,7 +85,7 @@ Consider that:
           {
             role: "system",
             content:
-              `You are an expert B2B sales assistant. Return valid JSON only and write all text values in ${responseLanguage}.`,
+              `You are an expert B2B sales assistant. Return valid JSON only and write all text values in ${responseLanguage}.${aiTerminologyRules(language)}`,
           },
           {
             role: "user",

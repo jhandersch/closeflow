@@ -3,6 +3,7 @@ import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 const MAX_INPUT_LENGTH = 16_000;
 const MAX_LEADS = 100;
@@ -148,6 +149,7 @@ Keep answers concise.
             role: "system",
             content: `
 You are an expert B2B revenue forecasting analyst inside a CRM.
+${aiTerminologyRules(language)}
 
 Your goal is to help sales teams understand future revenue and improve decisions.
 

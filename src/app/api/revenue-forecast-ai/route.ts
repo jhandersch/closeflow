@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 type LeadPayload = {
   id?: string;
   name?: string;
@@ -346,7 +347,7 @@ ${responseLanguage}
           {
             role: "system",
             content:
-              "You are a CRM revenue intelligence assistant. Return valid JSON only.",
+              "You are a CRM revenue intelligence assistant. Return valid JSON only." + aiTerminologyRules(locale),
           },
           {
             role: "user",

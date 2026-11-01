@@ -4,6 +4,7 @@ import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 export async function POST(request: Request) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `Prepare a concise meeting brief for a sales rep. Use provided deal costs when discussing profitability, negotiation limits, or risks. Do not recommend disclosing internal costs or margins to the customer. Write all text values in ${isGerman ? "German" : "English"}. Return JSON with customer_summary, important_points, questions, risks, next_steps.`,
+                    content: `Prepare a concise meeting brief for a sales rep. Use provided deal costs when discussing profitability, negotiation limits, or risks. Do not recommend disclosing internal costs or margins to the customer. Write all text values in ${isGerman ? "German" : "English"}. Return JSON with customer_summary, important_points, questions, risks, next_steps.${aiTerminologyRules(language)}`,
                 },
                 {
                     role: "user",

@@ -12,6 +12,7 @@ import {
   getUserFacingErrorMessage,
 } from "@/lib/errorRecovery";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 export async function POST(req: Request) {
   let userId: string | null = null;
@@ -182,7 +183,7 @@ Focus on:
           {
             role: "system",
             content:
-              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write every text value entirely in ${responseLanguage}, without mixing languages.`,
+              `You are an expert B2B sales strategist. Return valid JSON only. Keep schema keys in English and write every text value entirely in ${responseLanguage}, without mixing languages.${aiTerminologyRules(language)}`,
           },
           {
             role: "user",

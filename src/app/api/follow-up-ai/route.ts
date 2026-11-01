@@ -9,6 +9,7 @@ import {
   getAzureOpenAIConfig,
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
               role: "system",
               content: `
 You are an expert B2B sales assistant.
+${aiTerminologyRules(language)}
 
 Create a professional follow-up email.
 

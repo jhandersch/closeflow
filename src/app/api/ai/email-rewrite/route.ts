@@ -3,6 +3,7 @@ import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 const MAX_TEXT_LENGTH = 12_000;
 const ALLOWED_TONES = new Set([
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `Rewrite the email text in a ${tone} tone in ${responseLanguage}. Return JSON only with a single key called text.`,
+                    content: `Rewrite the email text in a ${tone} tone in ${responseLanguage}. Return JSON only with a single key called text.${aiTerminologyRules(language)}`,
                 },
                 {
                     role: "user",

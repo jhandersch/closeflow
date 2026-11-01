@@ -6,6 +6,7 @@ import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 export async function POST(request: Request) {
     let userId: string | null = null;
     try {
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance in ${responseLanguage}.${dealCostContext}`,
+                    content: `You are CloseFlow AI. Return JSON with answer and sources. Mode: ${mode}. Write concise, practical sales guidance in ${responseLanguage}.${aiTerminologyRules(language)}${dealCostContext}`,
                 },
                 {
                     role: "user",

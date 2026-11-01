@@ -9,6 +9,7 @@ import {
   getAzureOpenAIConfig,
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
               role: "system",
               content: `
 You are an AI sales strategist inside a professional CRM.
+${aiTerminologyRules(language)}
 
 Your job:
 Analyze the provided opportunities and identify the single most important deal to focus on.
@@ -188,7 +190,7 @@ Keep answers concise.
         typeof parsed?.headline === "string"
           ? parsed.headline
           : language === "de"
-            ? "Verkaufschancen brauchen Aufmerksamkeit"
+            ? "Leads brauchen Aufmerksamkeit"
             : "Deals need attention",
 
       explanation:

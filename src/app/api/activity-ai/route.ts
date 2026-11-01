@@ -4,6 +4,7 @@ import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+import { aiTerminologyRules } from "@/lib/aiLanguage";
 
 export async function POST(req: Request) {
   const access = await requireAiWorkspaceQuota(req);
@@ -85,7 +86,7 @@ Analyze:
         {
           role: "system",
           content:
-            `You are an expert sales operations AI. Return valid JSON only and write all text values in ${responseLanguage}.`,
+            `You are an expert sales operations AI. Return valid JSON only and write all text values in ${responseLanguage}.${aiTerminologyRules(language)}`,
         },
         {
           role: "user",
