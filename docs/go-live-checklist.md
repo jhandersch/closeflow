@@ -118,6 +118,7 @@ Run these checks with `UserA` token/cookie:
 
 ### Legal (open, owner decision)
 
+- Blocked until the company exists: Stripe Live (live keys, price IDs, live webhook, approved amount, refund procedure) and the legal page details below.
 - Replace placeholders in `/datenschutz`, `/impressum` and `/agb`: company name, address, contact email, and remove the "Finalize the placeholder information" notice.
 - Have a lawyer or data protection officer review the privacy policy, including the new section 6 on Azure OpenAI (global deployment, abuse-monitoring retention).
 - Confirm the Microsoft Data Processing Addendum (part of the Online Services Terms) covers the Azure OpenAI resource.
