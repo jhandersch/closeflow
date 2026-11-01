@@ -116,6 +116,13 @@ Run these checks with `UserA` token/cookie:
 
 ## 6) Release Decision
 
+### Legal (open, owner decision)
+
+- Replace placeholders in `/datenschutz`, `/impressum` and `/agb`: company name, address, contact email, and remove the "Finalize the placeholder information" notice.
+- Have a lawyer or data protection officer review the privacy policy, including the new section 6 on Azure OpenAI (global deployment, abuse-monitoring retention).
+- Confirm the Microsoft Data Processing Addendum (part of the Online Services Terms) covers the Azure OpenAI resource.
+- Decide whether to promise EU-only processing; that requires a Data Zone Standard deployment (quota request) instead of Global Standard.
+
 Release is approved only if all are true:
 - `npm run verify:release` passes.
 - Migration and schema health checks pass in production target.
