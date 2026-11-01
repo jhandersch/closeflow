@@ -133,6 +133,18 @@ export const germanTextTranslations: Record<string, string> = {
   "A workspace is required to use AI forecasting.":
     "Für KI-Prognosen ist ein Arbeitsbereich erforderlich.",
   "A workspace is required.": "Ein Arbeitsbereich ist erforderlich.",
+  "A workspace is required to use AI chat.":
+    "Für den KI-Chat ist ein Arbeitsbereich erforderlich.",
+  "A workspace is required to use the sales copilot.":
+    "Für den Vertriebs-Copilot ist ein Arbeitsbereich erforderlich.",
+  "Could not load integrations.":
+    "Die Integrationen konnten nicht geladen werden.",
+  "AI is temporarily unavailable. Please try again later.":
+    "Die KI ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+  "Azure OpenAI returned an empty response.":
+    "Die KI hat keine Antwort geliefert. Bitte versuche es erneut.",
+  "Azure OpenAI returned invalid JSON.":
+    "Die KI-Antwort war ungültig. Bitte versuche es erneut.",
   "A workspace with this name already exists.":
     "Ein Arbeitsbereich mit diesem Namen ist bereits vorhanden.",
   "Above-average deal value.": "Überdurchschnittlicher Abschlusswert.",
