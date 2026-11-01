@@ -4,8 +4,6 @@ import test from "node:test";
 
 import { decryptJson, encryptJson, signOAuthState, verifyOAuthState } from "../src/lib/integrations/crypto.ts";
 import { buildGoogleAuthUrl, buildRawEmail, createGoogleCalendarEvent, sendGmail } from "../src/lib/integrations/google.ts";
-import { isValidSlackWebhookUrl, postSlackMessage } from "../src/lib/integrations/slack.ts";
-
 const key = randomBytes(32).toString("base64");
 
 test("encryption round-trips and rejects tampering or wrong keys", () => {
@@ -27,26 +25,6 @@ test("OAuth state is bound to the user and expires", () => {
   assert.equal(verifyOAuthState(state, "user-1", key, now + 11 * 60 * 1000), false);
   assert.equal(verifyOAuthState(`${state.startsWith("A") ? "B" : "A"}${state.slice(1)}`, "user-1", key, now), false);
   assert.equal(verifyOAuthState("garbage", "user-1", key, now), false);
-});
-
-test("Slack webhook URLs are restricted to hooks.slack.com", () => {
-  assert.equal(isValidSlackWebhookUrl("https://hooks.slack.com/services/T000/B000/abc123"), true);
-  assert.equal(isValidSlackWebhookUrl("http://hooks.slack.com/services/T000/B000/abc123"), false);
-  assert.equal(isValidSlackWebhookUrl("https://evil.example/services/T000/B000/abc123"), false);
-  assert.equal(isValidSlackWebhookUrl("https://hooks.slack.com.evil.example/services/T/B/c"), false);
-  assert.equal(isValidSlackWebhookUrl(""), false);
-});
-
-test("Slack posting sends JSON and surfaces failures", async () => {
-  const calls = [];
-  const url = "https://hooks.slack.com/services/T000/B000/abc123";
-  await postSlackMessage(url, "hi", async (target, init) => {
-    calls.push({ target, body: JSON.parse(init.body) });
-    return { ok: true, status: 200 };
-  });
-  assert.deepEqual(calls, [{ target: url, body: { text: "hi" } }]);
-  await assert.rejects(postSlackMessage(url, "hi", async () => ({ ok: false, status: 404 })));
-  await assert.rejects(postSlackMessage("https://evil.example/x", "hi", async () => ({ ok: true })));
 });
 
 test("Google auth URL requests offline access with Gmail and Calendar scopes", () => {

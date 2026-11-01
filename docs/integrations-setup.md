@@ -1,10 +1,11 @@
-# Integrationen (Google Gmail/Kalender, Slack)
+# Integrationen (Google Gmail/Kalender)
 
 Zugangsdaten liegen verschlüsselt (AES-256-GCM) in `public.user_integrations`. Die Tabelle ist nur für den Service-Role-Key lesbar. Ohne die Variablen unten zeigt die Oberfläche „Noch nicht verfügbar“, und alle bestehenden Funktionen laufen unverändert.
 
+Slack war kurz eingebaut und wurde bewusst wieder entfernt.
+
 ## Verhalten
 
-- **Slack:** Nutzer fügt einen Incoming-Webhook ein. Beim Verbinden geht eine Testnachricht raus. Danach kommen Meldungen bei neuem Lead sowie gewonnenem/verlorenem Deal.
 - **Gmail:** E-Mails an Leads (`POST /api/leads/[id]/email`) werden über das verbundene Gmail gesendet. Schlägt das Senden fehl, antwortet die Route mit 502 und legt keine Aktivität an.
 - **Google Kalender:** Neue Termine mit Status `scheduled` werden in den primären Google-Kalender eingetragen (nur Anlegen, kein Update/Löschen-Sync). Fehler werden nur geloggt.
 
@@ -18,8 +19,6 @@ Zugangsdaten liegen verschlüsselt (AES-256-GCM) in `public.user_integrations`. 
 4. Variablen setzen: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `NEXT_PUBLIC_APP_URL` (oder `APP_URL`).
 5. Für öffentliche Nutzer außerhalb der Testnutzer verlangt Google eine App-Verifizierung (sensible Scopes).
 
-Slack braucht nur `INTEGRATIONS_ENCRYPTION_KEY`; der Webhook wird pro Nutzer in der Oberfläche eingetragen.
-
 ## Tests
 
-`npm run test:integrations` (Verschlüsselung, OAuth-State, Slack-URL-Prüfung, Gmail/Kalender-Requests).
+`npm run test:integrations` (Verschlüsselung, OAuth-State, Gmail/Kalender-Requests).

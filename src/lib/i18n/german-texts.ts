@@ -479,10 +479,7 @@ export const germanTextTranslations: Record<string, string> = {
   "Could not start the Google connection":
     "Die Google-Verbindung konnte nicht gestartet werden.",
   "Could not disconnect": "Die Verbindung konnte nicht getrennt werden.",
-  "Could not connect Slack": "Slack konnte nicht verbunden werden.",
   Disconnected: "Verbindung getrennt",
-  "Slack connected. A test message was sent.":
-    "Slack verbunden. Eine Testnachricht wurde gesendet.",
   "Integrations could not be loaded.":
     "Die Integrationen konnten nicht geladen werden.",
   Connected: "Verbunden",
@@ -491,20 +488,8 @@ export const germanTextTranslations: Record<string, string> = {
   Reconnect: "Neu verbinden",
   Disconnect: "Trennen",
   "Connect Google (Gmail + Calendar)": "Google verbinden (Gmail + Kalender)",
-  "Connect Slack": "Slack verbinden",
   "Emails to leads are sent via your Gmail. New meetings are added to your Google Calendar.":
     "E-Mails an Leads werden über dein Gmail gesendet. Neue Termine werden in deinen Google Kalender eingetragen.",
-  "You are notified in Slack about new leads and won or lost deals.":
-    "Du wirst in Slack über neue Leads sowie gewonnene und verlorene Deals benachrichtigt.",
-  "Create an incoming webhook in Slack and paste its URL here.":
-    "Erstelle in Slack einen Incoming Webhook und füge die URL hier ein.",
-  "Enter a valid Slack webhook URL (https://hooks.slack.com/services/...).":
-    "Gib eine gültige Slack-Webhook-URL ein (https://hooks.slack.com/services/...).",
-  "Slack did not accept the test message. Check the webhook URL.":
-    "Slack hat die Testnachricht nicht akzeptiert. Prüfe die Webhook-URL.",
-  "Could not save the Slack connection.":
-    "Die Slack-Verbindung konnte nicht gespeichert werden.",
-  "Could not disconnect Slack.": "Slack konnte nicht getrennt werden.",
   "Could not disconnect Google.": "Google konnte nicht getrennt werden.",
   "Integrations are not configured.": "Integrationen sind noch nicht eingerichtet.",
   "Google integration is not configured.":

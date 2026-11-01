@@ -23,7 +23,6 @@ export async function GET(request: Request) {
   }
 
   const google = rows.find((row) => row.provider === "google");
-  const slack = rows.find((row) => row.provider === "slack");
   const scopes: string[] = google?.scopes ?? [];
 
   return NextResponse.json({
@@ -33,10 +32,6 @@ export async function GET(request: Request) {
       email: google?.account_label ?? null,
       gmail: scopes.includes(GOOGLE_SCOPES.gmail),
       calendar: scopes.includes(GOOGLE_SCOPES.calendar),
-    },
-    slack: {
-      available: configured,
-      connected: Boolean(slack),
     },
   });
 }

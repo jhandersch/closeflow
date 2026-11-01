@@ -14,7 +14,6 @@ type IntegrationStatus = {
     gmail: boolean;
     calendar: boolean;
   };
-  slack: { available: boolean; connected: boolean };
 };
 
 const callbackMessages: Record<string, { ok: boolean; text: string }> = {
@@ -26,7 +25,6 @@ const callbackMessages: Record<string, { ok: boolean; text: string }> = {
 export function IntegrationsSettings() {
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -61,30 +59,13 @@ export function IntegrationsSettings() {
     window.location.href = url;
   };
 
-  const disconnect = async (provider: "google" | "slack") => {
+  const disconnect = async () => {
     setBusy(true);
-    const response = await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
+    const response = await fetch("/api/integrations/google", { method: "DELETE" });
     if (!response.ok) {
       toast.error(await readApiError(response, "Could not disconnect"));
     } else {
       toast.success(translateText("Disconnected"));
-      await load();
-    }
-    setBusy(false);
-  };
-
-  const connectSlack = async () => {
-    setBusy(true);
-    const response = await fetch("/api/integrations/slack", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ webhookUrl }),
-    });
-    if (!response.ok) {
-      toast.error(await readApiError(response, "Could not connect Slack"));
-    } else {
-      setWebhookUrl("");
-      toast.success(translateText("Slack connected. A test message was sent."));
       await load();
     }
     setBusy(false);
@@ -132,7 +113,7 @@ export function IntegrationsSettings() {
                   <button type="button" disabled={busy || !status.google.available} onClick={connectGoogle} className={buttonClass}>
                     {translateText("Reconnect")}
                   </button>
-                  <button type="button" disabled={busy} onClick={() => disconnect("google")} className={buttonClass}>
+                  <button type="button" disabled={busy} onClick={disconnect} className={buttonClass}>
                     {translateText("Disconnect")}
                   </button>
                 </div>
@@ -141,41 +122,6 @@ export function IntegrationsSettings() {
               <button type="button" disabled={busy} onClick={connectGoogle} className={buttonClass}>
                 {translateText("Connect Google (Gmail + Calendar)")}
               </button>
-            ) : (
-              <p className="text-foreground/65">{translateText("Not available yet.")}</p>
-            )}
-          </div>
-
-          <div className="space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4 text-sm text-foreground/80">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-medium text-foreground">{translateText("Slack")}</span>
-              {badge(status.slack.connected)}
-            </div>
-            {status.slack.connected ? (
-              <>
-                <p className="text-foreground/65">
-                  {translateText("You are notified in Slack about new leads and won or lost deals.")}
-                </p>
-                <button type="button" disabled={busy} onClick={() => disconnect("slack")} className={buttonClass}>
-                  {translateText("Disconnect")}
-                </button>
-              </>
-            ) : status.slack.available ? (
-              <>
-                <p className="text-foreground/65">
-                  {translateText("Create an incoming webhook in Slack and paste its URL here.")}
-                </p>
-                <input
-                  type="url"
-                  value={webhookUrl}
-                  onChange={(event) => setWebhookUrl(event.target.value)}
-                  placeholder="https://hooks.slack.com/services/..."
-                  className="w-full rounded-xl border border-border-subtle bg-surface-1 px-3 py-2 text-foreground"
-                />
-                <button type="button" disabled={busy || !webhookUrl.trim()} onClick={connectSlack} className={buttonClass}>
-                  {translateText("Connect Slack")}
-                </button>
-              </>
             ) : (
               <p className="text-foreground/65">{translateText("Not available yet.")}</p>
             )}
