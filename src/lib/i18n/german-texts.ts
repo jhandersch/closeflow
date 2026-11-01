@@ -472,6 +472,45 @@ export const germanTextTranslations: Record<string, string> = {
   Confirmed: "Bestätigt",
   "Connect your communication and calendar stack.":
     "Verbinde deine Kommunikations- und Kalenderdienste.",
+  "Google connected": "Google verbunden",
+  "Google connection was cancelled": "Die Google-Verbindung wurde abgebrochen.",
+  "Google connection failed. Please try again.":
+    "Die Google-Verbindung ist fehlgeschlagen. Bitte versuche es erneut.",
+  "Could not start the Google connection":
+    "Die Google-Verbindung konnte nicht gestartet werden.",
+  "Could not disconnect": "Die Verbindung konnte nicht getrennt werden.",
+  "Could not connect Slack": "Slack konnte nicht verbunden werden.",
+  Disconnected: "Verbindung getrennt",
+  "Slack connected. A test message was sent.":
+    "Slack verbunden. Eine Testnachricht wurde gesendet.",
+  "Integrations could not be loaded.":
+    "Die Integrationen konnten nicht geladen werden.",
+  Connected: "Verbunden",
+  "Not connected": "Nicht verbunden",
+  "Not available yet.": "Noch nicht verfügbar.",
+  Reconnect: "Neu verbinden",
+  Disconnect: "Trennen",
+  "Connect Google (Gmail + Calendar)": "Google verbinden (Gmail + Kalender)",
+  "Connect Slack": "Slack verbinden",
+  "Emails to leads are sent via your Gmail. New meetings are added to your Google Calendar.":
+    "E-Mails an Leads werden über dein Gmail gesendet. Neue Termine werden in deinen Google Kalender eingetragen.",
+  "You are notified in Slack about new leads and won or lost deals.":
+    "Du wirst in Slack über neue Leads sowie gewonnene und verlorene Deals benachrichtigt.",
+  "Create an incoming webhook in Slack and paste its URL here.":
+    "Erstelle in Slack einen Incoming Webhook und füge die URL hier ein.",
+  "Enter a valid Slack webhook URL (https://hooks.slack.com/services/...).":
+    "Gib eine gültige Slack-Webhook-URL ein (https://hooks.slack.com/services/...).",
+  "Slack did not accept the test message. Check the webhook URL.":
+    "Slack hat die Testnachricht nicht akzeptiert. Prüfe die Webhook-URL.",
+  "Could not save the Slack connection.":
+    "Die Slack-Verbindung konnte nicht gespeichert werden.",
+  "Could not disconnect Slack.": "Slack konnte nicht getrennt werden.",
+  "Could not disconnect Google.": "Google konnte nicht getrennt werden.",
+  "Integrations are not configured.": "Integrationen sind noch nicht eingerichtet.",
+  "Google integration is not configured.":
+    "Die Google-Integration ist noch nicht eingerichtet.",
+  "The email could not be sent via Gmail. Reconnect Google in Settings and try again.":
+    "Die E-Mail konnte nicht über Gmail gesendet werden. Verbinde Google in den Einstellungen neu und versuche es erneut.",
   Conservative: "Konservativ",
   "Conservative, expected, and optimistic scenarios":
     "Konservative, erwartete und optimistische Szenarien",

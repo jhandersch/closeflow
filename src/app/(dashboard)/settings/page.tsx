@@ -12,6 +12,7 @@ import {
   useAppPreferences,
 } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
+import { IntegrationsSettings } from "@/components/IntegrationsSettings";
 import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 
 type ThemeOption = "dark" | "light";
@@ -20,13 +21,6 @@ type NotificationSettings = {
   browser: boolean;
   email: boolean;
   taskReminders: boolean;
-};
-
-type Integrations = {
-  google: boolean;
-  gmail: boolean;
-  calendar: boolean;
-  slack: boolean;
 };
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
@@ -128,13 +122,6 @@ export default function SettingsPage() {
       email: true,
       taskReminders: true,
     });
-
-  const [integrations, setIntegrations] = useState<Integrations>({
-    google: false,
-    gmail: false,
-    calendar: false,
-    slack: false,
-  });
 
   const [sessionCount, setSessionCount] = useState(1);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -303,13 +290,6 @@ export default function SettingsPage() {
         taskReminders: metadata.notifications?.taskReminders ?? true,
       });
 
-      setIntegrations({
-        google: metadata.integrations?.google ?? false,
-        gmail: metadata.integrations?.gmail ?? false,
-        calendar: metadata.integrations?.calendar ?? false,
-        slack: metadata.integrations?.slack ?? false,
-      });
-
       setSessionCount(
         Number(metadata.session_count || (session ? 1 : 0))
       );
@@ -444,7 +424,6 @@ export default function SettingsPage() {
         theme,
         timezone: nextTimezone,
         notifications,
-        integrations,
         session_count: sessionCount,
       }),
     });
@@ -1092,67 +1071,7 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-surface-1 p-6">
-        <h2 className="text-xl font-semibold text-foreground">
-          {translateText("Integrations")}</h2>
-
-        <p className="mt-2 text-sm text-foreground/65">
-          {translateText("Connect your communication and calendar stack.")}</p>
-
-        <div className="mt-5 space-y-3 rounded-xl border border-border-subtle bg-surface-2/70 p-4">
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {translateText("Google")}<input
-              type="checkbox"
-              checked={integrations.google}
-              onChange={(event) =>
-                setIntegrations((current) => ({
-                  ...current,
-                  google: event.target.checked,
-                }))
-              }
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {translateText("Gmail")}<input
-              type="checkbox"
-              checked={integrations.gmail}
-              onChange={(event) =>
-                setIntegrations((current) => ({
-                  ...current,
-                  gmail: event.target.checked,
-                }))
-              }
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {translateText("Calendar")}<input
-              type="checkbox"
-              checked={integrations.calendar}
-              onChange={(event) =>
-                setIntegrations((current) => ({
-                  ...current,
-                  calendar: event.target.checked,
-                }))
-              }
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {translateText("Slack")}<input
-              type="checkbox"
-              checked={integrations.slack}
-              onChange={(event) =>
-                setIntegrations((current) => ({
-                  ...current,
-                  slack: event.target.checked,
-                }))
-              }
-            />
-          </label>
-        </div>
-      </div>
+      <IntegrationsSettings />
 
       <div
         id="security"

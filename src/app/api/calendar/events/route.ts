@@ -1,5 +1,7 @@
 import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
+import { GOOGLE_SCOPES, createGoogleCalendarEvent } from "@/lib/integrations/google";
+import { getGoogleAccessForUser } from "@/lib/integrations/store";
 import {
   denyReadOnlyWrite,
   getRouteUser,
@@ -451,6 +453,21 @@ export async function POST(request: Request) {
       status: data.status,
     },
   });
+
+  if (status === "scheduled") {
+    try {
+      const accessToken = await getGoogleAccessForUser(user.id, GOOGLE_SCOPES.calendar);
+      if (accessToken) {
+        await createGoogleCalendarEvent(accessToken, {
+          title,
+          description,
+          startsAt: data.scheduled_at,
+        });
+      }
+    } catch (googleError) {
+      console.error("Google Calendar sync failed:", googleError instanceof Error ? googleError.message : googleError);
+    }
+  }
 
   return NextResponse.json(data);
 }

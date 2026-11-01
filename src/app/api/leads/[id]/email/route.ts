@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { GOOGLE_SCOPES, sendGmail } from "@/lib/integrations/google";
+import { getGoogleAccessForUser } from "@/lib/integrations/store";
 import {
     getRouteUser,
     isReadOnlyRole,
@@ -53,6 +55,18 @@ export async function POST(request: Request, { params }: {
     if (!to || !subject || !bodyText) {
         return NextResponse.json({ error: "to, subject and body are required" }, { status: 400 });
     }
+    let sentViaGmail = false;
+    try {
+        const accessToken = await getGoogleAccessForUser(user.id, GOOGLE_SCOPES.gmail);
+        if (accessToken) {
+            await sendGmail(accessToken, { to, subject, body: bodyText });
+            sentViaGmail = true;
+        }
+    }
+    catch (gmailError) {
+        console.error("Gmail send failed:", gmailError instanceof Error ? gmailError.message : gmailError);
+        return NextResponse.json({ error: "The email could not be sent via Gmail. Reconnect Google in Settings and try again." }, { status: 502 });
+    }
     // Log email as an activity on the lead
     const { error: activityError } = await supabase.from("activities").insert({
         lead_id: leadId,
@@ -67,5 +81,5 @@ export async function POST(request: Request, { params }: {
     if (activityError) {
         return NextResponse.json({ error: activityError.message }, { status: 500 });
     }
-    return NextResponse.json({ ok: true, to, subject });
+    return NextResponse.json({ ok: true, to, subject, sentViaGmail });
 }

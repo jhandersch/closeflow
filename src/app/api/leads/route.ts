@@ -8,6 +8,7 @@ import type { Lead } from "@/types";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { notifySlack } from "@/lib/integrations/notify";
 type RouteSupabase = Awaited<ReturnType<typeof getRouteUser>>["supabase"];
 type CustomerLead = {
   id: string;
@@ -286,6 +287,12 @@ export async function POST(req: Request) {
     } catch (workflowError) {
       console.error("Workflow automation failed:", workflowError);
     }
+    await notifySlack(
+      user.id,
+      user.user_metadata?.language === "en"
+        ? `🆕 New lead: ${data.name}${data.company ? ` (${data.company})` : ""}`
+        : `🆕 Neuer Lead: ${data.name}${data.company ? ` (${data.company})` : ""}`,
+    );
     return NextResponse.json(data);
   } catch (error) {
     console.error("POST CRASH:", error);
@@ -475,6 +482,16 @@ export async function PUT(req: Request) {
         );
       } catch (error) {
         console.error("Lead automation failed:", error);
+      }
+      if (updates.status === "won" || updates.status === "lost") {
+        const leadName = typeof data.name === "string" ? data.name : "Lead";
+        const english = user.user_metadata?.language === "en";
+        await notifySlack(
+          user.id,
+          updates.status === "won"
+            ? english ? `🎉 Deal won: ${leadName}` : `🎉 Deal gewonnen: ${leadName}`
+            : english ? `Deal lost: ${leadName}` : `Deal verloren: ${leadName}`,
+        );
       }
     }
     /*
