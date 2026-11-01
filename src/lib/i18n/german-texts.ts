@@ -1134,8 +1134,8 @@ export const germanTextTranslations: Record<string, string> = {
   "Lead source": "Lead-Quelle",
   "Lead spreadsheet template showing the required name column, optional lead fields, allowed statuses, and tag format.":
     "Tabellenvorlage für Leads mit erforderlicher Namensspalte, optionalen Feldern, zulässigen Statuswerten und Tag-Format.",
-  "Lead still needs to be qualified.":
-    "Der Lead muss noch qualifiziert werden.",
+  "Lead has not been contacted yet.":
+    "Der Lead wurde noch nicht kontaktiert.",
   "Lead to Lost": "Lead verloren",
   "Lead to Proposal": "Lead erreicht Angebot",
   "Lead to Won": "Lead gewonnen",
@@ -1302,7 +1302,7 @@ export const germanTextTranslations: Record<string, string> = {
   "New inbound inquiry from PLG team.":
     "Neue eingehende Anfrage des PLG-Teams.",
   "New lead follow-up": "Follow-up für neuen Lead",
-  "New lead needs qualification.": "Der neue Lead muss qualifiziert werden.",
+  "New lead has not been contacted yet.": "Der neue Lead wurde noch nicht kontaktiert.",
   "New leads": "Neue Leads",
   "New Meeting": "Neuer Termin",
   "New password": "Neues Passwort",

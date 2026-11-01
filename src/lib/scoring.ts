@@ -92,7 +92,7 @@ export function analyzeLead(
 
     if (lead.status === "new") {
         reasons.push(
-            "Lead still needs to be qualified.",
+            "Lead has not been contacted yet.",
         );
     }
 

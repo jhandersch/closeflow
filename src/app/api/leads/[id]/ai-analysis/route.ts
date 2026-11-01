@@ -113,7 +113,7 @@ Lead:\n${lead.name}\n\nCompany:\n${lead.company ?? "—"}\n\nDeal Value:\n€${l
 function translateLeadStatus(status: string | null, language: "de") {
     if (language !== "de") return status ?? "—";
     const values: Record<string, string> = {
-        new: "Neu", contacted: "Kontaktiert", qualified: "Qualifiziert",
+        new: "Neu", contacted: "Kontaktiert",
         proposal: "Angebot", won: "Gewonnen", lost: "Verloren",
     };
     return values[(status ?? "").toLowerCase()] ?? status ?? "—";

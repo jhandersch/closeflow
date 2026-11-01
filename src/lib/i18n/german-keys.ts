@@ -271,7 +271,6 @@ export const germanKeyTranslations: Record<string, string> = {
     "pipeline.lost": "Verloren",
     "pipeline.new": "Neu",
     "pipeline.proposal": "Angebot",
-    "pipeline.qualified": "Qualifiziert",
     "pipeline.won": "Gewonnen",
     "settings.accountSubtitle": "Von diesem Arbeitsbereich abmelden.",
     "settings.accountTitle": "Konto",

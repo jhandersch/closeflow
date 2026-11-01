@@ -296,7 +296,6 @@ export const dictionary: DictionaryNode = {
         lost: "Lost",
         new: "New",
         proposal: "Proposal",
-        qualified: "Qualified",
         won: "Won",
     },
     settings: {

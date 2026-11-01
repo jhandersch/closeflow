@@ -43,7 +43,7 @@ export function useLeadAI(lead: any): LeadAIResult {
             title: translateText("Qualify lead"),
             description: translateText("Gather missing information and identify intent."),
             priority: "low",
-            reason: translateText("New lead needs qualification."),
+            reason: translateText("New lead has not been contacted yet."),
             score: priority,
         });
     }
