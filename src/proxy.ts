@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname } = request.nextUrl;
 
   if (isAllowedDuringMaintenance(pathname)) {
     return NextResponse.next();
@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.json(MAINTENANCE_API_BODY, { status: 503, headers: hardenedHeaders });
   }
 
-  return new NextResponse(maintenanceHtml(searchParams.get("access") === "denied"), {
+  return new NextResponse(maintenanceHtml(), {
     status: 503,
     headers: { "Content-Type": "text/html; charset=utf-8", ...hardenedHeaders },
   });

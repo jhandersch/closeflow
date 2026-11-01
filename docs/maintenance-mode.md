@@ -12,11 +12,11 @@ Vercel → Settings → Environment Variables (Production):
 
 Danach Redeploy. Ausschalten: `MAINTENANCE_MODE` löschen oder auf `off`, Redeploy.
 
-## Weiter testen (Team-Zugang)
-Auf der Wartungsseite „Team-Zugang“ aufklappen und den Code eingeben. Es wird ein httpOnly-Cookie (14 Tage) gesetzt. Skripte können stattdessen den Header `x-maintenance-bypass: <Code>` senden.
+## Weiter testen
+Es gibt kein Formular auf der Wartungsseite. Skripte senden den Header `x-maintenance-bypass: <Code>` (Wert von `MAINTENANCE_BYPASS_SECRET`). Zum normalen Testen im Browser den Modus ausschalten.
 
 ## Bleibt erreichbar
-`/api/health`, `/api/cron/*` (CRON_SECRET-geschützt), `/api/stripe/webhook` (signaturgeprüft), `/maintenance-access`.
+`/api/health`, `/api/cron/*` (CRON_SECRET-geschützt), `/api/stripe/webhook` (signaturgeprüft).
 
 ## Hinweis
-Google-Verbindung (OAuth-Callback) und Anmeldung funktionieren nur mit Team-Zugang. Ein Deployment startet das Monitoring-Fenster neu.
+Google-Verbindung und Anmeldung funktionieren im Browser erst nach dem Ausschalten. Ein Deployment startet das Monitoring-Fenster neu.

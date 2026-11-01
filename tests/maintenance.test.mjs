@@ -17,8 +17,8 @@ test("maintenance flag parsing", () => {
   assert.equal(isMaintenanceEnabled(undefined), false);
 });
 
-test("only monitoring, cron, webhook and access form stay open", () => {
-  for (const path of ["/api/health", "/api/stripe/webhook", "/api/cron/automations", "/maintenance-access"]) {
+test("only monitoring, cron and webhook stay open", () => {
+  for (const path of ["/api/health", "/api/stripe/webhook", "/api/cron/automations"]) {
     assert.equal(isAllowedDuringMaintenance(path), true, path);
   }
   for (const path of ["/", "/login", "/dashboard", "/api/leads", "/api/integrations/google/callback"]) {
