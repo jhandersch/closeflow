@@ -78,6 +78,7 @@ Current decision record (2026-10-28):
 - Open: monitoring window (`-- 24` on 2026-11-02 21:00, `-- 48` on 2026-11-03 21:00), Stripe Live and legal page details (blocked until the company exists), Azure price check against the official page, sign-off.
 - Done 2026-11-01: Azure prices verified against the official Azure Retail Prices API (Germany West Central, gpt-4.1-mini Global Standard: 0.40 USD input / 1.60 USD output per 1M tokens; matches the configured values). Data Zone would be 0.44 / 1.76 USD per 1M tokens.
 - Done 2026-11-01: Azure budget `closeflow-monatlich` (20 EUR/month, email alerts at 50% and 100%, owner-configured; alerts only, no spending cap).
+- Done 2026-11-01: Google integration (Gmail send, Calendar create and manual import) built and live-tested by the owner in Production (mail arrived via Gmail, calendar import worked). Slack was built and removed again. Setup in `docs/integrations-setup.md`. Pushes on this day restarted the monitoring window. Privacy policy still needs a Google section (legal, after company formation); Google app verification is needed for users beyond the 100 unverified-user limit.
 
 ## Remaining Steps to Move NO-GO -> GO
 
