@@ -1465,6 +1465,11 @@ export const germanTextTranslations: Record<string, string> = {
   "Open Tasks": "Offene Aufgaben",
   "Open tasks": "Offene Aufgaben",
   "Azure OpenAI returned no content.": "Azure OpenAI hat keine Inhalte zurückgegeben.",
+  "6. AI features and service providers": "6. KI-Funktionen und Dienstleister",
+  "When you use AI features, the content needed for the request (for example lead details, notes, activities and deal values) is sent to Microsoft Azure OpenAI Service. The resource is hosted in the Germany West Central region. The model deployment is a global deployment, so processing may take place outside the EU.":
+    "Wenn du KI-Funktionen nutzt, werden die für die Anfrage nötigen Inhalte (zum Beispiel Lead-Daten, Notizen, Aktivitäten und Abschlusswerte) an den Microsoft Azure OpenAI Service gesendet. Die Ressource wird in der Region Germany West Central betrieben. Das Modell ist global bereitgestellt, daher kann die Verarbeitung auch außerhalb der EU stattfinden.",
+  "Your data is not used to train or improve the models. Microsoft may temporarily retain requests for abuse monitoring in line with its terms. We do not send AI content to any other AI provider.":
+    "Deine Daten werden nicht zum Training oder zur Verbesserung der Modelle verwendet. Microsoft kann Anfragen gemäß seinen Bedingungen vorübergehend zur Missbrauchserkennung speichern. KI-Inhalte senden wir an keinen anderen KI-Anbieter.",
   "Opening...": "Wird geöffnet …",
   Optimistic: "Optimistisch",
   "Organization name is required": "Der Organisationsname ist erforderlich.",

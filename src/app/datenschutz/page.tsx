@@ -42,6 +42,14 @@ export default function DatenschutzPage() {
             {translateText("We retain data only as long as necessary for these purposes or as required by statutory retention obligations.")}</p>
         </section>
 
+        <section className="mt-6 text-sm leading-7 text-foreground/85">
+          <h2 className="text-lg font-semibold text-foreground">{translateText("6. AI features and service providers")}</h2>
+          <p className="mt-2">
+            {translateText("When you use AI features, the content needed for the request (for example lead details, notes, activities and deal values) is sent to Microsoft Azure OpenAI Service. The resource is hosted in the Germany West Central region. The model deployment is a global deployment, so processing may take place outside the EU.")}</p>
+          <p className="mt-2">
+            {translateText("Your data is not used to train or improve the models. Microsoft may temporarily retain requests for abuse monitoring in line with its terms. We do not send AI content to any other AI provider.")}</p>
+        </section>
+
         <div className="mt-8">
           <Link href="/" className="text-sm font-semibold text-cyan-300 hover:underline">
             {translateText("Back to home")}</Link>
