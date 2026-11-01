@@ -1334,7 +1334,7 @@ const germanTextTranslations: Record<string, string> = {
   "Enter 6-digit code": "Sechsstelligen Code eingeben",
   "Error Monitoring": "Fehlerüberwachung",
   "Estimated deal value": "Geschätzter Abschlusswert",
-  "Every opportunity.": "Jede Verkaufschance.",
+  "Every opportunity.": "Jeder Lead.",
   "Example workspace": "Beispielarbeitsbereich",
   Expected: "Erwartet",
   Expires: "Läuft ab",
@@ -2589,6 +2589,13 @@ const catalogGermanTextTranslations: Record<string, string> = {
   "5,000 / month": "5.000 pro Monat",
 };
 const homeGermanTextTranslations: Record<string, string> = {
+  "A CRM for small B2B agencies": "Ein CRM für kleine B2B-Agenturen",
+  "Keep leads, customers and follow-ups in one place. CloseFlow helps small B2B agencies see what needs attention and what to do next.":
+    "Leads, Kunden und Nachfassaktionen an einem Ort. CloseFlow zeigt kleinen B2B-Agenturen, was gerade Aufmerksamkeit braucht und was als Nächstes ansteht.",
+  "A CRM that keeps every step from first contact to close in view.":
+    "Ein CRM, das jeden Schritt vom Erstkontakt bis zum Abschluss im Blick behält.",
+  "Manage leads, move deals through your pipeline, plan follow-ups and review performance—all with the context of each opportunity in one place.":
+    "Verwalte Leads, begleite Verkaufschancen durch deine Pipeline, plane Nachfassaktionen und behalte die Entwicklung im Blick – mit allen Informationen zu jeder Verkaufschance an einem Ort.",
   "Leads that keep their context": "Leads mit vollständigem Kontext",
   "Keep contact details, deal value, stage, notes and activity history together. Turn a list of names into a pipeline your team can actually work.":
     "Bündle Kontaktdaten, Abschlusswert, Phase, Notizen und Aktivitäten. Verwandle eine Namensliste in eine Pipeline, mit der dein Team arbeiten kann.",
@@ -2598,7 +2605,7 @@ const homeGermanTextTranslations: Record<string, string> = {
   "See every opportunity by stage, stay on top of follow-ups with tasks and calendar events, and keep the next action close to the deal.":
     "Sieh alle Verkaufschancen nach Phase, behalte Follow-ups mit Aufgaben und Terminen im Blick und ordne jedem Abschluss die nächste Maßnahme zu.",
   "Pipeline · Tasks · Calendar": "Pipeline · Aufgaben · Kalender",
-  "A forecast you can inspect": "Eine nachvollziehbare Prognose",
+  "Forecasts you can understand": "Prognosen, die du nachvollziehen kannst",
   "Review pipeline performance, revenue history and scenario-based forecasts. Ask the AI assistant for deal insights using the information in your workspace.":
     "Analysiere die Pipeline, den bisherigen Umsatz und verschiedene Prognoseszenarien. Frage den KI-Assistenten anhand deiner Arbeitsbereichsdaten nach Erkenntnissen zu Leads.",
   "Analytics · Forecast · AI": "Analysen · Prognose · KI",
@@ -2628,6 +2635,10 @@ const homeGermanTextTranslations: Record<string, string> = {
   "Pipeline value": "Pipeline-Wert",
   "Follow-ups": "Follow-ups",
   "4 due": "4 fällig",
+  "From workspace setup to your first follow-up.":
+    "Von der Einrichtung bis zur ersten Nachfassaktion.",
+  "Set up your workspace, then add a real lead or explore sample data. No paid plan is required to get started.":
+    "Richte deinen Arbeitsbereich ein und füge einen echten Lead hinzu oder erkunde die App mit Beispieldaten. Du brauchst keinen kostenpflichtigen Tarif, um loszulegen.",
   "Add your company name and a little team context. Your workspace starts on Free.":
     "Ergänze deinen Unternehmensnamen und ein paar Angaben zum Team. Dein Arbeitsbereich startet mit dem kostenlosen Tarif.",
   "Add a real lead or load example leads, activities and tasks to explore.":
@@ -2658,7 +2669,7 @@ export const translateText = (
 export const formatTextForLanguage = (
   text: string,
   language: AppLanguage,
-): string => language === "de" ? formatGermanTranslation(text) : text;
+): string => (language === "de" ? formatGermanTranslation(text) : text);
 export const translatePlanName = (plan: string): string => {
   const normalized = plan.trim().toLowerCase();
   if (normalized === "free") return translateText("Free");
