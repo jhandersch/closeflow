@@ -155,7 +155,7 @@ export const germanKeyTranslations: Record<string, string> = {
     "dashboard.aiPriorityScoring": "KI-Priorisierung",
     "dashboard.aiRecommendation": "KI-Empfehlung",
     "dashboard.aiRevenueForecast": "KI-Umsatzprognose",
-    "dashboard.aiWeightedPrediction": "KI-Prognose auf Basis deiner aktuellen Vertriebspipeline.",
+    "dashboard.aiWeightedPrediction": "KI-Prognose auf Basis deiner aktuellen Pipeline.",
     "dashboard.analyzingPriority": "Verkaufschancen werden priorisiert …",
     "dashboard.askAI": "KI fragen",
     "dashboard.atRisk": "Gefährdet",
