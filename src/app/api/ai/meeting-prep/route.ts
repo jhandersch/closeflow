@@ -28,7 +28,7 @@ export async function POST(request: Request) {
                 important_points: isGerman ? ["Aktuelle Vertriebsphase prüfen", "Entscheidungsträger klären", "Budget und Zeitplan bestätigen"] : ["Review the current pipeline stage", "Clarify decision makers", "Confirm budget and timeline"],
                 questions: isGerman ? ["Was hat sich seit dem letzten Gespräch geändert?", "Wer trifft die Entscheidung?"] : ["What changed since the last conversation?", "Who owns the decision?"],
                 risks: isGerman ? ["Wenig Aktivität", "Kein klarer nächster Schritt"] : ["Limited activity", "No clear next step"],
-                next_steps: isGerman ? ["Einen konkreten Termin zum Nachfassen festlegen", "Eine Gesprächszusammenfassung senden"] : ["Set a clear follow-up date", "Send a recap email"],
+                next_steps: isGerman ? ["Einen konkreten Follow-up-Termin festlegen", "Eine Gesprächszusammenfassung senden"] : ["Set a clear follow-up date", "Send a recap email"],
             });
         }
         const openai = createTrackedOpenAIClient(

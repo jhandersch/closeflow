@@ -21,7 +21,7 @@ export async function POST(request: Request) {
             ...lead,
             personal_deal_costs: formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0)),
         };
-        const goal = typeof body.goal === "string" ? body.goal : isGerman ? "Nachfassen" : "Follow up";
+        const goal = typeof body.goal === "string" ? body.goal : isGerman ? "Follow-up" : "Follow up";
         const goalLabel = translateText(goal, language);
         const tone = typeof body.tone === "string" ? body.tone : "professional";
         const apiKey = process.env.OPENAI_API_KEY;

@@ -1,4 +1,4 @@
-import { formatGermanTranslation } from "./i18n/german-format";
+import { formatGermanTranslation, preserveEnglishFollowUpTerms } from "./i18n/german-format";
 export { formatEuro } from "./i18n/locale";
 
 export type AppLanguage = "en" | "de";
@@ -688,7 +688,7 @@ const buildDictionary = (
     const fullKey = prefix ? `${prefix}.${key}` : key;
     result[key] =
       typeof value === "string"
-        ? (germanTranslations[fullKey] ?? value)
+        ? preserveEnglishFollowUpTerms(germanTranslations[fullKey] ?? value)
         : buildDictionary(value, fullKey);
   }
   return result;
@@ -2255,7 +2255,7 @@ const dynamicGermanTextTranslations: Record<string, string> = {
   "Collect onboarding checklist": "Checkliste zur Einführung zusammenstellen",
   "Asked for expanded trial for three teams.":
     "Um eine erweiterte Testphase für drei Teams gebeten.",
-  "Follow-up call booked": "Nachfassgespräch vereinbart",
+  "Follow-up call booked": "Follow-up-Gespräch vereinbart",
   "Product tour delivered": "Produktvorstellung durchgeführt",
   "Send trial expansion terms":
     "Bedingungen für die erweiterte Testphase senden",
@@ -2591,11 +2591,11 @@ const catalogGermanTextTranslations: Record<string, string> = {
 const homeGermanTextTranslations: Record<string, string> = {
   "A CRM for small B2B agencies": "Ein CRM für kleine B2B-Agenturen",
   "Keep leads, customers and follow-ups in one place. CloseFlow helps small B2B agencies see what needs attention and what to do next.":
-    "Leads, Kunden und Nachfassaktionen an einem Ort. CloseFlow zeigt kleinen B2B-Agenturen, was gerade Aufmerksamkeit braucht und was als Nächstes ansteht.",
+    "Leads, Kunden und Follow-ups an einem Ort. CloseFlow zeigt kleinen B2B-Agenturen, was gerade Aufmerksamkeit braucht und was als Nächstes ansteht.",
   "A CRM that keeps every step from first contact to close in view.":
     "Ein CRM, das jeden Schritt vom Erstkontakt bis zum Abschluss im Blick behält.",
   "Manage leads, move deals through your pipeline, plan follow-ups and review performance—all with the context of each opportunity in one place.":
-    "Verwalte Leads, begleite Verkaufschancen durch deine Pipeline, plane Nachfassaktionen und behalte die Entwicklung im Blick – mit allen Informationen zu jeder Verkaufschance an einem Ort.",
+    "Verwalte Leads, begleite Verkaufschancen durch deine Pipeline, plane Follow-ups und behalte die Entwicklung im Blick – mit allen Informationen zu jeder Verkaufschance an einem Ort.",
   "Leads that keep their context": "Leads mit vollständigem Kontext",
   "Keep contact details, deal value, stage, notes and activity history together. Turn a list of names into a pipeline your team can actually work.":
     "Bündle Kontaktdaten, Abschlusswert, Phase, Notizen und Aktivitäten. Verwandle eine Namensliste in eine Pipeline, mit der dein Team arbeiten kann.",
@@ -2636,7 +2636,7 @@ const homeGermanTextTranslations: Record<string, string> = {
   "Follow-ups": "Follow-ups",
   "4 due": "4 fällig",
   "From workspace setup to your first follow-up.":
-    "Von der Einrichtung bis zur ersten Nachfassaktion.",
+    "Von der Einrichtung bis zum ersten Follow-up.",
   "Set up your workspace, then add a real lead or explore sample data. No paid plan is required to get started.":
     "Richte deinen Arbeitsbereich ein und füge einen echten Lead hinzu oder erkunde die App mit Beispieldaten. Du brauchst keinen kostenpflichtigen Tarif, um loszulegen.",
   "Add your company name and a little team context. Your workspace starts on Free.":
@@ -2646,7 +2646,8 @@ const homeGermanTextTranslations: Record<string, string> = {
   "Work from your pipeline, schedule follow-ups, and review analytics as your data grows.":
     "Arbeite mit deiner Pipeline, plane Follow-ups und prüfe die Analysen, wenn deine Daten wachsen.",
   "First Contact": "Erstkontakt",
-  "Follow Up": "Nachfassen",
+  "Follow Up": "Follow-up",
+  "Follow up:": "Follow-up:",
   Closing: "Abschluss",
   Reactivation: "Reaktivierung",
   "Status changed": "Status geändert",
@@ -2657,15 +2658,17 @@ const homeGermanTextTranslations: Record<string, string> = {
 export const translateText = (
   text: string,
   language: AppLanguage = activeLanguage,
-): string =>
-  language === "de"
-    ? (germanTextTranslations[text.trim()] ??
+): string => {
+  if (language !== "de") return text;
+  const translated =
+    germanTextTranslations[text.trim()] ??
       additionalGermanTextTranslations[text.trim()] ??
       dynamicGermanTextTranslations[text.trim()] ??
       catalogGermanTextTranslations[text.trim()] ??
       homeGermanTextTranslations[text.trim()] ??
-      text)
-    : text;
+      text;
+  return preserveEnglishFollowUpTerms(translated);
+};
 export const formatTextForLanguage = (
   text: string,
   language: AppLanguage,

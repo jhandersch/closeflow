@@ -131,42 +131,26 @@ const formalizeGermanAddress = (text: string) => {
     return result;
 };
 
-const germanizeFollowUpTerms = (text: string) => {
-    const contextual = text
+const germanizeLeadTerms = (text: string) =>
+    text
         .replace(/\bAbschlüsse\b/gi, "Leads")
         .replace(/\bVerkaufschancen\b/gi, "Leads")
         .replace(/\bVerkaufschance\b/gi, "Lead")
         .replace(/massnahmen?/gi, (word) => word.toLowerCase().endsWith("n") ? "Maßnahmen" : "Maßnahme")
-        .replace(/Vom Arbeitsbereich zum ersten Follow-up in wenigen Minuten\./gi, "Vom Arbeitsbereich zur ersten Nachfassaktion in wenigen Minuten.")
-        .replace(/Offene Leads, bei denen ein Follow-up anstehen könnte\./gi, "Offene Leads, bei denen eine Nachfassaktion anstehen könnte.")
-        .replace(/Aktive Deals, für die ein Follow-up ansteht/gi, "Aktive Leads mit ausstehender Nachfassaktion")
         .replace(/Follow-up in (\d+) Tagen durchführen/gi, "In $1 Tagen nachfassen")
-        .replace(/Follow-up in (\d+) days?/gi, "In $1 Tagen nachfassen")
-        .replace(/Follow-ups beim Abschluss behalten/gi, "Nachfassaktionen beim Abschluss im Blick behalten")
-        .replace(/Follow-ups beim Deal behalten/gi, "Nachfassaktionen beim Abschluss im Blick behalten")
-        .replace(/Follow-up für neuen Lead/gi, "Nachfassaktion für einen neuen Lead")
-        .replace(/Follow-up erforderlich/gi, "Nachfassaktion erforderlich")
-        .replace(/Follow-up sinnvoll/gi, "Nachfassen sinnvoll")
-        .replace(/Follow-up senden/gi, "Nachfassnachricht senden")
-        .replace(/Follow-up kopieren/gi, "Nachfassaktion kopieren")
-        .replace(/Follow-up zu unserem Gespräch/gi, "Rückmeldung zu unserem Gespräch")
-        .replace(/Follow-up mit dem Lead planen/gi, "Beim Lead nachfassen")
-        .replace(/Follow-up zum Angebot planen/gi, "Zum Angebot nachfassen")
-        .replace(/Follow-up reminders?/gi, "Erinnerung zum Nachfassen")
-        .replace(/Follow-up-Termin vereinbart/gi, "Nachfassgespräch vereinbart")
-        .replace(/Follow-up zu unserem Gespräch/gi, "Rückmeldung zu unserem Gespräch")
-        .replace(/planen Sie gezielte Follow-ups/gi, "Plane gezielte Nachfassaktionen");
+        .replace(/Follow-up in (\d+) days?/gi, "In $1 Tagen nachfassen");
 
-    return contextual
-        .replace(/Follow-up-Erinnerungen/gi, "Erinnerungen zum Nachfassen")
-        .replace(/Follow-up-Entwurf/gi, "Entwurf für eine Nachfass-E-Mail")
-        .replace(/Follow-up-E-Mail/gi, "Nachfass-E-Mail")
-        .replace(/Follow-up-Nachricht/gi, "Nachfassnachricht")
-        .replace(/Follow-up-Abläufe/gi, "Nachfassabläufe")
-        .replace(/Follow-up-Gespräch/gi, "Nachfassgespräch")
-        .replace(/Follow-ups/gi, "Nachfassaktionen")
-        .replace(/Follow-up/gi, "Nachfassaktion");
-};
+export const preserveEnglishFollowUpTerms = (text: string) =>
+    text
+        .replace(/Erinnerungen zum Nachfassen/gi, "Follow-up-Erinnerungen")
+        .replace(/Erinnerung zum Nachfassen/gi, "Follow-up-Erinnerung")
+        .replace(/Entwurf für eine Nachfass-E-Mail/gi, "Follow-up-Entwurf")
+        .replace(/Nachfass-E-Mail/gi, "Follow-up-E-Mail")
+        .replace(/Nachfassnachricht/gi, "Follow-up-Nachricht")
+        .replace(/Nachfassabläufe/gi, "Follow-up-Abläufe")
+        .replace(/Nachfassgespräch/gi, "Follow-up-Gespräch")
+        .replace(/Nachfassaktionen/gi, "Follow-ups")
+        .replace(/Nachfassaktion/gi, "Follow-up");
 
 const formatGermanEuroAmounts = (text: string) => text.replace(/€\s*(-?\d[\d.,]*(?:\s?[kKmM])?)/g, (_match, rawAmount: string) => {
     const amount = rawAmount.replace(/\s/g, "");
@@ -195,7 +179,8 @@ const formatGermanEuroAmounts = (text: string) => text.replace(/€\s*(-?\d[\d.,
     return formatEuro(parsed * multiplier, "de", { minimumFractionDigits, maximumFractionDigits: 2 });
 });
 
-export const formatGermanTranslation = (text: string) => germanizeFollowUpTerms(formatGermanEuroAmounts(text));
+export const formatGermanTranslation = (text: string) =>
+    preserveEnglishFollowUpTerms(germanizeLeadTerms(formatGermanEuroAmounts(text)));
 
 export const translateDynamicGermanText = (text: string): string | undefined => {
     const noActivityMatch = text.match(/^No activity for (\d+) days?\.$/);

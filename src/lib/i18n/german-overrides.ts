@@ -6,7 +6,7 @@ export const germanContextOverrides: Record<string, string> = {
   "Above-average deal value.":
     "Überdurchschnittlicher Wert der Verkaufschance.",
   "Active deals needing follow-up":
-    "Aktive Abschlüsse mit ausstehender Nachfassaktion",
+    "Aktive Abschlüsse mit ausstehendem Follow-up",
   "Address objections and close the deal.":
     "Klären Sie Einwände und führen Sie die Verkaufschance zum Abschluss.",
   "AI Cost (30d)": "KI-Kosten (30 Tage)",
@@ -51,7 +51,7 @@ export const germanContextOverrides: Record<string, string> = {
   Cancel: "Abbrechen",
   "Closed won opportunities": "Gewonnene Leads",
   "CloseFlow brings the everyday sales workflow together: organize leads, move deals through a pipeline, plan follow-ups and review your numbers without losing the story behind each opportunity.":
-    "CloseFlow bündelt den Vertriebsalltag: Verwalte Leads, begleite Verkaufschancen durch die Pipeline, plane Nachfassaktionen und behalte Kennzahlen sowie den Verlauf jeder Verkaufschance im Blick.",
+    "CloseFlow bündelt den Vertriebsalltag: Verwalte Leads, begleite Verkaufschancen durch die Pipeline, plane Follow-ups und behalte Kennzahlen sowie den Verlauf jeder Verkaufschance im Blick.",
   Companies: "Unternehmen",
   "Compare value, stage, health, close probability and deal costs, then inspect an individual lead.":
     "Vergleiche Wert, Phase, Status, Abschlusswahrscheinlichkeit und Kosten. Sieh dir anschließend einen Lead im Detail an.",
@@ -131,16 +131,16 @@ export const germanContextOverrides: Record<string, string> = {
   "Estimated deal value": "Geschätzter Lead-Wert",
   Expected: "Erwartet",
   "Failed to load demo data": "Beispieldaten konnten nicht geladen werden.",
-  "Follow Up": "Nachfassen",
+  "Follow Up": "Follow-up",
   "Follow up actions": "Follow-up-Maßnahmen",
   "Follow up in 3 days": "In 3 Tagen nachfassen",
   "Follow up on proposal": "Zum Angebot nachfassen",
-  "Follow up proposal:": "Zum Angebot nachfassen:",
+  "Follow up proposal:": "Follow-up zum Angebot:",
   "Follow up with lead": "Beim Lead nachfassen",
   "Follow up with VP by Friday":
     "Bis Freitag bei der Vertriebsleitung nachfassen",
-  "Follow up:": "Nachfassen:",
-  "Follow-up call booked": "Nachfassgespräch vereinbart",
+  "Follow up:": "Follow-up:",
+  "Follow-up call booked": "Follow-up-Gespräch vereinbart",
   "Following up on our conversation": "Rückmeldung zu unserem Gespräch",
   "Forecast confidence measures estimate reliability; close probability is separate for each deal.":
     "Die Prognosesicherheit beschreibt die Zuverlässigkeit der Schätzung. Die Abschlusswahrscheinlichkeit wird für jeden Lead einzeln berechnet.",
@@ -164,9 +164,9 @@ export const germanContextOverrides: Record<string, string> = {
   "Keep contacts, deal stages and customers together.":
     "Führen Sie Kontakte, Verkaufschancen und Kunden übersichtlich zusammen.",
   "Keep follow-ups with the deal":
-    "Behalte Nachfassaktionen beim Abschluss im Blick",
+    "Behalte Follow-ups beim Abschluss im Blick",
   "Keep leads, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.":
-    "Behalte Leads, offene Verkaufschancen und Nachfassaktionen an einem Ort. CloseFlow hilft kleinen B2B-Agenturen, Handlungsbedarf zu erkennen und die nächsten Schritte festzulegen.",
+    "Behalte Leads, offene Verkaufschancen und Follow-ups an einem Ort. CloseFlow hilft kleinen B2B-Agenturen, Handlungsbedarf zu erkennen und die nächsten Schritte festzulegen.",
   "Keep the next step visible: review your follow-ups and update deal activity as conversations move forward.":
     "Behalten Sie den nächsten Schritt im Blick: Prüfen Sie Follow-ups und aktualisieren Sie den Verlauf der Verkaufschance, sobald sich Gespräche weiterentwickeln.",
   "Keep your open leads moving with clear next actions.":
@@ -222,7 +222,7 @@ export const germanContextOverrides: Record<string, string> = {
   "Scenario outlook showing conservative, expected and optimistic revenue paths, alongside deal risk and confidence.":
     "Die Szenarien zeigen konservative, erwartete und optimistische Umsatzverläufe sowie Risiken und Prognosesicherheit der Verkaufschancen.",
   "Search, filter, sort, and follow up on the right opportunities.":
-    "Suche, filtere und sortiere Verkaufschancen und plane gezielte Nachfassaktionen.",
+    "Suche, filtere und sortiere Verkaufschancen und plane gezielte Follow-ups.",
   "Select a lead once, then add all costs that apply to that deal.":
     "Wählen Sie einen Lead aus und erfassen Sie anschließend alle Kosten, die zu dieser Verkaufschance gehören.",
   "Selected lead total:": "Summe des ausgewählten Leads:",
@@ -245,7 +245,7 @@ export const germanContextOverrides: Record<string, string> = {
   "The expected path uses each open deal's close probability. The conservative path lowers it by 10–25 points based on risk; the optimistic path raises it by the same amount. Deals without a future close date are placed using their pipeline stage. Listed personal costs are deducted before values are weighted.":
     "Die erwartete Prognose berücksichtigt die Abschlusswahrscheinlichkeit jeder offenen Verkaufschance. Im konservativen Szenario wird sie je nach Risiko um 10–25 Punkte gesenkt, im optimistischen um denselben Wert erhöht. Für Verkaufschancen ohne zukünftiges Abschlussdatum wird die jeweilige Pipeline-Phase herangezogen. Erfasste persönliche Kosten werden vor der Gewichtung abgezogen.",
   "Track follow-up work across your workspace.":
-    "Behalte Nachfassaktionen in deinem Arbeitsbereich im Blick.",
+    "Behalte Follow-ups in deinem Arbeitsbereich im Blick.",
   "Track leads with pipeline stages, tasks, calendar events, and next actions.":
     "Verfolge Leads mit Pipeline-Phasen, Aufgaben, Kalenderterminen und nächsten Maßnahmen.",
   Unauthorized: "Nicht autorisiert.",
@@ -262,7 +262,7 @@ export const germanContextOverrides: Record<string, string> = {
   "won leads": "gewonnene Leads",
   "Worst case": "Ungünstigstes Szenario",
   "Write a follow-up email I can send now.":
-    "Verfasse eine Nachfass-E-Mail, die ich sofort versenden kann.",
+    "Verfasse eine Follow-up-E-Mail, die ich sofort versenden kann.",
   "Your follow-ups and next steps":
-    "Deine Nachfassaktionen und nächsten Schritte",
+    "Deine Follow-ups und nächsten Schritte",
 };

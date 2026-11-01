@@ -162,9 +162,9 @@ export async function POST(request: NextRequest) {
             : nextActionCoverage < 50
               ? {
                   headline: "Deine Pipeline braucht klarere nächste Schritte.",
-                  detail: `Nur ${nextActionCoverage}% der aktiven Leads haben derzeit eine festgelegte nächste Maßnahme. Die Pipeline ist stabil, aber fehlende Nachfassaktionen erhöhen das Risiko von Inaktivität.`,
+                  detail: `Nur ${nextActionCoverage}% der aktiven Leads haben derzeit eine festgelegte nächste Maßnahme. Die Pipeline ist stabil, aber fehlende Follow-ups erhöhen das Risiko von Inaktivität.`,
                   actions: [
-                    "Lege nächste Schritte für Leads ohne Nachfassaktion fest.",
+                    "Lege nächste Schritte für Leads ohne Follow-up fest.",
                     "Priorisiere aktive Leads mit hohem Umsatzpotenzial.",
                     proposalLeads > 0
                       ? "Fasse bei Leads in der Angebotsphase nach."
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
               : proposalLeads > 0
                 ? {
                     headline:
-                      "Bei Verkaufschancen mit Angebot ist eine Nachfassaktion erforderlich.",
+                      "Bei Verkaufschancen mit Angebot ist ein Follow-up erforderlich.",
                     detail: `${proposalLeads} aktive Verkaufschance(n) befinden sich bei einem Pipeline-Wert von ${pipelineValue.toLocaleString("de-DE")} € in der Angebotsphase.`,
                     actions: [
                       "Fasse bei Leads mit Angebot nach.",

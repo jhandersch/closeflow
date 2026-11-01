@@ -124,7 +124,7 @@ export const germanTextTranslations: Record<string, string> = {
     "Ein CRM, das jeden Schritt vom Erstkontakt bis zum Abschluss im Blick behält.",
   "A CRM for small B2B agencies": "Ein CRM für kleine B2B-Agenturen",
   "Keep leads, customers and follow-ups in one place. CloseFlow helps small B2B agencies see what needs attention and what to do next.":
-    "Leads, Kunden und Nachfassaktionen an einem Ort. CloseFlow zeigt kleinen B2B-Agenturen, was gerade wichtig ist und was als Nächstes zu tun ist.",
+    "Leads, Kunden und Follow-ups an einem Ort. CloseFlow zeigt kleinen B2B-Agenturen, was gerade wichtig ist und was als Nächstes zu tun ist.",
   "A simple start": "Ein einfacher Einstieg",
   "A workspace is required to use AI email rewriting.":
     "Zum Überarbeiten von E-Mails mit KI ist ein Arbeitsbereich erforderlich.",
@@ -158,7 +158,7 @@ export const germanTextTranslations: Record<string, string> = {
   "Active Customers": "Aktive Kunden",
   "Active Deals": "Aktive Abschlüsse",
   "Active deals needing follow-up":
-    "Aktive Abschlüsse mit ausstehender Nachfassaktion",
+    "Aktive Abschlüsse mit ausstehendem Follow-up",
   "Active lead": "Aktiver Lead",
   "Active Leads": "Aktive Leads",
   "Active leads": "Aktive Leads",
@@ -409,7 +409,7 @@ export const germanTextTranslations: Record<string, string> = {
   CloseFlow: "CloseFlow",
   "CloseFlow | AI-powered CRM": "CloseFlow | KI-gestütztes CRM",
   "Manage leads, move deals through your pipeline, plan follow-ups and review performance—all with the context of each opportunity in one place.":
-    "Verwalte Leads, bewege sie durch deine Pipeline, plane Nachfassaktionen und überprüfe die Ergebnisse – mit allen wichtigen Informationen zu jeder Verkaufschance an einem Ort.",
+    "Verwalte Leads, bewege sie durch deine Pipeline, plane Follow-ups und überprüfe die Ergebnisse – mit allen wichtigen Informationen zu jeder Verkaufschance an einem Ort.",
   "CloseFlow GmbH": "CloseFlow GmbH",
   "CloseFlow GmbH, Musterstrasse 1, 10115 Berlin, Englishland":
     "CloseFlow GmbH, Musterstraße 1, 10115 Berlin, Deutschland",
@@ -884,15 +884,15 @@ export const germanTextTranslations: Record<string, string> = {
   Firmenname: "Firmenname",
   "First Contact": "Erstkontakt",
   "First lead details": "Angaben zum ersten Lead",
-  "Follow Up": "Nachfassen",
+  "Follow Up": "Follow-up",
   "Follow up in 3 days": "In 3 Tagen nachfassen",
   "Follow up on proposal": "Zum Angebot nachfassen",
-  "Follow up proposal:": "Zum Angebot nachfassen:",
+  "Follow up proposal:": "Follow-up zum Angebot:",
   "Follow up with lead": "Beim Lead nachfassen",
   "Follow up with VP by Friday":
     "Bis Freitag bei der Vertriebsleitung nachfassen",
-  "Follow up:": "Nachfassen:",
-  "Follow-up call booked": "Nachfassgespräch vereinbart",
+  "Follow up:": "Follow-up:",
+  "Follow-up call booked": "Follow-up-Gespräch vereinbart",
   "Follow-up draft": "Follow-up-Entwurf",
   "Follow-up required": "Follow-up erforderlich",
   "Follow-ups": "Follow-ups",
@@ -928,7 +928,7 @@ export const germanTextTranslations: Record<string, string> = {
     "Kostenlos starten · Keine Zahlungsdaten erforderlich · Upgrade bei Bedarf",
   Friendly: "Freundlich",
   "From workspace setup to your first follow-up.":
-    "Von der Einrichtung zur ersten Nachfassaktion.",
+    "Von der Einrichtung bis zum ersten Follow-up.",
   "Gather missing information and identify intent.":
     "Fehlende Informationen erfragen und die Kaufabsicht klären.",
   "Gather procurement timeline": "Zeitplan der Beschaffung erfragen",
@@ -2192,7 +2192,7 @@ export const germanTextTranslations: Record<string, string> = {
     "Arbeitsbereichs-ID, Nutzer-ID und Rolle sind erforderlich.",
   Workspaces: "Arbeitsbereiche",
   "Write a follow-up email I can send now.":
-    "Schreibe eine E-Mail zum Nachfassen, die ich sofort versenden kann.",
+    "Schreibe eine Follow-up-E-Mail, die ich sofort versenden kann.",
   "Write your email here...": "Schreibe hier deine E-Mail …",
   "Writing...": "Wird geschrieben …",
   "XLSX export": "XLSX-Export",

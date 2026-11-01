@@ -303,7 +303,7 @@ export default function ActivityTimeline({
             action.match(/^follow up:\s*(.+)$/i);
 
         if (followUpMatch) {
-            return language === "de" ? `Nachfassen: ${followUpMatch[1]}` : `Follow up: ${followUpMatch[1]}`;
+            return language === "de" ? `Follow-up: ${followUpMatch[1]}` : `Follow up: ${followUpMatch[1]}`;
         }
 
         const proposalFollowUpMatch =
@@ -312,7 +312,7 @@ export default function ActivityTimeline({
             );
 
         if (proposalFollowUpMatch) {
-            return language === "de" ? `Angebot nachfassen: ${proposalFollowUpMatch[1]}` : `Follow up proposal: ${proposalFollowUpMatch[1]}`;
+            return language === "de" ? `Follow-up zum Angebot: ${proposalFollowUpMatch[1]}` : `Follow up proposal: ${proposalFollowUpMatch[1]}`;
         }
 
         const welcomeMatch =

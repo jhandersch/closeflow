@@ -55,7 +55,7 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     if (hasRisk) {
         return {
             headline: isGerman ? "Mehrere Leads erfordern Aufmerksamkeit." : "Several opportunities need attention.",
-            detail: isGerman ? `${atRiskDeals} aktive ${atRiskDeals === 1 ? "Lead weist" : "Leads weisen"} ein erhöhtes Risiko auf und erfordern möglicherweise eine zeitnahe Nachfassaktion.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
+            detail: isGerman ? `${atRiskDeals} aktive ${atRiskDeals === 1 ? "Lead weist" : "Leads weisen"} ein erhöhtes Risiko auf und erfordern möglicherweise ein zeitnahes Follow-up.` : `${atRiskDeals} active ${atRiskDeals === 1 ? "deal shows" : "deals show"} elevated risk and may require immediate follow-up.`,
             actions: isGerman ? [
                 `Prüfe die ${atRiskDeals} gefährdeten Leads.`,
                 "Lege klare nächste Maßnahmen für alle aktiven Leads fest.",
@@ -70,7 +70,7 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
     }
     if (hasProposals) {
         return {
-            headline: isGerman ? "Bei Leads mit Angebot ist eine Nachfassaktion erforderlich." : "Proposal-stage opportunities need follow-up.",
+            headline: isGerman ? "Bei Leads mit Angebot ist ein Follow-up erforderlich." : "Proposal-stage opportunities need follow-up.",
             detail: isGerman ? `${proposalLeads} aktive ${proposalLeads === 1 ? "Lead befindet sich" : "Leads befinden sich"} bei einem Pipeline-Wert von ${pipeline} in der Angebotsphase. Die durchschnittliche Abschlusswahrscheinlichkeit beträgt ${forecast.averageProbability}%.` : `${proposalLeads} active ${proposalLeads === 1 ? "deal is" : "deals are"} currently in proposal stage within a €${activePipeline.toLocaleString(getIntlLocale())} active pipeline. Average close probability is ${forecast.averageProbability}%.`,
             actions: isGerman ? [
                 `Fasse bei ${proposalLeads === 1 ? "dem Angebot" : "den Angeboten"} nach.`,

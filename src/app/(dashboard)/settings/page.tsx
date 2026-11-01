@@ -1015,8 +1015,8 @@ export default function SettingsPage() {
               onChange={(event) => setLanguageDraft(normalizeLanguage(event.target.value))}
               className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
             >
-              <option value="de">{translateText("Deutsch")}</option>
-              <option value="en">{translateText("English")}</option>
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
             </select>
           </label>
 

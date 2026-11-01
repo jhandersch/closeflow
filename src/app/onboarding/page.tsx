@@ -42,7 +42,7 @@ const sanitizeNextPath = (nextPath: string | null) => {
 };
 
 export default function OnboardingPage() {
-    const { t, language } = useAppPreferences();
+    const { t, language, setLanguage } = useAppPreferences();
     const router = useRouter();
     const searchParams = useSearchParams();
     const nextPath = sanitizeNextPath(searchParams.get("next"));
@@ -194,7 +194,21 @@ export default function OnboardingPage() {
                 <header className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <LogoMark size={36} className="mb-4" />
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <LogoMark size={36} />
+                                <label>
+                                    <span className="sr-only">{language === "de" ? "Sprache" : "Language"}</span>
+                                    <select
+                                        aria-label={language === "de" ? "Sprache" : "Language"}
+                                        value={language}
+                                        onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")}
+                                        className="rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none focus:border-cyan-400"
+                                    >
+                                        <option value="de">Deutsch</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </label>
+                            </div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">{translateText("CloseFlow setup")}</p>
                             <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{translateText("Set up your workspace")}</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">

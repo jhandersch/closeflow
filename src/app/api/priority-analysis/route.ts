@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
             : "Focus on high-value leads and opportunities that are close to conversion.",
         nextAction:
           language === "de"
-            ? "Prüfe priorisierte Leads und plane Nachfassaktionen."
+            ? "Prüfe priorisierte Leads und plane Follow-ups."
             : "Review priority leads and schedule follow-ups.",
       });
     }
