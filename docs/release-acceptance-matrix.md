@@ -69,6 +69,14 @@ Current decision record (2026-10-28):
 	- Blocking: observe 24–48 hours after the latest deployment (restarted 2026-10-28 ca. 09:53 CET; run `npm run monitor:snapshot -- 24` and `-- 48`; next cron run in this window is 2026-10-29 06:00 UTC) and capture the final sign-off.
 	- Non-blocking, owner only: platform `/admin` check with a platform-admin account, Safari and real devices, OAuth/PKCE and mail deliverability across more providers, weekly backup calendar entry, Vercel bypass secret rotation, Backup/PITR and alerting (Supabase plan).
 
+## Update 2026-11-01 (local gates after Azure OpenAI migration)
+
+- Code: all AI routes migrated to Azure OpenAI (`gpt-4.1-mini`, Global Standard, resource in Germany West Central); no OpenAI fallback; German AI output follows fixed terminology and pipeline stage rules; privacy policy section 6 added; i18n module restored.
+- Passed locally: `npm run verify:release`; `test:ai-cost` (16/16), `test:ai-routes` (7/7), `test:csv`, `test:feedback-token`, `test:usage-quota`, `test:workspace-auth`, `test:workflow-automations`, `test:workspace-capacity`.
+- Passed: `npm run test:cross-tenant:suite` (7/7 isolation checks; local app against Production with marked fixtures, cleaned up, monitoring shows 0 leftover test users).
+- Production: health OK, `monitor:snapshot -- 1` reports no findings; manual live test of the AI routes OK (owner, 2026-11-01).
+- Open: monitoring window (`-- 24` on 2026-11-02 21:00, `-- 48` on 2026-11-03 21:00), Stripe Live and legal page details (blocked until the company exists), Azure budget alert and price check, sign-off.
+
 ## Remaining Steps to Move NO-GO -> GO
 
 1. DONE 2026-10-27: migrations applied to Production (direct exception, no staging clone; schema-health 0 problems).
