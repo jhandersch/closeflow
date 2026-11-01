@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isEncryptionConfigured, verifyOAuthState } from "@/lib/integrations/crypto";
-import { exchangeGoogleCode, getGoogleConfig } from "@/lib/integrations/google";
+import { exchangeGoogleCode, getGoogleConfig, GOOGLE_SCOPES } from "@/lib/integrations/google";
 import { saveIntegration } from "@/lib/integrations/store";
 import { getRouteUser } from "@/lib/supabase/route";
 
@@ -28,6 +28,11 @@ export async function GET(request: Request) {
   try {
     const credentials = await exchangeGoogleCode(config, code);
     await saveIntegration(user.id, "google", credentials, credentials.email, credentials.scopes);
+    const hasGmail = credentials.scopes.includes(GOOGLE_SCOPES.gmail);
+    const hasCalendar = credentials.scopes.includes(GOOGLE_SCOPES.calendar);
+    if (!hasGmail || !hasCalendar) {
+      return NextResponse.redirect(settingsUrl(request, "google_partial"));
+    }
   } catch (callbackError) {
     console.error("Google OAuth callback failed:", callbackError);
     return NextResponse.redirect(settingsUrl(request, "google_failed"));

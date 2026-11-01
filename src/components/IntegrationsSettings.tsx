@@ -20,6 +20,10 @@ const callbackMessages: Record<string, { ok: boolean; text: string }> = {
   google_connected: { ok: true, text: "Google connected" },
   google_denied: { ok: false, text: "Google connection was cancelled" },
   google_failed: { ok: false, text: "Google connection failed. Please try again." },
+  google_partial: {
+    ok: false,
+    text: "Google is connected, but not all permissions were granted. Reconnect and tick every permission.",
+  },
 };
 
 export function IntegrationsSettings() {
@@ -71,6 +75,20 @@ export function IntegrationsSettings() {
     setBusy(false);
   };
 
+  const importCalendar = async () => {
+    setBusy(true);
+    const response = await fetch("/api/integrations/google/import", { method: "POST" });
+    if (!response.ok) {
+      toast.error(await readApiError(response, "Could not import events"));
+    } else {
+      const { imported, skipped } = (await response.json()) as { imported: number; skipped: number };
+      toast.success(
+        `${translateText("Events imported")}: ${imported}${skipped ? ` (${translateText("already present")}: ${skipped})` : ""}`,
+      );
+    }
+    setBusy(false);
+  };
+
   const buttonClass =
     "rounded-xl border border-border-subtle px-4 py-2 text-sm text-foreground hover:bg-foreground/5 disabled:opacity-60";
   const badge = (on: boolean) => (
@@ -109,7 +127,12 @@ export function IntegrationsSettings() {
                 <p className="text-foreground/65">
                   {translateText("Emails to leads are sent via your Gmail. New meetings are added to your Google Calendar.")}
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {status.google.calendar ? (
+                    <button type="button" disabled={busy} onClick={importCalendar} className={buttonClass}>
+                      {translateText("Import events from Google Calendar")}
+                    </button>
+                  ) : null}
                   <button type="button" disabled={busy || !status.google.available} onClick={connectGoogle} className={buttonClass}>
                     {translateText("Reconnect")}
                   </button>

@@ -174,3 +174,64 @@ export async function createGoogleCalendarEvent(
   const created = (await response.json()) as { id?: string };
   return created.id ?? null;
 }
+
+export type GoogleCalendarItem = {
+  googleEventId: string;
+  title: string;
+  description: string | null;
+  scheduledAt: string;
+};
+
+type GoogleEventResource = {
+  id?: string;
+  status?: string;
+  summary?: string;
+  description?: string;
+  start?: { dateTime?: string; date?: string };
+};
+
+export function mapGoogleEvent(event: GoogleEventResource): GoogleCalendarItem | null {
+  if (!event.id || event.status === "cancelled") return null;
+  const startValue = event.start?.dateTime ?? (event.start?.date ? `${event.start.date}T12:00:00Z` : null);
+  if (!startValue) return null;
+  const scheduledAt = new Date(startValue);
+  if (Number.isNaN(scheduledAt.getTime())) return null;
+  return {
+    googleEventId: event.id,
+    title: (event.summary ?? "").trim().slice(0, 200) || "(ohne Titel)",
+    description: event.description?.trim().slice(0, 2000) || null,
+    scheduledAt: scheduledAt.toISOString(),
+  };
+}
+
+export async function listGoogleCalendarEvents(
+  accessToken: string,
+  range: { from: Date; to: Date },
+  fetchImpl: typeof fetch = fetch,
+  maxEvents = 500,
+) {
+  const items: GoogleCalendarItem[] = [];
+  let pageToken: string | undefined;
+  do {
+    const params = new URLSearchParams({
+      timeMin: range.from.toISOString(),
+      timeMax: range.to.toISOString(),
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "250",
+      ...(pageToken ? { pageToken } : {}),
+    });
+    const response = await fetchImpl(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(15000) },
+    );
+    if (!response.ok) throw new Error(`Google Calendar list failed (${response.status}).`);
+    const page = (await response.json()) as { items?: GoogleEventResource[]; nextPageToken?: string };
+    for (const event of page.items ?? []) {
+      const item = mapGoogleEvent(event);
+      if (item) items.push(item);
+    }
+    pageToken = page.nextPageToken;
+  } while (pageToken && items.length < maxEvents);
+  return items.slice(0, maxEvents);
+}

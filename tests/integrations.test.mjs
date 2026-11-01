@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import test from "node:test";
 
 import { decryptJson, encryptJson, signOAuthState, verifyOAuthState } from "../src/lib/integrations/crypto.ts";
-import { buildGoogleAuthUrl, buildRawEmail, createGoogleCalendarEvent, sendGmail } from "../src/lib/integrations/google.ts";
+import { buildGoogleAuthUrl, buildRawEmail, createGoogleCalendarEvent, listGoogleCalendarEvents, mapGoogleEvent, sendGmail } from "../src/lib/integrations/google.ts";
 const key = randomBytes(32).toString("base64");
 
 test("encryption round-trips and rejects tampering or wrong keys", () => {
@@ -46,6 +46,38 @@ test("raw emails encode subject/body and block header injection", () => {
   assert.ok(headers.every((line) => !line.startsWith("Bcc:")));
   assert.ok(headers[1].startsWith("Subject: =?UTF-8?B?"));
   assert.equal(Buffer.from(raw.split("\r\n\r\n")[1], "base64").toString("utf8"), "Text ü");
+});
+
+test("Google events are mapped and paged for import", async () => {
+  assert.equal(mapGoogleEvent({ id: "a", status: "cancelled", start: { dateTime: "2026-11-05T10:00:00Z" } }), null);
+  assert.equal(mapGoogleEvent({ id: "a" }), null);
+  assert.deepEqual(mapGoogleEvent({ id: "b", summary: "  Call ", start: { dateTime: "2026-11-05T10:00:00+01:00" } }), {
+    googleEventId: "b",
+    title: "Call",
+    description: null,
+    scheduledAt: "2026-11-05T09:00:00.000Z",
+  });
+  assert.equal(mapGoogleEvent({ id: "c", start: { date: "2026-11-06" } }).scheduledAt, "2026-11-06T12:00:00.000Z");
+  assert.equal(mapGoogleEvent({ id: "d", start: { date: "2026-11-06" } }).title, "(ohne Titel)");
+
+  const urls = [];
+  const pages = [
+    { items: [{ id: "1", summary: "A", start: { dateTime: "2026-11-05T10:00:00Z" } }], nextPageToken: "p2" },
+    { items: [{ id: "2", summary: "B", start: { dateTime: "2026-11-06T10:00:00Z" } }] },
+  ];
+  const items = await listGoogleCalendarEvents(
+    "tok",
+    { from: new Date("2026-10-01T00:00:00Z"), to: new Date("2027-10-01T00:00:00Z") },
+    async (url, init) => {
+      urls.push(url);
+      assert.equal(init.headers.Authorization, "Bearer tok");
+      return { ok: true, status: 200, json: async () => pages[urls.length - 1] };
+    },
+  );
+  assert.deepEqual(items.map((item) => item.googleEventId), ["1", "2"]);
+  assert.match(urls[0], /singleEvents=true/);
+  assert.match(urls[1], /pageToken=p2/);
+  await assert.rejects(listGoogleCalendarEvents("tok", { from: new Date(), to: new Date() }, async () => ({ ok: false, status: 403 })));
 });
 
 test("Gmail and Calendar calls use bearer auth and fail loudly", async () => {

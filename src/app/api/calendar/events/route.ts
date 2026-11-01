@@ -458,11 +458,18 @@ export async function POST(request: Request) {
     try {
       const accessToken = await getGoogleAccessForUser(user.id, GOOGLE_SCOPES.calendar);
       if (accessToken) {
-        await createGoogleCalendarEvent(accessToken, {
+        const googleEventId = await createGoogleCalendarEvent(accessToken, {
           title,
           description,
           startsAt: data.scheduled_at,
         });
+        if (googleEventId) {
+          await supabase
+            .from("calendar_events")
+            .update({ google_event_id: googleEventId })
+            .eq("id", data.id)
+            .eq("workspace_id", workspace.id);
+        }
       }
     } catch (googleError) {
       console.error("Google Calendar sync failed:", googleError instanceof Error ? googleError.message : googleError);

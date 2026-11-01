@@ -480,6 +480,18 @@ export const germanTextTranslations: Record<string, string> = {
     "Die Google-Verbindung konnte nicht gestartet werden.",
   "Could not disconnect": "Die Verbindung konnte nicht getrennt werden.",
   Disconnected: "Verbindung getrennt",
+  "Google is connected, but not all permissions were granted. Reconnect and tick every permission.":
+    "Google ist verbunden, aber nicht alle Berechtigungen wurden erteilt. Verbinde neu und hake alle Berechtigungen an.",
+  "Import events from Google Calendar": "Termine aus Google Kalender importieren",
+  "Could not import events": "Die Termine konnten nicht importiert werden.",
+  "Events imported": "Termine importiert",
+  "already present": "bereits vorhanden",
+  "Google Calendar is not connected. Reconnect Google in Settings.":
+    "Google Kalender ist nicht verbunden. Verbinde Google in den Einstellungen neu.",
+  "Google Calendar could not be read. Reconnect Google in Settings and try again.":
+    "Google Kalender konnte nicht gelesen werden. Verbinde Google in den Einstellungen neu und versuche es erneut.",
+  "Could not save the imported events.":
+    "Die importierten Termine konnten nicht gespeichert werden.",
   "Integrations could not be loaded.":
     "Die Integrationen konnten nicht geladen werden.",
   Connected: "Verbunden",
