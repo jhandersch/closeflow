@@ -1464,7 +1464,7 @@ export const germanTextTranslations: Record<string, string> = {
   "Open task": "Aufgabe öffnen",
   "Open Tasks": "Offene Aufgaben",
   "Open tasks": "Offene Aufgaben",
-  "OpenAI returned no content.": "OpenAI hat keine Inhalte zurückgegeben.",
+  "Azure OpenAI returned no content.": "Azure OpenAI hat keine Inhalte zurückgegeben.",
   "Opening...": "Wird geöffnet …",
   Optimistic: "Optimistisch",
   "Organization name is required": "Der Organisationsname ist erforderlich.",

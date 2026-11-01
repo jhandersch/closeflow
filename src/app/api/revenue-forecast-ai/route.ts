@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-import { recordAiUsageEvent } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { createClient } from "@/lib/supabase/server";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
@@ -44,67 +43,6 @@ type RevenueForecastAIResponse = {
   pipelineComment: string;
   singleDealRisk: number;
 };
-function fallbackInsight(
-  locale: AppLanguage,
-  forecastConfidence?: number,
-): RevenueForecastAIResponse {
-  const confidence =
-    typeof forecastConfidence === "number"
-      ? Math.max(0, Math.min(100, Math.round(forecastConfidence)))
-      : 20;
-  if (locale === "de") {
-    return {
-      confidence,
-      health: "Warning",
-      headline: "Umsatzanalyse vorübergehend nicht verfügbar",
-      summary:
-        "Die KI-Analyse konnte gerade nicht erstellt werden. Deine Prognosedaten sind weiterhin verfügbar.",
-      topDrivers: [],
-      risks: ["Die KI-Analyse ist vorübergehend nicht verfügbar."],
-      recommendations: [
-        "Prüfe deine größten offenen Verkaufschancen manuell.",
-        "Prüfe Leads mit niedrigem Statuswert oder ohne nächste Maßnahme.",
-      ],
-      pipelineComment:
-        "Die Pipeline ist weiterhin verfügbar und kann manuell geprüft werden.",
-      singleDealRisk: 0,
-    };
-  }
-  if (locale === "en") {
-    return {
-      confidence,
-      health: "Warning",
-      headline: "Revenue analysis temporarily unavailable",
-      summary:
-        "The AI analysis could not be generated right now. Your forecast data is still available.",
-      topDrivers: [],
-      risks: ["AI analysis is temporarily unavailable."],
-      recommendations: [
-        "Review your largest open opportunities manually.",
-        "Check deals with low health scores or missing next actions.",
-      ],
-      pipelineComment:
-        "The pipeline remains available and can be reviewed manually.",
-      singleDealRisk: 0,
-    };
-  }
-  return {
-    confidence,
-    health: "Warning",
-    headline: "Revenue analysis temporarily unavailable",
-    summary:
-      "The AI analysis could not be generated right now. Your forecast data is still available.",
-    topDrivers: [],
-    risks: ["AI analysis is temporarily unavailable."],
-    recommendations: [
-      "Review your largest open opportunities manually.",
-      "Review deals with a low health score or missing next action.",
-    ],
-    pipelineComment:
-      "The pipeline remains available and can be reviewed manually.",
-    singleDealRisk: 0,
-  };
-}
 function normalizeResponse(
   value: Partial<RevenueForecastAIResponse>,
   locale: AppLanguage,
@@ -227,19 +165,10 @@ export async function POST(req: Request) {
         },
       );
     }
-    /*
-     * OPENAI KEY
-     */
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      console.error("Revenue Forecast AI: OPENAI_API_KEY is missing.");
+    if (!usageCheck.context) {
       return NextResponse.json(
-        {
-          error: "AI is currently unavailable.",
-        },
-        {
-          status: 503,
-        },
+        { error: "A workspace is required to use AI forecasting." },
+        { status: 403 },
       );
     }
     /*
@@ -399,12 +328,16 @@ Rules:
 Language:
 ${responseLanguage}
 `;
-    const openai = new OpenAI({
-      apiKey,
-    });
     /*
-     * OPENAI REQUEST
+     * AZURE OPENAI REQUEST
      */
+    const openai = createTrackedAzureOpenAIClient(
+      supabase,
+      usageCheck.context.workspaceId,
+      user.id,
+      "revenue_forecast",
+      "gpt-4.1-mini",
+    );
     let completion;
     try {
       completion = await openai.chat.completions.create({
@@ -425,47 +358,12 @@ ${responseLanguage}
         },
         temperature: 0.2,
       });
-    } catch (openaiError) {
-      console.error("Revenue Forecast AI: OpenAI request failed", openaiError);
-      /*
-       * CONTROLLED FALLBACK
-       */
-      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-        status: 200,
-        headers: {
-          "X-AI-Fallback": "true",
-        },
-      });
-    }
-    /*
-     * TOKEN / COST TRACKING
-     */
-    if (usageCheck.context) {
-      if (!completion.usage) {
-        console.error(
-          "Revenue Forecast AI: provider did not return token usage.",
-        );
-        return NextResponse.json(
-          { error: "AI usage could not be verified. Please try again later." },
-          { status: 503 },
-        );
-      }
-      try {
-        await recordAiUsageEvent(
-          usageCheck.context.workspaceId,
-          user.id,
-          "revenue_forecast",
-          "gpt-4.1-mini",
-          completion.usage.prompt_tokens,
-          completion.usage.completion_tokens,
-        );
-      } catch (usageError) {
-        console.error("Revenue Forecast AI: usage tracking failed", usageError);
-        return NextResponse.json(
-          { error: "AI usage could not be recorded. Please try again later." },
-          { status: 503 },
-        );
-      }
+    } catch (azureError) {
+      console.error("Revenue Forecast AI: Azure OpenAI request failed", azureError);
+      return NextResponse.json(
+        { error: "AI is temporarily unavailable. Please try again later." },
+        { status: 502 },
+      );
     }
     /*
      * RESPONSE
@@ -473,12 +371,7 @@ ${responseLanguage}
     const raw = completion.choices[0]?.message?.content;
     if (!raw) {
       console.error("Revenue Forecast AI: empty response");
-      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-        status: 200,
-        headers: {
-          "X-AI-Fallback": "true",
-        },
-      });
+      return NextResponse.json({ error: "Azure OpenAI returned an empty response." }, { status: 502 });
     }
     /*
      * JSON PARSING
@@ -490,12 +383,7 @@ ${responseLanguage}
       console.error("Revenue Forecast AI: invalid JSON", {
         parseError,
       });
-      return NextResponse.json(fallbackInsight(locale, forecast.confidence), {
-        status: 200,
-        headers: {
-          "X-AI-Fallback": "true",
-        },
-      });
+      return NextResponse.json({ error: "Azure OpenAI returned invalid JSON." }, { status: 502 });
     }
     /*
      * NORMALIZE
@@ -510,17 +398,9 @@ ${responseLanguage}
     return NextResponse.json(result);
   } catch (error) {
     console.error("Revenue forecast AI failed:", error);
-    /*
-     * FINAL FALLBACK
-     *
-     * Even unexpected errors do not
-     * destroy the dashboard.
-     */
-    return NextResponse.json(fallbackInsight(locale), {
-      status: 200,
-      headers: {
-        "X-AI-Fallback": "true",
-      },
-    });
+    return NextResponse.json(
+      { error: "AI is temporarily unavailable. Please try again later." },
+      { status: 502 },
+    );
   }
 }

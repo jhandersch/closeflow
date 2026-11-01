@@ -1,7 +1,11 @@
 import { translateText } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import {
+  createTrackedAzureOpenAIFetch,
+  getAzureChatCompletionsUrl,
+  getAzureOpenAIConfig,
+} from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
@@ -11,35 +15,25 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     language = normalizeLanguage(payload?.language);
     const responseLanguage = language === "de" ? "German" : "English";
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({
-        explanation:
-          language === "de"
-            ? "Konzentriere dich auf hochwertige Leads mit hoher Abschlusschance."
-            : "Focus on high-value leads and opportunities that are close to conversion.",
-        nextAction:
-          language === "de"
-            ? "Prüfe priorisierte Leads und plane Follow-ups."
-            : "Review priority leads and schedule follow-ups.",
-      });
-    }
-    const trackedFetch = createTrackedOpenAIFetch(
+    const model = "gpt-4.1-mini";
+    const azureConfig = getAzureOpenAIConfig(model);
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       access.supabase,
       access.workspaceId,
       access.userId,
       "priority_analysis",
+      model,
     );
     const response = await trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      getAzureChatCompletionsUrl(model),
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": azureConfig.apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4.1-mini",
+          model: azureConfig.deployment,
           temperature: 0.3,
           messages: [
             {
@@ -67,21 +61,14 @@ export async function POST(request: NextRequest) {
         }),
       },
     );
-    if (!response.ok) {
-      throw new Error(translateText("AI request failed"));
-    }
+    if (!response.ok) throw new Error(translateText("Azure OpenAI request failed."));
     const data = await response.json();
     return NextResponse.json(JSON.parse(data.choices[0].message.content));
-  } catch {
-    return NextResponse.json({
-      explanation:
-        language === "de"
-          ? "Prüfe zuerst die Verkaufschancen mit höchster Priorität."
-          : "Review the highest priority opportunities first.",
-      nextAction:
-        language === "de"
-          ? "Kontaktiere Leads mit hohem Wert und geringer Aktivität."
-          : "Contact leads with high value and low activity.",
-    });
+  } catch (error) {
+    console.error("Priority analysis failed:", error);
+    return NextResponse.json(
+      { error: language === "de" ? "Die KI-Analyse ist fehlgeschlagen." : "AI analysis failed." },
+      { status: 502 },
+    );
   }
 }

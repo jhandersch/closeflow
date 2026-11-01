@@ -3,14 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import {
+  createTrackedAzureOpenAIFetch,
+  getAzureChatCompletionsUrl,
+  getAzureOpenAIConfig,
+} from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
+
 type InsightResponse = {
   headline: string;
   detail: string;
   actions: string[];
   confidence: "High" | "Medium" | "Low";
 };
+
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
   if (!access.ok) return access.response;
@@ -34,7 +40,6 @@ export async function POST(request: NextRequest) {
           ),
         }))
       : [];
-    const apiKey = process.env.OPENAI_API_KEY;
     /*
      * =========================
      * FALLBACK
@@ -136,93 +141,30 @@ export async function POST(request: NextRequest) {
           averageHealth >= 75 && averageProbability >= 60 ? "High" : "Medium",
       };
     }
-    const localizedFallback: InsightResponse =
-      language === "de"
-        ? activeDeals === 0
-          ? {
-              headline: "Keine aktiven Verkaufschancen.",
-              detail: "Deine Pipeline enthält derzeit keine offenen Leads.",
-              actions: [
-                "Erstelle neue Leads.",
-                "Lege klare nächste Schritte für neue Verkaufschancen fest.",
-              ],
-              confidence: fallback.confidence,
-            }
-          : atRiskDeals > 0 || revenueAtRisk > 0
-            ? {
-                headline: "Mehrere Verkaufschancen erfordern Aufmerksamkeit.",
-                detail: `${atRiskDeals} aktive Verkaufschance(n) weisen ein erhöhtes Risiko auf.`,
-                actions: [
-                  `Prüfe die ${atRiskDeals} gefährdeten Leads.`,
-                  "Lege konkrete nächste Schritte fest.",
-                  "Priorisiere gefährdete Leads mit hohem Umsatzpotenzial.",
-                ],
-                confidence: fallback.confidence,
-              }
-            : nextActionCoverage < 50
-              ? {
-                  headline: "Deine Pipeline braucht klarere nächste Schritte.",
-                  detail: `Nur ${nextActionCoverage}% der aktiven Leads haben derzeit eine festgelegte nächste Maßnahme. Die Pipeline ist stabil, aber fehlende Follow-ups erhöhen das Risiko von Inaktivität.`,
-                  actions: [
-                    "Lege nächste Schritte für Leads ohne Follow-up fest.",
-                    "Priorisiere aktive Leads mit hohem Umsatzpotenzial.",
-                    proposalLeads > 0
-                      ? "Fasse bei Leads in der Angebotsphase nach."
-                      : "Halte aktive Verkaufschancen in Bewegung.",
-                  ],
-                  confidence: fallback.confidence,
-                }
-              : proposalLeads > 0
-                ? {
-                    headline:
-                      "Bei Verkaufschancen mit Angebot ist ein Follow-up erforderlich.",
-                    detail: `${proposalLeads} aktive Verkaufschance(n) befinden sich bei einem Pipeline-Wert von ${pipelineValue.toLocaleString("de-DE")} € in der Angebotsphase.`,
-                    actions: [
-                      "Fasse bei Leads mit Angebot nach.",
-                      "Lege den nächsten konkreten Schritt zum Abschluss fest.",
-                      "Behalte den Fortschritt der Angebote im Blick.",
-                    ],
-                    confidence: fallback.confidence,
-                  }
-                : {
-                    headline: "Die Pipeline entwickelt sich stabil.",
-                    detail: `Deine Pipeline umfasst ${activeDeals} aktive Leads im Wert von ${pipelineValue.toLocaleString("de-DE")} €, mit einem durchschnittlichen Status von ${averageHealth}% und einer Abschlusswahrscheinlichkeit von ${averageProbability}%.`,
-                    actions: [
-                      "Führe aktive Leads zur nächsten Phase.",
-                      "Lege klare nächste Schritte für wichtige Leads fest.",
-                    ],
-                    confidence: fallback.confidence,
-                  }
-        : fallback;
     /*
      * =========================
-     * NO OPENAI KEY
+     * AZURE OPENAI
      * =========================
      */
-    if (!apiKey) {
-      return NextResponse.json(localizedFallback);
-    }
-    /*
-     * =========================
-     * OPENAI
-     * =========================
-     */
-    const trackedFetch = createTrackedOpenAIFetch(
+    const model = "gpt-4.1-mini";
+    const azureConfig = getAzureOpenAIConfig(model);
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       access.supabase,
       access.workspaceId,
       access.userId,
       "ai_insight",
+      model,
     );
     const response = await trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      getAzureChatCompletionsUrl(model),
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": azureConfig.apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4.1-mini",
+          model: azureConfig.deployment,
           temperature: 0.2,
           response_format: {
             type: "json_object",
@@ -316,11 +258,11 @@ Write every user-visible value entirely in ${responseLanguage}. Do not mix langu
     );
     /*
      * =========================
-     * OPENAI ERROR
+     * AZURE OPENAI ERROR
      * =========================
      */
     if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
+      throw new Error(`Azure OpenAI request failed with status ${response.status}`);
     }
     const data = await response.json();
     const content = data?.choices?.[0]?.message?.content;
@@ -334,14 +276,14 @@ Write every user-visible value entirely in ${responseLanguage}. Do not mix langu
      * =========================
      */
     const validConfidence = ["High", "Medium", "Low"];
-    const confidence = validConfidence.includes(parsed?.confidence)
-      ? parsed.confidence
-      : fallback.confidence;
+    if (!validConfidence.includes(parsed?.confidence)) {
+      throw new Error("Azure OpenAI returned an invalid confidence value.");
+    }
     const actions = Array.isArray(parsed?.actions)
       ? parsed.actions
           .filter((action: unknown) => typeof action === "string")
           .slice(0, 3)
-      : localizedFallback.actions;
+      : [];
     /*
      * Safety check:
      * If there are no at-risk deals,
@@ -354,45 +296,26 @@ Write every user-visible value entirely in ${responseLanguage}. Do not mix langu
             (action: string) => !/at.?risk|risiko|risk/i.test(action),
           )
         : actions;
-    /*
-     * If the AI returned no usable
-     * actions after validation,
-     * use our deterministic fallback.
-     */
-    if (!parsed?.headline || !parsed?.detail || safeActions.length === 0) {
-      return NextResponse.json(localizedFallback);
+    if (
+      typeof parsed?.headline !== "string" ||
+      !parsed.headline.trim() ||
+      typeof parsed?.detail !== "string" ||
+      !parsed.detail.trim() ||
+      safeActions.length === 0
+    ) {
+      throw new Error("Azure OpenAI returned an incomplete insight.");
     }
     return NextResponse.json({
-      headline: String(parsed.headline || localizedFallback.headline),
-      detail: String(parsed.detail || localizedFallback.detail),
+      headline: parsed.headline,
+      detail: parsed.detail,
       actions: safeActions,
-      confidence,
+      confidence: parsed.confidence,
     });
   } catch (error) {
     console.error("AI INSIGHT ERROR:", error);
-    /*
-     * Minimal safe fallback
-     */
-    return NextResponse.json({
-      headline:
-        language === "de"
-          ? "Pipelineanalyse verfügbar"
-          : "Pipeline analysis available",
-      detail:
-        language === "de"
-          ? "Ihre aktuellen CRM-Daten wurden analysiert."
-          : "Your current CRM data has been analyzed.",
-      actions:
-        language === "de"
-          ? [
-              "Prüfen Sie Ihre wichtigsten aktiven Verkaufschancen.",
-              "Legen Sie klare nächste Schritte fest.",
-            ]
-          : [
-              "Review your most important active opportunities.",
-              "Define clear next steps.",
-            ],
-      confidence: "Medium",
-    });
+    return NextResponse.json(
+      { error: language === "de" ? "Die Pipeline-Analyse ist fehlgeschlagen." : "Pipeline analysis failed." },
+      { status: 502 },
+    );
   }
 }

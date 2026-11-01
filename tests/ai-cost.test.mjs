@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  createTrackedOpenAIClient,
-  createTrackedOpenAIFetch,
+  createTrackedAzureOpenAIClient,
+  createTrackedAzureOpenAIFetch,
   recordAiUsageEvent,
   summarizeWorkspaceAiUsage,
 } from "../src/lib/aiCost.ts";
+
+process.env.AZURE_OPENAI_ENDPOINT ||= "https://closeflow-test.openai.azure.com";
+process.env.AZURE_OPENAI_API_KEY ||= "test-only-key";
+process.env.AZURE_OPENAI_API_VERSION ||= "2024-10-21";
+process.env.AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT ||= "gpt-4-1-mini-test";
+process.env.AZURE_OPENAI_GPT_4O_MINI_DEPLOYMENT ||= "gpt-4o-mini-test";
+process.env.AZURE_OPENAI_GPT_4_1_MINI_INPUT_USD_PER_1M_TOKENS ||= "0.4";
+process.env.AZURE_OPENAI_GPT_4_1_MINI_OUTPUT_USD_PER_1M_TOKENS ||= "1.6";
+process.env.AZURE_OPENAI_GPT_4O_MINI_INPUT_USD_PER_1M_TOKENS ||= "0.15";
+process.env.AZURE_OPENAI_GPT_4O_MINI_OUTPUT_USD_PER_1M_TOKENS ||= "0.6";
 
 const insertClient = (result) => ({
   from(table) {
@@ -73,7 +83,7 @@ test("records known model tokens and the configured cost", async () => {
   });
 });
 
-test("uses the published GPT-4o mini price", async () => {
+test("uses the configured Azure GPT-4o mini price", async () => {
     const result = {};
     await recordAiUsageEvent(
       "workspace-1",
@@ -107,13 +117,14 @@ test("uses the configured prices for dated model identifiers", async () => {
   }
 });
 
-test("tracked OpenAI fetch records usage from successful chat completions", async () => {
+test("tracked Azure fetch records usage from successful chat completions", async () => {
     const result = {};
-    const trackedFetch = createTrackedOpenAIFetch(
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       {},
       "workspace-1",
       "user-1",
       "ai_email_generator",
+      "gpt-4.1-mini",
       async () => new Response(JSON.stringify({
         model: "gpt-4.1-mini",
         usage: { prompt_tokens: 15, completion_tokens: 7 },
@@ -123,7 +134,7 @@ test("tracked OpenAI fetch records usage from successful chat completions", asyn
     );
 
     const response = await trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
       { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
     );
 
@@ -133,7 +144,7 @@ test("tracked OpenAI fetch records usage from successful chat completions", asyn
     assert.equal(result.row.payload.completion_tokens, 7);
 });
 
-test("tracked OpenAI SDK client records a mocked completion for every AI feature", async () => {
+test("tracked Azure SDK client records a mocked completion for every AI feature", async () => {
   const features = [
     "ai_chat",
     "sales_copilot",
@@ -154,24 +165,31 @@ test("tracked OpenAI SDK client records a mocked completion for every AI feature
 
   for (const feature of features) {
     const result = {};
-    const client = createTrackedOpenAIClient(
-      "mock-api-key",
+    let providerUrl;
+    const client = createTrackedAzureOpenAIClient(
       {},
       "workspace-1",
       "user-1",
       feature,
-      async () => new Response(JSON.stringify({
-        id: "chatcmpl-mock",
-        object: "chat.completion",
-        created: 0,
-        model: "gpt-4.1-mini",
-        choices: [{
-          index: 0,
-          message: { role: "assistant", content: "Mock response" },
-          finish_reason: "stop",
-        }],
-        usage: { prompt_tokens: 15, completion_tokens: 7, total_tokens: 22 },
-      }), { status: 200, headers: { "content-type": "application/json" } }),
+      "gpt-4.1-mini",
+      async (input, init) => {
+        const request = new Request(input, init);
+        providerUrl = request.url;
+        assert.equal(request.headers.get("api-key"), "test-only-key");
+        assert.equal(request.headers.has("authorization"), false);
+        return new Response(JSON.stringify({
+          id: "chatcmpl-mock",
+          object: "chat.completion",
+          created: 0,
+          model: "gpt-4.1-mini",
+          choices: [{
+            index: 0,
+            message: { role: "assistant", content: "Mock response" },
+            finish_reason: "stop",
+          }],
+          usage: { prompt_tokens: 15, completion_tokens: 7, total_tokens: 22 },
+        }), { status: 200, headers: { "content-type": "application/json" } });
+      },
       insertClient(result),
     );
 
@@ -181,6 +199,10 @@ test("tracked OpenAI SDK client records a mocked completion for every AI feature
     });
 
     assert.equal(completion.choices[0].message.content, "Mock response");
+    assert.match(
+      providerUrl,
+      /^https:\/\/closeflow-test\.openai\.azure\.com\/openai\/deployments\/gpt-4-1-mini-test\/chat\/completions\?/,
+    );
     assert.equal(result.row.event_type, "ai.usage");
     assert.equal(result.row.workspace_id, "workspace-1");
     assert.equal(result.row.actor_user_id, "user-1");
@@ -192,12 +214,13 @@ test("tracked OpenAI SDK client records a mocked completion for every AI feature
   }
 });
 
-test("tracked OpenAI fetch fails closed when successful responses omit usage", async () => {
-    const trackedFetch = createTrackedOpenAIFetch(
+test("tracked Azure fetch fails closed when successful responses omit usage", async () => {
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       {},
       "workspace-1",
       "user-1",
       "ai_email_generator",
+      "gpt-4.1-mini",
       async () => new Response(JSON.stringify({
         model: "gpt-4.1-mini",
         choices: [{ message: { content: "{}" } }],
@@ -207,19 +230,20 @@ test("tracked OpenAI fetch fails closed when successful responses omit usage", a
 
     await assert.rejects(
       trackedFetch(
-        "https://api.openai.com/v1/chat/completions",
+        "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
         { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
       ),
       /incomplete token usage/,
     );
 });
 
-test("tracked OpenAI fetch fails closed when cost persistence fails", async () => {
-    const trackedFetch = createTrackedOpenAIFetch(
+test("tracked Azure fetch fails closed when cost persistence fails", async () => {
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       {},
       "workspace-1",
       "user-1",
       "ai_email_generator",
+      "gpt-4.1-mini",
       async () => new Response(JSON.stringify({
         model: "gpt-4.1-mini",
         usage: { prompt_tokens: 15, completion_tokens: 7 },
@@ -229,20 +253,21 @@ test("tracked OpenAI fetch fails closed when cost persistence fails", async () =
 
     await assert.rejects(
       trackedFetch(
-        "https://api.openai.com/v1/chat/completions",
+        "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
         { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
       ),
       /Could not record AI usage/,
     );
 });
 
-test("tracked OpenAI fetch does not record usage for provider error responses", async () => {
+test("tracked Azure fetch does not record usage for provider error responses", async () => {
   const result = {};
-  const trackedFetch = createTrackedOpenAIFetch(
+  const trackedFetch = createTrackedAzureOpenAIFetch(
     {},
     "workspace-1",
     "user-1",
     "ai_email_generator",
+    "gpt-4.1-mini",
     async () => new Response(JSON.stringify({
       error: { message: "provider unavailable" },
     }), { status: 503 }),
@@ -250,7 +275,7 @@ test("tracked OpenAI fetch does not record usage for provider error responses", 
   );
 
   const response = await trackedFetch(
-    "https://api.openai.com/v1/chat/completions",
+    "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
     { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
   );
 
@@ -258,12 +283,13 @@ test("tracked OpenAI fetch does not record usage for provider error responses", 
   assert.equal(result.row, undefined);
 });
 
-test("tracked OpenAI fetch propagates provider transport failures", async () => {
-  const trackedFetch = createTrackedOpenAIFetch(
+test("tracked Azure fetch propagates provider transport failures", async () => {
+  const trackedFetch = createTrackedAzureOpenAIFetch(
     {},
     "workspace-1",
     "user-1",
     "ai_email_generator",
+    "gpt-4.1-mini",
     async () => {
       throw new Error("connection reset");
     },
@@ -272,25 +298,26 @@ test("tracked OpenAI fetch propagates provider transport failures", async () => 
 
   await assert.rejects(
     trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
       { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
     ),
     /connection reset/,
   );
 });
 
-test("tracked OpenAI fetch ignores successful non-completion responses", async () => {
+test("tracked Azure fetch ignores successful non-completion responses", async () => {
   const result = {};
-  const trackedFetch = createTrackedOpenAIFetch(
+  const trackedFetch = createTrackedAzureOpenAIFetch(
     {},
     "workspace-1",
     "user-1",
     "ai_email_generator",
+    "gpt-4.1-mini",
     async () => new Response(JSON.stringify({ object: "list" }), { status: 200 }),
     insertClient(result),
   );
 
-  const response = await trackedFetch("https://api.openai.com/v1/models", {
+  const response = await trackedFetch("https://closeflow-test.openai.azure.com/openai/models", {
     method: "GET",
   });
 

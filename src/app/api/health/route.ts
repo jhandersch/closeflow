@@ -6,7 +6,15 @@ const REQUIRED_ENV = [
     "NEXT_PUBLIC_SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "OPENAI_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_API_VERSION",
+    "AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT",
+    "AZURE_OPENAI_GPT_4O_MINI_DEPLOYMENT",
+    "AZURE_OPENAI_GPT_4_1_MINI_INPUT_USD_PER_1M_TOKENS",
+    "AZURE_OPENAI_GPT_4_1_MINI_OUTPUT_USD_PER_1M_TOKENS",
+    "AZURE_OPENAI_GPT_4O_MINI_INPUT_USD_PER_1M_TOKENS",
+    "AZURE_OPENAI_GPT_4O_MINI_OUTPUT_USD_PER_1M_TOKENS",
     "CRON_SECRET",
 ];
 async function checkDatabase() {
@@ -24,7 +32,7 @@ async function checkDatabase() {
 // Public endpoint: reports only pass/fail per check, never values or error details.
 export async function GET() {
     const database = await checkDatabase();
-    const config = REQUIRED_ENV.every((name) => Boolean(process.env[name]));
+    const config = REQUIRED_ENV.every((name) => Boolean(process.env[name]?.trim()));
     const ok = database && config;
     return NextResponse.json({
         status: ok ? "ok" : "degraded",

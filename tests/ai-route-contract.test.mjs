@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 import test from "node:test";
 
 const apiRoot = join(process.cwd(), "src", "app", "api");
-const EXEMPT = new Map([["health/route.ts", "reads only whether OPENAI_API_KEY is configured; no provider call"]]);
+const EXEMPT = new Map([["health/route.ts", "checks Azure OpenAI configuration; no provider call"]]);
 
 const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
@@ -19,7 +19,7 @@ const routes = walk(apiRoot).map((file) => ({
 }));
 
 const callsProvider = (src) =>
-  /from ["']openai["']|new OpenAI\(|api\.openai\.com|createTrackedOpenAI(Client|Fetch)/.test(src);
+  /createTrackedAzureOpenAI(Client|Fetch)\(/.test(src);
 const aiRoutes = routes.filter((r) => callsProvider(r.src) && !EXEMPT.has(r.rel));
 
 test("AI route discovery finds the known provider routes", () => {
@@ -51,7 +51,7 @@ test("the shared AI guard rejects anonymous users and missing workspaces before 
 
 test("every AI route records token cost telemetry", () => {
   for (const r of aiRoutes) {
-    const recorded = /createTrackedOpenAI(Client|Fetch)\(/.test(r.src) || /recordAiUsageEvent\(/.test(r.src);
+    const recorded = /createTrackedAzureOpenAI(Client|Fetch)\(/.test(r.src) || /recordAiUsageEvent\(/.test(r.src);
     assert.ok(recorded, `${r.rel}: provider call without cost tracking`);
   }
 });
@@ -59,6 +59,7 @@ test("every AI route records token cost telemetry", () => {
 test("no AI route reads the provider key from the client or logs it", () => {
   for (const r of aiRoutes) {
     assert.ok(!/NEXT_PUBLIC_OPENAI/.test(r.src), `${r.rel}: public OpenAI key`);
+    assert.ok(!/NEXT_PUBLIC_AZURE_OPENAI/.test(r.src), `${r.rel}: public Azure OpenAI key`);
     assert.ok(!/console\.\w+\([^)]*apiKey/.test(r.src), `${r.rel}: logs the API key`);
   }
 });
@@ -67,6 +68,12 @@ test("exempt routes stay free of provider calls", () => {
   for (const rel of EXEMPT.keys()) {
     const r = routes.find((x) => x.rel === rel);
     assert.ok(r, `${rel} missing`);
-    assert.ok(!/api\.openai\.com|new OpenAI\(|createTrackedOpenAI/.test(r.src), `${rel} now calls the provider`);
+    assert.ok(!/createTrackedAzureOpenAI(Client|Fetch)\(/.test(r.src), `${rel} now calls the provider`);
+  }
+});
+
+test("AI API routes use Azure endpoints and no direct OpenAI provider configuration", () => {
+  for (const r of aiRoutes) {
+    assert.ok(!/OPENAI_API_KEY|api\.openai\.com|createTrackedOpenAI/.test(r.src), `${r.rel}: OpenAI configuration remains`);
   }
 });

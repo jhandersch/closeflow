@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIClient } from "@/lib/aiCost";
-import { normalizeLanguage, translateText } from "@/lib/i18n";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
+import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: Request) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
@@ -22,21 +22,13 @@ export async function POST(request: Request) {
             personal_deal_costs: formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0)),
         };
         const goal = typeof body.goal === "string" ? body.goal : isGerman ? "Follow-up" : "Follow up";
-        const goalLabel = translateText(goal, language);
         const tone = typeof body.tone === "string" ? body.tone : "professional";
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json({
-                subject: `${goalLabel} – ${lead.company || lead.name || "Lead"}`,
-                body: isGerman ? `Guten Tag${lead.name ? ` ${lead.name}` : ""},\n\nich möchte mich bezüglich ${lead.company || "Ihres Unternehmens"} bei Ihnen melden.\n\nMit freundlichen Grüßen` : `Hello${lead.name ? ` ${lead.name}` : ""},\n\nI wanted to ${goal.toLowerCase()} regarding ${lead.company || "your company"}.\n\nBest regards`,
-            });
-        }
-        const openai = createTrackedOpenAIClient(
-            apiKey,
+        const openai = createTrackedAzureOpenAIClient(
             access.supabase,
             access.workspaceId,
             access.userId,
             "ai_email_generator",
+            "gpt-4.1-mini",
         );
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",
@@ -52,10 +44,20 @@ export async function POST(request: Request) {
                 },
             ],
         });
-        const result = JSON.parse(completion.choices[0].message.content || "{}");
+        const content = completion.choices[0]?.message?.content;
+        if (!content) throw new Error("Azure OpenAI returned an empty email response.");
+        const result = JSON.parse(content);
+        if (
+            typeof result.subject !== "string" ||
+            !result.subject.trim() ||
+            typeof result.body !== "string" ||
+            !result.body.trim()
+        ) {
+            throw new Error("Azure OpenAI returned an invalid email response.");
+        }
         return NextResponse.json({
-            subject: typeof result.subject === "string" ? result.subject : goalLabel,
-            body: typeof result.body === "string" ? result.body : "",
+            subject: result.subject,
+            body: result.body,
         });
     }
     catch (error) {

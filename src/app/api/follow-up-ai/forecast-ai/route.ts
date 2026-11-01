@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
-import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 
 const MAX_INPUT_LENGTH = 16_000;
@@ -53,11 +53,6 @@ export async function POST(req: Request) {
 
   if (JSON.stringify(body).length > MAX_INPUT_LENGTH) {
     return NextResponse.json({ error: `Forecast input must be ${MAX_INPUT_LENGTH} characters or fewer.` }, { status: 413 });
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI forecasting is not configured." }, { status: 503 });
   }
 
   const limitCheck = await enforceAndTrackUsageLimit(
@@ -134,12 +129,12 @@ Keep answers concise.
 `;
 
   try {
-    const openai = createTrackedOpenAIClient(
-      apiKey,
+    const openai = createTrackedAzureOpenAIClient(
       supabase,
       limitCheck.context.workspaceId,
       user.id,
       "follow_up_forecast_ai",
+      "gpt-4.1-mini",
     );
     const completion =
       await openai.chat.completions.create({

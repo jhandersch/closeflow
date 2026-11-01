@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import {
+  createTrackedAzureOpenAIFetch,
+  getAzureChatCompletionsUrl,
+  getAzureOpenAIConfig,
+} from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 
 export async function POST(request: NextRequest) {
@@ -20,33 +24,25 @@ export async function POST(request: NextRequest) {
     language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
     const responseLanguage = language === "de" ? "German" : "English";
 
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      return NextResponse.json({
-        subject: language === "de" ? "Rückfrage" : "Follow up",
-        email: language === "de"
-          ? "Guten Tag, ich möchte mich zu unserem letzten Gespräch erkundigen."
-          : "Hello, I wanted to follow up regarding our previous conversation.",
-      });
-    }
-
-    const trackedFetch = createTrackedOpenAIFetch(
+    const model = "gpt-4o-mini";
+    const azureConfig = getAzureOpenAIConfig(model);
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       access.supabase,
       access.workspaceId,
       access.userId,
       "follow_up_ai",
+      model,
     );
     const response = await trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      getAzureChatCompletionsUrl(model),
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": azureConfig.apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: azureConfig.deployment,
           temperature: 0.4,
           messages: [
             {
@@ -97,16 +93,16 @@ Write subject and email in ${responseLanguage}.
     const content = result.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error(translateText("OpenAI returned no content."));
+      throw new Error(translateText("Azure OpenAI returned no content."));
     }
 
     return NextResponse.json(JSON.parse(content));
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json({
-      subject: language === "de" ? "Rückfrage" : "Follow up",
-      email: language === "de" ? "Die E-Mail konnte nicht erstellt werden." : "Unable to generate email.",
-    });
+    return NextResponse.json(
+      { error: language === "de" ? "Die E-Mail konnte nicht erstellt werden." : "Unable to generate email." },
+      { status: 502 },
+    );
   }
 }

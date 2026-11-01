@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
-import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 
 const MAX_TEXT_LENGTH = 12_000;
@@ -49,11 +49,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unsupported rewrite tone." }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-        return NextResponse.json({ error: "AI email rewriting is not configured." }, { status: 503 });
-    }
-
     const limitCheck = await enforceAndTrackUsageLimit(
         supabase,
         user.id,
@@ -68,12 +63,12 @@ export async function POST(request: Request) {
     }
 
     try {
-        const openai = createTrackedOpenAIClient(
-            apiKey,
+        const openai = createTrackedAzureOpenAIClient(
             supabase,
             limitCheck.context.workspaceId,
             user.id,
             "ai_email_rewrite",
+            "gpt-4.1-mini",
         );
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",

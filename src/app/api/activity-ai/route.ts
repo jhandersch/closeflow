@@ -2,16 +2,8 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
-
-const fallbackResponse = (language: "en" | "de") => ({
-  health: language === "de" ? "Unbekannt" : "unknown",
-  risk: language === "de" ? "Unbekannt" : "unknown",
-  summary: language === "de" ? "KI-Analyse fehlgeschlagen" : "AI failed",
-  recommendation: language === "de" ? "Manuell prüfen" : "Review manually",
-  confidence: 0,
-});
 
 export async function POST(req: Request) {
   const access = await requireAiWorkspaceQuota(req);
@@ -26,12 +18,6 @@ export async function POST(req: Request) {
     const { lead, activities } = payload;
     language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
     const responseLanguage = language === "de" ? "German" : "English";
-
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      return NextResponse.json(fallbackResponse(language));
-    }
 
     const history = activities
       .map((a: any) => `${a.created_at}: ${a.action}`)
@@ -85,12 +71,12 @@ Analyze:
 - Write all text values in ${responseLanguage}
 `;
 
-    const openai = createTrackedOpenAIClient(
-      apiKey,
+    const openai = createTrackedAzureOpenAIClient(
       access.supabase,
       access.workspaceId,
       access.userId,
       "activity_ai",
+      "gpt-4.1-mini",
     );
 
     const completion = await openai.chat.completions.create({
@@ -111,33 +97,16 @@ Analyze:
       },
     });
 
-    const result = JSON.parse(completion.choices[0].message.content || "{}");
+    const content = completion.choices[0]?.message?.content;
+    if (!content) throw new Error("Azure OpenAI returned an empty activity analysis.");
+    const result = JSON.parse(content);
 
     return NextResponse.json(result);
   } catch (error) {
     console.error(error);
-
-    const openAiLikeError = error as
-      | {
-          status?: number;
-          code?: string;
-          type?: string;
-        }
-      | undefined;
-
-    const recoverable =
-      openAiLikeError?.status === 429 ||
-      openAiLikeError?.status === 401 ||
-      openAiLikeError?.code === "insufficient_quota" ||
-      openAiLikeError?.type === "insufficient_quota" ||
-      openAiLikeError?.code === "rate_limit_exceeded";
-
-    if (recoverable) {
-      return NextResponse.json(fallbackResponse(language));
-    }
-
-    return NextResponse.json(fallbackResponse(language), {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: language === "de" ? "Die Aktivitätsanalyse ist fehlgeschlagen." : "Activity analysis failed." },
+      { status: 502 },
+    );
   }
 }

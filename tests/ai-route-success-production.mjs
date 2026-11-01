@@ -24,15 +24,22 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const baseUrl = process.env.BASE_URL;
-const openAiKey = process.env.OPENAI_API_KEY;
+const azureRequiredEnv = [
+  "AZURE_OPENAI_ENDPOINT",
+  "AZURE_OPENAI_API_KEY",
+  "AZURE_OPENAI_API_VERSION",
+  "AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT",
+  "AZURE_OPENAI_GPT_4_1_MINI_INPUT_USD_PER_1M_TOKENS",
+  "AZURE_OPENAI_GPT_4_1_MINI_OUTPUT_USD_PER_1M_TOKENS",
+];
 if (
   !supabaseUrl ||
   !publishableKey ||
   !serviceRoleKey ||
   !baseUrl ||
-  !openAiKey
+  azureRequiredEnv.some((name) => !process.env[name]?.trim())
 ) {
-  throw new Error("Required Supabase, OpenAI, or local application configuration is missing.");
+  throw new Error("Required Supabase, Azure OpenAI, or local application configuration is missing.");
 }
 
 const parsedSupabaseUrl = new URL(supabaseUrl);
@@ -221,8 +228,10 @@ const run = async () => {
   assert.ok(Number.isFinite(usage.cost_usd) && usage.cost_usd >= 0);
 
   const outputCost =
-    (usage.prompt_tokens / 1_000_000) * 0.4 +
-    (usage.completion_tokens / 1_000_000) * 1.6;
+    (usage.prompt_tokens / 1_000_000) *
+      Number(process.env.AZURE_OPENAI_GPT_4_1_MINI_INPUT_USD_PER_1M_TOKENS) +
+    (usage.completion_tokens / 1_000_000) *
+      Number(process.env.AZURE_OPENAI_GPT_4_1_MINI_OUTPUT_USD_PER_1M_TOKENS);
   const expectedCost = Math.round(outputCost * 1_000_000) / 1_000_000;
   assert.equal(usage.cost_usd, expectedCost, "Persisted model cost did not match configured pricing.");
 

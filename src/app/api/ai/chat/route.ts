@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
 import { getUserFacingErrorMessage, getRetryableStatus } from "@/lib/errorRecovery";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
-import { recordAiUsageEvent } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: Request) {
@@ -39,15 +38,16 @@ export async function POST(request: Request) {
             user.id,
             preferredWorkspaceId,
         );
-        const apiKey = process.env.OPENAI_API_KEY;
-        const fallback = {
-            answer: language === "de" ? `KI (${mode}): ${message}` : `AI (${mode}): ${message}`,
-            sources: [],
-        };
-        if (!apiKey) {
-            return NextResponse.json(fallback);
+        if (!workspace?.id) {
+            return NextResponse.json({ error: "A workspace is required to use AI chat." }, { status: 403 });
         }
-        const openai = new OpenAI({ apiKey });
+        const openai = createTrackedAzureOpenAIClient(
+            supabase,
+            workspace.id,
+            user.id,
+            "ai_chat",
+            "gpt-4.1-mini",
+        );
         const dealCostContext = leadId
             ? ` For lead ${leadId}, user-entered deal costs are: ${formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, leadId)} Use them when answering about this deal, and distinguish gross from estimated net value.`
             : "";
@@ -65,36 +65,27 @@ export async function POST(request: Request) {
                 },
             ],
         });
-        const result = JSON.parse(completion.choices[0].message.content || "{}");
+        const content = completion.choices[0]?.message?.content;
+        if (!content) {
+            throw new Error("Azure OpenAI returned an empty chat response.");
+        }
+        const result = JSON.parse(content);
+        if (typeof result.answer !== "string" || !result.answer.trim()) {
+            throw new Error("Azure OpenAI returned an invalid chat response.");
+        }
         const payload = {
-            answer: typeof result.answer === "string" ? result.answer : fallback.answer,
+            answer: result.answer,
             sources: Array.isArray(result.sources) ? result.sources : [],
         };
-        if (workspace?.id) {
-            if (!completion.usage) {
-                return NextResponse.json(
-                    { error: "AI usage could not be verified. Please try again later." },
-                    { status: 503 },
-                );
-            }
-            await recordAiUsageEvent(
-                workspace.id,
-                user.id,
-                "ai_chat",
-                "gpt-4.1-mini",
-                completion.usage.prompt_tokens,
-                completion.usage.completion_tokens,
-            );
-            await supabase.from("ai_conversations").insert({
-                workspace_id: workspace.id,
-                user_id: user.id,
-                lead_id: leadId,
-                messages: [
-                    { role: "user", content: message },
-                    { role: "assistant", content: payload.answer },
-                ],
-            });
-        }
+        await supabase.from("ai_conversations").insert({
+            workspace_id: workspace.id,
+            user_id: user.id,
+            lead_id: leadId,
+            messages: [
+                { role: "user", content: message },
+                { role: "assistant", content: payload.answer },
+            ],
+        });
         return NextResponse.json(payload);
     }
     catch (error) {

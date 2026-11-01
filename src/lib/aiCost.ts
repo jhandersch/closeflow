@@ -1,6 +1,64 @@
-import { translateText } from "@/lib/i18n";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import OpenAI from "openai";
+import { AzureOpenAI } from "openai";
+export type AzureOpenAIModel = "gpt-4.1-mini" | "gpt-4o-mini";
+
+type AzureOpenAIConfig = {
+    apiKey: string;
+    apiVersion: string;
+    deployment: string;
+    endpoint: string;
+};
+
+const MODEL_DEPLOYMENT_ENV: Record<AzureOpenAIModel, string> = {
+    "gpt-4.1-mini": "AZURE_OPENAI_GPT_4_1_MINI_DEPLOYMENT",
+    "gpt-4o-mini": "AZURE_OPENAI_GPT_4O_MINI_DEPLOYMENT",
+};
+
+export function getAzureOpenAIConfig(model: AzureOpenAIModel): AzureOpenAIConfig {
+    const deploymentEnv = MODEL_DEPLOYMENT_ENV[model];
+    const required = {
+        AZURE_OPENAI_ENDPOINT: process.env.AZURE_OPENAI_ENDPOINT,
+        AZURE_OPENAI_API_KEY: process.env.AZURE_OPENAI_API_KEY,
+        AZURE_OPENAI_API_VERSION: process.env.AZURE_OPENAI_API_VERSION,
+        [deploymentEnv]: process.env[deploymentEnv],
+    };
+    const missing = Object.entries(required)
+        .filter(([, value]) => !value?.trim())
+        .map(([name]) => name);
+
+    if (missing.length > 0) {
+        throw new Error(`Azure OpenAI is not configured. Missing: ${missing.join(", ")}`);
+    }
+
+    const endpointValue = required.AZURE_OPENAI_ENDPOINT?.trim();
+    const apiKey = required.AZURE_OPENAI_API_KEY?.trim();
+    const apiVersion = required.AZURE_OPENAI_API_VERSION?.trim();
+    const deployment = required[deploymentEnv]?.trim();
+    if (!endpointValue || !apiKey || !apiVersion || !deployment) {
+        throw new Error("Azure OpenAI configuration is incomplete.");
+    }
+
+    const endpoint = endpointValue.replace(/\/+$/, "");
+    const parsedEndpoint = new URL(endpoint);
+    if (
+        parsedEndpoint.protocol !== "https:" ||
+        !parsedEndpoint.hostname ||
+        parsedEndpoint.username ||
+        parsedEndpoint.password ||
+        parsedEndpoint.pathname !== "/" ||
+        parsedEndpoint.search ||
+        parsedEndpoint.hash
+    ) {
+        throw new Error("AZURE_OPENAI_ENDPOINT must be an HTTPS resource endpoint without a path or query.");
+    }
+
+    return { apiKey, apiVersion, deployment, endpoint };
+}
+
+export function getAzureChatCompletionsUrl(model: AzureOpenAIModel): string {
+    const config = getAzureOpenAIConfig(model);
+    return `${config.endpoint}/openai/deployments/${encodeURIComponent(config.deployment)}/chat/completions?api-version=${encodeURIComponent(config.apiVersion)}`;
+}
 export type AiFeature =
     | "ai_chat"
     | "sales_copilot"
@@ -32,21 +90,51 @@ type AiUsageSummary = {
     calls: number;
     by_feature: Record<string, AiUsageBreakdown>;
 };
-const MODEL_PRICING: Record<string, {
-    inputPer1m: number;
-    outputPer1m: number;
+const MODEL_PRICING_ENV: Record<AzureOpenAIModel, {
+    input: string;
+    output: string;
 }> = {
-    "gpt-4.1-mini": { inputPer1m: 0.4, outputPer1m: 1.6 },
-    "gpt-4.1-mini-2025-04-14": { inputPer1m: 0.4, outputPer1m: 1.6 },
-    "gpt-4o-mini": { inputPer1m: 0.15, outputPer1m: 0.6 },
-    "gpt-4o-mini-2024-07-18": { inputPer1m: 0.15, outputPer1m: 0.6 },
+    "gpt-4.1-mini": {
+        input: "AZURE_OPENAI_GPT_4_1_MINI_INPUT_USD_PER_1M_TOKENS",
+        output: "AZURE_OPENAI_GPT_4_1_MINI_OUTPUT_USD_PER_1M_TOKENS",
+    },
+    "gpt-4o-mini": {
+        input: "AZURE_OPENAI_GPT_4O_MINI_INPUT_USD_PER_1M_TOKENS",
+        output: "AZURE_OPENAI_GPT_4O_MINI_OUTPUT_USD_PER_1M_TOKENS",
+    },
 };
 const round6 = (value: number) => Math.round(value * 1000000) / 1000000;
-const calcCostUsd = (model: string, promptTokens: number, completionTokens: number) => {
-    const pricing = MODEL_PRICING[model];
-    if (!pricing) {
+
+const getAzureModelPricing = (model: string) => {
+    const modelFamily = model.startsWith("gpt-4.1-mini")
+        ? "gpt-4.1-mini"
+        : model.startsWith("gpt-4o-mini")
+            ? "gpt-4o-mini"
+            : null;
+    if (!modelFamily) {
         throw new Error(`AI cost is not configured for model "${model}".`);
     }
+
+    const envNames = MODEL_PRICING_ENV[modelFamily];
+    const inputPer1m = Number(process.env[envNames.input]);
+    const outputPer1m = Number(process.env[envNames.output]);
+    if (
+        !process.env[envNames.input]?.trim() ||
+        !process.env[envNames.output]?.trim() ||
+        !Number.isFinite(inputPer1m) ||
+        inputPer1m < 0 ||
+        !Number.isFinite(outputPer1m) ||
+        outputPer1m < 0
+    ) {
+        throw new Error(
+            `Azure OpenAI pricing is not configured. Set ${envNames.input} and ${envNames.output} using your Azure rates in USD per 1 million tokens.`,
+        );
+    }
+    return { inputPer1m, outputPer1m };
+};
+
+const calcCostUsd = (model: string, promptTokens: number, completionTokens: number) => {
+    const pricing = getAzureModelPricing(model);
     const inputCost = (promptTokens / 1000000) * pricing.inputPer1m;
     const outputCost = (completionTokens / 1000000) * pricing.outputPer1m;
     return round6(inputCost + outputCost);
@@ -58,13 +146,13 @@ export async function recordAiUsageEvent(workspaceId: string, userId: string, fe
         !Number.isSafeInteger(completionTokens) ||
         completionTokens < 0
     ) {
-        throw new Error(translateText("AI token usage must be non-negative safe integers."));
+        throw new Error("AI token usage must be non-negative safe integers.");
     }
     const safePrompt = promptTokens;
     const safeCompletion = completionTokens;
     const total = safePrompt + safeCompletion;
     if (!Number.isSafeInteger(total)) {
-        throw new Error(translateText("Total AI token usage exceeds the safe integer range."));
+        throw new Error("Total AI token usage exceeds the safe integer range.");
     }
     const cost = calcCostUsd(model, safePrompt, safeCompletion);
     let client = auditClient;
@@ -91,14 +179,16 @@ export async function recordAiUsageEvent(workspaceId: string, userId: string, fe
     }
 }
 
-export function createTrackedOpenAIFetch(
+export function createTrackedAzureOpenAIFetch(
     _supabase: SupabaseClient,
     workspaceId: string,
     userId: string,
     feature: AiFeature,
+    model: AzureOpenAIModel,
     fetcher: typeof fetch = fetch,
     auditClient?: SupabaseClient,
 ): typeof fetch {
+    getAzureModelPricing(model);
     return async (input, init) => {
         const response = await fetcher(input, init);
         if (!response.ok) {
@@ -115,7 +205,6 @@ export function createTrackedOpenAIFetch(
         }
 
         let completion: {
-            model?: unknown;
             usage?: {
                 prompt_tokens?: unknown;
                 completion_tokens?: unknown;
@@ -124,25 +213,18 @@ export function createTrackedOpenAIFetch(
         try {
             completion = await response.clone().json();
         } catch {
-            throw new Error(translateText("AI provider returned an invalid usage response."));
+            throw new Error("AI provider returned an invalid usage response.");
         }
 
-        const requestBody = typeof init?.body === "string"
-            ? JSON.parse(init.body) as { model?: unknown }
-            : {};
-        const model = typeof completion.model === "string"
-            ? completion.model
-            : requestBody.model;
         const promptTokens = completion.usage?.prompt_tokens;
         const completionTokens = completion.usage?.completion_tokens;
         if (
-            typeof model !== "string" ||
             typeof promptTokens !== "number" ||
             !Number.isSafeInteger(promptTokens) ||
             typeof completionTokens !== "number" ||
             !Number.isSafeInteger(completionTokens)
         ) {
-            throw new Error(translateText("AI provider returned incomplete token usage."));
+            throw new Error("AI provider returned incomplete token usage.");
         }
 
         await recordAiUsageEvent(
@@ -158,23 +240,29 @@ export function createTrackedOpenAIFetch(
     };
 }
 
-export function createTrackedOpenAIClient(
-    apiKey: string,
+export function createTrackedAzureOpenAIClient(
     supabase: SupabaseClient,
     workspaceId: string,
     userId: string,
     feature: AiFeature,
+    model: AzureOpenAIModel = "gpt-4.1-mini",
     fetcher: typeof fetch = fetch,
     auditClient?: SupabaseClient,
-): OpenAI {
-    return new OpenAI({
-        apiKey,
+): AzureOpenAI {
+    getAzureModelPricing(model);
+    const config = getAzureOpenAIConfig(model);
+    return new AzureOpenAI({
+        apiKey: config.apiKey,
+        apiVersion: config.apiVersion,
+        endpoint: config.endpoint,
+        deployment: config.deployment,
         maxRetries: 0,
-        fetch: createTrackedOpenAIFetch(
+        fetch: createTrackedAzureOpenAIFetch(
             supabase,
             workspaceId,
             userId,
             feature,
+            model,
             fetcher,
             auditClient,
         ),
@@ -183,7 +271,7 @@ export function createTrackedOpenAIClient(
 
 export async function summarizeWorkspaceAiUsage(supabase: SupabaseClient, workspaceId: string, month: string): Promise<AiUsageSummary> {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
-        throw new Error(translateText("AI usage month must use YYYY-MM format."));
+        throw new Error("AI usage month must use YYYY-MM format.");
     }
     const from = `${month}-01T00:00:00.000Z`;
     const toDate = new Date(from);
@@ -224,7 +312,7 @@ export async function summarizeWorkspaceAiUsage(supabase: SupabaseClient, worksp
             !Number.isFinite(cost) ||
             cost < 0
         ) {
-            throw new Error(translateText("AI usage summary contains an invalid audit record."));
+            throw new Error("AI usage summary contains an invalid audit record.");
         }
         summary.prompt_tokens += prompt;
         summary.completion_tokens += completion;

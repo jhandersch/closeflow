@@ -843,7 +843,7 @@ const germanTextTranslations: Record<string, string> = {
   "Not authenticated.": "Nicht angemeldet.",
   "Only the workspace owner can manage billing.":
     "Nur der Inhaber des Arbeitsbereichs kann die Abrechnung verwalten.",
-  "OpenAI returned no content.": "OpenAI hat keine Inhalte zurückgegeben.",
+  "Azure OpenAI returned no content.": "Azure OpenAI hat keine Inhalte zurückgegeben.",
   "Password must be at least 8 characters":
     "Das Passwort muss mindestens acht Zeichen lang sein.",
   "Password updated": "Passwort aktualisiert",

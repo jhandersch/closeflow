@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import {
   getRouteUser,
   loadWorkspaceForUser,
 } from "@/lib/supabase/route";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { captureWorkspaceError } from "@/lib/errorMonitoring";
-import { recordAiUsageEvent } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import {
   getRetryableStatus,
   getUserFacingErrorMessage,
 } from "@/lib/errorRecovery";
 import { normalizeLanguage } from "@/lib/i18n";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(req: Request) {
   let userId: string | null = null;
@@ -53,6 +48,12 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: limitCheck.message },
         { status: limitCheck.status },
+      );
+    }
+    if (!workspace?.id) {
+      return NextResponse.json(
+        { error: "A workspace is required to use the sales copilot." },
+        { status: 403 },
       );
     }
 
@@ -167,6 +168,13 @@ Focus on:
 - Write every user-visible value entirely in ${responseLanguage}; never switch languages mid-response.
 `;
 
+    const openai = createTrackedAzureOpenAIClient(
+      supabase,
+      workspace.id,
+      user.id,
+      "sales_copilot",
+      "gpt-4.1-mini",
+    );
     const completion =
       await openai.chat.completions.create({
         model: "gpt-4.1-mini",
@@ -185,23 +193,6 @@ Focus on:
           type: "json_object",
         },
       });
-
-    if (workspace?.id) {
-      if (!completion.usage) {
-        return NextResponse.json(
-          { error: "AI usage could not be verified. Please try again later." },
-          { status: 503 },
-        );
-      }
-      await recordAiUsageEvent(
-        workspace.id,
-        user.id,
-        "sales_copilot",
-        "gpt-4.1-mini",
-        completion.usage.prompt_tokens,
-        completion.usage.completion_tokens,
-      );
-    }
 
     const result = JSON.parse(
       completion.choices[0].message.content || "{}",

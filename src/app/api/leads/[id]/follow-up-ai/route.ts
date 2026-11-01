@@ -3,7 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIClient } from "@/lib/aiCost";
+import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 export async function POST(request: Request, context: {
     params: Promise<{
@@ -56,16 +56,12 @@ export async function POST(request: Request, context: {
                 status: 404
             });
         }
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json({ error: isGerman ? "Die KI ist nicht eingerichtet." : "AI is not configured." }, { status: 503 });
-        }
-        const openai = createTrackedOpenAIClient(
-            apiKey,
+        const openai = createTrackedAzureOpenAIClient(
             access.supabase,
             access.workspaceId,
             access.userId,
             "lead_follow_up_ai",
+            "gpt-4.1-mini",
         );
         const completion = await openai.chat.completions.create({
             model: "gpt-4.1-mini",

@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
-import { createTrackedOpenAIFetch } from "@/lib/aiCost";
+import {
+  createTrackedAzureOpenAIFetch,
+  getAzureChatCompletionsUrl,
+  getAzureOpenAIConfig,
+} from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 
 export async function POST(request: NextRequest) {
@@ -31,56 +35,36 @@ export async function POST(request: NextRequest) {
         }))
       : [];
 
-    const apiKey = process.env.OPENAI_API_KEY;
 
     /*
      * =========================
      * FALLBACK
      * =========================
      */
-    if (!apiKey) {
-      return NextResponse.json({
-        headline:
-          language === "de"
-            ? "Priorisierung abgeschlossen"
-            : "Priority analysis ready",
-        explanation:
-          language === "de"
-            ? "Die wichtigsten Leads werden anhand von Wert, Pipeline-Phase, Aktivität und Abschlusswahrscheinlichkeit priorisiert."
-            : "The most important leads are prioritized using value, pipeline stage, activity and close probability.",
-        nextAction:
-          language === "de"
-            ? "Beginne mit hochwertigen Leads in fortgeschrittenen Phasen."
-            : "Start with high-value leads in advanced stages.",
-        priorityReason:
-          language === "de"
-            ? "Leads mit hohem Wert und guter Abschlusschance sollten zuerst bearbeitet werden."
-            : "High-value leads with strong closing potential should be handled first.",
-        riskLevel: "Medium",
-      });
-    }
-
     /*
      * =========================
-     * OPENAI REQUEST
+     * AZURE OPENAI REQUEST
      * =========================
      */
-    const trackedFetch = createTrackedOpenAIFetch(
+    const model = "gpt-4o-mini";
+    const azureConfig = getAzureOpenAIConfig(model);
+    const trackedFetch = createTrackedAzureOpenAIFetch(
       access.supabase,
       access.workspaceId,
       access.userId,
       "priority_ai",
+      model,
     );
     const response = await trackedFetch(
-      "https://api.openai.com/v1/chat/completions",
+      getAzureChatCompletionsUrl(model),
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": azureConfig.apiKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: azureConfig.deployment,
           temperature: 0.25,
           response_format: {
             type: "json_object",
@@ -165,16 +149,13 @@ Keep answers concise.
 
     /*
      * =========================
-     * OPENAI ERROR
+     * AZURE OPENAI ERROR
      * =========================
      */
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
 
-      throw new Error(
-        errorData?.error?.message ||
-          `OpenAI request failed with status ${response.status}`,
-      );
+      throw new Error(errorData?.error?.message || `Azure OpenAI request failed with status ${response.status}`);
     }
 
     /*
@@ -229,24 +210,9 @@ Keep answers concise.
      * SAFE FALLBACK
      * =========================
      */
-    return NextResponse.json({
-      headline:
-        language === "de"
-          ? "Verkaufschancen brauchen Aufmerksamkeit"
-          : "Deals need attention",
-      explanation:
-        language === "de"
-          ? "Prüfen Sie die Pipeline anhand von Wert, Aktivität und Abschlusswahrscheinlichkeit."
-          : "The pipeline should be reviewed using value, activity and closing probability.",
-      nextAction:
-        language === "de"
-          ? "Prüfen Sie zuerst Ihre wertvollsten Verkaufschancen."
-          : "Review your highest-value opportunities.",
-      priorityReason:
-        language === "de"
-          ? "Verkaufschancen mit hohem Potenzial sollten zuerst bearbeitet werden."
-          : "High-potential opportunities should be handled first.",
-      riskLevel: "Medium",
-    });
+    return NextResponse.json(
+      { error: language === "de" ? "Die KI-Priorisierung ist fehlgeschlagen." : "AI prioritization failed." },
+      { status: 502 },
+    );
   }
 }
