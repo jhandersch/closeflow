@@ -34,7 +34,7 @@ const capabilities = [
   },
   {
     number: "03",
-    title: "A forecast you can inspect",
+    title: "Forecasts you can understand",
     description: "Review pipeline performance, revenue history and scenario-based forecasts. Ask the AI assistant for deal insights using the information in your workspace.",
     icon: BarChart3,
     tag: "Analytics · Forecast · AI",
@@ -87,12 +87,12 @@ export default function HomePage() {
       <section className="mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:pb-28 lg:pt-24">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.07] px-3 py-1.5 text-xs font-medium text-cyan-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> {translateText("A sales workspace for small B2B agencies")}</div>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> {translateText("A CRM for small B2B agencies")}</div>
           <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[1.04] tracking-[-0.045em] sm:text-6xl lg:text-[4.4rem]">
             {translateText("Every opportunity.")}<br /><span className="bg-gradient-to-r from-cyan-200 via-sky-300 to-blue-400 bg-clip-text text-transparent">{translateText("One clear next step.")}</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-foreground/65 sm:text-lg sm:leading-8">
-            {translateText("Keep customers, open deals and follow-ups together. CloseFlow helps small B2B agencies see what needs attention and decide what to do next.")}</p>
+            {translateText("Keep leads, customers and follow-ups in one place. CloseFlow helps small B2B agencies see what needs attention and what to do next.")}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/login?mode=signup" className="inline-flex items-center justify-center rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">{translateText("Create your free workspace")}{" "}<ArrowRight className="ml-2 h-4 w-4" /></Link>
             <a href="#platform" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-white/[0.02] px-5 py-3 text-sm font-medium text-foreground/80 transition hover:bg-white/[0.06]">{translateText("Explore the platform")}{" "}<ArrowDown className="h-4 w-4" /></a>
@@ -146,8 +146,8 @@ export default function HomePage() {
       <section id="platform" className="border-y border-border-subtle bg-white/[0.015]">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
           <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{translateText("One connected workspace")}</p><h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">{translateText("A practical CRM for the work between first contact and close.")}</h2></div>
-            <p className="max-w-xl text-sm leading-7 text-foreground/60 lg:justify-self-end">{translateText("CloseFlow brings the everyday sales workflow together: organize leads, move deals through a pipeline, plan follow-ups and review your numbers without losing the story behind each opportunity.")}</p>
+            <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{translateText("One connected workspace")}</p><h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">{translateText("A CRM that keeps every step from first contact to close in view.")}</h2></div>
+            <p className="max-w-xl text-sm leading-7 text-foreground/60 lg:justify-self-end">{translateText("Manage leads, move deals through your pipeline, plan follow-ups and review performance—all with the context of each opportunity in one place.")}</p>
           </div>
           <div className="mt-11 grid gap-4 lg:grid-cols-3">
             {capabilities.map(({ number, title, description, icon: Icon, tag }) => <article key={number} className="group rounded-2xl border border-border-subtle bg-surface-1 p-6 transition hover:-translate-y-1 hover:border-cyan-400/25 hover:bg-surface-1/80"><div className="flex items-center justify-between"><span className="text-xs font-medium tracking-widest text-foreground/35">{number}</span><span className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] text-cyan-200 transition group-hover:bg-cyan-400/10"><Icon className="h-5 w-5" /></span></div><h3 className="mt-7 text-lg font-semibold">{translateText(title)}</h3><p className="mt-3 min-h-20 text-sm leading-6 text-foreground/60">{translateText(description)}</p><p className="mt-5 border-t border-border-subtle pt-4 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground/40">{translateText(tag)}</p></article>)}
@@ -157,7 +157,7 @@ export default function HomePage() {
 
       <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
         <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{translateText("A simple start")}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{translateText("From workspace to first follow-up in minutes.")}</h2><p className="mt-4 text-sm leading-7 text-foreground/60">{translateText("Set up your workspace, then choose a real lead or sample data. The onboarding helps you get into the app without making you choose a paid plan first.")}</p><Link href="/login?mode=signup" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">{translateText("Set up your workspace")}{" "}<ArrowRight className="h-4 w-4" /></Link></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{translateText("A simple start")}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{translateText("From workspace setup to your first follow-up.")}</h2><p className="mt-4 text-sm leading-7 text-foreground/60">{translateText("Set up your workspace, then add a real lead or explore sample data. No paid plan is required to get started.")}</p><Link href="/login?mode=signup" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-cyan-100">{translateText("Set up your workspace")}{" "}<ArrowRight className="h-4 w-4" /></Link></div>
           <div className="space-y-3">
             {[
               { n: "01", title: translateText("Create your workspace"), text: "Add your company name and a little team context. Your workspace starts on Free." },

@@ -196,9 +196,9 @@ export default function OnboardingPage() {
                         <div>
                             <LogoMark size={36} className="mb-4" />
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">{translateText("CloseFlow setup")}</p>
-                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{translateText("Make your workspace yours")}</h1>
+                            <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{translateText("Set up your workspace")}</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/65 sm:text-base">
-                                {translateText("A couple of details, then choose whether to add your first lead or explore a ready-made workspace.")}</p>
+                                {translateText("Add a few details, then choose how to explore CloseFlow: add your first lead or try sample data.")}</p>
                         </div>
                         <div className="w-full md:max-w-xs" aria-label={`${translateText("Step")} ${step + 1} ${translateText("of")} ${steps.length}`}>
                             <div className="flex justify-between text-sm text-foreground/65">
@@ -221,7 +221,7 @@ export default function OnboardingPage() {
                                 <div>
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Building2 className="h-5 w-5" /></div>
                                     <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("Your workspace")}</h2>
-                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("These details help organize your CRM. You can update them later in Settings.")}</p>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("Use these details to set up your CRM. You can update them later in Settings.")}</p>
                                 </div>
                                 <label className="block text-sm">
                                     <span className="mb-2 block font-medium">{translateText("Company or workspace name")}{" "}<span className="text-cyan-300">*</span></span>
@@ -251,8 +251,8 @@ export default function OnboardingPage() {
                             <div className="space-y-6">
                                 <div>
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Sparkles className="h-5 w-5" /></div>
-                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("How would you like to start?")}</h2>
-                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("Choose a useful first step. You can change everything once you are inside CloseFlow.")}</p>
+                                    <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("How would you like to get started?")}</h2>
+                                    <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("Add your first lead or explore the app with sample data. You can add or update details later.")}</p>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <button type="button" aria-pressed={quickStartMode === "lead"} onClick={() => setQuickStartMode("lead")} className={`rounded-2xl border p-5 text-left transition ${quickStartMode === "lead" ? "border-cyan-400/50 bg-cyan-500/10" : "border-border-subtle bg-surface-2 hover:border-foreground/20"}`}>
@@ -266,7 +266,7 @@ export default function OnboardingPage() {
                                 </div>
                                 {quickStartMode === "lead" ? (
                                     <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-2/60 p-5">
-                                        <div><h3 className="font-medium">{translateText("First lead details")}</h3><p className="mt-1 text-xs text-foreground/55">{translateText("You can add more details and activities later.")}</p></div>
+                                        <div><h3 className="font-medium">{translateText("First lead details")}</h3><p className="mt-1 text-xs text-foreground/55">{translateText("You can add more details and log activities later.")}</p></div>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <label className="text-sm"><span className="mb-2 block">{translateText("Contact name")}{" "}<span className="text-cyan-300">*</span></span><input autoFocus value={leadName} onChange={(event) => setLeadName(event.target.value)} maxLength={120} autoComplete="name" placeholder={translateText("Jordan Lee")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                             <label className="text-sm"><span className="mb-2 block">{translateText("Company")}{" "}<span className="text-cyan-300">*</span></span><input value={leadCompany} onChange={(event) => setLeadCompany(event.target.value)} maxLength={120} autoComplete="organization" placeholder={translateText("Northstar")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
@@ -277,7 +277,7 @@ export default function OnboardingPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-6 text-foreground/75">{translateText("We will add sample leads, activities and tasks to this new workspace so you can explore the dashboard right away.")}</div>
+                                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-6 text-foreground/75">{translateText("We will add sample leads, activities and tasks so you can explore your dashboard right away.")}</div>
                                 )}
                             </div>
                         )}
