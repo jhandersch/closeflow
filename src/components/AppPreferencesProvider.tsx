@@ -80,8 +80,9 @@ export function AppPreferencesProvider({
       );
     }
 
+    const storedLanguage = window.localStorage.getItem(STORAGE_KEYS.language);
     const savedLanguage = normalizeLanguage(
-      window.localStorage.getItem(STORAGE_KEYS.language),
+      storedLanguage ?? (window.navigator.language?.toLowerCase().startsWith("de") ? "de" : "en"),
     );
     setActiveLanguage(savedLanguage);
     setLanguageState(savedLanguage);
