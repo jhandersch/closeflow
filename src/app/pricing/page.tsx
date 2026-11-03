@@ -5,6 +5,7 @@ import { formatEuro, translateText } from "@/lib/i18n";
 import Link from "next/link";
 import { useState } from "react";
 import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
+import SiteFooter from "@/components/SiteFooter";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { LogoMark } from "@/components/Logo";
 import { planDetails, type Plan } from "@/lib/planDetails";
@@ -16,7 +17,8 @@ export default function PricingPage() {
   const [detailsPlan, setDetailsPlan] = useState<Plan | null>(null);
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-8">
+    <main className="flex min-h-screen flex-col bg-background text-foreground">
+      <div className="flex-1 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/70 transition hover:text-foreground" aria-label={translateText("CloseFlow home")}>
           <LogoMark size={24} /> {translateText("CloseFlow")}</Link>
@@ -96,11 +98,13 @@ export default function PricingPage() {
             {translateText("Sign in to manage billing")}</Link>
         </p>
       </div>
+      </div>
 
       <PlanDetailsModal
         plan={detailsPlan}
         onClose={() => setDetailsPlan(null)}
       />
+      <SiteFooter />
     </main>
   );
 }

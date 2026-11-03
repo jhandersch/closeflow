@@ -241,7 +241,7 @@ export default function OnboardingPage() {
                                         </select>
                                     </label>
                                     <label className="block text-sm">
-                                        <span className="mb-2 block font-medium">{translateText("Team size")}</span>
+                                        <span className="mb-2 block font-medium">{translateText("Team size")}{" "}<span className="text-cyan-300">*</span></span>
                                         <select value={teamSize} onChange={(event) => setTeamSize(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
                                             <option value="">{translateText("Select team size")}</option><option value="1">{translateText("Just me")}</option><option value="2">{translateText("2 people")}</option><option value="3">{translateText("3 people")}</option><option value="4">{translateText("4 people")}</option><option value="5">{translateText("5 people")}</option><option value="6">{translateText("6–10 people")}</option><option value="20">{translateText("11–20 people")}</option>
                                         </select>
