@@ -79,6 +79,8 @@ Current decision record (2026-10-28):
 - Done 2026-11-01: Azure prices verified against the official Azure Retail Prices API (Germany West Central, gpt-4.1-mini Global Standard: 0.40 USD input / 1.60 USD output per 1M tokens; matches the configured values). Data Zone would be 0.44 / 1.76 USD per 1M tokens.
 - Done 2026-11-01: Azure budget `closeflow-monatlich` (20 EUR/month, email alerts at 50% and 100%, owner-configured; alerts only, no spending cap).
 - Done 2026-11-01: Google integration (Gmail send, Calendar create and manual import) built and live-tested by the owner in Production (mail arrived via Gmail, calendar import worked). Slack was built and removed again. Setup in `docs/integrations-setup.md`. Pushes on this day restarted the monitoring window. Privacy policy still needs a Google section (legal, after company formation); Google app verification is needed for users beyond the 100 unverified-user limit.
+- Done 2026-11-01: Maintenance mode (`MAINTENANCE_MODE`, `docs/maintenance-mode.md`) enabled in Production; all pages and `/api/**` return 503 except `/api/health`, `/api/cron/*` and the Stripe webhook.
+- Done 2026-11-03: Monitoring window closed without findings. `monitor:snapshot -- 24` (2026-11-02) and `-- 48` (2026-11-03): health 200, 0 error events, database reachable, 0 leftover test users. The only warning (`/login` 503) is the intended maintenance mode. Note: no real user traffic during the window (app locked), so it shows idle stability only. Overall status stays NO-GO (company formation, legal texts, Stripe Live, Google verification).
 
 ## Remaining Steps to Move NO-GO -> GO
 
