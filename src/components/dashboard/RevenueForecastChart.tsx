@@ -98,7 +98,9 @@ export default function RevenueForecastChart({
               stroke="var(--chart-muted)"
               tick={{ fill: "var(--chart-muted)", fontSize: 12 }}
               tickLine={false}
-              tickFormatter={(value) => `${Number(value / 1000).toLocaleString(locale)}k €`}
+              tickFormatter={(value) => language === "de"
+                ? `${Number(value / 1000).toLocaleString(locale)}k €`
+                : `€${value / 1000}k`}
             />
 
             <Tooltip
