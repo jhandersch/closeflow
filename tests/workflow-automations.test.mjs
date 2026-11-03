@@ -174,6 +174,11 @@ test("lead.status.update changes the status once and never re-triggers", async (
   assert.equal(leadUpdates[0].payload.status, "won");
   assert.ok(leadUpdates[0].filters.some(([c, v]) => c === "workspace_id" && v === "workspace-a"));
   assert.equal(supabase.calls.filter((c) => c.table === "automations").length, 1);
+  const timeline = supabase.calls.find(
+    (c) => c.table === "activities" && c.payload?.type === "status_changed",
+  );
+  assert.equal(timeline.payload.metadata.next_status, "won");
+  assert.equal(timeline.payload.metadata.trigger, "automation");
 });
 
 test("task.create on lead.created also records a notification activity", async () => {

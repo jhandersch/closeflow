@@ -121,6 +121,19 @@ async function runAction(
     if (error) throw error;
     if (!updated || updated.length === 0) return "skipped";
 
+    const previous = (lead as { status?: string }).status;
+    const { error: timelineError } = await supabase.from("activities").insert({
+      workspace_id: workspaceId,
+      lead_id: lead.id,
+      user_id: userId,
+      type: "status_changed",
+      action: `Status changed from ${previous ?? "unknown"} to ${status}`,
+      title: `Status changed from ${previous ?? "unknown"} to ${status}`,
+      description: `Lead moved from ${previous ?? "unknown"} to ${status} by automation "${automationName}"`.slice(0, 500),
+      metadata: { previous_status: previous ?? null, next_status: status, trigger: "automation" },
+    });
+    if (timelineError) console.error("Automation status activity failed:", timelineError.message);
+
     await recordNotice(
       supabase,
       userId,
