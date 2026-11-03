@@ -20,6 +20,7 @@ type ThemeOption = "dark" | "light";
 type NotificationSettings = {
   browser: boolean;
   email: boolean;
+  emailAlerts: boolean;
   taskReminders: boolean;
 };
 
@@ -120,9 +121,9 @@ export default function SettingsPage() {
     useState<NotificationSettings>({
       browser: true,
       email: true,
+      emailAlerts: false,
       taskReminders: true,
     });
-
   const [sessionCount, setSessionCount] = useState(1);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<string | null>(
@@ -287,6 +288,7 @@ export default function SettingsPage() {
       setNotifications({
         browser: metadata.notifications?.browser ?? true,
         email: metadata.notifications?.email ?? true,
+        emailAlerts: metadata.notifications?.emailAlerts === true,
         taskReminders: metadata.notifications?.taskReminders ?? true,
       });
 
@@ -1033,14 +1035,21 @@ export default function SettingsPage() {
             />
           </label>
 
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            {translateText("Email notifications")}<input
+          <label className="flex items-start justify-between gap-3 text-sm text-foreground/80">
+            <span>
+              {translateText("Email alerts from automations")}
+              <span className="mt-1 block text-xs text-foreground/50">
+                {translateText("CloseFlow sends alerts to your own address through your connected Gmail account. Requires Gmail access below. You can turn this off at any time.")}
+              </span>
+            </span>
+            <input
               type="checkbox"
-              checked={notifications.email}
+              className="mt-1"
+              checked={notifications.emailAlerts}
               onChange={(event) =>
                 setNotifications((current) => ({
                   ...current,
-                  email: event.target.checked,
+                  emailAlerts: event.target.checked,
                 }))
               }
             />

@@ -75,6 +75,14 @@ async function runAction(
       metadata: { automation: true },
     });
     if (error) throw error;
+
+    const leadName = (lead as { name?: string }).name || "";
+    // Loaded lazily so unit tests running outside Next do not need the Google/Supabase stack.
+    const alerts = await import("./emailAlerts").catch(() => null);
+    await alerts?.sendEmailAlert(userId, {
+      subject: `CloseFlow: ${automationName}`,
+      body: `${message}${leadName ? `\n\nLead: ${leadName}` : ""}\n\nhttps://www.closeflowapp.de/leads`,
+    });
     return "success";
   }
 
