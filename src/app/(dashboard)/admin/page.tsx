@@ -204,14 +204,8 @@ export default function AdminPage() {
 
                 {error ? (
                     <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                        <p>{error}</p>
-
-                        {error
-                            .toLowerCase()
-                            .includes(
-                                "two-factor authentication required",
-                            ) ? (
-                            <p className="mt-2">
+                        {/2fa|two-factor|zwei-faktor/i.test(error) ? (
+                            <p>
                                 {translateText("Enable 2FA first in")}{" "}
                                 <Link
                                     href="/settings#security"
@@ -220,7 +214,9 @@ export default function AdminPage() {
                                     {translateText("Settings -> Security")}</Link>
                                 .
                             </p>
-                        ) : null}
+                        ) : (
+                            <p>{error}</p>
+                        )}
                     </div>
                 ) : null}
 

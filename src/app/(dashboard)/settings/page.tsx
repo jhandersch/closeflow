@@ -1037,9 +1037,9 @@ export default function SettingsPage() {
 
           <label className="flex items-start justify-between gap-3 text-sm text-foreground/80">
             <span>
-              {translateText("Email alerts from automations")}
+              {translateText("Email notifications")}
               <span className="mt-1 block text-xs text-foreground/50">
-                {translateText("CloseFlow sends alerts to your own address through your connected Gmail account. Requires Gmail access below. You can turn this off at any time.")}
+                {translateText("I agree that CloseFlow sends my notifications (for example leads without activity) by email to my account address. You can withdraw this at any time.")}
               </span>
             </span>
             <input

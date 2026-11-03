@@ -872,8 +872,8 @@ export const germanTextTranslations: Record<string, string> = {
   'Email logged: "{subject}"': "E-Mail gespeichert: „{subject}“",
   "Email notifications": "E-Mail-Benachrichtigungen",
   "Email alerts from automations": "E-Mail-Hinweise aus Automationen",
-  "CloseFlow sends alerts to your own address through your connected Gmail account. Requires Gmail access below. You can turn this off at any time.":
-    "CloseFlow sendet Hinweise über dein verbundenes Gmail-Konto an deine eigene Adresse. Dafür ist der Gmail-Zugriff weiter unten nötig. Du kannst das jederzeit ausschalten.",
+  "I agree that CloseFlow sends my notifications (for example leads without activity) by email to my account address. You can withdraw this at any time.":
+    "Ich bin damit einverstanden, dass CloseFlow mir meine Benachrichtigungen (zum Beispiel Leads ohne Aktivität) per E-Mail an meine Konto-Adresse sendet. Du kannst das jederzeit widerrufen.",
   "Email sent": "E-Mail gesendet",
   "Email text is required.": "Der E-Mail-Text ist erforderlich.",
   "Email:": "E-Mail:",

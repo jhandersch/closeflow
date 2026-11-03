@@ -1,32 +1,34 @@
+import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "./supabase/admin";
-import { GOOGLE_SCOPES, sendGmail } from "./integrations/google";
-import { getGoogleAccessForUser } from "./integrations/store";
+import { sendNotificationEmail } from "./email";
+import { normalizeLanguage } from "./i18n";
 
-type AlertInput = { subject: string; body: string };
+export const hasEmailConsent = (user: User) =>
+  (user.user_metadata?.notifications as { emailAlerts?: unknown } | undefined)?.emailAlerts === true;
+
+export const publicBaseUrl = () => {
+  const configured = (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
+  return configured && !/localhost|127\.0\.0\.1/i.test(configured)
+    ? configured
+    : "https://www.closeflowapp.de";
+};
 
 /*
- * Sends an alert to the user's own address through the user's own Gmail
- * connection. Only runs if the user opted in (notifications.emailAlerts)
- * and granted the gmail.send scope. Never throws: an alert must not break
- * the automation that triggered it.
+ * Emails a notification to the user's own account address, but only if the
+ * user consented (user_metadata.notifications.emailAlerts). Never throws:
+ * an email problem must not break the automation that triggered it.
  */
-export async function sendEmailAlert(userId: string, input: AlertInput) {
+export async function sendEmailAlert(userId: string, item: { title: string; message: string }) {
   try {
     const { data, error } = await createAdminClient().auth.admin.getUserById(userId);
-    if (error || !data.user?.email) return "skipped";
+    const user = data?.user;
+    if (error || !user?.email || !hasEmailConsent(user)) return "skipped";
 
-    const notifications = data.user.user_metadata?.notifications as
-      | { emailAlerts?: unknown }
-      | undefined;
-    if (notifications?.emailAlerts !== true) return "skipped";
-
-    const accessToken = await getGoogleAccessForUser(userId, GOOGLE_SCOPES.gmail);
-    if (!accessToken) return "skipped";
-
-    await sendGmail(accessToken, {
-      to: data.user.email,
-      subject: input.subject.slice(0, 200),
-      body: input.body.slice(0, 2000),
+    await sendNotificationEmail({
+      to: user.email,
+      items: [item],
+      language: normalizeLanguage(user.user_metadata?.language),
+      baseUrl: publicBaseUrl(),
     });
     return "sent";
   } catch (alertError) {

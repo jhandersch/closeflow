@@ -102,6 +102,43 @@ export const buildInviteEmail = (
     };
 };
 
+export const buildNotificationEmail = (
+    language: EmailLanguage,
+    params: { items: { title: string; message: string }[]; appUrl: string },
+): { subject: string; html: string } => {
+    const list = params.items
+        .slice(0, 15)
+        .map((item) => `<strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.message)}`);
+    const more = params.items.length - list.length;
+    const url = escapeHtml(params.appUrl);
+    const optOut =
+        language === "de"
+            ? "Du erhältst diese E-Mail, weil du E-Mail-Benachrichtigungen aktiviert hast. Du kannst das jederzeit unter Einstellungen → Benachrichtigungen ausschalten."
+            : "You receive this email because you turned on email notifications. You can turn them off any time under Settings → Notifications.";
+    if (language === "de") {
+        return {
+            subject: params.items.length === 1 ? "CloseFlow: 1 neue Benachrichtigung" : `CloseFlow: ${params.items.length} neue Benachrichtigungen`,
+            html: renderEmailHtml("de", {
+                title: "Neue Benachrichtigungen",
+                paragraphs: more > 0 ? [...list, `… und ${more} weitere`] : list,
+                cta: { label: "CloseFlow öffnen", url },
+                note: optOut,
+                footer: footers.de,
+            }),
+        };
+    }
+    return {
+        subject: params.items.length === 1 ? "CloseFlow: 1 new notification" : `CloseFlow: ${params.items.length} new notifications`,
+        html: renderEmailHtml("en", {
+            title: "New notifications",
+            paragraphs: more > 0 ? [...list, `… and ${more} more`] : list,
+            cta: { label: "Open CloseFlow", url },
+            note: optOut,
+            footer: footers.en,
+        }),
+    };
+};
+
 type AuthTemplateKind = "confirmation" | "invite" | "recovery" | "magic_link" | "email_change";
 
 // Supabase Auth templates are rendered by Go templates; the language comes from user_metadata.language.

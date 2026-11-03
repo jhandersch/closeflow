@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
-type Notification = {
-    id: string;
-    title: string;
-    message: string;
-    level: "info" | "warning" | "critical";
-    leadId: string;
-    createdAt: string;
-};
+import { buildIdleLeadNotifications } from "@/lib/leadNotifications";
+
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -24,43 +18,12 @@ export async function GET(request: Request) {
         .eq("id", user.id)
         .maybeSingle();
     const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
-    const [{ data: leads, error: leadsError }, { data: activities, error: activitiesError }] = await Promise.all([
-        supabase.from("leads").select("id, name, company, created_at, stage_changed_at").eq("workspace_id", workspace.id).is("deleted_at", null).in("status", ["new", "contacted", "proposal"]),
-        supabase.from("activities").select("lead_id, created_at").eq("workspace_id", workspace.id),
-    ]);
-    if (leadsError) {
-        return NextResponse.json({ error: leadsError.message }, { status: 500 });
+    try {
+        const notifications = await buildIdleLeadNotifications(supabase, workspace.id, language === "de" ? "de" : "en");
+        return NextResponse.json(notifications);
     }
-    if (activitiesError) {
-        return NextResponse.json({ error: activitiesError.message }, { status: 500 });
+    catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : "Could not load notifications";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
-    const latestActivityByLead = new Map<string, string>();
-    for (const activity of activities || []) {
-        const current = latestActivityByLead.get(activity.lead_id);
-        if (!current || new Date(activity.created_at).getTime() > new Date(current).getTime()) {
-            latestActivityByLead.set(activity.lead_id, activity.created_at);
-        }
-    }
-    const notifications: Notification[] = (leads || [])
-        .map((lead) => {
-        const latest = latestActivityByLead.get(lead.id) || lead.stage_changed_at || lead.created_at;
-        const idleDays = Math.floor((Date.now() - new Date(latest).getTime()) / (1000 * 60 * 60 * 24));
-        if (idleDays < 7) {
-            return null;
-        }
-        return {
-            id: lead.id,
-            title: language === "de"
-                ? `Lead ${lead.name || lead.company || "Unbekannt"} benötigt Aufmerksamkeit`
-                : `Lead ${lead.name || lead.company || "Unknown"} needs attention`,
-            message: language === "de"
-                ? `Seit ${idleDays} Tagen ohne Aktivität`
-                : `${idleDays} days without activity`,
-            level: idleDays >= 14 ? "critical" : "warning",
-            leadId: lead.id,
-            createdAt: new Date().toISOString(),
-        };
-    })
-        .filter(Boolean) as Notification[];
-    return NextResponse.json(notifications);
 }
