@@ -134,3 +134,35 @@ test("duplicate workflow claims remain idempotently skipped", async () => {
     0,
   );
 });
+
+test("task.create on lead.created also records a notification activity", async () => {
+  const supabase = makeSupabase((table) => {
+    if (table === "automations") {
+      return {
+        data: [{
+          id: "automation-a",
+          name: "New lead follow-up",
+          actions: [{ type: "task.create", payload: { title: "Call lead" } }],
+        }],
+        error: null,
+      };
+    }
+    return { data: table === "tasks" ? [] : null, error: null };
+  });
+
+  const results = await runWorkflowAutomations(
+    supabase,
+    "user-a",
+    "workspace-a",
+    { id: "lead-a", name: "Acme" },
+    "lead.created",
+  );
+
+  assert.deepEqual(results, [{ automationId: "automation-a", status: "success" }]);
+  const notice = supabase.calls.find(
+    (call) => call.table === "activities" && call.operation === "insert",
+  );
+  assert.equal(notice.payload.action, "automation_notice");
+  assert.equal(notice.payload.description, "Task created: Call lead");
+  assert.equal(notice.payload.workspace_id, "workspace-a");
+});

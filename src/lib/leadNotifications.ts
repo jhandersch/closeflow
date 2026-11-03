@@ -9,6 +9,44 @@ export type LeadNotification = {
   createdAt: string;
 };
 
+/* Automation events of the last 14 days, shown as info notifications. */
+export async function buildAutomationNotifications(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  language: "de" | "en",
+): Promise<LeadNotification[]> {
+  const since = new Date(Date.now() - 14 * 86400000).toISOString();
+  const { data, error } = await supabase
+    .from("activities")
+    .select("id, lead_id, title, description, created_at")
+    .eq("workspace_id", workspaceId)
+    .eq("action", "automation_notice")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+
+  return (data || []).map((row) => {
+    const description = row.description || "";
+    const taskTitle = description.startsWith("Task created: ")
+      ? description.slice("Task created: ".length)
+      : null;
+    return {
+      id: `automation-${row.id}`,
+      title: row.title || "Automation",
+      message:
+        taskTitle !== null
+          ? language === "de"
+            ? `Aufgabe erstellt: ${taskTitle}`
+            : description
+          : description,
+      level: "info" as const,
+      leadId: row.lead_id || "",
+      createdAt: row.created_at,
+    };
+  });
+}
+
 /*
  * Leads without activity for 7+ days (14+ = critical). Shared by the
  * notifications tab and the email digest so both always show the same items.

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
-import { buildIdleLeadNotifications } from "@/lib/leadNotifications";
+import { buildAutomationNotifications, buildIdleLeadNotifications } from "@/lib/leadNotifications";
 
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
@@ -19,8 +19,12 @@ export async function GET(request: Request) {
         .maybeSingle();
     const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
     try {
-        const notifications = await buildIdleLeadNotifications(supabase, workspace.id, language === "de" ? "de" : "en");
-        return NextResponse.json(notifications);
+        const lang = language === "de" ? "de" : "en";
+        const [idle, automation] = await Promise.all([
+            buildIdleLeadNotifications(supabase, workspace.id, lang),
+            buildAutomationNotifications(supabase, workspace.id, lang),
+        ]);
+        return NextResponse.json([...idle, ...automation]);
     }
     catch (loadError) {
         const message = loadError instanceof Error ? loadError.message : "Could not load notifications";

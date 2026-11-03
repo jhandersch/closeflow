@@ -19,6 +19,39 @@ const text = (value: unknown, max: number) =>
 export const workflowEventForStatus = (status: string) =>
   `lead.stage.${status}`;
 
+/*
+ * Records an automation event as an activity. The notifications tab shows
+ * these, and the user gets an email if they consented to email notifications.
+ */
+async function recordNotice(
+  supabase: SupabaseClient,
+  userId: string,
+  workspaceId: string,
+  lead: Lead,
+  automationName: string,
+  message: string
+) {
+  const { error } = await supabase.from("activities").insert({
+    workspace_id: workspaceId,
+    lead_id: lead.id,
+    user_id: userId,
+    type: "other",
+    action: "automation_notice",
+    title: `Automation: ${automationName}`.slice(0, 200),
+    description: message,
+    metadata: { automation: true },
+  });
+  if (error) throw error;
+
+  const leadName = (lead as { name?: string }).name || "";
+  // Loaded lazily so unit tests outside Next do not need the email/Supabase stack.
+  const alerts = await import("./emailAlerts").catch(() => null);
+  await alerts?.sendEmailAlert(userId, {
+    title: `Automation: ${automationName}`,
+    message: leadName ? `${message} (${leadName})` : message,
+  });
+}
+
 async function runAction(
   supabase: SupabaseClient,
   userId: string,
@@ -57,6 +90,8 @@ async function runAction(
       completed: false,
     });
     if (error) throw error;
+
+    await recordNotice(supabase, userId, workspaceId, lead, automationName, `Task created: ${title}`);
     return "success";
   }
 
@@ -64,25 +99,7 @@ async function runAction(
     const message = text(payload.message, 500);
     if (!message) return "skipped";
 
-    const { error } = await supabase.from("activities").insert({
-      workspace_id: workspaceId,
-      lead_id: lead.id,
-      user_id: userId,
-      type: "other",
-      action: "automation_notice",
-      title: `Automation: ${automationName}`.slice(0, 200),
-      description: message,
-      metadata: { automation: true },
-    });
-    if (error) throw error;
-
-    const leadName = (lead as { name?: string }).name || "";
-    // Loaded lazily so unit tests outside Next do not need the email/Supabase stack.
-    const alerts = await import("./emailAlerts").catch(() => null);
-    await alerts?.sendEmailAlert(userId, {
-      title: `Automation: ${automationName}`,
-      message: leadName ? `${message} (${leadName})` : message,
-    });
+    await recordNotice(supabase, userId, workspaceId, lead, automationName, message);
     return "success";
   }
 
