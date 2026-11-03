@@ -1,16 +1,18 @@
 "use client";
-import { translateText } from "@/lib/i18n";
+import { formatEuro, translateText } from "@/lib/i18n";
 
 
 import Link from "next/link";
 import { useState } from "react";
 import PlanDetailsModal from "@/components/billing/PlanDetailsModal";
+import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { LogoMark } from "@/components/Logo";
 import { planDetails, type Plan } from "@/lib/planDetails";
 
 const plans = [planDetails.free, planDetails.pro, planDetails.business];
 
 export default function PricingPage() {
+  const { language } = useAppPreferences();
   const [detailsPlan, setDetailsPlan] = useState<Plan | null>(null);
 
   return (
@@ -45,7 +47,7 @@ export default function PricingPage() {
                       {translateText(plan.name)}
                     </h2>
                     <p className="mt-2 text-3xl font-bold text-foreground">
-                      {plan.price.replace(/\/month$/, "")}
+                      {formatEuro(Number(plan.price.match(/\d+(?:\.\d+)?/)?.[0] ?? 0), language, { maximumFractionDigits: 0 })}
                       {plan.id !== "free" && (
                         <span className="text-sm font-normal text-foreground/50"> {" "}{translateText("/ month per workspace")}</span>
                       )}
