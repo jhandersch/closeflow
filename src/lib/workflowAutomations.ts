@@ -13,6 +13,8 @@ export const SUPPORTED_WORKFLOW_TRIGGERS = [
   "lead.stage.lost",
 ] as const;
 
+const LEAD_STATUSES = ["new", "contacted", "proposal", "won", "lost"];
+
 const text = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
 
@@ -103,7 +105,33 @@ async function runAction(
     return "success";
   }
 
-  // lead.status.update is intentionally not executed to avoid trigger loops.
+  if (action.type === "lead.status.update") {
+    const status = text(payload.status, 20).toLowerCase();
+    if (!LEAD_STATUSES.includes(status)) return "skipped";
+
+    // Direct update: no follow-up triggers fire, so automations cannot loop.
+    const { data: updated, error } = await supabase
+      .from("leads")
+      .update({ status, stage_changed_at: new Date().toISOString() })
+      .eq("id", lead.id)
+      .eq("workspace_id", workspaceId)
+      .neq("status", status)
+      .is("deleted_at", null)
+      .select("id");
+    if (error) throw error;
+    if (!updated || updated.length === 0) return "skipped";
+
+    await recordNotice(
+      supabase,
+      userId,
+      workspaceId,
+      lead,
+      automationName,
+      `Status changed to ${status}`
+    );
+    return "success";
+  }
+
   return "unsupported";
 }
 

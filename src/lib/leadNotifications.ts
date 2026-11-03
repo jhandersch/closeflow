@@ -31,15 +31,21 @@ export async function buildAutomationNotifications(
     const taskTitle = description.startsWith("Task created: ")
       ? description.slice("Task created: ".length)
       : null;
+    const newStatus = description.startsWith("Status changed to ")
+      ? description.slice("Status changed to ".length)
+      : null;
+    const statusDe: Record<string, string> = {
+      new: "Neu", contacted: "Kontaktiert", proposal: "Angebot", won: "Gewonnen", lost: "Verloren",
+    };
     return {
       id: `automation-${row.id}`,
       title: row.title || "Automation",
       message:
-        taskTitle !== null
-          ? language === "de"
-            ? `Aufgabe erstellt: ${taskTitle}`
-            : description
-          : description,
+        language === "de" && taskTitle !== null
+          ? `Aufgabe erstellt: ${taskTitle}`
+          : language === "de" && newStatus !== null
+            ? `Status geändert auf ${statusDe[newStatus] ?? newStatus}`
+            : description,
       level: "info" as const,
       leadId: row.lead_id || "",
       createdAt: row.created_at,

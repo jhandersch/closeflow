@@ -635,6 +635,22 @@ export default function AutomationsPage() {
                               )}
                             </select>
 
+                            {fieldKey === "status" ? (
+                              <select
+                                value={fieldValue}
+                                onChange={(event) =>
+                                  updateAction(index, fieldKey, event.target.value)
+                                }
+                                className="w-full rounded-lg border border-border-subtle bg-surface-1 px-3 py-2 text-sm text-foreground outline-none focus:border-cyan-500/40"
+                              >
+                                <option value="">{translateText("Select status...")}</option>
+                                {["new", "contacted", "proposal", "won", "lost"].map((status) => (
+                                  <option key={status} value={status}>
+                                    {translateText(status.charAt(0).toUpperCase() + status.slice(1))}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
                             <input
                               value={fieldValue}
                               onChange={(event) =>
@@ -648,13 +664,11 @@ export default function AutomationsPage() {
                                 fieldKey ===
                                 "title"
                                   ? "Task title..."
-                                  : fieldKey ===
-                                      "message"
-                                    ? "Notification text..."
-                                    : "Status value..."
+                                  : "Notification text..."
                               }
                               className="w-full rounded-lg border border-border-subtle bg-surface-1 px-3 py-2 text-sm text-foreground outline-none focus:border-cyan-500/40"
                             />
+                            )}
                           </div>
 
                           {bActions.length >

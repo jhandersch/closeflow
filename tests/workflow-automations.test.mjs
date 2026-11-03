@@ -29,6 +29,12 @@ const makeSupabase = (responses) => {
           call.filters.push([column, value]);
           return builder;
         },
+        neq() {
+          return builder;
+        },
+        is() {
+          return builder;
+        },
         limit() {
           return builder;
         },
@@ -133,6 +139,41 @@ test("duplicate workflow claims remain idempotently skipped", async () => {
     ).length,
     0,
   );
+});
+
+test("lead.status.update changes the status once and never re-triggers", async () => {
+  const supabase = makeSupabase((table, call) => {
+    if (table === "automations") {
+      return {
+        data: [{
+          id: "automation-a",
+          name: "Auto close",
+          actions: [
+            { type: "lead.status.update", payload: { status: "won" } },
+            { type: "lead.status.update", payload: { status: "bogus" } },
+          ],
+        }],
+        error: null,
+      };
+    }
+    if (table === "leads") return { data: [{ id: "lead-a" }], error: null };
+    return { data: null, error: null };
+  });
+
+  const results = await runWorkflowAutomations(
+    supabase,
+    "user-a",
+    "workspace-a",
+    { id: "lead-a", name: "Acme", status: "new" },
+    "lead.created",
+  );
+
+  assert.deepEqual(results, [{ automationId: "automation-a", status: "success" }]);
+  const leadUpdates = supabase.calls.filter((c) => c.table === "leads" && c.payload?.status);
+  assert.equal(leadUpdates.length, 1);
+  assert.equal(leadUpdates[0].payload.status, "won");
+  assert.ok(leadUpdates[0].filters.some(([c, v]) => c === "workspace_id" && v === "workspace-a"));
+  assert.equal(supabase.calls.filter((c) => c.table === "automations").length, 1);
 });
 
 test("task.create on lead.created also records a notification activity", async () => {

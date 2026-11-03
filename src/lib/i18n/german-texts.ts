@@ -872,6 +872,7 @@ export const germanTextTranslations: Record<string, string> = {
   'Email logged: "{subject}"': "E-Mail gespeichert: „{subject}“",
   "Email notifications": "E-Mail-Benachrichtigungen",
   "Email alerts from automations": "E-Mail-Hinweise aus Automationen",
+  "Select status...": "Status wählen ...",
   "I agree that CloseFlow sends my notifications (for example leads without activity) by email to my account address. You can withdraw this at any time.":
     "Ich bin damit einverstanden, dass CloseFlow mir meine Benachrichtigungen (zum Beispiel Leads ohne Aktivität) per E-Mail an meine Konto-Adresse sendet. Du kannst das jederzeit widerrufen.",
   "Email sent": "E-Mail gesendet",
