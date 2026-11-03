@@ -5,7 +5,9 @@ const MIN_SECRET_LENGTH = 24;
 export const isMaintenanceEnabled = (value: string | undefined) =>
   ["on", "1", "true", "yes"].includes((value ?? "").trim().toLowerCase());
 
-export const isUsableBypassSecret = (secret: string | undefined): secret is string =>
+export const isUsableBypassSecret = (
+  secret: string | undefined,
+): secret is string =>
   typeof secret === "string" && secret.length >= MIN_SECRET_LENGTH;
 
 /** Only these stay reachable: health monitoring, secret-protected cron and signed Stripe webhooks. */
@@ -20,7 +22,9 @@ export async function bypassToken(secret: string) {
     "SHA-256",
     new TextEncoder().encode(`closeflow-maintenance:${secret}`),
   );
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
 }
 
 export function tokensMatch(left: string, right: string) {
@@ -39,7 +43,8 @@ export async function hasBypass(
   if (!isUsableBypassSecret(secret)) return false;
   const expected = await bypassToken(secret);
   if (input.cookie && tokensMatch(input.cookie, expected)) return true;
-  if (input.header && tokensMatch(await bypassToken(input.header), expected)) return true;
+  if (input.header && tokensMatch(await bypassToken(input.header), expected))
+    return true;
   return false;
 }
 
@@ -70,7 +75,7 @@ p{line-height:1.6;color:#aab3c7;margin:8px 0}
 <body>
 <main>
 <h1>CloseFlow ist in Arbeit</h1>
-<p>Wir überarbeiten CloseFlow gerade und sind bald wieder für dich da. Anmeldung und Registrierung sind in dieser Zeit nicht verfügbar.</p>
+<p>Wir überarbeiten CloseFlow gerade und sind bald wieder für Sie da. Anmeldung und Registrierung sind in dieser Zeit nicht verfügbar.</p>
 <p class="en">CloseFlow is currently under construction. Sign-in and sign-up are temporarily unavailable. We will be back soon.</p>
 </main>
 </body>
