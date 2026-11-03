@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
+import SiteFooter from "@/components/SiteFooter";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import {
     ArrowRight,
@@ -189,6 +190,7 @@ export default function OnboardingPage() {
     }
 
     return (
+        <>
         <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
             <div className="mx-auto max-w-6xl">
                 <header className="rounded-3xl border border-border-subtle bg-surface-1 p-6 sm:p-8">
@@ -224,6 +226,7 @@ export default function OnboardingPage() {
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300"><Building2 className="h-5 w-5" /></div>
                                     <h2 id="step-title" className="mt-4 text-2xl font-semibold">{translateText("Your workspace")}</h2>
                                     <p className="mt-2 text-sm leading-6 text-foreground/65">{translateText("Use these details to set up your CRM. You can update them later in Settings.")}</p>
+                                    <p className="mt-2 text-xs text-foreground/55"><span className="text-cyan-300">*</span>{" "}{translateText("Required field")}</p>
                                 </div>
                                 <label className="block text-sm">
                                     <span className="mb-2 block font-medium">{translateText("Company or workspace name")}{" "}<span className="text-cyan-300">*</span></span>
@@ -231,7 +234,7 @@ export default function OnboardingPage() {
                                 </label>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <label className="block text-sm">
-                                        <span className="mb-2 block font-medium">{translateText("Industry")}{" "}<span className="text-foreground/40">{translateText("(optional)")}</span></span>
+                                        <span className="mb-2 block font-medium">{translateText("Industry")}</span>
                                         <select value={industry} onChange={(event) => setIndustry(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60">
                                             <option value="">{translateText("Choose an industry")}</option>
                                             <option value="Technology">{translateText("Technology")}</option><option value="Consulting">{translateText("Consulting")}</option><option value="Marketing">{translateText("Marketing")}</option><option value="Finance">{translateText("Finance")}</option><option value="Real estate">{translateText("Real estate")}</option><option value="Healthcare">{translateText("Healthcare")}</option><option value="Education">{translateText("Education")}</option><option value="Other">{translateText("Other")}</option>
@@ -268,13 +271,13 @@ export default function OnboardingPage() {
                                 </div>
                                 {quickStartMode === "lead" ? (
                                     <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-2/60 p-5">
-                                        <div><h3 className="font-medium">{translateText("First lead details")}</h3><p className="mt-1 text-xs text-foreground/55">{translateText("You can add more details and log activities later.")}</p></div>
+                                        <div><h3 className="font-medium">{translateText("First lead details")}</h3><p className="mt-1 text-xs text-foreground/55">{translateText("You can add more details and log activities later.")}</p><p className="mt-1 text-xs text-foreground/55"><span className="text-cyan-300">*</span>{" "}{translateText("Required field")}</p></div>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <label className="text-sm"><span className="mb-2 block">{translateText("Contact name")}{" "}<span className="text-cyan-300">*</span></span><input autoFocus value={leadName} onChange={(event) => setLeadName(event.target.value)} maxLength={120} autoComplete="name" placeholder={translateText("Jordan Lee")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                             <label className="text-sm"><span className="mb-2 block">{translateText("Company")}{" "}<span className="text-cyan-300">*</span></span><input value={leadCompany} onChange={(event) => setLeadCompany(event.target.value)} maxLength={120} autoComplete="organization" placeholder={translateText("Northstar")} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                         </div>
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            <label className="text-sm"><span className="mb-2 block">{translateText("Estimated deal value")}{" "}<span className="text-foreground/40">{translateText("(optional)")}</span></span><input type="number" min="0" step="0.01" inputMode="decimal" value={leadValue} onChange={(event) => setLeadValue(event.target.value)} placeholder="12000" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
+                                            <label className="text-sm"><span className="mb-2 block">{translateText("Estimated deal value")}</span><input type="number" min="0" step="0.01" inputMode="decimal" value={leadValue} onChange={(event) => setLeadValue(event.target.value)} placeholder="12000" className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60" /></label>
                                             <label className="text-sm"><span className="mb-2 block">{translateText("Pipeline stage")}</span><select value={leadStatus} onChange={(event) => setLeadStatus(event.target.value)} className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 outline-none focus:border-cyan-400/60"><option value="new">{translateText("New")}</option><option value="contacted">{translateText("Contacted")}</option><option value="proposal">{translateText("Proposal")}</option><option value="won">{translateText("Won")}</option></select></label>
                                         </div>
                                     </div>
@@ -317,5 +320,7 @@ export default function OnboardingPage() {
                 <footer className="mx-auto mt-6 max-w-6xl text-center text-xs text-foreground/40">{translateText("Already started? Your setup draft stays on this device until you finish.")}</footer>
             </div>
         </main>
+        <SiteFooter />
+        </>
     );
 }

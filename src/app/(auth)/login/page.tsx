@@ -6,6 +6,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import SiteFooter from "@/components/SiteFooter";
 import { translateText } from "@/lib/i18n";
 
 const sanitizeNextPath = (nextPath: string | null) => {
@@ -765,7 +766,8 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground sm:px-6">
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
+            <div className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
             <div className="w-full max-w-md rounded-3xl border border-border-subtle bg-surface-1 p-6 shadow-[0_0_0_1px_color-mix(in_oklab,var(--foreground)_8%,transparent)] sm:p-8">
                 <Logo size={40} className="mb-5" wordmarkClassName="text-xl font-semibold tracking-tight" />
 
@@ -1160,6 +1162,8 @@ export default function LoginPage() {
                     ) : null}
                 </div>
             </div>
+            </div>
+            <SiteFooter />
         </div>
     );
 }

@@ -2,6 +2,7 @@
 import { formatEuro, translatePlanName, translateText } from "@/lib/i18n";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import Link from "next/link";
+import SiteFooter from "@/components/SiteFooter";
 import Logo, { LogoMark } from "@/components/Logo";
 import {
   ArrowDown,
@@ -54,7 +55,7 @@ const exampleDeals = [
 ];
 
 export default function HomePage() {
-  const { language, setLanguage, theme, setTheme } = useAppPreferences();
+  const { language } = useAppPreferences();
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -184,24 +185,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-border-subtle">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-7 text-xs text-foreground/45 sm:px-8 md:flex-row md:flex-wrap md:items-center md:justify-between lg:flex-nowrap lg:px-10">
-          <div className="flex items-center gap-2"><LogoMark size={28} /><span>{translateText("© 2026 CloseFlow")}</span></div>
-          <div className="flex items-center gap-3">
-            <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
-            <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400">
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-            </select>
-            <label className="sr-only" htmlFor="landing-theme">{language === "de" ? "Darstellung" : "Theme"}</label>
-            <select id="landing-theme" aria-label={language === "de" ? "Darstellung" : "Theme"} value={theme} onChange={(event) => setTheme(event.target.value === "light" ? "light" : "dark")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400">
-              <option value="light">{language === "de" ? "Hell" : "Light"}</option>
-              <option value="dark">{language === "de" ? "Dunkel" : "Dark"}</option>
-            </select>
-          </div>
-          <nav aria-label={translateText("Footer navigation")} className="flex flex-wrap gap-x-4 gap-y-2 whitespace-nowrap"><Link href="/pricing" className="transition hover:text-foreground">{translateText("Pricing")}</Link><Link href="/login" className="transition hover:text-foreground">{translateText("Log in")}</Link><Link href="/impressum" className="transition hover:text-foreground">{translateText("Impressum")}</Link><Link href="/datenschutz" className="transition hover:text-foreground">{translateText("Datenschutz")}</Link><Link href="/cookies" className="transition hover:text-foreground">{translateText("Cookies")}</Link><Link href="/agb" className="transition hover:text-foreground">{translateText("AGB")}</Link></nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

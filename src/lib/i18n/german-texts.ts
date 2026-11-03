@@ -139,6 +139,8 @@ export const germanTextTranslations: Record<string, string> = {
     "Für den Vertriebs-Copilot ist ein Arbeitsbereich erforderlich.",
   "Could not load integrations.":
     "Die Integrationen konnten nicht geladen werden.",
+  "Required field":
+    "Pflichtfeld",
   "Invalid login credentials":
     "E-Mail oder Passwort ist falsch.",
   "Email not confirmed":
