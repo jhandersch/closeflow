@@ -10,6 +10,7 @@ import {
   useNotifications,
   type NotificationItem,
 } from "@/hooks/useNotifications";
+import { markNotificationsSeen } from "@/lib/notificationSeen";
 
 type LevelFilter = "all" | "critical" | "warning" | "info";
 
@@ -170,6 +171,14 @@ export default function NotificationsPage() {
 
   const { notifications, loading, refresh } = useNotifications();
   const [filter, setFilter] = useState<LevelFilter>("all");
+
+  // Opening the page counts as reading: clears the sidebar badge.
+  useEffect(() => {
+    if (loading) return;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user) markNotificationsSeen(data.user.id, notifications);
+    });
+  }, [loading, notifications]);
 
   useEffect(() => {
     let cancelled = false;

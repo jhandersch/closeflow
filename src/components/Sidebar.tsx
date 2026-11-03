@@ -10,11 +10,19 @@ import { useSidebar } from "@/components/SidebarContext";
 import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/lib/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
+import { countUnseenNotifications, onNotificationsSeen } from "@/lib/notificationSeen";
 function useNotificationCount(pathname: string) {
     const [count, setCount] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
+        let latest: { userId: string; items: Array<{ id: string; level: string }> } | null = null;
+
+        const recount = () => {
+            if (!cancelled && latest) {
+                setCount(countUnseenNotifications(latest.userId, latest.items));
+            }
+        };
 
         const load = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -32,13 +40,15 @@ function useNotificationCount(pathname: string) {
             }
 
             const data = (await response.json()) as Array<{
+                id: string;
                 level: string;
             }>;
 
-            if (!cancelled) {
-                setCount(Array.isArray(data) ? data.length : 0);
-            }
+            latest = { userId: user.id, items: Array.isArray(data) ? data : [] };
+            recount();
         };
+
+        const stopSeen = onNotificationsSeen(recount);
 
         const refreshOnFocus = () => {
             void load();
@@ -64,6 +74,7 @@ function useNotificationCount(pathname: string) {
 
         return () => {
             cancelled = true;
+            stopSeen();
             window.removeEventListener("focus", refreshOnFocus);
             document.removeEventListener(
                 "visibilitychange",

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
 import { buildAutomationNotifications, buildIdleLeadNotifications } from "@/lib/leadNotifications";
+import { runTimeBasedAutomationsForWorkspace } from "@/lib/timeBasedAutomations";
 
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
@@ -19,6 +20,11 @@ export async function GET(request: Request) {
         .maybeSingle();
     const language = normalizeLanguage(profile?.language ?? user.user_metadata?.language);
     try {
+        // Time-based triggers (overdue, idle) also run while the user is active.
+        // Failures here must never hide the notification list.
+        await runTimeBasedAutomationsForWorkspace(supabase, workspace.id, user.id).catch((runError) => {
+            console.error("On-demand automations failed:", runError instanceof Error ? runError.message : runError);
+        });
         const lang = language === "de" ? "de" : "en";
         const [idle, automation] = await Promise.all([
             buildIdleLeadNotifications(supabase, workspace.id, lang),

@@ -1,28 +1,18 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { runWorkflowAutomations } from "@/lib/workflowAutomations";
-import type { Lead } from "@/types";
+import { TIME_BASED_EVENTS, runTimeBasedEvent } from "@/lib/timeBasedAutomations";
 
 export const maxDuration = 60;
-
-const IDLE_EVENTS: Record<string, number> = {
-  "lead.idle_7d": 7,
-  "lead.idle_14d": 14,
-};
-const BATCH_LIMIT = 200;
 
 const isAuthorized = (request: Request) => {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
 
-  const header = request.headers.get("authorization") || "";
   const expected = Buffer.from(`Bearer ${secret}`);
-  const actual = Buffer.from(header);
+  const actual = Buffer.from(request.headers.get("authorization") || "");
 
-  return (
-    actual.length === expected.length && timingSafeEqual(actual, expected)
-  );
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
 };
 
 /*
@@ -42,7 +32,7 @@ export async function GET(request: Request) {
     .from("automations")
     .select("id, workspace_id, trigger_event")
     .eq("enabled", true)
-    .in("trigger_event", [...Object.keys(IDLE_EVENTS), "task.overdue"]);
+    .in("trigger_event", TIME_BASED_EVENTS);
 
   if (error) {
     console.error("Cron automation load failed:", error);
@@ -55,73 +45,11 @@ export async function GET(request: Request) {
   }
   summary.automations = automations?.length || 0;
 
-  const today = new Date().toISOString().slice(0, 10);
-
   for (const pair of pairs) {
     const [workspaceId, event] = pair.split("|");
 
     try {
-      if (event in IDLE_EVENTS) {
-        const cutoff = new Date(
-          Date.now() - IDLE_EVENTS[event] * 86400000
-        ).toISOString();
-
-        const { data: leads, error: leadsError } = await admin
-          .from("leads")
-          .select("*")
-          .eq("workspace_id", workspaceId)
-          .in("status", ["new", "contacted", "proposal"])
-          .is("deleted_at", null)
-          .lt("last_activity_at", cutoff)
-          .limit(BATCH_LIMIT);
-        if (leadsError) throw leadsError;
-
-        for (const lead of leads || []) {
-          const results = await runWorkflowAutomations(
-            admin,
-            lead.user_id,
-            workspaceId,
-            lead as Lead,
-            event,
-            { dedupeKey: `${event}:${lead.id}:${lead.last_activity_at}` }
-          );
-          summary.runs += results.length;
-        }
-      } else if (event === "task.overdue") {
-        const { data: tasks, error: tasksError } = await admin
-          .from("tasks")
-          .select("id, user_id, lead_id, due_date")
-          .eq("workspace_id", workspaceId)
-          .eq("completed", false)
-          .is("deleted_at", null)
-          .not("lead_id", "is", null)
-          .lt("due_date", today)
-          .limit(BATCH_LIMIT);
-        if (tasksError) throw tasksError;
-
-        for (const task of tasks || []) {
-          const { data: lead, error: leadError } = await admin
-            .from("leads")
-            .select("*")
-            .eq("id", task.lead_id)
-            .eq("workspace_id", workspaceId)
-            .is("deleted_at", null)
-            .maybeSingle();
-          if (leadError) throw leadError;
-
-          if (!lead) continue;
-
-          const results = await runWorkflowAutomations(
-            admin,
-            task.user_id || lead.user_id,
-            workspaceId,
-            lead as Lead,
-            event,
-            { dedupeKey: `${event}:${task.id}:${task.due_date}` }
-          );
-          summary.runs += results.length;
-        }
-      }
+      summary.runs += await runTimeBasedEvent(admin, workspaceId, event);
     } catch (cronError) {
       summary.errors += 1;
       console.error("Cron workflow pass failed:", workspaceId, event, cronError);

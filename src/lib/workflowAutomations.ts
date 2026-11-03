@@ -8,6 +8,7 @@ type WorkflowAction = {
 
 export const SUPPORTED_WORKFLOW_TRIGGERS = [
   "lead.created",
+  "lead.stage.contacted",
   "lead.stage.proposal",
   "lead.stage.won",
   "lead.stage.lost",
@@ -35,7 +36,7 @@ async function recordNotice(
 ) {
   const { error } = await supabase.from("activities").insert({
     workspace_id: workspaceId,
-    lead_id: lead.id,
+    lead_id: lead.id ?? null,
     user_id: userId,
     type: "other",
     action: "automation_notice",
@@ -68,14 +69,14 @@ async function runAction(
     const title = text(payload.title, 200);
     if (!title) return "skipped";
 
-    const { data: existing, error: lookupError } = await supabase
+    let lookup = supabase
       .from("tasks")
       .select("id")
       .eq("workspace_id", workspaceId)
-      .eq("lead_id", lead.id)
       .eq("title", title)
-      .eq("completed", false)
-      .limit(1);
+      .eq("completed", false);
+    lookup = lead.id ? lookup.eq("lead_id", lead.id) : lookup.is("lead_id", null);
+    const { data: existing, error: lookupError } = await lookup.limit(1);
     if (lookupError) throw lookupError;
 
     if (existing && existing.length > 0) return "skipped";
@@ -83,7 +84,7 @@ async function runAction(
     const { error } = await supabase.from("tasks").insert({
       workspace_id: workspaceId,
       user_id: userId,
-      lead_id: lead.id,
+      lead_id: lead.id ?? null,
       title,
       priority: "medium",
       due_date: new Date(Date.now() + 86400000)
@@ -107,7 +108,7 @@ async function runAction(
 
   if (action.type === "lead.status.update") {
     const status = text(payload.status, 20).toLowerCase();
-    if (!LEAD_STATUSES.includes(status)) return "skipped";
+    if (!LEAD_STATUSES.includes(status) || !lead.id) return "skipped";
 
     // Direct update: no follow-up triggers fire, so automations cannot loop.
     const { data: updated, error } = await supabase

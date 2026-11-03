@@ -37,6 +37,11 @@ const TRIGGERS = [
     description: "Fires when a new lead is added",
   },
   {
+    value: "lead.stage.contacted",
+    label: "Lead to Contacted",
+    description: "Lead marked as contacted",
+  },
+  {
     value: "lead.stage.proposal",
     label: "Lead to Proposal",
     description: "Lead enters proposal stage",

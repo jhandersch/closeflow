@@ -1212,6 +1212,8 @@ export const germanTextTranslations: Record<string, string> = {
     "Der Lead wurde noch nicht kontaktiert.",
   "Lead to Lost": "Lead verloren",
   "Lead to Proposal": "Lead erreicht Angebot",
+  "Lead to Contacted": "Lead wird kontaktiert",
+  "Lead marked as contacted": "Lead als kontaktiert markiert",
   "Lead to Won": "Lead gewonnen",
   "Lead update failed": "Lead konnte nicht aktualisiert werden.",
   "Lead updated": "Lead aktualisiert",
