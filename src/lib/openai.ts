@@ -116,5 +116,5 @@ export function generateDashboardInsight({ leads, forecast, proposalLeads, atRis
 function activePipelineFormatter(value: number, isGerman: boolean) {
     return isGerman
         ? `${value.toLocaleString("de-DE")} €`
-        : `€${value.toLocaleString("en-US")}`;
+        : `${value.toLocaleString("en-US")} €`;
 }

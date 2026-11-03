@@ -14,5 +14,5 @@ export const formatEuro = (
     options?: Intl.NumberFormatOptions,
 ): string => {
     const formatted = new Intl.NumberFormat(getIntlLocale(language), options).format(value);
-    return language === "de" ? `${formatted} €` : `€${formatted}`;
+    return `${formatted} €`;
 };

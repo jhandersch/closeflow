@@ -6,6 +6,7 @@ import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { translateText } from "@/lib/i18n";
 
 const sanitizeNextPath = (nextPath: string | null) => {
     if (!nextPath) return null;
@@ -1043,7 +1044,7 @@ export default function LoginPage() {
 
                 {error ? (
                     <div className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                        {t(error, error)}
+                        {translateText(t(error, error), language)}
                     </div>
                 ) : null}
 

@@ -139,6 +139,26 @@ export const germanTextTranslations: Record<string, string> = {
     "Für den Vertriebs-Copilot ist ein Arbeitsbereich erforderlich.",
   "Could not load integrations.":
     "Die Integrationen konnten nicht geladen werden.",
+  "Invalid login credentials":
+    "E-Mail oder Passwort ist falsch.",
+  "Email not confirmed":
+    "Die E-Mail-Adresse ist noch nicht bestätigt. Bitte bestätige sie über den Link in deinem Postfach.",
+  "User already registered":
+    "Mit dieser E-Mail-Adresse existiert bereits ein Konto.",
+  "Email rate limit exceeded":
+    "Zu viele E-Mails angefordert. Bitte versuche es später erneut.",
+  "For security purposes, you can only request this after 60 seconds.":
+    "Aus Sicherheitsgründen kannst du das erst nach 60 Sekunden erneut anfordern.",
+  "Token has expired or is invalid":
+    "Der Code ist abgelaufen oder ungültig.",
+  "Invalid TOTP code entered":
+    "Der eingegebene Code ist ungültig.",
+  "New password should be different from the old password.":
+    "Das neue Passwort muss sich vom alten unterscheiden.",
+  "Password should be at least 6 characters.":
+    "Das Passwort muss mindestens 6 Zeichen lang sein.",
+  "Signups not allowed for this instance":
+    "Registrierungen sind derzeit nicht möglich.",
   "AI is temporarily unavailable. Please try again later.":
     "Die KI ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
   "Azure OpenAI returned an empty response.":
