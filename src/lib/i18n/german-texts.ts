@@ -25,7 +25,7 @@ export const germanTextTranslations: Record<string, string> = {
   "% confidence": "% Sicherheit",
   "% of active deals healthy": "% der aktiven Abschlüsse sind stabil",
   "• No additional score factors.": "• Keine weiteren Bewertungsfaktoren.",
-  "© 2026 CloseFlow": "© 2026 CloseFlow",
+  "© 2027 CloseFlow": "© 2027 CloseFlow",
   "+ Add action": "+ Aktion hinzufügen",
   "+ Add Lead": "+ Lead hinzufügen",
   "+ Add lead": "+ Lead hinzufügen",

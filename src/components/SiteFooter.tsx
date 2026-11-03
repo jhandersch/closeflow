@@ -13,7 +13,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-border-subtle bg-background text-foreground">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-7 text-xs text-foreground/45 sm:px-8 md:flex-row md:flex-wrap md:items-center md:justify-between lg:flex-nowrap lg:px-10">
-        <div className="flex items-center gap-2"><LogoMark size={28} /><span>{translateText("Â© 2026 CloseFlow")}</span></div>
+        <div className="flex items-center gap-2"><LogoMark size={28} /><span>{translateText("© 2027 CloseFlow")}</span></div>
         <div className="flex items-center gap-3">
           <label className="sr-only" htmlFor="footer-language">{de ? "Sprache" : "Language"}</label>
           <select id="footer-language" value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400">
