@@ -54,7 +54,7 @@ const exampleDeals = [
 ];
 
 export default function HomePage() {
-  const { language, setLanguage } = useAppPreferences();
+  const { language, setLanguage, theme, setTheme } = useAppPreferences();
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -63,15 +63,10 @@ export default function HomePage() {
       </div>
 
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center" aria-label={translateText("CloseFlow home")}>
             <Logo size={36} />
           </Link>
-          <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
-          <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-cyan-400">
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-          </select>
         </div>
         <nav aria-label={translateText("Main navigation")} className="hidden items-center gap-7 text-sm text-foreground/60 md:flex">
           <a href="#platform" className="transition hover:text-foreground">{translateText("Platform")}</a>
@@ -192,6 +187,18 @@ export default function HomePage() {
       <footer className="border-t border-border-subtle">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-7 text-xs text-foreground/45 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
           <div className="flex items-center gap-2"><LogoMark size={28} /><span>{translateText("© 2026 CloseFlow")}</span></div>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="sr-only" htmlFor="landing-language">{language === "de" ? "Sprache" : "Language"}</label>
+            <select id="landing-language" aria-label={language === "de" ? "Sprache" : "Language"} value={language} onChange={(event) => setLanguage(event.target.value === "de" ? "de" : "en")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400">
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+            </select>
+            <label className="sr-only" htmlFor="landing-theme">{language === "de" ? "Darstellung" : "Theme"}</label>
+            <select id="landing-theme" aria-label={language === "de" ? "Darstellung" : "Theme"} value={theme} onChange={(event) => setTheme(event.target.value === "light" ? "light" : "dark")} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400">
+              <option value="light">{language === "de" ? "Hell" : "Light"}</option>
+              <option value="dark">{language === "de" ? "Dunkel" : "Dark"}</option>
+            </select>
+          </div>
           <nav aria-label={translateText("Footer navigation")} className="flex flex-wrap gap-x-5 gap-y-2"><Link href="/pricing" className="transition hover:text-foreground">{translateText("Pricing")}</Link><Link href="/login" className="transition hover:text-foreground">{translateText("Log in")}</Link><Link href="/impressum" className="transition hover:text-foreground">{translateText("Impressum")}</Link><Link href="/datenschutz" className="transition hover:text-foreground">{translateText("Datenschutz")}</Link><Link href="/cookies" className="transition hover:text-foreground">{translateText("Cookies")}</Link><Link href="/agb" className="transition hover:text-foreground">{translateText("AGB")}</Link></nav>
         </div>
       </footer>
