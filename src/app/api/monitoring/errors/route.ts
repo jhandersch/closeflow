@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { captureWorkspaceError, listWorkspaceErrors } from "@/lib/errorMonitoring";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`monitoring:errors:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     let body: {
         message?: string;
         stack?: string;

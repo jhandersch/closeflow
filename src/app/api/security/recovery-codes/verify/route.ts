@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 const normalizeCode = (value: string) => value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 const hashCode = (userId: string, code: string) => createHash("sha256").update(`${userId}:${normalizeCode(code)}`).digest("hex");
 export async function POST(request: Request) {
@@ -8,6 +9,8 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`security:recovery-verify:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const body = await request.json();
     const code = typeof body.code === "string" ? body.code.trim() : "";
     if (!code) {
