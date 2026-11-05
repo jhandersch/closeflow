@@ -13,6 +13,29 @@ import {
 import { isOversizedApiRequest } from "./lib/inputLimits";
 import { isCrossSiteApiWrite } from "./lib/csrf";
 
+import { buildCsp, generateNonce } from "./lib/csp";
+
+// Pages get a per-request nonce CSP; API routes return JSON and keep the static headers.
+function withCsp(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+  const nonce = generateNonce();
+  const csp = buildCsp({
+    nonce,
+    isDev: process.env.NODE_ENV === "development",
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
+  // CSP_REPORT_ONLY=1 lets a rollout observe violations in the browser console without blocking.
+  const headerName = process.env.CSP_REPORT_ONLY === "1" ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set(headerName, csp);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set(headerName, csp);
+  return response;
+}
 const hardenedHeaders = {
   "Cache-Control": "no-store",
   "Retry-After": "3600",
@@ -38,13 +61,13 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!isMaintenanceEnabled(process.env.MAINTENANCE_MODE)) {
-    return NextResponse.next();
+    return withCsp(request);
   }
 
   const { pathname } = request.nextUrl;
 
   if (isAllowedDuringMaintenance(pathname)) {
-    return NextResponse.next();
+    return withCsp(request);
   }
 
   const allowed = await hasBypass(
@@ -55,7 +78,7 @@ export async function proxy(request: NextRequest) {
     process.env.MAINTENANCE_BYPASS_SECRET,
   );
   if (allowed) {
-    return NextResponse.next();
+    return withCsp(request);
   }
 
   if (pathname === "/robots.txt") {

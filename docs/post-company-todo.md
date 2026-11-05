@@ -32,7 +32,7 @@ Alles, was bewusst auf später verschoben ist. Solange diese Punkte offen sind, 
 - [ ] Supabase Pro mit Point-in-Time-Recovery, Restore-Test mit Zeitmessung (RPO/RTO neu festlegen)
 - [ ] Vercel-Tarif prüfen (Cron-Limits, Logs, Team-Funktionen)
 - [ ] Wartungsmodus kurz abschalten und auf Vercel testen: Header, Cron `alerts`, E-Mail-Versand; danach DAST (ZAP) gegen Preview
-- [ ] Vollständige `script-src`-CSP mit Nonces
+- [ ] CSP beim Go-live: zuerst `CSP_REPORT_ONLY=1` in Vercel setzen, eingeloggte Seiten durchklicken (Konsole auf Verstöße prüfen), danach Variable entfernen (= erzwingen)
 - [ ] Externer Penetrationstest, Nachtests der Befunde
 - [ ] Rollback-Übung auf Vercel, DR-Übung halbjährlich
 - [ ] Aufbewahrungsfrist für `audit_logs` umsetzen (12 Monate vorgeschlagen)

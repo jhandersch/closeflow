@@ -1,6 +1,7 @@
 import { translateText } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
+import { headers } from "next/headers";
 import { AppPreferencesProvider, LocalizedContent } from "@/components/AppPreferencesProvider";
 import ToastProvider from "@/components/ToastProvider";
 import AppDialogProvider from "@/components/AppDialogProvider";
@@ -22,11 +23,12 @@ export const metadata: Metadata = {
   description: "A polished AI-powered CRM experience for modern revenue teams.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html
       lang="en"
@@ -35,6 +37,7 @@ export default function RootLayout({
     >
       <head>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               (function () {
