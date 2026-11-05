@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Tenancy guard
+        run: npm run lint:tenancy
+      - name: Unit and security tests
+        run: |
+          npm run test:ai-cost
+          npm run test:ai-routes
+          npm run test:maintenance
+          npm run test:input-limits
+          npm run test:alerting
+          npm run test:csrf
+          npm run test:integrations
+          npm run test:csv
+          npm run test:usage-quota
+          npm run test:workspace-auth
+          npm run test:feedback-token
+          npm run test:workflow-automations
+          npm run test:workspace-capacity
+      - name: Dependency vulnerabilities (production, high and above)
+        run: npm audit --omit=dev --audit-level=high
+      - name: License check
+        run: node scripts/check-licenses.mjs
+      - name: SBOM (CycloneDX)
+        run: npm sbom --sbom-format cyclonedx --omit=dev > sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          retention-days: 90
