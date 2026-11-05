@@ -11,6 +11,7 @@ import {
   maintenanceHtml,
 } from "./lib/maintenance";
 import { isOversizedApiRequest } from "./lib/inputLimits";
+import { isCrossSiteApiWrite } from "./lib/csrf";
 
 const hardenedHeaders = {
   "Cache-Control": "no-store",
@@ -21,6 +22,19 @@ const hardenedHeaders = {
 export async function proxy(request: NextRequest) {
   if (isOversizedApiRequest(request.method, request.nextUrl.pathname, request.headers.get("content-length"))) {
     return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+  }
+
+  if (
+    isCrossSiteApiWrite({
+      method: request.method,
+      pathname: request.nextUrl.pathname,
+      origin: request.headers.get("origin"),
+      host: request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
+      secFetchSite: request.headers.get("sec-fetch-site"),
+      hasAuthorizationHeader: request.headers.has("authorization"),
+    })
+  ) {
+    return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
   }
 
   if (!isMaintenanceEnabled(process.env.MAINTENANCE_MODE)) {
