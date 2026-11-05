@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, requireMfaForWorkspaceRole } from "@/lib/supabase/route";
+import { recordAuditEvent } from "@/lib/auditLog";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -56,6 +57,12 @@ export async function POST(request: Request) {
     if (insertError) {
         return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
+    await recordAuditEvent({
+        workspaceId: workspace.id,
+        actorUserId: user.id,
+        eventType: "automation.created",
+        payload: { automation_id: data.id, name, trigger_event: triggerEvent },
+    });
     return NextResponse.json(data);
 }
 export async function PATCH(request: Request) {
@@ -89,6 +96,12 @@ export async function PATCH(request: Request) {
     if (updateError) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
+    await recordAuditEvent({
+        workspaceId: workspace.id,
+        actorUserId: user.id,
+        eventType: "automation.updated",
+        payload: { automation_id: id, enabled },
+    });
     return NextResponse.json(data);
 }
 export async function DELETE(request: Request) {
@@ -119,5 +132,11 @@ export async function DELETE(request: Request) {
     if (deleteError) {
         return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
+    await recordAuditEvent({
+        workspaceId: workspace.id,
+        actorUserId: user.id,
+        eventType: "automation.deleted",
+        payload: { automation_id: id },
+    });
     return NextResponse.json({ ok: true });
 }

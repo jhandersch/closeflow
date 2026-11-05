@@ -97,6 +97,17 @@ export default function MonitoringPage() {
     void load();
   }, []);
 
+  const [auditItems, setAuditItems] = useState<MonitoringItem[]>([]);
+
+  useEffect(() => {
+    fetch("/api/audit-logs?limit=50")
+      .then((response) => (response.ok ? response.json() : { items: [] }))
+      .then((data: { items?: MonitoringItem[] }) =>
+        setAuditItems(Array.isArray(data.items) ? data.items : []),
+      )
+      .catch(() => setAuditItems([]));
+  }, []);
+
   return (
     <AuthGuard>
       <div className="mx-auto max-w-6xl space-y-6">
@@ -161,6 +172,39 @@ export default function MonitoringPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : null}
+
+        {auditItems.length > 0 ? (
+          <div className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">
+              {translateText("Audit log")}</h2>
+            <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-1">
+              <table className="min-w-full divide-y divide-border-subtle text-sm">
+                <thead>
+                  <tr className="text-left text-foreground/60">
+                    <th className="px-4 py-3">{translateText("Time")}</th>
+                    <th className="px-4 py-3">{translateText("Event")}</th>
+                    <th className="px-4 py-3">{translateText("Details")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {auditItems.map((item) => (
+                    <tr key={item.id} className="align-top">
+                      <td className="px-4 py-3 text-foreground/75">
+                        {formatDateTime(item.created_at, timezone)}
+                      </td>
+                      <td className="px-4 py-3 text-foreground">{item.event_type}</td>
+                      <td className="px-4 py-3 text-foreground/70">
+                        {Object.entries(item.payload || {})
+                          .map(([key, value]) => `${key}: ${String(value)}`)
+                          .join(", ") || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : null}
       </div>

@@ -6,6 +6,7 @@ import {
     requireAal2,
 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
+import { recordAuditEvent } from "@/lib/auditLog";
 
 type Plan = "pro" | "business" | "free";
 
@@ -204,6 +205,13 @@ export async function POST(request: Request) {
                     },
                 );
 
+            await recordAuditEvent({
+                workspaceId: workspace.id,
+                actorUserId: user.id,
+                eventType: "plan.changed",
+                payload: { plan: "free", scheduled: "cancel_at_period_end" },
+            });
+
             return NextResponse.json({
                 success: true,
                 plan: "free",
@@ -262,6 +270,13 @@ export async function POST(request: Request) {
                     cancel_at_period_end: false,
                 },
             );
+
+        await recordAuditEvent({
+            workspaceId: workspace.id,
+            actorUserId: user.id,
+            eventType: "plan.changed",
+            payload: { plan },
+        });
 
         return NextResponse.json({
             success: true,

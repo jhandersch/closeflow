@@ -10,7 +10,8 @@ export type AuditEventType =
   | "automation.created"
   | "automation.updated"
   | "automation.deleted"
-  | "integration.disconnected";
+  | "integration.disconnected"
+  | "plan.changed";
 
 type AuditInput = {
   workspaceId: string;
