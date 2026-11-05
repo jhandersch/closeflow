@@ -37,10 +37,7 @@ type OnboardingDraft = {
 const ONBOARDING_DRAFT_KEY = "closeflow-onboarding-draft-v1";
 const steps = ["onboarding.setupWorkspace", "onboarding.quickStart"];
 
-const sanitizeNextPath = (nextPath: string | null) => {
-    if (!nextPath?.startsWith("/") || nextPath.startsWith("//")) return null;
-    return nextPath;
-};
+import { sanitizeNextPath } from "@/lib/safeRedirect";
 
 export default function OnboardingPage() {
     const { t, language } = useAppPreferences();

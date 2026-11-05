@@ -9,12 +9,7 @@ import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import SiteFooter from "@/components/SiteFooter";
 import { translateText } from "@/lib/i18n";
 
-const sanitizeNextPath = (nextPath: string | null) => {
-    if (!nextPath) return null;
-    if (!nextPath.startsWith("/")) return null;
-    if (nextPath.startsWith("//")) return null;
-    return nextPath;
-};
+import { sanitizeNextPath } from "@/lib/safeRedirect";
 
 type MfaFactor = {
     id: string;

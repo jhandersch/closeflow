@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-const sanitizeNextPath = (nextPath: string | null, baseUrl: string) => {
-    if (!nextPath)
-        return null;
-    if (!nextPath.startsWith("/"))
-        return null;
-    if (nextPath.startsWith("//"))
-        return null;
-    try {
-        if (new URL(nextPath, baseUrl).origin !== new URL(baseUrl).origin) {
-            return null;
-        }
-    }
-    catch {
-        return null;
-    }
-    return nextPath;
-};
+import { sanitizeNextPath } from "@/lib/safeRedirect";
 const toLoginRedirect = (request: NextRequest, nextPath: string | null, oauthError: string) => {
     const loginUrl = new URL("/login", request.url);
     if (nextPath) {
@@ -51,7 +35,7 @@ export async function GET(request: NextRequest) {
     const type = requestUrl.searchParams.get("type");
     const oauthError = requestUrl.searchParams.get("error");
     const oauthErrorDescription = requestUrl.searchParams.get("error_description");
-    const nextPath = sanitizeNextPath(requestUrl.searchParams.get("next"), request.url);
+    const nextPath = sanitizeNextPath(requestUrl.searchParams.get("next"));
     const requestedLanguage = requestUrl.searchParams.get("language");
     if (oauthError) {
         return toLoginRedirect(request, nextPath, oauthErrorDescription ||
