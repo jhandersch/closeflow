@@ -11,11 +11,12 @@ Kein Zertifikat und keine Konformitätsaussage: ISO 27001 verlangt ein Managemen
 | Argon2id für Passwörter | ❌ | Supabase nutzt bcrypt |
 | MFA für Nutzer | ✅ | in der App umgesetzt (Release-Matrix) |
 | Passkeys | ⏳ | Supabase-Support klären |
-| E-Mail-Bestätigung | 👤 | „Confirm email“ in Supabase aktivieren |
+| E-Mail-Bestätigung | ✅ | „Confirm email“ in Supabase, Betreiber bestätigt 2026-11-05 |
 | Rollen owner/admin/member, serverseitige Prüfung | ✅ | `workspaceAuth`, Tests `test:workspace-auth` |
 | Mandantentrennung (RLS, Tenancy-Guard) | ✅ | `lint:tenancy`, RLS-Tests |
 | 2FA auf GitHub | ✅ | Betreiber bestätigt |
-| 2FA auf Vercel, Supabase, Resend, Stripe, Google, Azure | 👤 | Betreiber bestätigt noch |
+| 2FA auf Vercel und Supabase | ✅ | Betreiber bestätigt 2026-11-05 |
+| 2FA auf Resend, Stripe, Google, Azure | 👤 | Betreiber bestätigt noch |
 | Rechte-Review, Offboarding | 🟡 | `security-policy.md`, erste Durchführung offen |
 
 ## Anwendungssicherheit (A.8.25–8.29 · NIST PR.PS · ASVS V5/V7/V13/V14)
@@ -41,7 +42,7 @@ Kein Zertifikat und keine Konformitätsaussage: ISO 27001 verlangt ein Managemen
 | Verschlüsselung at rest | ☁️ | Supabase/Vercel |
 | Secrets nicht im Repo, Scanning | ✅ | Push-Protection, Secret-Scanning |
 | Rotationskonzept | 🟡 | `security-policy.md`, erste Rotation offen |
-| `CRON_SECRET` ≥ 32 Zeichen | 👤 | nicht von mir prüfbar |
+| `CRON_SECRET` ≥ 32 Zeichen | 👤 | Betreiber meldet gesetzt, Länge nicht von mir prüfbar |
 
 ## Logging, Monitoring, Reaktion (A.8.15–8.16, A.5.24–5.28 · NIST DE/RS · ASVS V7)
 | Kontrolle | Status | Beleg |
@@ -68,7 +69,7 @@ Kein Zertifikat und keine Konformitätsaussage: ISO 27001 verlangt ein Managemen
 |---|---|---|
 | Dependabot, `npm audit` (Produktion 0) | ✅ | CI |
 | Lizenzprüfung, SBOM | ✅ | `check-licenses.mjs`, CI-Artefakt |
-| Branch-Schutz, Pflicht-Checks | 🟡 | CodeQL Pflicht; „CI / verify“ noch hinzufügen (👤) |
+| Branch-Schutz, Pflicht-Checks | ✅ | Pflicht-Checks CodeQL und „CI / verify“ (Betreiber bestätigt 2026-11-05) |
 | Pinning der Actions auf SHA | ⏳ | derzeit Versions-Tags |
 | Lieferantenbewertung, AVVs | ⏳ | nach Firmengründung |
 
