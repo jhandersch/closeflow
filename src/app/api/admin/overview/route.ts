@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
-const isAdminEmail = (email: string | null | undefined) => {
-    if (!email)
-        return false;
-    const raw = process.env.CLOSEFLOW_ADMIN_EMAILS || "";
-    const list = raw
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean);
-    return list.includes(email.toLowerCase());
-};
+import { isPlatformAdminUser } from "@/lib/platformAdmin";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (!isAdminEmail(user.email)) {
+    if (!isPlatformAdminUser(user)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const authz = await requireAal2(request, supabase);

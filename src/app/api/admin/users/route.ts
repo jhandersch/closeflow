@@ -1,21 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
-
-const isAdminEmail = (email: string | null | undefined) => {
-    if (!email) {
-        return false;
-    }
-
-    const raw = process.env.CLOSEFLOW_ADMIN_EMAILS || "";
-
-    const list = raw
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean);
-
-    return list.includes(email.toLowerCase());
-};
+import { isPlatformAdminUser } from "@/lib/platformAdmin";
 
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
@@ -27,7 +13,7 @@ export async function GET(request: Request) {
         );
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!isPlatformAdminUser(user)) {
         return NextResponse.json(
             { error: "Forbidden" },
             { status: 403 }
@@ -73,7 +59,7 @@ export async function GET(request: Request) {
                 username: user.user_metadata?.username || null,
                 company_name: user.user_metadata?.company_name || null,
             },
-            is_platform_admin: isAdminEmail(user.email),
+            is_platform_admin: isPlatformAdminUser(user),
         }));
 
         return NextResponse.json({

@@ -16,6 +16,8 @@ const ALLOWLIST = new Set([
   "src/app/api/workspaces/route.ts",
   "src/app/api/me/permissions/route.ts",
   "src/app/api/workspaces/invite/accept/route.ts",
+  // Lists the workspaces of each consenting user; all later queries are workspace-scoped.
+  "src/app/api/cron/notifications/route.ts",
   // These user ownership filters are also constrained by workspace_id.
   "src/app/api/calendar/events/route.ts",
   "src/app/api/calendar/events/restore/route.ts",

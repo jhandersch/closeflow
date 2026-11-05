@@ -3,23 +3,7 @@ import {
     getRouteUser,
     loadWorkspaceForUser,
 } from "@/lib/supabase/route";
-
-const isAdminEmail = (
-    email: string | null | undefined,
-) => {
-    if (!email) {
-        return false;
-    }
-
-    const admins = (
-        process.env.CLOSEFLOW_ADMIN_EMAILS || ""
-    )
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean);
-
-    return admins.includes(email.toLowerCase());
-};
+import { isPlatformAdminUser } from "@/lib/platformAdmin";
 
 export async function GET(request: Request) {
     const {
@@ -68,9 +52,7 @@ export async function GET(request: Request) {
         return NextResponse.json({
             role: null,
             workspaceId: null,
-            isPlatformAdmin: isAdminEmail(
-                user.email,
-            ),
+            isPlatformAdmin: isPlatformAdminUser(user),
             canManageWorkspace: false,
             canManageBilling: false,
             readOnly: false,
@@ -119,7 +101,7 @@ export async function GET(request: Request) {
             : null;
 
     const isPlatformAdmin =
-        isAdminEmail(user.email);
+        isPlatformAdminUser(user);
 
     return NextResponse.json({
         role,
