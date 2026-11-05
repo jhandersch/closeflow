@@ -61,7 +61,7 @@
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.8.1",
     "resend": "^6.18.1",
-    "stripe": "^22.1.1",
+    "stripe": "^23.1.0",
     "xlsx": "npm:@e965/xlsx@^0.20.3",
     "zustand": "^5.0.13"
   },
