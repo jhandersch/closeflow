@@ -28,7 +28,8 @@ export async function POST(request: Request) {
         p_user_id: user.id,
     });
     if (cleanupError) {
-        return NextResponse.json({ error: cleanupError.message }, { status: 500 });
+        console.error("ACCOUNT CLEANUP ERROR:", cleanupError);
+        return NextResponse.json({ error: "Account cleanup failed" }, { status: 500 });
     }
     if (cleanupStatus === "owner_has_members") {
         return NextResponse.json({
@@ -40,7 +41,8 @@ export async function POST(request: Request) {
     }
     const { error: deleteUserError } = await admin.auth.admin.deleteUser(user.id);
     if (deleteUserError) {
-        return NextResponse.json({ error: deleteUserError.message }, { status: 500 });
+        console.error("ACCOUNT DELETE ERROR:", deleteUserError);
+        return NextResponse.json({ error: "Account deletion failed" }, { status: 500 });
     }
     return NextResponse.json({ success: true });
 }
