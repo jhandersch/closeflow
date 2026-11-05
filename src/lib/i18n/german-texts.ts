@@ -1546,6 +1546,9 @@ export const germanTextTranslations: Record<string, string> = {
     "Wenn du KI-Funktionen nutzt, werden die für die Anfrage nötigen Inhalte (zum Beispiel Lead-Daten, Notizen, Aktivitäten und Abschlusswerte) an den Microsoft Azure OpenAI Service gesendet. Die Ressource wird in der Region Germany West Central betrieben. Das Modell ist global bereitgestellt, daher kann die Verarbeitung auch außerhalb der EU stattfinden.",
   "Your data is not used to train or improve the models. Microsoft may temporarily retain requests for abuse monitoring in line with its terms. We do not send AI content to any other AI provider.":
     "Deine Daten werden nicht zum Training oder zur Verbesserung der Modelle verwendet. Microsoft kann Anfragen gemäß seinen Bedingungen vorübergehend zur Missbrauchserkennung speichern. KI-Inhalte senden wir an keinen anderen KI-Anbieter.",
+  "7. Email notifications": "7. E-Mail-Benachrichtigungen",
+  "If you turn on email notifications in Settings, we send the alerts shown in your notifications tab (for example leads without activity or automation messages) to the email address of your account. This is based on your consent, which you can withdraw at any time by turning the setting off. We use Resend as email service provider for delivery.":
+    "Wenn du in den Einstellungen E-Mail-Benachrichtigungen aktivierst, senden wir die Hinweise aus deinem Benachrichtigungs-Tab (zum Beispiel Leads ohne Aktivität oder Automations-Meldungen) an die E-Mail-Adresse deines Kontos. Grundlage ist deine Einwilligung, die du jederzeit widerrufen kannst, indem du die Einstellung ausschaltest. Für den Versand nutzen wir Resend als E-Mail-Dienstleister.",
   "Opening...": "Wird geöffnet …",
   Optimistic: "Optimistisch",
   "Organization name is required": "Der Organisationsname ist erforderlich.",

@@ -20,6 +20,7 @@
     "test:feedback-token": "node --experimental-strip-types --import ./tests/ts-alias-loader.mjs --test tests/feedback-token.test.mjs",
     "test:workflow-automations": "node --experimental-strip-types --test tests/workflow-automations.test.mjs",
     "test:workspace-capacity": "node --experimental-strip-types --test tests/workspace-capacity.test.mjs",
+    "test:automations-e2e": "node tests/automations-e2e.mjs",
     "test:lead-lifecycle:production": "node tests/lead-lifecycle-production.mjs",
     "test:auth-recovery:production": "node tests/auth-recovery-production.mjs",
     "test:stripe-api:production": "node tests/stripe-api-production.mjs",

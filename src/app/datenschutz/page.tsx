@@ -50,6 +50,12 @@ export default function DatenschutzPage() {
             {translateText("Your data is not used to train or improve the models. Microsoft may temporarily retain requests for abuse monitoring in line with its terms. We do not send AI content to any other AI provider.")}</p>
         </section>
 
+        <section className="mt-6 text-sm leading-7 text-foreground/85">
+          <h2 className="text-lg font-semibold text-foreground">{translateText("7. Email notifications")}</h2>
+          <p className="mt-2">
+            {translateText("If you turn on email notifications in Settings, we send the alerts shown in your notifications tab (for example leads without activity or automation messages) to the email address of your account. This is based on your consent, which you can withdraw at any time by turning the setting off. We use Resend as email service provider for delivery.")}</p>
+        </section>
+
         <div className="mt-8">
           <Link href="/" className="text-sm font-semibold text-cyan-300 hover:underline">
             {translateText("Back to home")}</Link>

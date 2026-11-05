@@ -82,6 +82,8 @@ Current decision record (2026-10-28):
 - Done 2026-11-01: Maintenance mode (`MAINTENANCE_MODE`, `docs/maintenance-mode.md`) enabled in Production; all pages and `/api/**` return 503 except `/api/health`, `/api/cron/*` and the Stripe webhook.
 - Done 2026-11-03: Monitoring window closed without findings. `monitor:snapshot -- 24` (2026-11-02) and `-- 48` (2026-11-03): health 200, 0 error events, database reachable, 0 leftover test users. The only warning (`/login` 503) is the intended maintenance mode. Note: no real user traffic during the window (app locked), so it shows idle stability only. Overall status stays NO-GO (company formation, legal texts, Stripe Live, Google verification).
 
+- Done 2026-11-05: Notifications and automations. Unit tests `test:workflow-automations` (5/5) and new `npm run test:automations-e2e` (local app against Production Supabase, marked fixtures, cleaned up) pass: `lead.created` creates a task and notification, `lead.stage.contacted` notifies, `lead.status.update` sets the status with a timeline entry and no loop, `task.overdue` notifies, repeated loads do not duplicate. Browser check: sidebar counter shows unseen items and resets after opening Notifications, also after reload. Privacy policy section 7 covers email notifications. NOT verified: Resend delivery, Vercel cron runs (needs `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`, verified sender domain, and the maintenance mode lifted or a Preview deployment).
+
 ## Remaining Steps to Move NO-GO -> GO
 
 1. DONE 2026-10-27: migrations applied to Production (direct exception, no staging clone; schema-health 0 problems).
