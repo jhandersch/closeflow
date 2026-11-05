@@ -210,6 +210,30 @@ try {
     [wa, ua]
   );
   refs.lead_id = viewerLead.rows[0].id;
+  // State for the viewer RPC checks below, created while still acting as the workspace owner.
+  const insertTask = async () => {
+    const { names, vals } = makeInsert(insertSpecs.get("tasks"), wa, ua);
+    const r = await c.query(
+      `insert into public.tasks (${names.join(",")}) values (${vals.map((_, i) => `$${i + 1}`).join(",")}) returning id`,
+      vals
+    );
+    return r.rows[0].id;
+  };
+  const deletedLead = await c.query(
+    "insert into public.leads (workspace_id,user_id,name,status,deleted_at) values ($1,$2,'CLOSEFLOW-RLS-DELETED-LEAD','new',now()) returning id, deleted_at",
+    [wa, ua]
+  );
+  const rpcLeadId = deletedLead.rows[0].id;
+  const rpcLeadDeletedAt = deletedLead.rows[0].deleted_at;
+  refs.lead_id = rpcLeadId;
+  const taskForLeadDelete = await insertTask();
+  refs.lead_id = viewerLead.rows[0].id;
+  const taskForSoftDelete = await insertTask();
+  const taskForRestore = await insertTask();
+  await c.query(
+    "update public.tasks set deleted_at=now(), deleted_with_lead=true where id=$1",
+    [taskForRestore]
+  );
   const viewerWriteTargets = ["customers", "ai_conversations", "revenue_events", "usage"];
   const viewerRows = new Map();
   for (const t of viewerWriteTargets) {
@@ -279,6 +303,63 @@ try {
     viewerAiQuota.rows === 0 && viewerAiQuota.error === "42501",
     `usage RPC: viewer cannot reserve AI quota (${viewerAiQuota.error || "unexpected result"})`
   );
+
+  const viewerRpcLeavesStateUnchanged = async (call, params, stateSql, stateParams) => {
+    await c.query("savepoint viewer_rpc");
+    let blocked = false;
+    let changed = false;
+    try {
+      await c.query(call, params);
+      changed = (await c.query(stateSql, stateParams)).rows[0].changed === true;
+    } catch {
+      blocked = true;
+    }
+    await c.query("rollback to savepoint viewer_rpc");
+    return blocked || !changed;
+  };
+  const viewerRpcCases = [
+    [
+      "soft_delete_task",
+      "select public.soft_delete_task($1,$2)",
+      [taskForSoftDelete, wa],
+      "select deleted_at is not null as changed from public.tasks where id=$1",
+      [taskForSoftDelete],
+    ],
+    [
+      "soft_delete_lead_dependents",
+      "select public.soft_delete_lead_dependents($1,$2,$3)",
+      [rpcLeadId, wa, rpcLeadDeletedAt],
+      "select deleted_at is not null as changed from public.tasks where id=$1",
+      [taskForLeadDelete],
+    ],
+    [
+      "soft_delete_lead_tasks",
+      "select public.soft_delete_lead_tasks($1,$2,$3)",
+      [rpcLeadId, wa, rpcLeadDeletedAt],
+      "select deleted_at is not null as changed from public.tasks where id=$1",
+      [taskForLeadDelete],
+    ],
+    [
+      "restore_lead_dependents",
+      "select public.restore_lead_dependents($1,$2)",
+      [viewerLead.rows[0].id, wa],
+      "select deleted_at is null as changed from public.tasks where id=$1",
+      [taskForRestore],
+    ],
+    [
+      "restore_lead_tasks",
+      "select public.restore_lead_tasks($1,$2)",
+      [viewerLead.rows[0].id, wa],
+      "select deleted_at is null as changed from public.tasks where id=$1",
+      [taskForRestore],
+    ],
+  ];
+  for (const [name, call, params, stateSql, stateParams] of viewerRpcCases) {
+    report(
+      await viewerRpcLeavesStateUnchanged(call, params, stateSql, stateParams),
+      `rpc ${name}: viewer cannot change workspace data`
+    );
+  }
 
   await c.query("select set_config('request.jwt.claim.sub',$1,true)", [ua]);
   await c.query("select set_config('request.jwt.claims',$1,true)", [
