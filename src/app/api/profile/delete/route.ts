@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
+import { revokeGoogleToken, type GoogleCredentials } from "@/lib/integrations/google";
+import { loadIntegration } from "@/lib/integrations/store";
 export async function POST(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -24,6 +26,7 @@ export async function POST(request: Request) {
         auth: { persistSession: false, autoRefreshToken: false },
     });
     // One transaction: hand shared-workspace rows to the owner, remove solo data, or refuse.
+    const googleIntegration = await loadIntegration<GoogleCredentials>(user.id, "google").catch(() => null);
     const { data: cleanupStatus, error: cleanupError } = await admin.rpc("delete_account_data", {
         p_user_id: user.id,
     });
@@ -38,6 +41,9 @@ export async function POST(request: Request) {
     }
     if (cleanupStatus !== "ok") {
         return NextResponse.json({ error: "Account cleanup failed" }, { status: 500 });
+    }
+    if (googleIntegration) {
+        await revokeGoogleToken(googleIntegration.credentials.refreshToken);
     }
     const { error: deleteUserError } = await admin.auth.admin.deleteUser(user.id);
     if (deleteUserError) {
