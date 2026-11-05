@@ -4,6 +4,7 @@ import { sendWorkspaceInviteEmail } from "@/lib/email";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { normalizeLanguage } from "@/lib/i18n";
+import { recordAuditEvent } from "@/lib/auditLog";
 
 const rolePattern = /^(owner|admin|member|viewer)$/i;
 
@@ -170,6 +171,13 @@ export async function POST(request: Request) {
       },
     );
   }
+
+  await recordAuditEvent({
+    workspaceId,
+    actorUserId: user.id,
+    eventType: "invite.created",
+    payload: { invite_id: inviteId, role },
+  });
 
   return NextResponse.json({
     ok: true,

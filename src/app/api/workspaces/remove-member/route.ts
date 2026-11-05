@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, requireMfaForWorkspaceRole, } from "@/lib/supabase/route";
 import { getWorkspaceUserRole, } from "@/lib/supabase/workspaceAuth";
+import { recordAuditEvent } from "@/lib/auditLog";
 export async function POST(request: Request) {
     const { supabase, user, error, } = await getRouteUser(request);
     if (error || !user) {
@@ -86,6 +87,12 @@ export async function POST(request: Request) {
     if (memberError) {
         return NextResponse.json({ error: memberError.message }, { status: 500 });
     }
+    await recordAuditEvent({
+        workspaceId,
+        actorUserId: user.id,
+        eventType: "member.removed",
+        payload: { target_user_id: userId, role: targetMember.role },
+    });
     return NextResponse.json({
         ok: true,
     });

@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 import { escapeCsvCell } from "@/lib/csv";
+import { recordAuditEvent } from "@/lib/auditLog";
 
 type ExportLead = {
   name: string | null;
@@ -159,6 +160,12 @@ export async function GET(request: Request) {
 
   const leads = (data || []) as ExportLead[];
 
+  await recordAuditEvent({
+    workspaceId: workspace.id,
+    actorUserId: user.id,
+    eventType: "data.exported",
+    payload: { kind: "leads", format, rows: leads.length },
+  });
   const headers = [
     "name",
     "company",

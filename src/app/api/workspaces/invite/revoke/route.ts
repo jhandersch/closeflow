@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
+import { recordAuditEvent } from "@/lib/auditLog";
 
 export async function POST(request: Request) {
   const { supabase, user, error } = await getRouteUser(request);
@@ -75,6 +76,13 @@ export async function POST(request: Request) {
   if (!deleted || deleted.length === 0) {
     return NextResponse.json({ error: "Invite not found." }, { status: 404 });
   }
+
+  await recordAuditEvent({
+    workspaceId,
+    actorUserId: user.id,
+    eventType: "invite.revoked",
+    payload: { invite_id: inviteId },
+  });
 
   return NextResponse.json({ ok: true });
 }

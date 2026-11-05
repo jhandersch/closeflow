@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
+import { recordAuditEvent } from "@/lib/auditLog";
 export async function POST(request: Request) {
     try {
         const { supabase, user, error: authError, } = await getRouteUser(request);
@@ -46,6 +47,13 @@ export async function POST(request: Request) {
                 { error: "The invitation could not be accepted." },
                 { status: 503 },
             );
+        }
+        if (accepted.already_member !== true) {
+            await recordAuditEvent({
+                workspaceId: accepted.workspace_id,
+                actorUserId: user.id,
+                eventType: "invite.accepted",
+            });
         }
         return NextResponse.json({
             ok: true,

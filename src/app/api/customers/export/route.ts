@@ -5,6 +5,7 @@ import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 import { escapeCsvCell } from "@/lib/csv";
+import { recordAuditEvent } from "@/lib/auditLog";
 type CustomerSummary = {
     company: string;
     contact: string;
@@ -196,6 +197,12 @@ export async function GET(request: Request) {
         customer.lost_deals,
         customer.last_contact_at,
     ]);
+    await recordAuditEvent({
+        workspaceId: workspace.id,
+        actorUserId: user.id,
+        eventType: "data.exported",
+        payload: { kind: "customers", format, rows: rows.length },
+    });
     /*
      * XLSX
      */
