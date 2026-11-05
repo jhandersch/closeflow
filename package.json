@@ -13,6 +13,7 @@
     "test:ai-routes": "node --test tests/ai-route-contract.test.mjs",
     "test:maintenance": "node --experimental-strip-types --test tests/maintenance.test.mjs",
     "test:input-limits": "node --experimental-strip-types --test tests/input-limits.test.mjs",
+    "test:alerting": "node --experimental-strip-types --test tests/alerting.test.mjs",
     "test:integrations": "node --experimental-strip-types --test tests/integrations.test.mjs",
     "monitor:snapshot": "node tests/monitoring-snapshot.mjs",
     "test:csv": "node --experimental-strip-types --import ./tests/ts-alias-loader.mjs --test tests/csv.test.mjs",
