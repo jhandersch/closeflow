@@ -10,6 +10,7 @@ import {
   isMaintenanceEnabled,
   maintenanceHtml,
 } from "./lib/maintenance";
+import { isOversizedApiRequest } from "./lib/inputLimits";
 
 const hardenedHeaders = {
   "Cache-Control": "no-store",
@@ -18,6 +19,10 @@ const hardenedHeaders = {
 };
 
 export async function proxy(request: NextRequest) {
+  if (isOversizedApiRequest(request.method, request.nextUrl.pathname, request.headers.get("content-length"))) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+  }
+
   if (!isMaintenanceEnabled(process.env.MAINTENANCE_MODE)) {
     return NextResponse.next();
   }
