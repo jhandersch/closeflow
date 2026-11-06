@@ -135,7 +135,7 @@ test("tracked Azure fetch records usage from successful chat completions", async
 
     const response = await trackedFetch(
       "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
-      { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
+      { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "test" }] }) },
     );
 
     assert.equal(response.status, 200);
@@ -231,7 +231,7 @@ test("tracked Azure fetch fails closed when successful responses omit usage", as
     await assert.rejects(
       trackedFetch(
         "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
-        { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
+        { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "test" }] }) },
       ),
       /incomplete token usage/,
     );
@@ -254,7 +254,7 @@ test("tracked Azure fetch fails closed when cost persistence fails", async () =>
     await assert.rejects(
       trackedFetch(
         "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
-        { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
+        { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "test" }] }) },
       ),
       /Could not record AI usage/,
     );
@@ -276,7 +276,7 @@ test("tracked Azure fetch does not record usage for provider error responses", a
 
   const response = await trackedFetch(
     "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
-    { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
+    { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "test" }] }) },
   );
 
   assert.equal(response.status, 503);
@@ -299,7 +299,7 @@ test("tracked Azure fetch propagates provider transport failures", async () => {
   await assert.rejects(
     trackedFetch(
       "https://closeflow-test.openai.azure.com/openai/deployments/gpt-4-1-mini-test/chat/completions?api-version=2024-10-21",
-      { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini" }) },
+      { method: "POST", body: JSON.stringify({ model: "gpt-4.1-mini", messages: [{ role: "user", content: "test" }] }) },
     ),
     /connection reset/,
   );

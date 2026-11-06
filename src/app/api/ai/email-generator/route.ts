@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
-import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+
+const MAX_LEAD_TEXT_LENGTH = 4_000;
+const MAX_OUTPUT_LENGTH = 12_000;
+const ALLOWED_GOALS = new Set(["First Contact", "Follow Up", "Closing", "Reactivation"]);
+const ALLOWED_TONES = new Set(["professional", "friendly", "formal", "concise", "persuasive", "direct"]);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
+
 export async function POST(request: Request) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
@@ -14,16 +21,32 @@ export async function POST(request: Request) {
         if (error || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const body = await request.json();
+        const body: unknown = await request.json();
+        if (!isRecord(body) || !isRecord(body.lead)) {
+            return NextResponse.json({ error: "A lead object is required." }, { status: 400 });
+        }
         language = normalizeLanguage(body.language ?? user.user_metadata?.language);
         const isGerman = language === "de";
-        const lead = body.lead || {};
-        const leadWithCosts = {
-            ...lead,
-            personal_deal_costs: formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0)),
+        const sourceLead = body.lead;
+        const textField = (value: unknown, maxLength: number) =>
+            typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+        const lead = {
+            name: textField(sourceLead.name, 200),
+            company: textField(sourceLead.company, 200),
+            status: textField(sourceLead.status, 80),
+            value: typeof sourceLead.value === "number" && Number.isFinite(sourceLead.value)
+                ? sourceLead.value
+                : 0,
+            notes: textField(sourceLead.notes, MAX_LEAD_TEXT_LENGTH),
         };
-        const goal = typeof body.goal === "string" ? body.goal : isGerman ? "Follow-up" : "Follow up";
-        const tone = typeof body.tone === "string" ? body.tone : "professional";
+        const goal = typeof body.goal === "string" ? body.goal.trim() : "Follow Up";
+        const tone = typeof body.tone === "string" ? body.tone.trim() : "professional";
+        if (!ALLOWED_GOALS.has(goal)) {
+            return NextResponse.json({ error: "Unsupported email goal." }, { status: 400 });
+        }
+        if (!ALLOWED_TONES.has(tone)) {
+            return NextResponse.json({ error: "Unsupported email tone." }, { status: 400 });
+        }
         const openai = createTrackedAzureOpenAIClient(
             access.supabase,
             access.workspaceId,
@@ -41,7 +64,7 @@ export async function POST(request: Request) {
                 },
                 {
                     role: "user",
-                    content: JSON.stringify(leadWithCosts),
+                    content: JSON.stringify(lead),
                 },
             ],
         });
@@ -51,8 +74,10 @@ export async function POST(request: Request) {
         if (
             typeof result.subject !== "string" ||
             !result.subject.trim() ||
+            result.subject.length > 300 ||
             typeof result.body !== "string" ||
-            !result.body.trim()
+            !result.body.trim() ||
+            result.body.length > MAX_OUTPUT_LENGTH
         ) {
             throw new Error("Azure OpenAI returned an invalid email response.");
         }

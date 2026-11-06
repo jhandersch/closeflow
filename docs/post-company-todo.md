@@ -33,6 +33,7 @@ Alles, was bewusst auf später verschoben ist. Solange diese Punkte offen sind, 
 - [ ] Vercel-Tarif prüfen (Cron-Limits, Logs, Team-Funktionen)
 - [ ] Wartungsmodus kurz abschalten und auf Vercel testen: Header, Cron `alerts`, E-Mail-Versand; danach DAST (ZAP) gegen Preview
 - [ ] CSP beim Go-live: zuerst `CSP_REPORT_ONLY=1` in Vercel setzen, eingeloggte Seiten durchklicken (Konsole auf Verstöße prüfen), danach Variable entfernen (= erzwingen)
+- [ ] KI vor Go-live: Azure-Region/Aufbewahrung/AVV dokumentieren; Prompt-Injection-Red-Team mit synthetischen CRM-Notizen und importierten Texten durchführen; offene Kontrollen aus `docs/ai-security-review.md` abarbeiten
 - [ ] Externer Penetrationstest, Nachtests der Befunde
 - [ ] Rollback-Übung auf Vercel, DR-Übung halbjährlich
 - [ ] Aufbewahrungsfrist für `audit_logs` umsetzen (12 Monate vorgeschlagen)

@@ -77,3 +77,31 @@ test("AI API routes use Azure endpoints and no direct OpenAI provider configurat
     assert.ok(!/OPENAI_API_KEY|api\.openai\.com|createTrackedOpenAI/.test(r.src), `${r.rel}: OpenAI configuration remains`);
   }
 });
+
+test("the shared provider transport applies the injection guard and clamps requests", () => {
+  const src = readFileSync(join(process.cwd(), "src", "lib", "aiCost.ts"), "utf8");
+  assert.match(src, /url\.includes\("\/chat\/completions"\)[\s\S]*?withAiInjectionGuard\(init\)/);
+  assert.match(src, /MAX_AI_COMPLETION_TOKENS\s*=\s*1200/);
+  assert.match(src, /MAX_AI_REQUEST_CHARS\s*=\s*256\s*\*\s*1024/);
+  assert.match(src, /server-side authorization/);
+});
+
+test("chat lead context is verified in the authorized workspace and is not retained redundantly", () => {
+  const route = routes.find((r) => r.rel === "ai/chat/route.ts");
+  assert.ok(route);
+  const leadLookup = route.src.indexOf('.from("leads")');
+  const providerCall = route.src.indexOf("createTrackedAzureOpenAIClient(");
+  assert.ok(leadLookup > -1 && providerCall > leadLookup, "lead access must be checked before the provider call");
+  assert.match(route.src.slice(leadLookup, providerCall), /\.eq\("workspace_id",\s*workspace\.id\)/);
+  assert.ok(!route.src.includes('.from("ai_conversations")'), "do not persist duplicate prompt and response content");
+});
+
+test("customer email generation sends an allowlisted lead context and excludes internal deal costs", () => {
+  const route = routes.find((r) => r.rel === "ai/email-generator/route.ts");
+  assert.ok(route);
+  assert.match(route.src, /name: textField\(sourceLead\.name/);
+  assert.match(route.src, /notes: textField\(sourceLead\.notes/);
+  assert.match(route.src, /JSON\.stringify\(lead\)/);
+  assert.ok(!route.src.includes("formatPersonalDealCostsForLead"));
+  assert.match(route.src, /MAX_OUTPUT_LENGTH/);
+});

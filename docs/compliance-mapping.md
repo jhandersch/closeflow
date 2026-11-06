@@ -28,6 +28,7 @@ Kein Zertifikat und keine Konformitätsaussage: ISO 27001 verlangt ein Managemen
 | CSRF | ✅ | `src/lib/csrf.ts`, `test:csrf` |
 | SSRF | ✅ | nur feste Zielhosts |
 | Rate-Limits, KI-Quoten | ✅ | `test:usage-quota`, `test:ai-cost` |
+| KI-Sicherheit (Workspace, Prompt-Guard, Limits, Datenminimierung) | 🟡 | Code-Review und Tests: `docs/ai-security-review.md`; Live-Red-Team und Azure-Datenschutzprüfung offen |
 | Security-Header | ✅ | HSTS, nosniff, XFO, Referrer, Permissions; Produktion und lokaler Build geprüft |
 | Vollständige `script-src`-CSP mit Nonces | ✅ | `src/lib/csp.ts` + `src/proxy.ts`; lokal im Edge geprüft (Login/öffentliche Seiten); eingeloggte Seiten noch ungeprüft, daher beim Go-live zuerst `CSP_REPORT_ONLY=1` |
 | Fehlerbehandlung ohne Detail-Leaks | 🟡 | stichprobenartig, kein Vollreview |

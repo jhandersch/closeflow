@@ -7,6 +7,19 @@ import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+
+const MAX_MESSAGE_LENGTH = 12_000;
+const ALLOWED_MODES = new Set([
+    "lead-analysis",
+    "pipeline-analysis",
+    "sales-coach",
+    "email-generator",
+    "risk-detection",
+]);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
+
 export async function POST(request: Request) {
     let userId: string | null = null;
     try {
@@ -25,7 +38,10 @@ export async function POST(request: Request) {
         if (!limitCheck.ok) {
             return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status });
         }
-        const body = await request.json();
+        const body: unknown = await request.json();
+        if (!isRecord(body)) {
+            return NextResponse.json({ error: "A JSON object is required." }, { status: 400 });
+        }
         const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
         const responseLanguage = language === "de" ? "German" : "English";
         const message = typeof body.message === "string" ? body.message.trim() : "";
@@ -34,6 +50,12 @@ export async function POST(request: Request) {
         if (!message) {
             return NextResponse.json({ error: "message is required" }, { status: 400 });
         }
+        if (message.length > MAX_MESSAGE_LENGTH) {
+            return NextResponse.json({ error: `message must be ${MAX_MESSAGE_LENGTH} characters or fewer` }, { status: 413 });
+        }
+        if (!ALLOWED_MODES.has(mode)) {
+            return NextResponse.json({ error: "Unsupported AI chat mode." }, { status: 400 });
+        }
         const { workspace } = await loadWorkspaceForUser(
             supabase,
             user.id,
@@ -41,6 +63,24 @@ export async function POST(request: Request) {
         );
         if (!workspace?.id) {
             return NextResponse.json({ error: "A workspace is required to use AI chat." }, { status: 403 });
+        }
+        if (leadId) {
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(leadId)) {
+                return NextResponse.json({ error: "Invalid lead id." }, { status: 400 });
+            }
+            const { data: lead, error: leadError } = await supabase
+                .from("leads")
+                .select("id")
+                .eq("id", leadId)
+                .eq("workspace_id", workspace.id)
+                .maybeSingle();
+            if (leadError) {
+                console.error("AI chat lead authorization failed:", leadError.message);
+                return NextResponse.json({ error: "Could not verify lead access." }, { status: 503 });
+            }
+            if (!lead) {
+                return NextResponse.json({ error: "Lead not found." }, { status: 404 });
+            }
         }
         const openai = createTrackedAzureOpenAIClient(
             supabase,
@@ -78,15 +118,6 @@ export async function POST(request: Request) {
             answer: result.answer,
             sources: Array.isArray(result.sources) ? result.sources : [],
         };
-        await supabase.from("ai_conversations").insert({
-            workspace_id: workspace.id,
-            user_id: user.id,
-            lead_id: leadId,
-            messages: [
-                { role: "user", content: message },
-                { role: "assistant", content: payload.answer },
-            ],
-        });
         return NextResponse.json(payload);
     }
     catch (error) {
