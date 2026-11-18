@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { readJsonObject } from "@/lib/requestValidation";
 const normalizeCode = (value: string) => value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 const hashCode = (userId: string, code: string) => createHash("sha256").update(`${userId}:${normalizeCode(code)}`).digest("hex");
 export async function POST(request: Request) {
@@ -11,31 +12,25 @@ export async function POST(request: Request) {
     }
     const limited = await checkRateLimit(`security:recovery-verify:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
     if (!limited.success) return rateLimitResponse(limited);
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body) {
+        return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const code = typeof body.code === "string" ? body.code.trim() : "";
     if (!code) {
         return NextResponse.json({ error: "code is required" }, { status: 400 });
     }
     const codeHash = hashCode(user.id, code);
-    const { data: row, error: queryError } = await supabase
-        .from("mfa_recovery_codes")
-        .select("id, used_at")
-        .eq("user_id", user.id)
-        .eq("code_hash", codeHash)
-        .limit(1)
-        .maybeSingle();
-    if (queryError) {
-        return NextResponse.json({ error: queryError.message }, { status: 500 });
+    const { data: consumed, error: consumeError } = await supabase.rpc(
+        "consume_mfa_recovery_code",
+        { p_code_hash: codeHash },
+    );
+    if (consumeError) {
+        console.error("MFA RECOVERY CODE CONSUME ERROR:", consumeError.message);
+        return NextResponse.json({ error: "Could not verify recovery code" }, { status: 500 });
     }
-    if (!row || row.used_at) {
+    if (consumed !== true) {
         return NextResponse.json({ error: "Invalid recovery code" }, { status: 400 });
-    }
-    const { error: updateError } = await supabase
-        .from("mfa_recovery_codes")
-        .update({ used_at: new Date().toISOString() })
-        .eq("id", row.id);
-    if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
     return NextResponse.json({ ok: true });
 }

@@ -29,10 +29,12 @@ export async function POST(request: Request) {
     );
     if (createError) {
         if (createError.code === "22023") {
-            return NextResponse.json({ error: createError.message }, { status: 400 });
+            console.error("CREATE WORKSPACE VALIDATION ERROR:", createError.message);
+            return NextResponse.json({ error: "Workspace details are invalid." }, { status: 400 });
         }
         if (createError.code === "23514") {
-            return NextResponse.json({ error: createError.message }, { status: 409 });
+            console.error("CREATE WORKSPACE LIMIT ERROR:", createError.message);
+            return NextResponse.json({ error: "Workspace limit reached." }, { status: 409 });
         }
         if (createError.code === "23505") {
             return NextResponse.json({ error: "A workspace with this name already exists." }, { status: 409 });

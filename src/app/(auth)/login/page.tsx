@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppPreferences } from "@/components/AppPreferencesProvider";
 import { supabase } from "@/lib/supabase/client";
@@ -8,6 +8,7 @@ import Logo from "@/components/Logo";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import SiteFooter from "@/components/SiteFooter";
 import { translateText } from "@/lib/i18n";
+import HCaptchaWidget from "@/components/HCaptchaWidget";
 
 import { sanitizeNextPath } from "@/lib/safeRedirect";
 
@@ -40,6 +41,7 @@ type MfaApi = {
         error?: { message?: string } | null;
     }>;
 };
+type LoginMode = "login" | "signup" | "forgot" | "reset" | "magic" | "mfa";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -54,9 +56,8 @@ export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
-    const [mode, setMode] = useState<
-        "login" | "signup" | "forgot" | "reset" | "magic" | "mfa"
-    >("login");
+    const [mode, setMode] = useState<LoginMode>("login");
+    const modeRef = useRef<LoginMode>("login");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -67,6 +68,10 @@ export default function LoginPage() {
     const [mfaRecoveryCode, setMfaRecoveryCode] = useState("");
     const [useRecoveryCode, setUseRecoveryCode] = useState(false);
     const [mfaForPasswordReset, setMfaForPasswordReset] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaResetKey, setCaptchaResetKey] = useState(0);
+    const captchaSiteKey =
+        process.env.NEXT_PUBLIC_CAPTCHA_SITE_KEY?.trim() || "";
 
     function getMfaApi(): MfaApi | null {
         return (supabase.auth as unknown as { mfa?: MfaApi }).mfa || null;
@@ -77,6 +82,14 @@ export default function LoginPage() {
      * is being completed.
      */
     const mfaPending = mode === "mfa";
+
+    const changeMode = useCallback((nextMode: LoginMode) => {
+        if (nextMode === modeRef.current) return;
+        modeRef.current = nextMode;
+        setCaptchaToken(null);
+        setCaptchaResetKey((value) => value + 1);
+        setMode(nextMode);
+    }, []);
 
     useEffect(() => {
         const modeParam = searchParams.get("mode");
@@ -103,7 +116,7 @@ export default function LoginPage() {
                 return;
             }
 
-            setMode("reset");
+            changeMode("reset");
             setError(null);
             setSuccess(null);
 
@@ -120,7 +133,7 @@ export default function LoginPage() {
                         "Recovery session missing. Open the reset link again."
                     )
                 );
-                setMode("forgot");
+                changeMode("forgot");
                 return;
             }
 
@@ -185,7 +198,7 @@ export default function LoginPage() {
                 setMfaFactorId(verifiedFactor.id);
                 setMfaCode("");
                 setUseRecoveryCode(false);
-                setMode("mfa");
+                changeMode("mfa");
                 setError(null);
                 setSuccess(
                     t(
@@ -197,7 +210,7 @@ export default function LoginPage() {
             }
 
             setMfaForPasswordReset(false);
-            setMode("reset");
+            changeMode("reset");
             setError(null);
             setSuccess(
                 t(
@@ -208,7 +221,7 @@ export default function LoginPage() {
         };
 
         void initRecoverySession();
-    }, [searchParams, t]);
+    }, [changeMode, searchParams, t]);
 
     /*
      * Only redirect already authenticated users when we are NOT
@@ -293,6 +306,20 @@ export default function LoginPage() {
             return;
         }
 
+        if (!captchaSiteKey) {
+            setError(
+                "CAPTCHA is not configured for this deployment."
+            );
+            return;
+        }
+
+        if (!captchaToken) {
+            setError(
+                "Complete the CAPTCHA verification before continuing."
+            );
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setSuccess(null);
@@ -301,6 +328,7 @@ export default function LoginPage() {
             email: email.trim(),
             options: {
                 emailRedirectTo: getAuthRedirectPath(),
+                captchaToken: captchaToken || undefined,
                 data: { language },
             },
         });
@@ -320,7 +348,7 @@ export default function LoginPage() {
                     "Magic link sent. Check your inbox."
                 )
             );
-            setMode("login");
+            changeMode("login");
         }
 
         setLoading(false);
@@ -394,7 +422,7 @@ export default function LoginPage() {
         setMfaRecoveryCode("");
         setUseRecoveryCode(false);
         setMfaForPasswordReset(false);
-        setMode("mfa");
+        changeMode("mfa");
         setError(null);
         setSuccess(
             t(
@@ -432,10 +460,31 @@ export default function LoginPage() {
         setSuccess(null);
 
         try {
+            const captchaRequired =
+                mode === "login" ||
+                mode === "signup" ||
+                mode === "forgot" ||
+                mode === "magic";
+
+            if (captchaRequired && !captchaSiteKey) {
+                throw new Error(
+                    "CAPTCHA is not configured for this deployment."
+                );
+            }
+
+            if (captchaRequired && !captchaToken) {
+                throw new Error(
+                    "Complete the CAPTCHA verification before continuing."
+                );
+            }
+
             if (mode === "login") {
                 const { error } = await supabase.auth.signInWithPassword({
                     email: email.trim(),
                     password,
+                    options: {
+                        captchaToken: captchaToken || undefined,
+                    },
                 });
 
                 if (error) {
@@ -473,6 +522,7 @@ export default function LoginPage() {
                 const { error } =
                     await supabase.auth.resetPasswordForEmail(email.trim(), {
                         redirectTo: resetUrl.toString(),
+                        captchaToken: captchaToken || undefined,
                     });
 
                 if (error) {
@@ -486,7 +536,7 @@ export default function LoginPage() {
                     )
                 );
 
-                setMode("login");
+                changeMode("login");
                 return;
             }
 
@@ -545,6 +595,10 @@ export default function LoginPage() {
                     throw error;
                 }
 
+                await supabase.auth.signOut({
+                    scope: "global",
+                });
+
                 setSuccess(
                     t(
                         "auth.passwordUpdated",
@@ -552,41 +606,38 @@ export default function LoginPage() {
                     )
                 );
 
-                setMode("login");
+                changeMode("login");
                 setPassword("");
                 setPasswordConfirm("");
                 return;
             }
 
             if (mode === "signup") {
-                const { error } = await supabase.auth.signUp({
+                const { data, error } = await supabase.auth.signUp({
                     email: email.trim(),
                     password,
                     options: {
                         emailRedirectTo: getAuthRedirectPath(),
+                        captchaToken: captchaToken || undefined,
                         data: {
-                        name: fullName.trim(),
-                        username: username.trim().toLowerCase(),
-                        language,
+                            name: fullName.trim(),
+                            username: username.trim().toLowerCase(),
+                            language,
                         },
                     },
-                    })
-
-                    if (error) {
-                    throw error
-                    }
-
-                    setSuccess(
-                    t(
-                        "auth.accountCreated",
-                        "Account created. Confirm your email, then sign in."
-                    )
-                    )
-                    setFullName("")
-                    setUsername("")
+                });
 
                 if (error) {
                     throw error;
+                }
+
+                setPassword("");
+                setFullName("");
+                setUsername("");
+
+                if (data.session) {
+                    await finishLogin();
+                    return;
                 }
 
                 setSuccess(
@@ -715,7 +766,7 @@ export default function LoginPage() {
 
                 if (mfaForPasswordReset) {
                     setMfaForPasswordReset(false);
-                    setMode("reset");
+                    changeMode("reset");
                     setSuccess(
                         t(
                             "auth.recoveryVerified",
@@ -757,6 +808,7 @@ export default function LoginPage() {
             );
         } finally {
             setLoading(false);
+            setCaptchaResetKey((value) => value + 1);
         }
     };
 
@@ -856,7 +908,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={() => {
-                                setMode("magic");
+                                changeMode("magic");
                                 setError(null);
                                 setSuccess(null);
                             }}
@@ -875,7 +927,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={() => {
-                                setMode("login");
+                                changeMode("login");
                                 setError(null);
                                 setSuccess(null);
                             }}
@@ -891,7 +943,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={() => {
-                                setMode("signup");
+                                changeMode("signup");
                                 setError(null);
                                 setSuccess(null);
                             }}
@@ -933,6 +985,16 @@ export default function LoginPage() {
                                 className="w-full rounded-2xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none transition focus:border-cyan-400/50"
                             />
                         </>
+                    ) : null}
+
+                    {mode === "login" ||
+                    mode === "signup" ||
+                    mode === "forgot" ||
+                    mode === "magic" ? (
+                        <HCaptchaWidget
+                            onToken={setCaptchaToken}
+                            resetKey={captchaResetKey}
+                        />
                     ) : null}
 
                     {mode !== "mfa" ? (
@@ -1099,14 +1161,14 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => {
                             if (mode === "magic") {
-                                setMode("login");
+                                changeMode("login");
                                 setError(null);
                                 setSuccess(null);
                                 return;
                             }
 
                             if (mode === "mfa") {
-                                setMode("login");
+                                changeMode("login");
                                 setMfaCode("");
                                 setMfaFactorId(null);
                                 setMfaRecoveryCode("");
@@ -1116,7 +1178,7 @@ export default function LoginPage() {
                                 return;
                             }
 
-                            setMode(
+                            changeMode(
                                 mode === "forgot"
                                     ? "login"
                                     : "forgot"
@@ -1143,7 +1205,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={() => {
-                                setMode("login");
+                                changeMode("login");
                                 setError(null);
                                 setSuccess(null);
                             }}

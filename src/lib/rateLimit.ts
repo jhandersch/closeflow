@@ -16,6 +16,12 @@ export type RateLimitResult = {
     resetAt: number;
 };
 
+const unavailableRateLimitResult = (): RateLimitResult => ({
+    success: false,
+    remaining: 0,
+    resetAt: Date.now() + 60 * 1000,
+});
+
 // Per-instance fallback, used only when the shared limiter is unavailable.
 export function rateLimit(key: string, options: RateLimitOptions): RateLimitResult {
     const now = Date.now();
@@ -56,7 +62,9 @@ export async function checkRateLimit(key: string, options: RateLimitOptions): Pr
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !serviceRole) {
-        return rateLimit(key, options);
+        return process.env.NODE_ENV === "production"
+            ? unavailableRateLimitResult()
+            : rateLimit(key, options);
     }
     try {
         const admin = createClient(url, serviceRole, {
@@ -70,7 +78,9 @@ export async function checkRateLimit(key: string, options: RateLimitOptions): Pr
         const row = Array.isArray(data) ? data[0] : data;
         if (error || !row) {
             console.error("Shared rate limiter unavailable:", error?.message ?? "empty result");
-            return rateLimit(key, options);
+            return process.env.NODE_ENV === "production"
+                ? unavailableRateLimitResult()
+                : rateLimit(key, options);
         }
         return {
             success: Boolean(row.is_allowed),
@@ -80,7 +90,9 @@ export async function checkRateLimit(key: string, options: RateLimitOptions): Pr
     }
     catch (error) {
         console.error("Shared rate limiter failed:", error);
-        return rateLimit(key, options);
+        return process.env.NODE_ENV === "production"
+            ? unavailableRateLimitResult()
+            : rateLimit(key, options);
     }
 }
 

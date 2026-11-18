@@ -18,5 +18,6 @@ Ergänzt `backup-restore.md` und `incident-plan.md`.
 5. **Ausfall Anbieter (Vercel/Supabase):** Statusseiten beobachten, Wartungsseite/Kommunikation; kein automatisches Failover vorhanden.
 
 ## Tests
-- Restore-Test lokal: 2026-10-19 (siehe `backup-restore.md`).
-- **OFFEN:** halbjährlicher Restore-Test mit Zeitmessung; Rollback-Übung auf Vercel nach Wartungsmodus.
+- Restore-Test lokal: 2026-10-19 und transaktionaler `public`-Restore am 2026-11-15 (33 Tabellen, 0 Zeilenabweichungen, Rechte identisch, RLS 33/33; Details in `backup-restore.md`).
+- Gemessener transaktionaler `public`-Restore am 2026-11-17 lokal gegen Loopback: 55,57 Sekunden bis zum Abschluss, 33 Tabellen, 0 Zeilenabweichungen, Rechte 970/970 identisch, RLS 33/33 und 85 Policies.
+- **OFFEN:** halbjährlicher Restore-Test mit extern getrenntem Backup, Produktions-Restore und zeitgemessene Rollback-Übung auf Vercel nach Wartungsmodus.

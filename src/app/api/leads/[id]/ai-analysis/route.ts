@@ -3,6 +3,7 @@ import { getRouteUser, loadWorkspaceForUser, } from "@/lib/supabase/route";
 import { getPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { normalizeLanguage } from "@/lib/i18n";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function POST(request: NextRequest, context: {
     params: Promise<{
         id: string;
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest, context: {
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const limited = await checkRateLimit(`lead:ai-analysis:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+        if (!limited.success) return rateLimitResponse(limited);
         language = normalizeLanguage(body?.language ?? user.user_metadata?.language);
         const isGerman = language === "de";
         const { workspace, error: workspaceError, } = await loadWorkspaceForUser(
@@ -101,9 +104,7 @@ Lead:\n${lead.name}\n\nCompany:\n${lead.company ?? "—"}\n\nDeal Value:\n€${l
     catch (error) {
         console.error("AI ANALYSIS ERROR:", error);
         return NextResponse.json({
-            error: error instanceof Error
-                ? (language === "de" ? "Die Analyse ist fehlgeschlagen." : error.message)
-                : language === "de" ? "Interner Serverfehler" : "Internal server error",
+            error: language === "de" ? "Die Analyse ist fehlgeschlagen." : "Lead analysis failed.",
         }, {
             status: 500,
         });

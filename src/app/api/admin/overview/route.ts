@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { isPlatformAdminUser } from "@/lib/platformAdmin";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
@@ -10,6 +11,8 @@ export async function GET(request: Request) {
     if (!isPlatformAdminUser(user)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+    const limited = await checkRateLimit(`admin:overview:${user.id}`, { limit: 30, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const authz = await requireAal2(request, supabase);
     if (!authz.ok) {
         return NextResponse.json({ error: authz.message }, { status: authz.status });

@@ -7,6 +7,7 @@ import {
     requireAal2,
 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
     const {
@@ -21,6 +22,11 @@ export async function POST(request: Request) {
             { status: 401 },
         );
     }
+    const limited = await checkRateLimit(`billing:portal:${user.id}`, {
+        limit: 10,
+        windowMs: 60 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const authz = await requireAal2(
         request,
@@ -49,8 +55,9 @@ export async function POST(request: Request) {
     );
 
     if (workspaceError) {
+        console.error("STRIPE PORTAL WORKSPACE LOAD ERROR:", workspaceError.message);
         return NextResponse.json(
-            { error: workspaceError.message },
+            { error: "Could not open billing portal." },
             { status: 500 },
         );
     }
@@ -117,10 +124,11 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (subscriptionError) {
+        console.error("STRIPE PORTAL SUBSCRIPTION LOAD ERROR:", subscriptionError.message);
         return NextResponse.json(
             {
                 error:
-                    subscriptionError.message,
+                    "Could not load billing details.",
             },
             { status: 500 },
         );

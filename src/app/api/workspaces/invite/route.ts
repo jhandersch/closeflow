@@ -5,6 +5,7 @@ import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { normalizeLanguage } from "@/lib/i18n";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { isEmail, isUuid, readJsonObject } from "@/lib/requestValidation";
 
 const rolePattern = /^(owner|admin|member|viewer)$/i;
 
@@ -15,7 +16,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
 
   const workspaceId =
     typeof body.workspace_id === "string" ? body.workspace_id.trim() : "";
@@ -28,10 +32,10 @@ export async function POST(request: Request) {
       ? body.role.toLowerCase()
       : "member";
 
-  if (!workspaceId || !email) {
+  if (!isUuid(workspaceId) || !isEmail(email)) {
     return NextResponse.json(
       {
-        error: "email is required",
+        error: "A valid workspace and email address are required.",
       },
       { status: 400 },
     );

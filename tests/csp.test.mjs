@@ -17,6 +17,8 @@ test("keeps framing, base and object restrictions and allows Supabase", () => {
     assert.ok(csp.includes(d), d);
   }
   assert.ok(csp.includes("connect-src 'self' https://proj.supabase.co wss://proj.supabase.co"));
+  assert.ok(csp.includes("https://*.hcaptcha.com"));
+  assert.ok(csp.includes("frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com"));
 });
 
 test("dev mode adds unsafe-eval only in dev", () => {
@@ -25,6 +27,8 @@ test("dev mode adds unsafe-eval only in dev", () => {
 });
 
 test("ignores an invalid Supabase URL and nonces are unique", () => {
-  assert.ok(buildCsp({ nonce: "n", supabaseUrl: "not a url" }).includes("connect-src 'self';"));
+  const csp = buildCsp({ nonce: "n", supabaseUrl: "not a url" });
+  assert.ok(csp.includes("connect-src 'self' https://hcaptcha.com https://*.hcaptcha.com"));
+  assert.ok(!csp.includes("https://not a url"));
   assert.notEqual(generateNonce(), generateNonce());
 });

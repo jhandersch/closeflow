@@ -7,6 +7,12 @@ import crypto from "node:crypto";
 
 // CLOSEFLOW_LOCAL_DB=1 targets only the local Supabase stack and never reads .env.local.
 const useLocal = process.env.CLOSEFLOW_LOCAL_DB === "1";
+const allowRemote = process.env.CLOSEFLOW_ALLOW_REMOTE_RLS_TEST === "YES";
+if (!useLocal && !allowRemote) {
+  throw new Error(
+    "Refusing remote RLS leak check. Set CLOSEFLOW_LOCAL_DB=1 for local Supabase or explicitly set CLOSEFLOW_ALLOW_REMOTE_RLS_TEST=YES for an authorized remote test.",
+  );
+}
 let c;
 if (useLocal) {
   c = new pg.Client({

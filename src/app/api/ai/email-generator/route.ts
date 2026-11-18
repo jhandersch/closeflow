@@ -4,6 +4,7 @@ import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
 
 const MAX_LEAD_TEXT_LENGTH = 4_000;
 const MAX_OUTPUT_LENGTH = 12_000;
@@ -21,8 +22,8 @@ export async function POST(request: Request) {
         if (error || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const body: unknown = await request.json();
-        if (!isRecord(body) || !isRecord(body.lead)) {
+        const body = await readJsonObject(request);
+        if (!body || !isRecord(body.lead)) {
             return NextResponse.json({ error: "A lead object is required." }, { status: 400 });
         }
         language = normalizeLanguage(body.language ?? user.user_metadata?.language);

@@ -107,7 +107,6 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [teamSize, setTeamSize] = useState("");
@@ -269,7 +268,6 @@ export default function SettingsPage() {
       setAppLanguage(storedLanguage);
       setName(metadata.name || "");
       setUsername(metadata.username || "");
-      setAvatarUrl(metadata.avatar_url || "");
       setCompanyName(metadata.company_name || "");
       setIndustry(metadata.industry || "");
       setTeamSize(metadata.team_size || "");
@@ -386,7 +384,7 @@ export default function SettingsPage() {
       data: {
         name: trimmedName,
         username: trimmedUsername,
-        avatar_url: avatarUrl.trim(),
+        avatar_url: "",
         company_name: companyName.trim(),
         industry: industry.trim(),
         team_size: teamSize.trim(),
@@ -463,9 +461,13 @@ export default function SettingsPage() {
     if (error) {
       toast.error(toDisplayMessage(error, "Could not change password"));
     } else {
+      await supabase.auth.signOut({
+        scope: "global",
+      });
       toast.success(translateText("Password updated"));
       setNewPassword("");
       setConfirmPassword("");
+      router.push("/login");
     }
 
     setChangingPassword(false);
@@ -894,16 +896,6 @@ export default function SettingsPage() {
             />
           </label>
 
-          <label className="text-sm text-foreground/70 md:col-span-2">
-            {translateText("Profile image URL")}<input
-              value={avatarUrl}
-              onChange={(event) =>
-                setAvatarUrl(event.target.value)
-              }
-              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            />
-          </label>
-
           <label className="text-sm text-foreground/70">
             {translateText("Company name")}<input
               value={companyName}
@@ -941,21 +933,9 @@ export default function SettingsPage() {
           </label>
         </div>
 
-        {avatarUrl ? (
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
-            <img
-              src={avatarUrl}
-              alt={translateText("Profile preview")}
-              className="h-10 w-10 rounded-full object-cover"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
-            />
-
-            <span className="text-xs text-foreground/65">
-              {translateText("Preview")}</span>
-          </div>
-        ) : null}
+        <p className="mt-4 text-sm text-foreground/60">
+          {translateText("External profile image URLs are disabled for privacy. Avatar uploads are not available yet.")}
+        </p>
 
         <button
           onClick={saveProfile}

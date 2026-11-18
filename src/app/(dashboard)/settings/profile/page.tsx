@@ -10,7 +10,6 @@ import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 
 type ProfilePayload = {
   full_name: string;
-  avatar_url: string;
   company_name: string;
   phone: string;
   timezone: string;
@@ -45,7 +44,6 @@ export default function ProfileSettingsPage() {
 
   const [profile, setProfile] = useState<ProfilePayload>({
     full_name: "",
-    avatar_url: "",
     company_name: "",
     phone: "",
     timezone: DEFAULT_TIMEZONE,
@@ -72,7 +70,6 @@ export default function ProfileSettingsPage() {
 
         setProfile({
           full_name: data.name || data.full_name || "",
-          avatar_url: data.avatar || data.avatar_url || "",
           company_name: data.company || data.company_name || "",
           phone: data.phone || "",
           timezone: storedTimezone,
@@ -177,18 +174,9 @@ export default function ProfileSettingsPage() {
             />
           </label>
 
-          <label className="block text-sm text-foreground/70">
-            {translateText("Avatar URL")}<input
-              value={profile.avatar_url}
-              onChange={(event) =>
-                updateField("avatar_url", event.target.value)
-              }
-              type="url"
-              autoComplete="url"
-              placeholder={translateText("https://...")}
-              className="mt-2 w-full rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 text-foreground outline-none focus:border-cyan-400"
-            />
-          </label>
+          <p className="text-sm text-foreground/60">
+            {translateText("External profile image URLs are disabled for privacy. Avatar uploads are not available yet.")}
+          </p>
 
           <label className="block text-sm text-foreground/70">
             {translateText("Company")}<input

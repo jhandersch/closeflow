@@ -7,6 +7,7 @@ import {
 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 type Plan = "pro" | "business" | "free";
 
@@ -23,6 +24,12 @@ export async function POST(request: Request) {
             { status: 401 },
         );
     }
+
+    const limited = await checkRateLimit(`billing:change-plan:${user.id}`, {
+        limit: 10,
+        windowMs: 60 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const authz = await requireAal2(
         request,
@@ -68,8 +75,9 @@ export async function POST(request: Request) {
     );
 
     if (workspaceError) {
+        console.error("STRIPE PLAN CHANGE WORKSPACE LOAD ERROR:", workspaceError.message);
         return NextResponse.json(
-            { error: workspaceError.message },
+            { error: "Could not change billing plan." },
             { status: 500 },
         );
     }
@@ -133,10 +141,11 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (subscriptionError) {
+        console.error("STRIPE SUBSCRIPTION LOAD ERROR:", subscriptionError.message);
         return NextResponse.json(
             {
                 error:
-                    subscriptionError.message,
+                    "Could not load the current billing subscription.",
             },
             { status: 500 },
         );

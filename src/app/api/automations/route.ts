@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, requireMfaForWorkspaceRole } from "@/lib/supabase/route";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`automations:read:${user.id}`, {
+        limit: 120,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json([]);
@@ -16,7 +23,8 @@ export async function GET(request: Request) {
         .eq("workspace_id", workspace.id)
         .order("created_at", { ascending: false });
     if (queryError) {
-        return NextResponse.json({ error: queryError.message }, { status: 500 });
+        console.error("AUTOMATIONS LOAD ERROR:", queryError.message);
+        return NextResponse.json({ error: "Could not load automations." }, { status: 500 });
     }
     return NextResponse.json(data || []);
 }
@@ -27,6 +35,11 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`automations:write:${user.id}`, {
+        limit: 30,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
@@ -35,12 +48,13 @@ export async function POST(request: Request) {
     if (!authz.ok) {
         return NextResponse.json({ error: authz.message }, { status: authz.status });
     }
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const triggerEvent = typeof body.trigger_event === "string" ? body.trigger_event.trim() : "lead.created";
     const actions = Array.isArray(body.actions) ? body.actions : [];
     const enabled = body.enabled !== false;
-    if (!name) {
+    if (!name || name.length > 200 || triggerEvent.length > 100 || actions.length > 50) {
         return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
     const { data, error: insertError } = await supabase
@@ -55,7 +69,8 @@ export async function POST(request: Request) {
         .select("id, workspace_id, name, trigger_event, actions, enabled, created_at, updated_at")
         .single();
     if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 });
+        console.error("AUTOMATION CREATE ERROR:", insertError.message);
+        return NextResponse.json({ error: "Could not create automation." }, { status: 500 });
     }
     await recordAuditEvent({
         workspaceId: workspace.id,
@@ -72,6 +87,11 @@ export async function PATCH(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`automations:write:${user.id}`, {
+        limit: 30,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
@@ -80,10 +100,11 @@ export async function PATCH(request: Request) {
     if (!authz.ok) {
         return NextResponse.json({ error: authz.message }, { status: authz.status });
     }
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const id = typeof body.id === "string" ? body.id.trim() : "";
     const enabled = Boolean(body.enabled);
-    if (!id) {
+    if (!isUuid(id)) {
         return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
     const { data, error: updateError } = await supabase
@@ -94,7 +115,8 @@ export async function PATCH(request: Request) {
         .select("id, workspace_id, name, trigger_event, actions, enabled, created_at, updated_at")
         .single();
     if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        console.error("AUTOMATION UPDATE ERROR:", updateError.message);
+        return NextResponse.json({ error: "Could not update automation." }, { status: 500 });
     }
     await recordAuditEvent({
         workspaceId: workspace.id,
@@ -111,6 +133,11 @@ export async function DELETE(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`automations:write:${user.id}`, {
+        limit: 30,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json({ error: "Workspace not found" }, { status: 400 });
@@ -119,9 +146,10 @@ export async function DELETE(request: Request) {
     if (!authz.ok) {
         return NextResponse.json({ error: authz.message }, { status: authz.status });
     }
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const id = typeof body.id === "string" ? body.id.trim() : "";
-    if (!id) {
+    if (!isUuid(id)) {
         return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
     const { error: deleteError } = await supabase
@@ -130,7 +158,8 @@ export async function DELETE(request: Request) {
         .eq("id", id)
         .eq("workspace_id", workspace.id);
     if (deleteError) {
-        return NextResponse.json({ error: deleteError.message }, { status: 500 });
+        console.error("AUTOMATION DELETE ERROR:", deleteError.message);
+        return NextResponse.json({ error: "Could not delete automation." }, { status: 500 });
     }
     await recordAuditEvent({
         workspaceId: workspace.id,

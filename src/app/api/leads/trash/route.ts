@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function DELETE(request: Request) {
   const denied = await denyReadOnlyWrite(request);
@@ -13,6 +14,8 @@ export async function DELETE(request: Request) {
         { status: 401 }
       );
     }
+    const limited = await checkRateLimit(`leads:trash-empty:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const { workspace } = await loadWorkspaceForUser(
       supabase,
@@ -37,7 +40,7 @@ export async function DELETE(request: Request) {
       console.error("EMPTY TRASH LEADS ERROR:", leadsError);
 
       return NextResponse.json(
-        { error: leadsError.message },
+        { error: "Could not empty lead trash." },
         { status: 500 }
       );
     }
@@ -53,7 +56,7 @@ export async function DELETE(request: Request) {
       console.error("EMPTY TRASH TASKS ERROR:", tasksError);
 
       return NextResponse.json(
-        { error: tasksError.message },
+        { error: "Could not empty task trash." },
         { status: 500 }
       );
     }
@@ -69,7 +72,7 @@ export async function DELETE(request: Request) {
     if (calendarEventsError) {
       console.error("EMPTY TRASH CALENDAR EVENTS ERROR:", calendarEventsError);
       return NextResponse.json(
-        { error: calendarEventsError.message },
+        { error: "Could not empty calendar-event trash." },
         { status: 500 }
       );
     }

@@ -5,6 +5,24 @@ import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
+
+const isLeadMemoryResponse = (value: unknown): value is {
+  summary: string;
+  risk: string;
+  nextAction: string;
+  confidence: number;
+} => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const response = value as Record<string, unknown>;
+  return (
+    typeof response.summary === "string" && response.summary.length <= 4000 &&
+    typeof response.risk === "string" && response.risk.length <= 4000 &&
+    typeof response.nextAction === "string" && response.nextAction.length <= 1000 &&
+    typeof response.confidence === "number" && Number.isFinite(response.confidence) &&
+    response.confidence >= 0 && response.confidence <= 1
+  );
+};
 
 export async function POST(req: Request) {
     const access = await requireAiWorkspaceQuota(req);
@@ -15,15 +33,23 @@ export async function POST(req: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const payload = await req.json();
-    const { lead, activities } = payload;
+    const payload = await readJsonObject(req);
+    if (!payload) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    const lead = payload.lead && typeof payload.lead === "object" && !Array.isArray(payload.lead)
+      ? payload.lead as Record<string, unknown>
+      : null;
+    const activities = Array.isArray(payload.activities) ? payload.activities : [];
+    if (!lead) return NextResponse.json({ error: "lead is required" }, { status: 400 });
     language = normalizeLanguage(payload.language ?? user.user_metadata?.language);
     const responseLanguage = language === "de" ? "German" : "English";
 
     const history = (activities || [])
       .map(
-        (activity: any) =>
-          `${activity.created_at}: ${activity.action}`,
+        (activity: unknown) => {
+          if (!activity || typeof activity !== "object" || Array.isArray(activity)) return "";
+          const item = activity as Record<string, unknown>;
+          return `${typeof item.created_at === "string" ? item.created_at : ""}: ${typeof item.action === "string" ? item.action : ""}`;
+        },
       )
       .join("\n");
 
@@ -99,7 +125,10 @@ Consider that:
 
     const content = completion.choices[0]?.message?.content;
     if (!content) throw new Error("Azure OpenAI returned an empty lead analysis.");
-    const result = JSON.parse(content);
+    const result: unknown = JSON.parse(content);
+    if (!isLeadMemoryResponse(result)) {
+      throw new Error("Azure OpenAI returned an invalid lead analysis.");
+    }
 
     return NextResponse.json(result);
   } catch (error) {

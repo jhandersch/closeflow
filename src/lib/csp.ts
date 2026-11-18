@@ -25,14 +25,16 @@ export function buildCsp({ nonce, isDev = false, supabaseUrl }: CspOptions) {
     connect.push(supabaseOrigin, supabaseOrigin.replace(/^http/, "ws"));
   }
   if (isDev) connect.push("ws:", "http://localhost:*");
+  connect.push("https://hcaptcha.com", "https://*.hcaptcha.com");
 
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://hcaptcha.com https://*.hcaptcha.com${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src ${connect.join(" ")}`,
+    "frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com",
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'none'",

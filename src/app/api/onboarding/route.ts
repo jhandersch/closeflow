@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugifyWorkspaceName, loadWorkspaceForUser, } from "@/lib/supabase/route";
+import { readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 type QuickStartMode = "lead" | "demo";
 export async function POST(request: Request) {
     const supabase = await createClient();
@@ -11,9 +13,14 @@ export async function POST(request: Request) {
         console.error("ONBOARDING AUTH ERROR:", userError);
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`onboarding:write:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     console.log("ONBOARDING USER:", user.id);
     try {
-        const body = await request.json();
+        const body = await readJsonObject(request);
+        if (!body) {
+            return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+        }
         const companyName = typeof body.companyName === "string"
             ? body.companyName.trim()
             : "";
@@ -38,6 +45,14 @@ export async function POST(request: Request) {
         const leadStatus = typeof body.leadStatus === "string"
             ? body.leadStatus.trim()
             : "new";
+        if (companyName.length > 200 ||
+            industry.length > 100 ||
+            teamSize.length > 50 ||
+            leadName.length > 200 ||
+            leadCompany.length > 200 ||
+            leadValueRaw.length > 30) {
+            return NextResponse.json({ error: "Onboarding fields exceed the allowed length." }, { status: 400 });
+        }
         if (!companyName) {
             return NextResponse.json({ error: "Company name required" }, { status: 400 });
         }
@@ -95,10 +110,10 @@ export async function POST(request: Request) {
         if (workspaceError) {
             console.error("ONBOARDING WORKSPACE ERROR:", workspaceError);
             if (workspaceError.code === "23514") {
-                return NextResponse.json({ error: workspaceError.message }, { status: 409 });
+                return NextResponse.json({ error: "Workspace limit reached." }, { status: 409 });
             }
             if (workspaceError.code === "22023") {
-                return NextResponse.json({ error: workspaceError.message }, { status: 400 });
+                return NextResponse.json({ error: "Workspace details are invalid." }, { status: 400 });
             }
             throw workspaceError;
         }

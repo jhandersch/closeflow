@@ -5,9 +5,10 @@ import { runLeadAutomation } from "@/lib/automation";
 import { runWorkflowAutomations, workflowEventForStatus } from "@/lib/workflowAutomations";
 import { getDefaultStatusNextAction } from "@/lib/leadNextAction";
 import type { Lead } from "@/types";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
 import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
+import { readJsonObject } from "@/lib/requestValidation";
 type RouteSupabase = Awaited<ReturnType<typeof getRouteUser>>["supabase"];
 type CustomerLead = {
   id: string;
@@ -87,6 +88,11 @@ export async function GET(req: Request) {
         },
       );
     }
+    const limited = await checkRateLimit(`leads:read:${user.id}`, {
+      limit: 120,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
       return NextResponse.json(
@@ -171,8 +177,8 @@ export async function POST(req: Request) {
         },
       );
     }
-    const body: unknown = await req.json();
-    if (!isRecord(body)) {
+    const body = await readJsonObject(req);
+    if (!body) {
       return NextResponse.json({ error: "A lead object is required" }, { status: 400 });
     }
     if (typeof body.name !== "string" || !body.name.trim()) {
@@ -433,13 +439,13 @@ export async function PUT(req: Request) {
     const terminalStatus =
       updates.status === "won" || updates.status === "lost";
     if (terminalStatus) {
-      const existingCosts = Array.isArray(
+      const existingCosts: unknown[] = Array.isArray(
         user.user_metadata?.personal_deal_costs,
       )
         ? user.user_metadata.personal_deal_costs
         : [];
       const personalDealCosts = existingCosts.filter(
-        (item: any) => item?.lead_id !== id,
+        (item) => !isRecord(item) || item.lead_id !== id,
       );
       if (personalDealCosts.length !== existingCosts.length) {
         const { error: costCleanupError } = await supabase.auth.updateUser({

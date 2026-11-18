@@ -1,6 +1,7 @@
 import { translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
 export const dynamic = "force-dynamic";
 const REQUIRED_ENV = [
     "NEXT_PUBLIC_SUPABASE_URL",
@@ -30,7 +31,12 @@ async function checkDatabase() {
     }
 }
 // Public endpoint: reports only pass/fail per check, never values or error details.
-export async function GET() {
+export async function GET(request: Request) {
+    const limited = await checkRateLimit(`health:read:${getClientIp(request)}`, {
+        limit: 60,
+        windowMs: 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const database = await checkDatabase();
     const config = REQUIRED_ENV.every((name) => Boolean(process.env[name]?.trim()));
     const ok = database && config;

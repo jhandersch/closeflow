@@ -34,9 +34,10 @@ export async function GET(request: Request) {
     );
 
     if (workspaceError) {
+        console.error("BILLING WORKSPACE LOAD ERROR:", workspaceError.message);
         return NextResponse.json(
             {
-                error: workspaceError.message,
+                error: "Could not load billing information.",
             },
             { status: 500 },
         );
@@ -101,9 +102,10 @@ export async function GET(request: Request) {
         .maybeSingle();
 
     if (subscriptionError) {
+        console.error("BILLING SUBSCRIPTION LOAD ERROR:", subscriptionError.message);
         return NextResponse.json(
             {
-                error: subscriptionError.message,
+                error: "Could not load billing information.",
             },
             { status: 500 },
         );

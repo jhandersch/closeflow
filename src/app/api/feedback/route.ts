@@ -77,6 +77,8 @@ export async function GET(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`feedback:read:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace) {
         return NextResponse.json({ items: [] });

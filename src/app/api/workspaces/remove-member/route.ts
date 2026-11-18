@@ -2,19 +2,29 @@ import { NextResponse } from "next/server";
 import { getRouteUser, requireMfaForWorkspaceRole, } from "@/lib/supabase/route";
 import { getWorkspaceUserRole, } from "@/lib/supabase/workspaceAuth";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function POST(request: Request) {
     const { supabase, user, error, } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json();
+    const limited = await checkRateLimit(`workspace:member-remove:${user.id}`, {
+        limit: 30,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
+    const body = await readJsonObject(request);
+    if (!body) {
+        return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const workspaceId = typeof body.workspace_id === "string"
         ? body.workspace_id.trim()
         : "";
     const userId = typeof body.user_id === "string"
         ? body.user_id.trim()
         : "";
-    if (!workspaceId || !userId) {
+    if (!isUuid(workspaceId) || !isUuid(userId)) {
         return NextResponse.json({
             error: "workspace_id and user_id are required",
         }, { status: 400 });
@@ -54,7 +64,8 @@ export async function POST(request: Request) {
         .eq("user_id", userId)
         .maybeSingle();
     if (targetError) {
-        return NextResponse.json({ error: targetError.message }, { status: 500 });
+        console.error("WORKSPACE MEMBER TARGET LOOKUP ERROR:", targetError.message);
+        return NextResponse.json({ error: "Could not load workspace member." }, { status: 500 });
     }
     if (!targetMember) {
         return NextResponse.json({
@@ -85,7 +96,8 @@ export async function POST(request: Request) {
         .eq("workspace_id", workspaceId)
         .eq("user_id", userId);
     if (memberError) {
-        return NextResponse.json({ error: memberError.message }, { status: 500 });
+        console.error("WORKSPACE MEMBER REMOVE ERROR:", memberError.message);
+        return NextResponse.json({ error: "Could not remove workspace member." }, { status: 500 });
     }
     await recordAuditEvent({
         workspaceId,

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`dashboard:forecast:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
         return NextResponse.json({ pipelineValue: 0, weightedRevenue: 0, winRate: 0 });
@@ -14,7 +17,8 @@ export async function GET(request: Request) {
         .select("value, status")
         .eq("workspace_id", workspace.id);
     if (leadsError) {
-        return NextResponse.json({ error: leadsError.message }, { status: 500 });
+        console.error("DASHBOARD FORECAST LOAD ERROR:", leadsError.message);
+        return NextResponse.json({ error: "Could not load forecast." }, { status: 500 });
     }
     const activeLeads = (leads || []).filter((lead) => lead.status === "new" ||
         lead.status === "contacted" ||

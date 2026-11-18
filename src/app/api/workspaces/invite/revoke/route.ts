@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
 
 export async function POST(request: Request) {
   const { supabase, user, error } = await getRouteUser(request);
@@ -10,13 +12,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const limited = await checkRateLimit(`workspace:invite-revoke:${user.id}`, {
+    limit: 30,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.success) return rateLimitResponse(limited);
+
+  const body = await readJsonObject(request);
+  if (!body) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
   const workspaceId =
     typeof body.workspace_id === "string" ? body.workspace_id.trim() : "";
   const inviteId =
     typeof body.invite_id === "string" ? body.invite_id.trim() : "";
 
-  if (!workspaceId || !inviteId) {
+  if (!isUuid(workspaceId) || !isUuid(inviteId)) {
     return NextResponse.json(
       { error: "workspace_id and invite_id are required" },
       { status: 400 },

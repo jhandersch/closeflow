@@ -4,6 +4,7 @@ import {
     loadWorkspaceForUser,
 } from "@/lib/supabase/route";
 import { isPlatformAdminUser } from "@/lib/platformAdmin";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
     const {
@@ -18,6 +19,11 @@ export async function GET(request: Request) {
             { status: 401 },
         );
     }
+    const limited = await checkRateLimit(`permissions:read:${user.id}`, {
+        limit: 120,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const preferredWorkspaceId =
         request.headers.get(

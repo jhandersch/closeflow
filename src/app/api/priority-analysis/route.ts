@@ -8,12 +8,32 @@ import {
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
+
+const isPriorityAnalysisResponse = (
+  value: unknown,
+): value is { explanation: string; nextAction: string } => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const response = value as Record<string, unknown>;
+  return (
+    typeof response.explanation === "string" &&
+    response.explanation.trim().length > 0 &&
+    response.explanation.length <= 4000 &&
+    typeof response.nextAction === "string" &&
+    response.nextAction.trim().length > 0 &&
+    response.nextAction.length <= 1000
+  );
+};
+
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
   if (!access.ok) return access.response;
   let language = normalizeLanguage(undefined);
   try {
-    const payload = await request.json();
+    const payload = await readJsonObject(request);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     language = normalizeLanguage(payload?.language);
     const responseLanguage = language === "de" ? "German" : "English";
     const model = "gpt-4.1-mini";
@@ -65,7 +85,15 @@ ${aiTerminologyRules(language)}
     );
     if (!response.ok) throw new Error(translateText("Azure OpenAI request failed."));
     const data = await response.json();
-    return NextResponse.json(JSON.parse(data.choices[0].message.content));
+    const content = data.choices?.[0]?.message?.content;
+    if (typeof content !== "string") {
+      throw new Error("Priority analysis returned no content.");
+    }
+    const parsed: unknown = JSON.parse(content);
+    if (!isPriorityAnalysisResponse(parsed)) {
+      throw new Error("Priority analysis returned an invalid response.");
+    }
+    return NextResponse.json(parsed);
   } catch (error) {
     console.error("Priority analysis failed:", error);
     return NextResponse.json(

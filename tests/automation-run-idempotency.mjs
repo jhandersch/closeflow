@@ -1,26 +1,45 @@
 // Rolled-back production check for automation_runs RLS and idempotency.
 import pg from "pg";
 import fs from "node:fs";
+import { randomUUID } from "node:crypto";
 
-const env = Object.fromEntries(
-  fs
-    .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
-    .split(/\r?\n/)
-    .filter((l) => l.includes("=") && !l.startsWith("#"))
-    .map((l) => {
-      const i = l.indexOf("=");
-      return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
-    })
-);
-const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
-const client = new pg.Client({
-  host: `db.${ref}.supabase.co`,
-  port: 5432,
-  user: "postgres",
-  password: env.SUPABASE_DB_PASSWORD,
-  database: "postgres",
-  ssl: { rejectUnauthorized: false },
-});
+const isLocal = process.env.CLOSEFLOW_LOCAL_DB === "1";
+let client;
+if (isLocal) {
+  client = new pg.Client({
+    host: process.env.LOCAL_PG_HOST || "127.0.0.1",
+    port: Number(process.env.LOCAL_PG_PORT || "54322"),
+    user: process.env.LOCAL_PG_USER || "postgres",
+    password: process.env.LOCAL_PG_PASSWORD || "postgres",
+    database: process.env.LOCAL_PG_DATABASE || "postgres",
+  });
+} else {
+  if (process.env.CLOSEFLOW_ALLOW_REMOTE_RLS_TEST !== "YES") {
+    throw new Error(
+      "Refusing remote automation idempotency check. Set CLOSEFLOW_ALLOW_REMOTE_RLS_TEST=YES only for an authorized remote test.",
+    );
+  }
+
+  const env = Object.fromEntries(
+    fs
+      .readFileSync(new URL("../.env.local", import.meta.url), "utf8")
+      .split(/\r?\n/)
+      .filter((l) => l.includes("=") && !l.startsWith("#"))
+      .map((l) => {
+        const i = l.indexOf("=");
+        return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
+      })
+  );
+  const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0];
+  client = new pg.Client({
+    host: `db.${ref}.supabase.co`,
+    port: 5432,
+    user: "postgres",
+    password: env.SUPABASE_DB_PASSWORD,
+    database: "postgres",
+    ssl: { rejectUnauthorized: false },
+  });
+}
 
 const results = [];
 const check = (name, ok, detail = "") => {
@@ -31,10 +50,29 @@ const check = (name, ok, detail = "") => {
 await client.connect();
 try {
   await client.query("begin");
-  const { rows } = await client.query(
+  let { rows } = await client.query(
     "select workspace_id, user_id from public.workspace_members where role='owner' limit 1"
   );
-  const { workspace_id: ws, user_id: uid } = rows[0];
+  if (isLocal && rows.length === 0) {
+    const uid = randomUUID();
+    const ws = randomUUID();
+    const otherWs = randomUUID();
+    await client.query(
+      "insert into auth.users (id, aud, role, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values ($1, 'authenticated', 'authenticated', $2, now(), '{}', '{}', now(), now())",
+      [uid, `closeflow-automation-${uid}@example.invalid`]
+    );
+    await client.query(
+      "insert into public.workspaces (id, name, owner_id) values ($1, 'Automation Test Workspace', $2), ($3, 'Automation Other Workspace', $2)",
+      [ws, uid, otherWs]
+    );
+    await client.query(
+      "insert into public.workspace_members (workspace_id, user_id, role) values ($1, $2, 'owner'), ($3, $2, 'owner')",
+      [ws, uid, otherWs]
+    );
+    rows = [{ workspace_id: ws, user_id: uid }];
+  }
+  const { workspace_id: ws, user_id: uid } = rows[0] || {};
+  if (!ws || !uid) throw new Error("No local automation fixture is available.");
   const other = await client.query(
     "select id from public.workspaces where id <> $1 limit 1",
     [ws]

@@ -11,7 +11,8 @@ export async function GET(request: Request) {
         .eq("user_id", user.id)
         .is("used_at", null);
     if (countError) {
-        return NextResponse.json({ error: countError.message }, { status: 500 });
+        console.error("MFA RECOVERY CODE STATUS ERROR:", countError.message);
+        return NextResponse.json({ error: "Could not load recovery-code status." }, { status: 500 });
     }
     return NextResponse.json({ remaining: count || 0 });
 }

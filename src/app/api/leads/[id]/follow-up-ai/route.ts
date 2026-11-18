@@ -6,6 +6,7 @@ import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
 export async function POST(request: Request, context: {
     params: Promise<{
         id: string;
@@ -15,7 +16,13 @@ export async function POST(request: Request, context: {
     if (!access.ok) return access.response;
     try {
         const { id } = await context.params;
-        const requestBody = await request.json().catch(() => ({}));
+        const requestBody = await readJsonObject(request);
+        if (!requestBody) {
+            return NextResponse.json({ error: "A JSON object is required." }, { status: 400 });
+        }
+        if (!isUuid(id)) {
+            return NextResponse.json({ error: "Invalid lead id." }, { status: 400 });
+        }
         const cookieSupabase = await createClient();
         const authorization = request.headers.get("authorization");
         const bearerToken = authorization?.startsWith("Bearer ")
@@ -117,10 +124,23 @@ Create the best follow-up.
                 }
             ]
         });
-        const result = JSON.parse(completion
+        const result: unknown = JSON.parse(completion
             .choices[0]
             .message
             .content || "{}");
+        if (
+            !result ||
+            typeof result !== "object" ||
+            Array.isArray(result) ||
+            !Object.entries(result).every(
+                ([key, value]) =>
+                    ["subject", "email", "reason", "next_action"].includes(key) &&
+                    typeof value === "string" &&
+                    value.length <= (key === "email" ? 12000 : 2000),
+            )
+        ) {
+            throw new Error("Lead follow-up AI returned an invalid response.");
+        }
         return NextResponse.json(result);
     }
     catch (error) {

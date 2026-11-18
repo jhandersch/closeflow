@@ -5,7 +5,15 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 
 // CLOSEFLOW_LOCAL_DB=1 targets only the local Supabase stack and never reads .env.local.
+// Remote execution is intentionally opt-in because it creates test users/data and
+// requires reading a database password from the local environment.
 const useLocal = process.env.CLOSEFLOW_LOCAL_DB === "1";
+const allowRemote = process.env.CLOSEFLOW_ALLOW_REMOTE_RLS_TEST === "YES";
+if (!useLocal && !allowRemote) {
+  throw new Error(
+    "Refusing remote RLS test. Set CLOSEFLOW_LOCAL_DB=1 for local Supabase or explicitly set CLOSEFLOW_ALLOW_REMOTE_RLS_TEST=YES for an authorized remote test.",
+  );
+}
 let c;
 if (useLocal) {
   c = new pg.Client({
@@ -320,16 +328,35 @@ try {
 
   const viewerRpcLeavesStateUnchanged = async (call, params, stateSql, stateParams) => {
     await c.query("savepoint viewer_rpc");
-    let blocked = false;
-    let changed = false;
+    let callError = null;
     try {
       await c.query(call, params);
+    } catch (error) {
+      callError = error;
+    }
+    if (callError) {
+      await c.query("rollback to savepoint viewer_rpc");
+      const code = typeof callError.code === "string" ? callError.code : "unknown";
+      const message = typeof callError.message === "string" ? callError.message : "";
+      const expectedDenial =
+        code === "42501" ||
+        (code === "P0001" && message === "Lead not found or workspace access denied");
+      return {
+        ok: expectedDenial,
+        detail: `error ${code}`,
+      };
+    }
+
+    let changed;
+    try {
       changed = (await c.query(stateSql, stateParams)).rows[0].changed === true;
-    } catch {
-      blocked = true;
+    } catch (error) {
+      await c.query("rollback to savepoint viewer_rpc");
+      const code = typeof error.code === "string" ? error.code : "unknown";
+      return { ok: false, detail: `state check error ${code}` };
     }
     await c.query("rollback to savepoint viewer_rpc");
-    return blocked || !changed;
+    return { ok: !changed, detail: changed ? "state changed" : "state unchanged" };
   };
   const viewerRpcCases = [
     [
@@ -370,9 +397,10 @@ try {
   ];
   if (!rpcSeedOk) console.log("INFO viewer RPC checks skipped: task seed blocked by RLS on this database");
   for (const [name, call, params, stateSql, stateParams] of rpcSeedOk ? viewerRpcCases : []) {
+    const result = await viewerRpcLeavesStateUnchanged(call, params, stateSql, stateParams);
     report(
-      await viewerRpcLeavesStateUnchanged(call, params, stateSql, stateParams),
-      `rpc ${name}: viewer cannot change workspace data`
+      result.ok,
+      `rpc ${name}: viewer cannot change workspace data (${result.detail})`
     );
   }
 

@@ -6,6 +6,7 @@ import { getUserFacingErrorMessage } from "@/lib/errorRecovery";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 import { escapeCsvCell } from "@/lib/csv";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 type CustomerSummary = {
     company: string;
     contact: string;
@@ -31,6 +32,8 @@ export async function GET(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`customers:export:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     const timezone = resolveExportTimezone(user.user_metadata?.timezone);
     const exportDate = getExportDateKey(new Date(), timezone);

@@ -5,6 +5,8 @@ import {
     getRouteUser,
     loadWorkspaceForUser,
 } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { readJsonObject } from "@/lib/requestValidation";
 
 const DEFAULT_TIMEZONE = "Europe/Berlin";
 
@@ -247,6 +249,8 @@ export async function POST(
             { status: 401 },
         );
     }
+    const limited = await checkRateLimit(`activity:write:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const { workspace } =
         await loadWorkspaceForUser(
@@ -262,8 +266,13 @@ export async function POST(
     }
 
     try {
-        const body =
-            await request.json();
+        const body = await readJsonObject(request);
+        if (!body) {
+            return NextResponse.json(
+                { error: "Invalid request." },
+                { status: 400 },
+            );
+        }
 
         const leadId =
             typeof body.lead_id ===
@@ -304,7 +313,8 @@ export async function POST(
         const metadata =
             typeof body.metadata ===
                 "object" &&
-            body.metadata !== null
+            body.metadata !== null &&
+            !Array.isArray(body.metadata)
                 ? body.metadata
                 : {};
 
@@ -413,6 +423,8 @@ export async function GET(
             { status: 401 },
         );
     }
+    const limited = await checkRateLimit(`activity:read:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const { workspace } =
         await loadWorkspaceForUser(
@@ -444,7 +456,7 @@ export async function GET(
                 timeZone,
             );
 
-        const data: Array<Record<string, any>> = [];
+        const data: Array<Record<string, unknown>> = [];
         const pageSize = 1000;
         for (let offset = 0; ; offset += pageSize) {
             const { data: page, error: queryError } = await supabase
@@ -457,7 +469,8 @@ export async function GET(
                 .range(offset, offset + pageSize - 1);
 
             if (queryError) {
-                return NextResponse.json({ error: queryError.message }, { status: 500 });
+                console.error("ACTIVITY LOAD ERROR:", queryError.message);
+                return NextResponse.json({ error: "Could not load activity." }, { status: 500 });
             }
             data.push(...(page || []));
             if (!page || page.length < pageSize) break;

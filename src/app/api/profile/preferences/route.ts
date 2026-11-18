@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { getRouteUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
+import { readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function PATCH(request: Request) {
   const { supabase, user, error } = await getRouteUser(request);
@@ -13,7 +15,16 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const body = await request.json();
+  const limited = await checkRateLimit(`profile:preferences:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
+
+  const body = await readJsonObject(request);
+  if (!body) {
+    return NextResponse.json(
+      { error: "Invalid request." },
+      { status: 400 },
+    );
+  }
 
   const phone =
     typeof body.phone === "string"
@@ -44,9 +55,10 @@ export async function PATCH(request: Request) {
     });
 
   if (authError) {
+    console.error("PROFILE PREFERENCES AUTH UPDATE ERROR:", authError.message);
     return NextResponse.json(
-      { error: authError.message },
-      { status: 400 },
+      { error: "Could not update preferences." },
+      { status: 500 },
     );
   }
 
@@ -57,9 +69,10 @@ export async function PATCH(request: Request) {
       .eq("id", user.id);
 
   if (profileError) {
+    console.error("PROFILE PREFERENCES PROFILE UPDATE ERROR:", profileError.message);
     return NextResponse.json(
-      { error: profileError.message },
-      { status: 400 },
+      { error: "Could not update preferences." },
+      { status: 500 },
     );
   }
 

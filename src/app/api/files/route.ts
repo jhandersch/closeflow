@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser } from "@/lib/supabase/route";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { isUuid } from "@/lib/requestValidation";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,8 @@ function safeFilename(value: string) {
 export async function GET(request: Request) {
   const { supabase, user, error } = await getRouteUser(request);
   if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const limited = await checkRateLimit(`files:read:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
 
   const url = new URL(request.url);
   let workspaceId: string | undefined;
@@ -103,6 +106,9 @@ export async function POST(request: Request) {
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json({ error: "Files must be 20 MB or smaller." }, { status: 413 });
   }
+  if (typeof requestedWorkspaceId === "string" && !isUuid(requestedWorkspaceId)) {
+    return NextResponse.json({ error: "Invalid workspace." }, { status: 400 });
+  }
 
   let workspaceId: string | undefined;
   try {
@@ -131,6 +137,8 @@ export async function DELETE(request: Request) {
   if (denied) return denied;
   const { supabase, user, error } = await getRouteUser(request);
   if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const limited = await checkRateLimit(`files:delete:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
 
   let body: { workspaceId?: unknown; path?: unknown };
   try {
@@ -140,6 +148,9 @@ export async function DELETE(request: Request) {
   }
   const { workspaceId: requestedWorkspaceId, path } = body;
   if (typeof path !== "string" || typeof requestedWorkspaceId !== "string") {
+    return NextResponse.json({ error: "Invalid file." }, { status: 400 });
+  }
+  if (!isUuid(requestedWorkspaceId) || path.length > 500) {
     return NextResponse.json({ error: "Invalid file." }, { status: 400 });
   }
 

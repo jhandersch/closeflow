@@ -22,9 +22,7 @@ async function syncProfile(supabase: any, user: any) {
             "",
         company_name: metadata.company_name ||
             "",
-        avatar_url: metadata.avatar_url ||
-            metadata.picture ||
-            "",
+        avatar_url: "",
         language: metadata.language === "en" ? "en" : "de",
         role: "owner",
     });

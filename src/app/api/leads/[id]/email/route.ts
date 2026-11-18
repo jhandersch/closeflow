@@ -7,6 +7,8 @@ import {
     loadWorkspaceForUser,
     READ_ONLY_ERROR,
 } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
 export async function POST(request: Request, { params }: {
     params: Promise<{
         id: string;
@@ -16,6 +18,8 @@ export async function POST(request: Request, { params }: {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`lead:email:${user.id}`, { limit: 30, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace, role, error: workspaceError } = await loadWorkspaceForUser(
         supabase,
         user.id,
@@ -32,7 +36,7 @@ export async function POST(request: Request, { params }: {
         return NextResponse.json({ error: READ_ONLY_ERROR }, { status: 403 });
     }
     const { id: leadId } = await params;
-    if (!leadId) {
+    if (!leadId || !isUuid(leadId)) {
         return NextResponse.json({ error: "leadId is required" }, { status: 400 });
     }
     const { data: lead, error: leadError } = await supabase
@@ -48,12 +52,18 @@ export async function POST(request: Request, { params }: {
     if (!lead) {
         return NextResponse.json({ error: "Lead not found." }, { status: 404 });
     }
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body) {
+        return NextResponse.json({ error: "A JSON object is required." }, { status: 400 });
+    }
     const to = typeof body.to === "string" ? body.to.trim() : "";
     const subject = typeof body.subject === "string" ? body.subject.trim() : "";
     const bodyText = typeof body.body === "string" ? body.body.trim() : "";
     if (!to || !subject || !bodyText) {
         return NextResponse.json({ error: "to, subject and body are required" }, { status: 400 });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || to.length > 254 || subject.length > 300 || bodyText.length > 12000) {
+        return NextResponse.json({ error: "Invalid email fields." }, { status: 400 });
     }
     let sentViaGmail = false;
     try {
@@ -79,7 +89,8 @@ export async function POST(request: Request, { params }: {
         created_at: new Date().toISOString(),
     });
     if (activityError) {
-        return NextResponse.json({ error: activityError.message }, { status: 500 });
+        console.error("LEAD EMAIL ACTIVITY LOG ERROR:", activityError.message);
+        return NextResponse.json({ error: "The email was sent but could not be recorded." }, { status: 500 });
     }
     return NextResponse.json({ ok: true, to, subject, sentViaGmail });
 }

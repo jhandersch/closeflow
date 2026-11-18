@@ -5,12 +5,15 @@ import { buildGoogleAuthUrl, getGoogleConfig, revokeGoogleToken, type GoogleCred
 import { deleteIntegration, loadIntegration } from "@/lib/integrations/store";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
   const { user, error } = await getRouteUser(request);
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = await checkRateLimit(`google:connect:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
   const config = getGoogleConfig();
   if (!config || !isEncryptionConfigured()) {
     return NextResponse.json({ error: "Google integration is not configured." }, { status: 503 });
@@ -23,6 +26,8 @@ export async function DELETE(request: Request) {
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = await checkRateLimit(`google:disconnect:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
   try {
     const existing = await loadIntegration<GoogleCredentials>(user.id, "google");
     if (existing) await revokeGoogleToken(existing.credentials.refreshToken);

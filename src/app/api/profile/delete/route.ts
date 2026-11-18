@@ -3,11 +3,17 @@ import { createClient } from "@supabase/supabase-js";
 import { getRouteUser, requireAal2 } from "@/lib/supabase/route";
 import { revokeGoogleToken, type GoogleCredentials } from "@/lib/integrations/google";
 import { loadIntegration } from "@/lib/integrations/store";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function POST(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`profile:delete:${user.id}`, {
+        limit: 3,
+        windowMs: 60 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
     const authz = await requireAal2(request, supabase);
     if (!authz.ok) {
         return NextResponse.json({ error: authz.message }, { status: authz.status });

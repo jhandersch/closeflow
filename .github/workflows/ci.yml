@@ -36,6 +36,42 @@ jobs:
           npm run test:csv
           npm run test:usage-quota
           npm run test:workspace-auth
+          npm run test:mfa-recovery
+          npm run test:auth-session-security
+          npm run test:security-error-contract
+          npm run test:session-timeout
+          npm run test:invite-email-confirmation
+          npm run test:rate-limit-fail-closed
+          npm run test:critical-rate-limit-coverage
+          npm run test:request-schema-contract
+          npm run test:field-validation-contract
+          npm run test:write-route-validation-contract
+          npm run test:remaining-write-validation-contract
+          npm run test:write-abuse-limit-contract
+          npm run test:privileged-workspace-abuse-contract
+          npm run test:audit-log-access-contract
+          npm run test:cron-auth-contract
+          npm run test:export-error-contract
+          npm run test:backup-restore-safety-contract
+          npm run test:api-auth-surface-contract
+          npm run test:monitoring-error-contract
+          npm run test:integration-abuse-contract
+          npm run test:remaining-mutation-abuse-contract
+          npm run test:activity-abuse-contract
+          npm run test:billing-integration-security-contract
+          npm run test:profile-onboarding-invite-abuse-contract
+          npm run test:ai-output-validation-contract
+          npm run test:lead-analysis-security-contract
+          npm run test:notifications-usage-security-contract
+          npm run test:data-read-abuse-contract
+          npm run test:export-file-security-contract
+          npm run test:calendar-workspace-security-contract
+          npm run test:general-api-read-security-contract
+          npm run test:remaining-ai-input-security-contract
+          npm run test:health-cron-security-contract
+          npm run test:ai-chat-followup-input-contract
+          npm run test:supabase-storage-realtime-contract
+          npm run test:supabase-function-grant-contract
           npm run test:feedback-token
           npm run test:workflow-automations
           npm run test:workspace-capacity

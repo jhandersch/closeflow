@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, requireAal2, } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
 export async function POST(request: Request) {
     try {
         const { supabase, user, error } = await getRouteUser(request);
         if (error || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const body = await request.json();
+        const limited = await checkRateLimit(`workspace:delete:${user.id}`, {
+            limit: 5,
+            windowMs: 60 * 60 * 1000,
+        });
+        if (!limited.success) return rateLimitResponse(limited);
+        const body = await readJsonObject(request);
+        if (!body) {
+            return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+        }
         const workspaceId = typeof body.workspace_id === "string"
             ? body.workspace_id.trim()
             : "";
-        if (!workspaceId) {
+        if (!isUuid(workspaceId)) {
             return NextResponse.json({ error: "workspace_id is required" }, { status: 400 });
         }
         /*
@@ -23,7 +33,7 @@ export async function POST(request: Request) {
             .maybeSingle();
         if (workspaceError) {
             console.error("LOAD WORKSPACE FOR DELETE ERROR:", workspaceError);
-            return NextResponse.json({ error: workspaceError.message }, { status: 500 });
+            return NextResponse.json({ error: "Could not load workspace." }, { status: 500 });
         }
         if (!workspace) {
             return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
@@ -55,7 +65,7 @@ export async function POST(request: Request) {
             .maybeSingle();
         if (workspaceDeleteError) {
             console.error("DELETE WORKSPACE ERROR:", workspaceDeleteError);
-            return NextResponse.json({ error: workspaceDeleteError.message }, { status: 500 });
+            return NextResponse.json({ error: "Could not delete workspace." }, { status: 500 });
         }
         if (!deletedWorkspace) {
             return NextResponse.json({
@@ -70,9 +80,7 @@ export async function POST(request: Request) {
     catch (error) {
         console.error("DELETE WORKSPACE CRASH:", error);
         return NextResponse.json({
-            error: error instanceof Error
-                ? error.message
-                : "Internal Server Error",
+            error: "Could not delete workspace.",
         }, { status: 500 });
     }
 }

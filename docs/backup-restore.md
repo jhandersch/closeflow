@@ -52,6 +52,23 @@ Der vereinbarte Rhythmus ist wöchentlich sowie zusätzlich vor Datenbankmigrati
 - `auth-data.sql`: 3 Nutzer, Identitäten und MFA-Faktor wiederhergestellt; keine verwaisten Verweise von `workspace_members` und `workspaces` auf `auth.users`.
 - Befund: Das lokale Auth-Image war älter als die Produktion. `mfa_recovery_code_sets`, `mfa_recovery_codes`, `scim_tokens`, `scim_users` und die Spalte `one_time_tokens.expires_at` fehlten dort, die Daten dieser Tabellen wurden beim Test nicht eingespielt. Das ist ein Versionsunterschied der Testumgebung, kein Backup-Fehler, wurde aber nicht gegen ein neues Supabase-Cloud-Projekt geprüft.
 
+## Aktueller lokaler Restore-Test 2026-11-15
+
+- Den aktuellen `public`-Stand der lokalen Supabase-Instanz in einen temporären Dump exportiert und dessen SHA-256-Prüfsumme berechnet; Dump-Inhalt und Schlüssel wurden nicht ausgegeben.
+- `scripts/restore-supabase-public.ps1` ausschließlich gegen den lokalen Loopback-Postgres-Endpunkt ausgeführt. Vor dem Restore wurden die Tabellenzeilenzahlen mit dem Dump verglichen; bei Abweichung hätte das Skript abgebrochen.
+- Transaktionaler Restore erfolgreich: 33 Tabellen, 0 Zeilenabweichungen; 970 Rechte-Einträge vor/nachher identisch; RLS 33/33; 85 Policies. Es waren keine Auth-Trigger oder Realtime-Tabellen außerhalb von `public` wiederherzustellen.
+- Der temporäre Dump wurde anschließend entfernt. Auth-Schema und Auth-Testkonto wurden vom `public`-Restore nicht verändert.
+- Das ist ein lokaler Funktions-/Restore-Nachweis, kein frisches externes Backup und kein aktueller Produktions-Restore-Nachweis. Provider-Backups/PITR und getrennte, verschlüsselte Sicherungsmedien bleiben separat erforderlich.
+
+## Gemessener lokaler Restore-Test 2026-11-17
+
+- Ein neuer temporärer `public`-Dump und Rechte-Dump wurden gegen den lokalen Loopback-Postgres erstellt.
+- `scripts/restore-supabase-public.ps1` wurde mit `host.docker.internal:54322` ausgeführt; der Docker-Container wurde über das lokale Host-Netzwerk verbunden.
+- Der vollständige Skriptlauf dauerte 55,57 Sekunden.
+- Ergebnis: 33 Tabellen, 0 Zeilenabweichungen, Rechte 970/970 identisch, RLS 33/33 und 85 Policies.
+- Temporäre Dump- und Vorab-Restore-Dateien wurden danach gezielt entfernt.
+- Dieser Nachweis ergänzt die RTO-Schätzung, ersetzt aber weder ein externes, verschlüsseltes Backup noch einen Produktions-Restore.
+
 ## In-Place-Restore von `public` (scripts/restore-supabase-public.ps1)
 
 ```powershell

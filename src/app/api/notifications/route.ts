@@ -3,12 +3,15 @@ import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
 import { buildAutomationNotifications, buildIdleLeadNotifications } from "@/lib/leadNotifications";
 import { runTimeBasedAutomationsForWorkspace } from "@/lib/timeBasedAutomations";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`notifications:read:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
         return NextResponse.json([]);
@@ -33,7 +36,7 @@ export async function GET(request: Request) {
         return NextResponse.json([...idle, ...automation]);
     }
     catch (loadError) {
-        const message = loadError instanceof Error ? loadError.message : "Could not load notifications";
-        return NextResponse.json({ error: message }, { status: 500 });
+        console.error("Could not load notifications:", loadError);
+        return NextResponse.json({ error: "Could not load notifications." }, { status: 500 });
     }
 }

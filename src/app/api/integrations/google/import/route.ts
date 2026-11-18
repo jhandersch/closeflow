@@ -7,6 +7,7 @@ import {
   getRouteUser,
   loadWorkspaceForUser,
 } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -18,6 +19,8 @@ export async function POST(request: Request) {
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limited = await checkRateLimit(`google:calendar-import:${user.id}`, { limit: 10, windowMs: 10 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
 
   const { workspace } = await loadWorkspaceForUser(supabase, user.id);
   if (!workspace?.id) {

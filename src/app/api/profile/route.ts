@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 
 import { getRouteUser } from "@/lib/supabase/route";
 import { normalizeLanguage } from "@/lib/i18n";
+import {
+  hasUnsupportedProfileAvatarUrl,
+  PROFILE_AVATAR_DISABLED_ERROR,
+} from "@/lib/profileAvatar";
+import { readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
   const { supabase, user, error } =
@@ -18,14 +24,15 @@ export async function GET(request: Request) {
     await supabase
       .from("profiles")
       .select(
-        "id, full_name, username, company_name, avatar_url, role, language, created_at, updated_at",
+        "id, full_name, username, company_name, language, created_at, updated_at",
       )
       .eq("id", user.id)
       .maybeSingle();
 
   if (profileError) {
+    console.error("PROFILE LOAD ERROR:", profileError.message);
     return NextResponse.json(
-      { error: profileError.message },
+      { error: "Could not load profile." },
       { status: 500 },
     );
   }
@@ -41,8 +48,11 @@ export async function GET(request: Request) {
       metadata.username ||
       "",
     company: profile?.company_name || "",
-    avatar: profile?.avatar_url || "",
-    role: profile?.role || "",
+    avatar: "",
+    role:
+      typeof user.app_metadata?.role === "string"
+        ? user.app_metadata.role
+        : "",
     phone: metadata.phone || "",
     timezone:
       typeof metadata.timezone === "string" &&
@@ -68,7 +78,16 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const body = await request.json();
+  const limited = await checkRateLimit(`profile:update:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
+
+  const body = await readJsonObject(request);
+  if (!body) {
+    return NextResponse.json(
+      { error: "Invalid request." },
+      { status: 400 },
+    );
+  }
 
   const fullName =
     typeof body.full_name === "string"
@@ -89,6 +108,13 @@ export async function PATCH(request: Request) {
         ? body.avatar.trim()
         : "";
 
+  if (hasUnsupportedProfileAvatarUrl(avatar)) {
+    return NextResponse.json(
+      { error: PROFILE_AVATAR_DISABLED_ERROR },
+      { status: 400 },
+    );
+  }
+
   const company =
     typeof body.company_name === "string"
       ? body.company_name.trim()
@@ -100,6 +126,18 @@ export async function PATCH(request: Request) {
     typeof body.phone === "string"
       ? body.phone.trim()
       : "";
+
+  if (
+    fullName.length > 200 ||
+    username.length > 100 ||
+    company.length > 200 ||
+    phone.length > 50
+  ) {
+    return NextResponse.json(
+      { error: "Profile fields exceed the allowed length." },
+      { status: 400 },
+    );
+  }
 
   const timezone =
     typeof body.timezone === "string" &&
@@ -122,9 +160,10 @@ export async function PATCH(request: Request) {
       });
 
   if (updateError) {
+    console.error("PROFILE UPDATE ERROR:", updateError.message);
     return NextResponse.json(
-      { error: updateError.message },
-      { status: 400 },
+      { error: "Could not update profile." },
+      { status: 500 },
     );
   }
 
@@ -143,9 +182,10 @@ export async function PATCH(request: Request) {
     });
 
   if (authUpdateError) {
+    console.error("PROFILE AUTH METADATA UPDATE ERROR:", authUpdateError.message);
     return NextResponse.json(
-      { error: authUpdateError.message },
-      { status: 400 },
+      { error: "Could not update profile." },
+      { status: 500 },
     );
   }
 

@@ -1,6 +1,7 @@
 import { normalizeLanguage, translateText } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 type SearchResult = {
   id: string;
@@ -18,7 +19,7 @@ type LeadRow = {
   status: "new" | "contacted" | "proposal" | "won" | "lost" | null;
 };
 
-const MAX_SEARCH_RESULTS = 1000;
+const MAX_SEARCH_RESULTS = 100;
 
 const searchLeadRows = async (
   supabase: Awaited<ReturnType<typeof getRouteUser>>["supabase"],
@@ -61,6 +62,8 @@ export async function GET(request: Request) {
       status: 401
     });
   }
+  const limited = await checkRateLimit(`search:read:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
   const { workspace } = await loadWorkspaceForUser(supabase, user.id);
   if (!workspace?.id) {
     return NextResponse.json({ leads: [], customers: [], tasks: [], pages: [] });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { sumPersonalDealCosts } from "@/lib/personalDealCosts";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 const clamp = (value: number) => Math.max(0, Math.min(100, value));
 export async function POST(request: Request, context: {
     params: Promise<{
@@ -11,6 +12,8 @@ export async function POST(request: Request, context: {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`lead:score:${user.id}`, { limit: 120, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const { workspace } = await loadWorkspaceForUser(supabase, user.id);
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });

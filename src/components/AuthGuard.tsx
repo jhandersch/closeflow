@@ -11,6 +11,9 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/Logo";
 
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_ACTIVITY_THROTTLE_MS = 60 * 1000;
+
 export default function AuthGuard({
   children,
 }: {
@@ -29,6 +32,7 @@ export default function AuthGuard({
 
   useEffect(() => {
     let mounted = true;
+    let cleanupIdle: (() => void) | null = null;
 
     const checkSession = async () => {
       try {
@@ -54,9 +58,44 @@ export default function AuthGuard({
           return;
         }
 
+        let idleTimer: ReturnType<typeof setTimeout> | null = null;
+        let lastActivityAt = Date.now();
+        let signingOut = false;
+
+        const signOutAfterInactivity = async () => {
+          if (signingOut) return;
+          signingOut = true;
+          await supabase.auth.signOut({ scope: "local" });
+          router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+        };
+
+        const resetIdleTimer = () => {
+          const now = Date.now();
+          if (now - lastActivityAt < SESSION_ACTIVITY_THROTTLE_MS) return;
+          lastActivityAt = now;
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
+            void signOutAfterInactivity();
+          }, SESSION_IDLE_TIMEOUT_MS);
+        };
+
+        idleTimer = setTimeout(() => {
+          void signOutAfterInactivity();
+        }, SESSION_IDLE_TIMEOUT_MS);
+        window.addEventListener("pointerdown", resetIdleTimer);
+        window.addEventListener("keydown", resetIdleTimer);
+        window.addEventListener("touchstart", resetIdleTimer);
+
         if (mounted) {
           setLoading(false);
         }
+
+        cleanupIdle = () => {
+          if (idleTimer) clearTimeout(idleTimer);
+          window.removeEventListener("pointerdown", resetIdleTimer);
+          window.removeEventListener("keydown", resetIdleTimer);
+          window.removeEventListener("touchstart", resetIdleTimer);
+        };
       } catch (error) {
         console.error("AUTH GUARD ERROR:", error);
 
@@ -82,6 +121,7 @@ export default function AuthGuard({
 
     return () => {
       mounted = false;
+      cleanupIdle?.();
       subscription.unsubscribe();
     };
   }, [router, nextPath]);

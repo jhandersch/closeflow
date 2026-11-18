@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { getWorkspaceUsageContext } from "@/lib/usageLimits";
 import { summarizeWorkspaceAiUsage } from "@/lib/aiCost";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function GET(request: Request) {
     const { supabase, user, error } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(`usage:read:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
     const preferredWorkspaceId =
         request.headers.get(
             "x-closeflow-workspace-id",

@@ -10,6 +10,25 @@ import {
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
+
+const isPriorityResponse = (value: unknown): value is {
+  headline: string;
+  explanation: string;
+  nextAction: string;
+  priorityReason: string;
+  riskLevel: "Low" | "Medium" | "High";
+} => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const result = value as Record<string, unknown>;
+  return (
+    typeof result.headline === "string" && result.headline.trim().length > 0 && result.headline.length <= 500 &&
+    typeof result.explanation === "string" && result.explanation.length <= 4000 &&
+    typeof result.nextAction === "string" && result.nextAction.length <= 1000 &&
+    typeof result.priorityReason === "string" && result.priorityReason.length <= 2000 &&
+    (result.riskLevel === "Low" || result.riskLevel === "Medium" || result.riskLevel === "High")
+  );
+};
 
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
@@ -20,20 +39,25 @@ export async function POST(request: NextRequest) {
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const payload = await request.json();
-    const { leads } = payload;
+    const payload = await readJsonObject(request);
+    if (!payload) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    const leads = Array.isArray(payload.leads) ? payload.leads : [];
     language = normalizeLanguage(
       payload.language ?? user.user_metadata?.language,
     );
     const responseLanguage = language === "de" ? "German" : "English";
     const leadsWithCosts = Array.isArray(leads)
-      ? leads.map((lead: any) => ({
-          ...lead,
+      ? leads.map((lead) => {
+          if (!lead || typeof lead !== "object" || Array.isArray(lead)) return null;
+          const leadRecord = lead as Record<string, unknown>;
+          return {
+          ...leadRecord,
           personal_deal_costs: getPersonalDealCostsForLead(
             user.user_metadata?.personal_deal_costs,
-            String(lead.id || ""),
+            String(leadRecord.id || ""),
           ),
-        }))
+        };
+        }).filter((lead) => lead !== null)
       : [];
 
 
@@ -179,31 +203,10 @@ Keep answers concise.
      * VALIDATE RESPONSE
      * =========================
      */
-    const validRiskLevels = ["Low", "Medium", "High"];
-
-    const riskLevel = validRiskLevels.includes(parsed?.riskLevel)
-      ? parsed.riskLevel
-      : "Medium";
-
-    return NextResponse.json({
-      headline:
-        typeof parsed?.headline === "string"
-          ? parsed.headline
-          : language === "de"
-            ? "Leads brauchen Aufmerksamkeit"
-            : "Deals need attention",
-
-      explanation:
-        typeof parsed?.explanation === "string" ? parsed.explanation : "",
-
-      nextAction:
-        typeof parsed?.nextAction === "string" ? parsed.nextAction : "",
-
-      priorityReason:
-        typeof parsed?.priorityReason === "string" ? parsed.priorityReason : "",
-
-      riskLevel,
-    });
+    if (!isPriorityResponse(parsed)) {
+      throw new Error("Azure OpenAI returned an invalid priority response.");
+    }
+    return NextResponse.json(parsed);
   } catch (error) {
     console.error("PRIORITY AI ERROR:", error);
 

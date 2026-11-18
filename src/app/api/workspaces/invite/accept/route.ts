@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 export async function POST(request: Request) {
     try {
         const { supabase, user, error: authError, } = await getRouteUser(request);
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const body = await request.json();
+        const limited = await checkRateLimit(`workspace:invite-accept:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+        if (!limited.success) return rateLimitResponse(limited);
+        const body = await readJsonObject(request);
+        if (!body) {
+            return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+        }
         const token = typeof body.token === "string"
             ? body.token.trim()
             : "";
@@ -15,7 +22,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invite token is required" }, { status: 400 });
         }
         /*
-         * The RPC validates token, expiry, invited email (from the JWT) and seat
+         * The RPC validates token, expiry, confirmed invited email, and seat
          * capacity atomically. Invitees are not workspace members yet, so RLS
          * would hide the invite row from a direct select.
          */
@@ -27,10 +34,13 @@ export async function POST(request: Request) {
             console.error("ACCEPT WORKSPACE INVITE ERROR:", acceptanceError.message);
             const code = acceptanceError.code;
             const expired = /expired/i.test(acceptanceError.message);
+            const confirmationRequired = /confirmation required/i.test(acceptanceError.message);
             const [status, message] = code === "P0002"
                 ? [404, "Invitation not found or invalid"]
                 : expired
                     ? [410, "Invitation has expired"]
+                    : confirmationRequired
+                        ? [403, "Confirm your email address before accepting an invitation."]
                     : code === "22023"
                         ? [404, "Invitation not found or invalid"]
                         : code === "42501"
@@ -64,9 +74,7 @@ export async function POST(request: Request) {
     catch (error) {
         console.error("ACCEPT INVITE CRASH:", error);
         return NextResponse.json({
-            error: error instanceof Error
-                ? error.message
-                : "Internal Server Error",
+            error: "The invitation could not be accepted.",
         }, { status: 500 });
     }
 }

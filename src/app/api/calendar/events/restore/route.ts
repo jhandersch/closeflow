@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { isUuid } from "@/lib/requestValidation";
 
 export async function POST(request: Request) {
   const denied = await denyReadOnlyWrite(request);
@@ -9,8 +11,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const limited = await checkRateLimit(`calendar:write:${user.id}`, {
+    limit: 60,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.success) return rateLimitResponse(limited);
+
   const id = new URL(request.url).searchParams.get("id");
-  if (!id) {
+  if (!id || !isUuid(id)) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
@@ -30,7 +38,8 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (restoreError) {
-    return NextResponse.json({ error: restoreError.message }, { status: 500 });
+    console.error("CALENDAR EVENT RESTORE ERROR:", restoreError.message);
+    return NextResponse.json({ error: "Could not restore calendar event." }, { status: 500 });
   }
   if (!data) {
     return NextResponse.json({ error: "Deleted event not found" }, { status: 404 });

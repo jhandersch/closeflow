@@ -2,13 +2,23 @@ import { NextResponse } from "next/server";
 import { getRouteUser, requireMfaForWorkspaceRole, } from "@/lib/supabase/route";
 import { getWorkspaceUserRole, } from "@/lib/supabase/workspaceAuth";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { isUuid, readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 const rolePattern = /^(owner|admin|member|viewer)$/i;
 export async function POST(request: Request) {
     const { supabase, user, error, } = await getRouteUser(request);
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json();
+    const limited = await checkRateLimit(`workspace:role-update:${user.id}`, {
+        limit: 30,
+        windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
+    const body = await readJsonObject(request);
+    if (!body) {
+        return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const workspaceId = typeof body.workspace_id === "string"
         ? body.workspace_id.trim()
         : "";
@@ -18,8 +28,8 @@ export async function POST(request: Request) {
     const role = typeof body.role === "string"
         ? body.role.trim().toLowerCase()
         : "";
-    if (!workspaceId ||
-        !userId ||
+    if (!isUuid(workspaceId) ||
+        !isUuid(userId) ||
         !role) {
         return NextResponse.json({
             error: "workspace_id, user_id and role are required",
@@ -65,7 +75,8 @@ export async function POST(request: Request) {
         .eq("user_id", userId)
         .maybeSingle();
     if (targetError) {
-        return NextResponse.json({ error: targetError.message }, { status: 500 });
+        console.error("WORKSPACE ROLE TARGET LOOKUP ERROR:", targetError.message);
+        return NextResponse.json({ error: "Could not load workspace member." }, { status: 500 });
     }
     if (!targetMember) {
         return NextResponse.json({
@@ -112,7 +123,8 @@ export async function POST(request: Request) {
         .eq("workspace_id", workspaceId)
         .eq("user_id", userId);
     if (memberError) {
-        return NextResponse.json({ error: memberError.message }, { status: 500 });
+        console.error("WORKSPACE ROLE UPDATE ERROR:", memberError.message);
+        return NextResponse.json({ error: "Could not update workspace member." }, { status: 500 });
     }
     await recordAuditEvent({
         workspaceId,

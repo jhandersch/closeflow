@@ -10,6 +10,7 @@ import {
 } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
 
 type InsightResponse = {
   headline: string;
@@ -17,6 +18,8 @@ type InsightResponse = {
   actions: string[];
   confidence: "High" | "Medium" | "Low";
 };
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 export async function POST(request: NextRequest) {
   const access = await requireAiWorkspaceQuota(request);
@@ -27,17 +30,20 @@ export async function POST(request: NextRequest) {
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const payload = await request.json();
+    const payload = await readJsonObject(request);
+    if (!payload) {
+      return NextResponse.json({ error: "A JSON object is required." }, { status: 400 });
+    }
     language = normalizeLanguage(
       payload?.language ?? user.user_metadata?.language,
     );
     const responseLanguage = language === "de" ? "German" : "English";
-    const leadsWithCosts = Array.isArray(payload?.leads)
-      ? payload.leads.map((lead: any) => ({
-          ...lead,
+    const leadsWithCosts = Array.isArray(payload.leads)
+      ? payload.leads.slice(0, 100).filter((lead) => typeof lead === "object" && lead !== null).map((lead) => ({
+          ...(lead as Record<string, unknown>),
           personal_deal_costs: getPersonalDealCostsForLead(
             user.user_metadata?.personal_deal_costs,
-            String(lead.id || ""),
+            String((lead as Record<string, unknown>).id || ""),
           ),
         }))
       : [];
@@ -46,19 +52,20 @@ export async function POST(request: NextRequest) {
      * FALLBACK
      * =========================
      */
-    const atRiskDeals = Number(payload?.atRiskDeals || 0);
-    const proposalLeads = Number(payload?.proposalLeads || 0);
-    const activeDeals = Number(payload?.forecast?.activeDeals || 0);
-    const pipelineValue = Number(payload?.forecast?.pipelineValue || 0);
-    const averageHealth = Number(payload?.forecast?.averageHealth || 0);
+    const forecast = isRecord(payload.forecast) ? payload.forecast : {};
+    const atRiskDeals = Number(payload.atRiskDeals || 0);
+    const proposalLeads = Number(payload.proposalLeads || 0);
+    const activeDeals = Number(forecast.activeDeals || 0);
+    const pipelineValue = Number(forecast.pipelineValue || 0);
+    const averageHealth = Number(forecast.averageHealth || 0);
     const averageProbability = Number(
-      payload?.forecast?.averageProbability || 0,
+      forecast.averageProbability || 0,
     );
-    const revenueAtRisk = Number(payload?.forecast?.revenueAtRisk || 0);
+    const revenueAtRisk = Number(forecast.revenueAtRisk || 0);
     const nextActionCoverage =
       activeDeals > 0
         ? Math.round(
-            (Number(payload?.forecast?.dealsWithNextAction || 0) /
+            (Number(forecast.dealsWithNextAction || 0) /
               activeDeals) *
               100,
           )
@@ -271,18 +278,22 @@ Write every user-visible value entirely in ${responseLanguage}. Do not mix langu
     if (!content) {
       throw new Error(translateText("No AI response"));
     }
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error("Azure OpenAI returned an invalid insight object.");
+    }
+    const result = parsed as Record<string, unknown>;
     /*
      * =========================
      * VALIDATE AI RESPONSE
      * =========================
      */
     const validConfidence = ["High", "Medium", "Low"];
-    if (!validConfidence.includes(parsed?.confidence)) {
+    if (typeof result.confidence !== "string" || !validConfidence.includes(result.confidence)) {
       throw new Error("Azure OpenAI returned an invalid confidence value.");
     }
-    const actions = Array.isArray(parsed?.actions)
-      ? parsed.actions
+    const actions = Array.isArray(result.actions)
+      ? result.actions
           .filter((action: unknown) => typeof action === "string")
           .slice(0, 3)
       : [];
@@ -299,19 +310,21 @@ Write every user-visible value entirely in ${responseLanguage}. Do not mix langu
           )
         : actions;
     if (
-      typeof parsed?.headline !== "string" ||
-      !parsed.headline.trim() ||
-      typeof parsed?.detail !== "string" ||
-      !parsed.detail.trim() ||
+      typeof result.headline !== "string" ||
+      !result.headline.trim() ||
+      result.headline.length > 300 ||
+      typeof result.detail !== "string" ||
+      !result.detail.trim() ||
+      result.detail.length > 4000 ||
       safeActions.length === 0
     ) {
       throw new Error("Azure OpenAI returned an incomplete insight.");
     }
     return NextResponse.json({
-      headline: parsed.headline,
-      detail: parsed.detail,
+      headline: result.headline,
+      detail: result.detail,
       actions: safeActions,
-      confidence: parsed.confidence,
+      confidence: result.confidence as InsightResponse["confidence"],
     });
   } catch (error) {
     console.error("AI INSIGHT ERROR:", error);

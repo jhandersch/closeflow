@@ -92,7 +92,12 @@ export async function POST(request: Request) {
         }
 
         const result: unknown = JSON.parse(responseText);
-        if (!isRecord(result) || typeof result.text !== "string") {
+        if (
+            !isRecord(result) ||
+            typeof result.text !== "string" ||
+            !result.text.trim() ||
+            result.text.length > MAX_TEXT_LENGTH
+        ) {
             console.error("AI email rewrite returned an invalid response shape.");
             return NextResponse.json({ error: "AI returned an invalid response." }, { status: 502 });
         }

@@ -4,6 +4,7 @@ import { isEncryptionConfigured, verifyOAuthState } from "@/lib/integrations/cry
 import { exchangeGoogleCode, getGoogleConfig, GOOGLE_SCOPES } from "@/lib/integrations/google";
 import { saveIntegration } from "@/lib/integrations/store";
 import { getRouteUser } from "@/lib/supabase/route";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const settingsUrl = (request: Request, result: string) =>
   new URL(`/settings?integration=${result}#integrations`, request.url);
@@ -13,6 +14,10 @@ export async function GET(request: Request) {
   const { user, error } = await getRouteUser(request);
   if (error || !user) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+  const limited = await checkRateLimit(`google:callback:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (!limited.success) {
+    return NextResponse.redirect(settingsUrl(request, "google_rate_limited"));
   }
 
   const config = getGoogleConfig();

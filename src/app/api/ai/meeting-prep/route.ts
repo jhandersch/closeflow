@@ -5,6 +5,32 @@ import { requireAiWorkspaceQuota } from "@/lib/aiAccess";
 import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
+
+const isStringList = (value: unknown, maxItemLength: number): value is string[] =>
+    Array.isArray(value) &&
+    value.length <= 20 &&
+    value.every((item) => typeof item === "string" && item.length <= maxItemLength);
+
+const isMeetingPrepResponse = (value: unknown): value is {
+    customer_summary: string;
+    important_points: string[];
+    questions: string[];
+    risks: string[];
+    next_steps: string[];
+} => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const result = value as Record<string, unknown>;
+    return (
+        typeof result.customer_summary === "string" &&
+        result.customer_summary.length <= 4000 &&
+        isStringList(result.important_points, 1000) &&
+        isStringList(result.questions, 1000) &&
+        isStringList(result.risks, 1000) &&
+        isStringList(result.next_steps, 1000)
+    );
+};
+
 export async function POST(request: Request) {
     const access = await requireAiWorkspaceQuota(request);
     if (!access.ok) return access.response;
@@ -14,10 +40,18 @@ export async function POST(request: Request) {
         if (error || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const body = await request.json();
+        const body = await readJsonObject(request);
+        if (!body) {
+            return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+        }
         language = normalizeLanguage(body.language ?? user.user_metadata?.language);
         const isGerman = language === "de";
-        const lead = body.lead || {};
+        const lead = body.lead && typeof body.lead === "object" && !Array.isArray(body.lead)
+            ? body.lead as Record<string, unknown>
+            : null;
+        if (!lead) {
+            return NextResponse.json({ error: "lead is required" }, { status: 400 });
+        }
         const leadWithCosts = {
             ...lead,
             personal_deal_costs: formatPersonalDealCostsForLead(user.user_metadata?.personal_deal_costs, String(lead.id || ""), Number(lead.value || 0)),
@@ -43,14 +77,11 @@ export async function POST(request: Request) {
                 },
             ],
         });
-        const result = JSON.parse(completion.choices[0].message.content || "{}");
-        return NextResponse.json({
-            customer_summary: result.customer_summary || "",
-            important_points: Array.isArray(result.important_points) ? result.important_points : [],
-            questions: Array.isArray(result.questions) ? result.questions : [],
-            risks: Array.isArray(result.risks) ? result.risks : [],
-            next_steps: Array.isArray(result.next_steps) ? result.next_steps : [],
-        });
+        const result: unknown = JSON.parse(completion.choices[0].message.content || "{}");
+        if (!isMeetingPrepResponse(result)) {
+            throw new Error("Azure OpenAI returned an invalid meeting brief.");
+        }
+        return NextResponse.json(result);
     }
     catch (error) {
         console.error(error);

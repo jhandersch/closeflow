@@ -7,6 +7,7 @@ import { createTrackedAzureOpenAIClient } from "@/lib/aiCost";
 import { formatPersonalDealCostsForLead } from "@/lib/personalDealCosts";
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
+import { readJsonObject } from "@/lib/requestValidation";
 
 const MAX_MESSAGE_LENGTH = 12_000;
 const ALLOWED_MODES = new Set([
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
         if (!limitCheck.ok) {
             return NextResponse.json({ error: limitCheck.message }, { status: limitCheck.status });
         }
-        const body: unknown = await request.json();
-        if (!isRecord(body)) {
+        const body = await readJsonObject(request);
+        if (!body) {
             return NextResponse.json({ error: "A JSON object is required." }, { status: 400 });
         }
         const language = normalizeLanguage(body.language ?? user.user_metadata?.language);
@@ -110,8 +111,23 @@ export async function POST(request: Request) {
         if (!content) {
             throw new Error("Azure OpenAI returned an empty chat response.");
         }
-        const result = JSON.parse(content);
-        if (typeof result.answer !== "string" || !result.answer.trim()) {
+        const parsed: unknown = JSON.parse(content);
+        if (!isRecord(parsed)) {
+            throw new Error("Azure OpenAI returned an invalid chat object.");
+        }
+        const result = parsed;
+        if (
+            typeof result.answer !== "string" ||
+            !result.answer.trim() ||
+            result.answer.length > 12000 ||
+            (result.sources !== undefined &&
+                (!Array.isArray(result.sources) ||
+                    result.sources.length > 20 ||
+                    !result.sources.every(
+                        (source: unknown) =>
+                            typeof source === "string" && source.length <= 500,
+                    )))
+        ) {
             throw new Error("Azure OpenAI returned an invalid chat response.");
         }
         const payload = {

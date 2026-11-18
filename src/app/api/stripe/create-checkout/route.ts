@@ -7,6 +7,8 @@ import {
     requireAal2,
 } from "@/lib/supabase/route";
 import { getWorkspaceUserRole } from "@/lib/supabase/workspaceAuth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { readJsonObject } from "@/lib/requestValidation";
 
 export async function POST(request: Request) {
     const {
@@ -21,6 +23,12 @@ export async function POST(request: Request) {
             { status: 401 },
         );
     }
+
+    const limited = await checkRateLimit(`billing:checkout:${user.id}`, {
+        limit: 10,
+        windowMs: 60 * 60 * 1000,
+    });
+    if (!limited.success) return rateLimitResponse(limited);
 
     const authz = await requireAal2(
         request,
@@ -49,8 +57,9 @@ export async function POST(request: Request) {
     );
 
     if (workspaceError) {
+        console.error("STRIPE CHECKOUT WORKSPACE LOAD ERROR:", workspaceError.message);
         return NextResponse.json(
-            { error: workspaceError.message },
+            { error: "Could not start checkout." },
             { status: 500 },
         );
     }
@@ -92,8 +101,11 @@ export async function POST(request: Request) {
     let selectedPlan: "pro" | "business" = "pro";
 
     try {
-        const body = await request.json();
-
+        const body = await readJsonObject(request);
+        if (body && body.plan !== undefined &&
+            body.plan !== "pro" && body.plan !== "business") {
+            return NextResponse.json({ error: "Invalid billing plan." }, { status: 400 });
+        }
         if (body?.plan === "business") {
             selectedPlan = "business";
         }

@@ -3,6 +3,7 @@ import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser, } from "@/lib/su
 import { withWorkspaceImportLock } from "@/lib/import-lock";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { detectCsvDelimiter, parseCsvDocument } from "@/lib/csv";
+import { readJsonObject } from "@/lib/requestValidation";
 type ImportIssue = {
     row: number;
     reason: string;
@@ -31,21 +32,13 @@ async function importCustomers(request: Request) {
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
-    let body: unknown;
-    try {
-        body = await request.json();
-    }
-    catch {
-        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const csvText = typeof body === "object" &&
-        body !== null &&
-        "csv" in body &&
-        typeof body.csv === "string"
-        ? body.csv
-        : "";
+    const body = await readJsonObject(request);
+    const csvText = typeof body?.csv === "string" ? body.csv : "";
     if (!csvText.trim()) {
         return NextResponse.json({ error: "csv is required" }, { status: 400 });
+    }
+    if (csvText.length > 5 * 1024 * 1024) {
+        return NextResponse.json({ error: "CSV payload is too large." }, { status: 413 });
     }
     /*
      * Remove UTF-8 BOM if present.
@@ -90,7 +83,8 @@ async function importCustomers(request: Request) {
         .select("contact, company")
         .eq("workspace_id", workspace.id);
     if (existingCustomersError) {
-        return NextResponse.json({ error: existingCustomersError.message }, { status: 500 });
+        console.error("CUSTOMER IMPORT EXISTING CUSTOMERS LOAD ERROR:", existingCustomersError.message);
+        return NextResponse.json({ error: "Could not prepare customer import." }, { status: 500 });
     }
     const { data: existingLeads, error: existingLeadsError, } = await supabase
         .from("leads")
@@ -98,8 +92,9 @@ async function importCustomers(request: Request) {
         .eq("workspace_id", workspace.id)
         .is("deleted_at", null);
     if (existingLeadsError) {
+        console.error("CUSTOMER IMPORT EXISTING LEADS LOAD ERROR:", existingLeadsError.message);
         return NextResponse.json({
-            error: existingLeadsError.message,
+            error: "Could not prepare customer import.",
         }, {
             status: 500,
         });

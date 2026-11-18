@@ -14,6 +14,23 @@ import {
 import { normalizeLanguage } from "@/lib/i18n";
 import { aiTerminologyRules } from "@/lib/aiLanguage";
 
+const isSalesCopilotResponse = (value: unknown): value is {
+  strategy: string;
+  dealSummary: string;
+  nextBestAction: string;
+} => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const result = value as Record<string, unknown>;
+  return (
+    typeof result.strategy === "string" &&
+    typeof result.dealSummary === "string" &&
+    typeof result.nextBestAction === "string" &&
+    result.strategy.length <= 4000 &&
+    result.dealSummary.length <= 4000 &&
+    result.nextBestAction.length <= 2000
+  );
+};
+
 export async function POST(req: Request) {
   let userId: string | null = null;
 
@@ -58,6 +75,10 @@ export async function POST(req: Request) {
       );
     }
 
+    const requestBody: unknown = await req.json();
+    if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const {
       lead,
       activities,
@@ -68,16 +89,24 @@ export async function POST(req: Request) {
       mode,
       pipeline,
       language: requestedLanguage,
-    } = await req.json();
+    } = requestBody as Record<string, unknown>;
     const language = normalizeLanguage(requestedLanguage ?? user.user_metadata?.language);
     const responseLanguage = language === "de" ? "German" : "English";
 
-    const activityHistory = activities
-      ?.map(
-        (activity: any) =>
-          `${activity.created_at}: ${activity.action}`,
+    const activityList = Array.isArray(activities) ? activities : [];
+    const activityHistory = activityList
+      .map(
+        (activity: unknown) => {
+          if (!activity || typeof activity !== "object" || Array.isArray(activity)) return "";
+          const item = activity as Record<string, unknown>;
+          return `${typeof item.created_at === "string" ? item.created_at : ""}: ${typeof item.action === "string" ? item.action : ""}`;
+        },
       )
       .join("\n");
+    const leadRecord =
+      lead && typeof lead === "object" && !Array.isArray(lead)
+        ? lead as Record<string, unknown>
+        : {};
 
     const memoryJson =
       JSON.stringify(memory || {}).slice(0, 2000);
@@ -89,8 +118,8 @@ export async function POST(req: Request) {
       JSON.stringify(pipeline || {}).slice(0, 2000);
     const personalCosts = formatPersonalDealCostsForLead(
       user.user_metadata?.personal_deal_costs,
-      String(lead?.id || ""),
-      Number(lead?.value || 0),
+      String(leadRecord.id || ""),
+      Number(leadRecord.value || 0),
     );
 
     const prompt = `
@@ -99,16 +128,16 @@ You are an AI sales copilot inside a CRM.
 Analyze this sales opportunity and answer the user query.
 
 Lead:
-  Name: ${lead?.name || "n/a"}
-  Company: ${lead?.company || "n/a"}
-  Deal Value: €${lead?.value || 0}
-  Current Stage: ${status || lead?.status || "n/a"}
+  Name: ${leadRecord.name || "n/a"}
+  Company: ${leadRecord.company || "n/a"}
+  Deal Value: €${leadRecord.value || 0}
+  Current Stage: ${status || leadRecord.status || "n/a"}
 
 User-entered costs for this deal:
   ${personalCosts}
 
 Notes:
-  ${lead?.notes || "No notes"}
+  ${leadRecord.notes || "No notes"}
 
 Activity History:
 ${activityHistory || "No activity"}
@@ -195,9 +224,12 @@ Focus on:
         },
       });
 
-    const result = JSON.parse(
+    const result: unknown = JSON.parse(
       completion.choices[0].message.content || "{}",
     );
+    if (!isSalesCopilotResponse(result)) {
+      throw new Error("Sales copilot returned an invalid response.");
+    }
 
     return NextResponse.json(result);
   } catch (error) {

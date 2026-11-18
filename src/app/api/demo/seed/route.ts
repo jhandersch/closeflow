@@ -2,6 +2,8 @@ import { translateText, normalizeLanguage } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { denyReadOnlyWrite, getRouteUser, loadWorkspaceForUser } from "@/lib/supabase/route";
 import { enforceLeadCapacityLimit } from "@/lib/usageLimits";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { readJsonObject } from "@/lib/requestValidation";
 type DemoLeadSeed = {
     name: string;
     company: string;
@@ -117,12 +119,11 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    let body: { mode?: unknown; language?: unknown } = {};
-    try {
-        body = await request.json();
-    }
-    catch {
-        body = {};
+    const limited = await checkRateLimit(`demo:seed:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+    if (!limited.success) return rateLimitResponse(limited);
+    const body = await readJsonObject(request);
+    if (!body) {
+        return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
     const { data: profile } = await supabase.from("profiles").select("language").eq("id", user.id).maybeSingle();
     const language = normalizeLanguage(body.language ?? profile?.language ?? user.user_metadata?.language);

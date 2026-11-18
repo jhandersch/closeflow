@@ -5,6 +5,7 @@ import { enforceAndTrackUsageLimit } from "@/lib/usageLimits";
 import { formatCsvTimestamp, getExcelDateCell, getExportDateKey, resolveExportTimezone } from "@/lib/exportDates";
 import { escapeCsvCell } from "@/lib/csv";
 import { recordAuditEvent } from "@/lib/auditLog";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 type ExportLead = {
   name: string | null;
@@ -39,6 +40,8 @@ export async function GET(request: Request) {
       { status: 401 }
     );
   }
+  const limited = await checkRateLimit(`leads:export:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+  if (!limited.success) return rateLimitResponse(limited);
 
   const { workspace } = await loadWorkspaceForUser(
     supabase,
@@ -141,8 +144,9 @@ export async function GET(request: Request) {
       });
 
     if (fallback.error) {
+      console.error("LEAD EXPORT FALLBACK LOAD ERROR:", fallback.error.message);
       return NextResponse.json(
-        { error: fallback.error.message },
+        { error: "Could not export leads." },
         { status: 500 }
       );
     }
@@ -152,8 +156,9 @@ export async function GET(request: Request) {
   }
 
   if (queryError) {
+    console.error("LEAD EXPORT LOAD ERROR:", queryError.message);
     return NextResponse.json(
-      { error: queryError.message },
+    { error: "Could not export leads." },
       { status: 500 }
     );
   }

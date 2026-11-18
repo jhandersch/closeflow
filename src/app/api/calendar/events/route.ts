@@ -7,6 +7,8 @@ import {
   getRouteUser,
   loadWorkspaceForUser,
 } from "@/lib/supabase/route";
+import { readJsonObject } from "@/lib/requestValidation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 type CalendarEventRow = {
   id: string;
@@ -219,6 +221,11 @@ export async function GET(request: Request) {
       { status: 401 }
     );
   }
+  const limited = await checkRateLimit(`calendar:read:${user.id}`, {
+    limit: 120,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.success) return rateLimitResponse(limited);
 
   const url = new URL(request.url);
 
@@ -277,7 +284,8 @@ export async function GET(request: Request) {
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false });
     if (queryError) {
-      return NextResponse.json({ error: queryError.message }, { status: 500 });
+      console.error("CALENDAR TRASH LOAD ERROR:", queryError.message);
+      return NextResponse.json({ error: "Could not load calendar events." }, { status: 500 });
     }
     return NextResponse.json({ events: data ?? [] });
   }
@@ -297,8 +305,9 @@ export async function GET(request: Request) {
     });
 
   if (queryError) {
+    console.error("CALENDAR EVENTS LOAD ERROR:", queryError.message);
     return NextResponse.json(
-      { error: queryError.message },
+      { error: "Could not load calendar events." },
       { status: 500 }
     );
   }
@@ -339,7 +348,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
+  const limited = await checkRateLimit(`calendar:write:${user.id}`, {
+    limit: 60,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.success) return rateLimitResponse(limited);
+
+  const body = await readJsonObject(request);
+  if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   const title =
     typeof body.title === "string"
@@ -369,7 +385,7 @@ export async function POST(request: Request) {
       ? body.status.trim()
       : "scheduled";
 
-  if (!title) {
+  if (!title || title.length > 200 || (description && description.length > 5000)) {
     return NextResponse.json(
       { error: "Title required" },
       { status: 400 }
@@ -427,8 +443,9 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError) {
+    console.error("CALENDAR EVENT CREATE ERROR:", insertError.message);
     return NextResponse.json(
-      { error: insertError.message },
+      { error: "Could not create calendar event." },
       { status: 500 }
     );
   }
@@ -495,7 +512,14 @@ export async function PUT(request: Request) {
     );
   }
 
-  const body = await request.json();
+  const limited = await checkRateLimit(`calendar:write:${user.id}`, {
+    limit: 60,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.success) return rateLimitResponse(limited);
+
+  const body = await readJsonObject(request);
+  if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   const id =
     typeof body.id === "string"
@@ -531,7 +555,7 @@ export async function PUT(request: Request) {
         ? null
         : undefined;
 
-  if (!id) {
+  if (!id || id.length > 100) {
     return NextResponse.json(
       { error: "Missing id" },
       { status: 400 }
@@ -616,8 +640,9 @@ export async function PUT(request: Request) {
     .maybeSingle();
 
   if (updateError) {
+    console.error("CALENDAR EVENT UPDATE ERROR:", updateError.message);
     return NextResponse.json(
-      { error: updateError.message },
+      { error: "Could not update calendar event." },
       { status: 500 }
     );
   }
@@ -709,8 +734,9 @@ export async function DELETE(request: Request) {
     .maybeSingle();
 
   if (deleteError) {
+    console.error("CALENDAR EVENT DELETE ERROR:", deleteError.message);
     return NextResponse.json(
-      { error: deleteError.message },
+      { error: "Could not delete calendar event." },
       { status: 500 }
     );
   }

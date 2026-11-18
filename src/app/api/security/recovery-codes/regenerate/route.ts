@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getRouteUser } from "@/lib/supabase/route";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 const normalizeCode = (value: string) => value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 const hashCode = (userId: string, code: string) => createHash("sha256").update(`${userId}:${normalizeCode(code)}`).digest("hex");
 const generateCode = () => {
@@ -12,15 +13,22 @@ export async function POST(request: Request) {
     if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const limited = await checkRateLimit(
+        `security:recovery-regenerate:${user.id}`,
+        { limit: 3, windowMs: 15 * 60 * 1000 },
+    );
+    if (!limited.success) return rateLimitResponse(limited);
     const codes = Array.from({ length: 8 }).map(() => generateCode());
     const rows = codes.map((code) => ({ user_id: user.id, code_hash: hashCode(user.id, code) }));
     const { error: deleteError } = await supabase.from("mfa_recovery_codes").delete().eq("user_id", user.id);
     if (deleteError) {
-        return NextResponse.json({ error: deleteError.message }, { status: 500 });
+        console.error("MFA RECOVERY CODE RESET ERROR:", deleteError.message);
+        return NextResponse.json({ error: "Could not regenerate recovery codes" }, { status: 500 });
     }
     const { error: insertError } = await supabase.from("mfa_recovery_codes").insert(rows);
     if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 });
+        console.error("MFA RECOVERY CODE CREATE ERROR:", insertError.message);
+        return NextResponse.json({ error: "Could not regenerate recovery codes" }, { status: 500 });
     }
     await supabase.auth.updateUser({
         data: {

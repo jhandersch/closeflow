@@ -4,6 +4,7 @@ import { withWorkspaceImportLock } from "@/lib/import-lock";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getLeadCapacitySnapshot } from "@/lib/usageLimits";
 import { parseCsvDocument } from "@/lib/csv";
+import { readJsonObject } from "@/lib/requestValidation";
 type ImportIssue = {
     row: number;
     reason: string;
@@ -110,21 +111,13 @@ async function importLeads(request: Request) {
     if (!workspace?.id) {
         return NextResponse.json({ error: "Workspace required" }, { status: 403 });
     }
-    let body: unknown;
-    try {
-        body = await request.json();
-    }
-    catch {
-        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const csvText = typeof body === "object" &&
-        body !== null &&
-        "csv" in body &&
-        typeof body.csv === "string"
-        ? body.csv
-        : "";
+    const body = await readJsonObject(request);
+    const csvText = typeof body?.csv === "string" ? body.csv : "";
     if (!csvText.trim()) {
         return NextResponse.json({ error: "csv is required" }, { status: 400 });
+    }
+    if (csvText.length > 5 * 1024 * 1024) {
+        return NextResponse.json({ error: "CSV payload is too large." }, { status: 413 });
     }
     let rows: string[][];
     try {
@@ -173,7 +166,8 @@ async function importLeads(request: Request) {
             pageError = legacyPage.error;
         }
         if (pageError) {
-            return NextResponse.json({ error: pageError.message }, { status: 500 });
+            console.error("LEAD IMPORT EXISTING LEADS LOAD ERROR:", pageError.message);
+            return NextResponse.json({ error: "Could not prepare lead import." }, { status: 500 });
         }
         existingLeads.push(...(pageData || []));
         if (!pageData || pageData.length < 1000) break;
