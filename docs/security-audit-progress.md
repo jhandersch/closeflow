@@ -231,3 +231,12 @@ statischen Tests in 31 lokalen Security-Contract-Dateien sind davon unabhängig 
 
 Eine verteilte Rate-Limit-/Live-Prüfung aller API-Routen sowie DAST und Provider-Live-Nachweise
 bleiben offen.
+
+Am 2026-11-21 wurden nach Wiederherstellung der lokalen Docker-/Supabase-Datenbank
+`test:rls-matrix` und `test:rls-leak` erneut ausschließlich lokal ausgeführt. Die
+Cross-Tenant-Matrix bestand für alle 20 Workspace-Tabellen; der Leak-Check konnte
+synthetische Fremd-Tenant-Zeilen in 31/31 geprüften Tabellen anlegen und prüfte mit
+vorhandenen Testzeilen alle 33 `public`-Tabellen. Dabei wurde eine vorherige Fixture-Lücke
+für `user_integrations` geschlossen; künftig schlägt der Test fehl, wenn eine Tabelle
+unbepflanzt bleibt. Alle Testdaten wurden transaktional zurückgerollt. Produktions- und
+Remote-RLS-/Browserprüfungen bleiben offen.

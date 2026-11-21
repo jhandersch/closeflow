@@ -103,6 +103,8 @@ try {
       "organization_audit_events.event_type": "invite_created",
       "organization_invites.role": "Sales",
       "organization_members.role": "Sales",
+      "user_integrations.provider": "google",
+      "user_integrations.encrypted_credentials": "synthetic-rls-fixture",
       "workspace_invites.role": "member",
       "revenue_events.type": "won",
       "usage_events.bucket": "ai",
@@ -153,6 +155,10 @@ try {
       }
     }
     console.log(`INFO seeded foreign-tenant rows in ${seeded.size}/${tables.length - skip.size} tables; unseeded: ${[...pending].join(", ") || "none"}`);
+    report(
+      pending.size === 0,
+      `foreign-tenant fixture rows seeded in every public table (${seeded.size}/${tables.length - skip.size})`
+    );
   }
 
   // Totals as superuser, to show the check is not vacuous.
