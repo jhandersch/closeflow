@@ -7,6 +7,7 @@ test("all scheduled cron routes fail closed and compare secrets safely", async (
     "../src/app/api/cron/alerts/route.ts",
     "../src/app/api/cron/automations/route.ts",
     "../src/app/api/cron/notifications/route.ts",
+    "../src/app/api/cron/audit-log-retention/route.ts",
   ];
   const sources = await Promise.all(
     files.map((file) => readFile(new URL(file, import.meta.url), "utf8")),

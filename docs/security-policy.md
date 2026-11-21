@@ -18,7 +18,7 @@ Stand: 2026-11. Gilt für den Betreiber (Einzelperson, Firmengründung geplant).
 - Audit-Trail (Tabelle `audit_logs`): Rollen, Einladungen, Exporte, Automationen, Integrationen, Planwechsel. Sichtbar für owner/admin unter Einstellungen → Monitoring.
 - Fehler-Events: Alarm per E-Mail bei Fehlerspitze (Cron `alerts`, täglich).
 - Login-Ereignisse: nur in den Supabase-Auth-Logs (Aufbewahrung durch Anbieter, Tarif-abhängig).
-- **OFFEN:** definierte Aufbewahrungsfrist für `audit_logs` (Vorschlag: 12 Monate) und automatische Löschung.
+- Audit-Logs werden 12 Monate aufbewahrt. Die produktive Datenbankfunktion für eine täglich geplante, auf 20.000 Datensätze pro Lauf begrenzte Löschung ist eingerichtet; der Vercel-Cron wird mit dem Code-Deployment aktiviert. Betriebsprüfung und Alarmkontrolle nach dem ersten Lauf bleiben erforderlich.
 
 ## 4. Änderungen
 - `main` ist per Ruleset geschützt (keine Force-Pushes, keine Löschung, Pflicht-Check CodeQL). CI (`.github/workflows/ci.yml`) prüft Typen, Tenancy, Tests, `npm audit`, Lizenzen, SBOM.

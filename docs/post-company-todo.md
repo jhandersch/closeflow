@@ -7,7 +7,7 @@ Alles, was bewusst auf später verschoben ist. Solange diese Punkte offen sind, 
 - [ ] Impressum, Datenschutzerklärung, AGB mit finalen Firmendaten
 - [ ] Auftragsverarbeitungsverträge (AVV) mit Supabase, Vercel, Resend, Stripe, Google, Microsoft/Azure; Drittlandtransfers prüfen
 - [ ] Verarbeitungsverzeichnis und TOM-Dokument (Grundlage: `security-policy.md`, `compliance-mapping.md`)
-- [ ] Löschkonzept und Aufbewahrungsfristen (inkl. `audit_logs`, Backups)
+- [ ] Löschkonzept und Aufbewahrungsfristen (inkl. Backups); für `audit_logs` sind 12 Monate beschlossen und die technische Umsetzung vorbereitet.
 - [ ] Prüfung, ob DSFA oder Datenschutzbeauftragter nötig ist
 - [ ] Meldekontakt für Datenschutzvorfälle (72 h) im `incident-plan.md` eintragen
 - [ ] Cookie-/Tracking-Prüfung der Landing Page
@@ -36,7 +36,7 @@ Alles, was bewusst auf später verschoben ist. Solange diese Punkte offen sind, 
 - [ ] KI vor Go-live: Azure-Region/Aufbewahrung/AVV dokumentieren; Prompt-Injection-Red-Team mit synthetischen CRM-Notizen und importierten Texten durchführen; offene Kontrollen aus `docs/ai-security-review.md` abarbeiten
 - [ ] Externer Penetrationstest, Nachtests der Befunde
 - [ ] Rollback-Übung auf Vercel, DR-Übung halbjährlich
-- [ ] Aufbewahrungsfrist für `audit_logs` umsetzen (12 Monate vorgeschlagen)
+- [ ] Audit-Log-Retention-Cron nach Deployment überwachen; erster Lauf und Alarmzustellung bestätigen
 - [x] GitHub Actions auf Commit-SHAs pinnen (2026-11-21; Contract-Test in CI)
 - [ ] Passkey-Unterstützung bei Supabase klären
 - [ ] Uptime-Monitoring mit Benachrichtigung (Handy) einrichten
