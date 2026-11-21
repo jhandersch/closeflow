@@ -59,6 +59,7 @@
     "test:supabase-storage-realtime-contract": "node --test tests/supabase-storage-realtime-contract.test.mjs",
     "test:supabase-function-grant-contract": "node --test tests/supabase-function-grant-contract.test.mjs",
     "test:github-actions-pinning-contract": "node --test tests/github-actions-pinning-contract.test.mjs",
+    "test:audit-log-presentation": "node --experimental-strip-types --import ./tests/ts-alias-loader.mjs --test tests/audit-log-presentation.test.mjs",
     "test:feedback-token": "node --experimental-strip-types --import ./tests/ts-alias-loader.mjs --test tests/feedback-token.test.mjs",
     "test:workflow-automations": "node --experimental-strip-types --test tests/workflow-automations.test.mjs",
     "test:workspace-capacity": "node --experimental-strip-types --test tests/workspace-capacity.test.mjs",

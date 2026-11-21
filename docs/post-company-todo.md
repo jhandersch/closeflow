@@ -37,10 +37,10 @@ Alles, was bewusst auf später verschoben ist. Solange diese Punkte offen sind, 
 - [ ] Externer Penetrationstest, Nachtests der Befunde
 - [ ] Rollback-Übung auf Vercel, DR-Übung halbjährlich
 - [ ] Aufbewahrungsfrist für `audit_logs` umsetzen (12 Monate vorgeschlagen)
-- [ ] GitHub Actions auf Commit-SHAs pinnen
+- [x] GitHub Actions auf Commit-SHAs pinnen (2026-11-21; Contract-Test in CI)
 - [ ] Passkey-Unterstützung bei Supabase klären
 - [ ] Uptime-Monitoring mit Benachrichtigung (Handy) einrichten
-- [ ] Übersetzung der neuen UI-Texte (Audit log) ins Deutsche
+- [x] Übersetzung der neuen UI-Texte (Audit log) ins Deutsche (2026-11-21; Eventnamen und bekannte Payload-Felder/-Werte lokalisiert)
 
 ## 6. Organisation
 - [ ] Rollen und Verantwortlichkeiten schriftlich festlegen

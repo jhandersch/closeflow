@@ -5,6 +5,7 @@ import { getIntlLocale, translateText  } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase/client";
+import { presentAuditEventType, presentAuditPayload } from "@/lib/auditLogPresentation";
 
 type MonitoringItem = {
   id: string;
@@ -194,11 +195,11 @@ export default function MonitoringPage() {
                       <td className="px-4 py-3 text-foreground/75">
                         {formatDateTime(item.created_at, timezone)}
                       </td>
-                      <td className="px-4 py-3 text-foreground">{item.event_type}</td>
+                      <td className="px-4 py-3 text-foreground">
+                        {presentAuditEventType(item.event_type)}
+                      </td>
                       <td className="px-4 py-3 text-foreground/70">
-                        {Object.entries(item.payload || {})
-                          .map(([key, value]) => `${key}: ${String(value)}`)
-                          .join(", ") || "-"}
+                        {presentAuditPayload(item.payload) || "-"}
                       </td>
                     </tr>
                   ))}

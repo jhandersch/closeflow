@@ -73,6 +73,7 @@ jobs:
           npm run test:supabase-storage-realtime-contract
           npm run test:supabase-function-grant-contract
           npm run test:github-actions-pinning-contract
+          npm run test:audit-log-presentation
           npm run test:feedback-token
           npm run test:workflow-automations
           npm run test:workspace-capacity
